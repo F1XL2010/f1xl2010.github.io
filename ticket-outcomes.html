@@ -267,13 +267,19 @@ async function loadTickets() {
 
     const rows = parseCSV(text);
 
-    // Skip header row, collect data rows
+    // Skip header row, collect valid data rows
+    // A valid row must have a race name starting with S (e.g. S27 Singapore)
+    // and a submitter name and ticket number
     allTickets = [];
     for (let i = 1; i < rows.length; i++) {
       const row = rows[i];
       const race = (row[COLS.race] || '').trim();
+      const ticketNum = (row[COLS.ticketNum] || '').trim();
       const driver = (row[COLS.submitter] || '').trim();
+      // Validate: race must look like "S27 Something" and ticket# must be numeric
       if (!race || !driver) continue;
+      if (!race.match(/^S\d+\s+\w/)) continue;
+      if (ticketNum && isNaN(parseInt(ticketNum))) continue;
       allTickets.push(row);
     }
 
@@ -288,25 +294,46 @@ async function loadTickets() {
 }
 
 function parseCSV(text) {
-  const lines = text.split(/\r?\n/);
-  return lines.map(line => {
-    const cells = [];
-    let current = '';
-    let inQuotes = false;
-    for (let i = 0; i < line.length; i++) {
-      const ch = line[i];
-      if (ch === '"' && !inQuotes) { inQuotes = true; }
-      else if (ch === '"' && inQuotes) {
-        if (line[i+1] === '"') { current += '"'; i++; }
-        else { inQuotes = false; }
-      } else if (ch === ',' && !inQuotes) {
-        cells.push(current);
-        current = '';
-      } else { current += ch; }
+  // Full character-by-character parser that handles multiline quoted cells
+  const rows = [];
+  let cells = [];
+  let current = '';
+  let inQuotes = false;
+  let i = 0;
+
+  while (i < text.length) {
+    const ch = text[i];
+    const next = text[i + 1];
+
+    if (ch === '"') {
+      if (!inQuotes) {
+        inQuotes = true;
+      } else if (next === '"') {
+        current += '"';
+        i++;
+      } else {
+        inQuotes = false;
+      }
+    } else if (ch === ',' && !inQuotes) {
+      cells.push(current);
+      current = '';
+    } else if ((ch === '\n' || (ch === '\r' && next === '\n')) && !inQuotes) {
+      if (ch === '\r') i++;
+      cells.push(current);
+      current = '';
+      if (cells.some(c => c.trim())) rows.push(cells);
+      cells = [];
+    } else {
+      current += ch;
     }
-    cells.push(current);
-    return cells;
-  });
+    i++;
+  }
+
+  // Handle last row
+  cells.push(current);
+  if (cells.some(c => c.trim())) rows.push(cells);
+
+  return rows;
 }
 
 function getFiltered() {
@@ -398,11 +425,13 @@ function renderTickets() {
       const offenderPoints = (row[COLS.offenderPoints] || '0').trim();
       const offenderPenalty = (row[COLS.offenderPenalty] || '').trim();
 
-      // Evidence links
+      // Evidence links - trim whitespace and check for http
       const evLinks = [row[COLS.ev1], row[COLS.ev2], row[COLS.ev3], row[COLS.ev4]]
-        .filter(e => e && e.trim().startsWith('http'));
+        .map(e => (e || '').trim())
+        .filter(e => e.startsWith('http'));
       const devLinks = [row[COLS.dev1], row[COLS.dev2], row[COLS.dev3], row[COLS.dev4]]
-        .filter(e => e && e.trim().startsWith('http'));
+        .map(e => (e || '').trim())
+        .filter(e => e.startsWith('http'));
 
       const vc = verdictClass(penalty);
       const vl = verdictLabel(penalty, points);
