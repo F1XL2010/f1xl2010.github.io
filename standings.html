@@ -365,11 +365,35 @@ const divisions = [
 let currentDiv = null;
 
 async function fetchSheet(sheetId, gid) {
-  const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&gid=${gid}`;
+  const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
   const res = await fetch(url);
+  if (!res.ok) throw new Error(`HTTP ${res.status} - sheet may not be published to web`);
   const text = await res.text();
-  const json = JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*?)\);?\s*$/)[1]);
-  return json.table;
+  if (text.includes('<!DOCTYPE') || text.includes('<html')) throw new Error('Sheet returned HTML - check it is published to web');
+  return parseCSV(text);
+}
+
+function parseCSV(text) {
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  const rows = lines.map(line => {
+    const cells = [];
+    let current = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"' && !inQuotes) { inQuotes = true; }
+      else if (ch === '"' && inQuotes) {
+        if (line[i+1] === '"') { current += '"'; i++; }
+        else { inQuotes = false; }
+      } else if (ch === ',' && !inQuotes) {
+        cells.push(current.trim());
+        current = '';
+      } else { current += ch; }
+    }
+    cells.push(current.trim());
+    return { c: cells.map(v => ({ v: v === '' ? null : v })) };
+  });
+  return { rows };
 }
 
 function cv(row, col) {
@@ -545,7 +569,7 @@ async function loadDrivers() {
     document.getElementById('div-view-meta').textContent = `${rounds} rounds completed`;
 
   } catch(e) {
-    document.getElementById('drivers-body').innerHTML = '<tr><td colspan="30"><div class="loading-msg">Could not load driver data. Make sure the sheet is set to public.</div></td></tr>';
+    document.getElementById('drivers-body').innerHTML = '<tr><td colspan="30"><div class="loading-msg">Could not load data: ' + e.message + '</div></td></tr>';
     console.error('Drivers error:', e);
   }
 }
@@ -555,17 +579,39 @@ async function loadConstructors() {
     const table = await fetchSheet(currentDiv.sheetId, currentDiv.gids.constructors);
     const rows = table.rows;
     let html = '';
-    let pos = 1;
 
+    // Find header row
+    let hIdx = -1;
+    let posCol=-1, teamCol=-1, ptsCol=-1, gapCol=-1;
     for (let i=0; i<rows.length; i++) {
+      for (let c=0; c<rows[i].c.length; c++) {
+        const v = cs(rows[i],c);
+        if (v==='Pos') { hIdx=i; posCol=c; }
+        if (v==='Team'||v==='Constructor') teamCol=c;
+        if (v==='Points') ptsCol=c;
+        if (v==='Gap') gapCol=c;
+      }
+      if (hIdx===i) break;
+    }
+
+    // If no header found, assume first non-empty row is data with cols: pos, team, pts, gap
+    const startRow = hIdx>=0 ? hIdx+1 : 0;
+    if (posCol<0) posCol=1;
+    if (teamCol<0) teamCol=2;
+    if (ptsCol<0) ptsCol=4;
+    if (gapCol<0) gapCol=5;
+
+    let pos = 1;
+    for (let i=startRow; i<rows.length; i++) {
       const row = rows[i];
-      const posVal = cs(row,1);
-      const team = cs(row,2);
-      const pts = cv(row,4);
-      const gap = cs(row,5);
+      const team = cs(row, teamCol);
+      const ptsRaw = cs(row, ptsCol);
+      const posVal = cs(row, posCol);
+      if (!team || !ptsRaw || team==='Team' || team==='Constructor') continue;
 
-      if (!team || pts===null || posVal==='Pos') continue;
-
+      const pts = parseFloat(ptsRaw);
+      if (isNaN(pts)) continue;
+      const gap = gapCol>=0 ? cs(row, gapCol) : '';
       const color = teamColors[team] || '#555';
       const pn = parseInt(posVal)||pos;
       const pc = pClass(pn);
@@ -579,7 +625,7 @@ async function loadConstructors() {
         </div>
         <div class="con-right">
           <div class="con-pts">${Math.round(pts)}</div>
-          <div class="con-gap">${gap&&gap!=='0'?gap:'—'}</div>
+          <div class="con-gap">${gap&&gap!=='0'&&gap!=='—'?gap:'—'}</div>
         </div>
       </div>`;
       pos++;
@@ -587,7 +633,7 @@ async function loadConstructors() {
 
     document.getElementById('constructors-list').innerHTML = html || '<div class="loading-msg">No constructor data found</div>';
   } catch(e) {
-    document.getElementById('constructors-list').innerHTML = '<div class="loading-msg">Could not load constructor data</div>';
+    document.getElementById('constructors-list').innerHTML = `<div class="loading-msg">Could not load constructors: ${e.message}</div>`;
     console.error('Constructors error:', e);
   }
 }
@@ -598,20 +644,53 @@ async function loadStats() {
     const rows = table.rows;
     let html = '';
 
-    for (let i=1; i<rows.length; i++) {
+    // Find header row and map columns by name
+    let hIdx = 0;
+    let cols = {};
+    for (let i=0; i<rows.length; i++) {
       const row = rows[i];
-      const driver = cs(row,0);
-      if (!driver) continue;
+      for (let c=0; c<row.c.length; c++) {
+        const v = cs(row,c).toLowerCase();
+        if (v==='driver') { hIdx=i; cols.driver=c; }
+        if (v.includes('total wins')||v==='wins') cols.wins=c;
+        if (v.includes('total podiums')||v==='podiums') cols.pods=c;
+        if (v.includes('total poles')||v==='poles') cols.poles=c;
+        if (v.includes('average finish')) cols.avgFin=c;
+        if (v.includes('average points')) cols.avgPts=c;
+        if (v.includes('average gained')||v.includes('pos. gained')) cols.avgGain=c;
+        if (v.includes('races started')) cols.started=c;
+        if (v.includes('races dnf')) cols.dnfs=c;
+        if (v==='reliability') cols.rel=c;
+      }
+      if (cols.driver !== undefined) break;
+    }
 
-      const wins     = cv(row,2)||0;
-      const pods     = cv(row,3)||0;
-      const poles    = cv(row,4)||0;
-      const avgFin   = cv(row,5);
-      const avgPts   = cv(row,6);
-      const avgGain  = cv(row,8);
-      const started  = cv(row,17)||0;
-      const dnfs     = cv(row,20)||0;
-      const relStr   = cs(row,22);
+    // Fallbacks matching what we saw in the sheet
+    if (cols.driver===undefined) cols.driver=0;
+    if (cols.wins===undefined) cols.wins=2;
+    if (cols.pods===undefined) cols.pods=3;
+    if (cols.poles===undefined) cols.poles=4;
+    if (cols.avgFin===undefined) cols.avgFin=5;
+    if (cols.avgPts===undefined) cols.avgPts=6;
+    if (cols.avgGain===undefined) cols.avgGain=8;
+    if (cols.started===undefined) cols.started=17;
+    if (cols.dnfs===undefined) cols.dnfs=20;
+    if (cols.rel===undefined) cols.rel=22;
+
+    for (let i=hIdx+1; i<rows.length; i++) {
+      const row = rows[i];
+      const driver = cs(row, cols.driver);
+      if (!driver || driver.toLowerCase()==='driver') continue;
+
+      const wins     = parseFloat(cs(row,cols.wins))||0;
+      const pods     = parseFloat(cs(row,cols.pods))||0;
+      const poles    = parseFloat(cs(row,cols.poles))||0;
+      const avgFin   = cs(row,cols.avgFin);
+      const avgPts   = cs(row,cols.avgPts);
+      const avgGain  = cs(row,cols.avgGain);
+      const started  = parseFloat(cs(row,cols.started))||0;
+      const dnfs     = parseFloat(cs(row,cols.dnfs))||0;
+      const relStr   = cs(row,cols.rel);
       const rel      = parseFloat(relStr)||0;
       const relClass = rel>=85?'':rel>=60?'mid':'low';
 
