@@ -289,7 +289,8 @@
   <div class="inner-tabs">
     <button class="inner-tab active" onclick="showTab('drivers',this)">Drivers</button>
     <button class="inner-tab" onclick="showTab('constructors',this)">Constructors</button>
-    <button class="inner-tab" onclick="showTab('stats',this)">Stats</button>
+    <button class="inner-tab" onclick="showTab('stats',this)">Driver Stats</button>
+    <button class="inner-tab" onclick="showTab('teamstats',this)">Team Stats</button>
   </div>
 
   <div class="tab-panel active" id="tab-drivers">
@@ -317,6 +318,12 @@
   <div class="tab-panel" id="tab-stats">
     <div class="stats-grid" id="stats-grid">
       <div class="loading-msg" style="grid-column:1/-1">Loading stats...</div>
+    </div>
+  </div>
+
+  <div class="tab-panel" id="tab-teamstats">
+    <div class="constructors-list" id="teamstats-list">
+      <div class="loading-msg">Loading team stats...</div>
     </div>
   </div>
 </div>
@@ -436,8 +443,9 @@ async function openDiv(idx) {
   document.getElementById('drivers-body').innerHTML = '<tr><td colspan="30"><div class="loading-msg">Loading driver standings...</div></td></tr>';
   document.getElementById('constructors-list').innerHTML = '<div class="loading-msg">Loading constructors...</div>';
   document.getElementById('stats-grid').innerHTML = '<div class="loading-msg" style="grid-column:1/-1">Loading stats...</div>';
+  document.getElementById('teamstats-list').innerHTML = '<div class="loading-msg">Loading team stats...</div>';
 
-  await Promise.all([loadDrivers(), loadConstructors(), loadStats()]);
+  await Promise.all([loadDrivers(), loadConstructors(), loadStats(), loadTeamStats()]);
 }
 
 function showSelector() {
@@ -576,60 +584,58 @@ async function loadDrivers() {
 
 async function loadConstructors() {
   try {
-    const table = await fetchSheet(currentDiv.sheetId, currentDiv.gids.constructors);
-    const rows = table.rows;
-    let html = '';
+    // Fetch both tabs simultaneously - cross-reference names from teamStats
+    const [conTable, teamTable] = await Promise.all([
+      fetchSheet(currentDiv.sheetId, currentDiv.gids.constructors),
+      fetchSheet(currentDiv.sheetId, currentDiv.gids.teamStats)
+    ]);
 
-    // Find header row
-    let hIdx = -1;
-    let posCol=-1, teamCol=-1, ptsCol=-1, gapCol=-1;
-    for (let i=0; i<rows.length; i++) {
-      for (let c=0; c<rows[i].c.length; c++) {
-        const v = cs(rows[i],c);
-        if (v==='Pos') { hIdx=i; posCol=c; }
-        if (v==='Team'||v==='Constructor') teamCol=c;
-        if (v==='Points') ptsCol=c;
-        if (v==='Gap') gapCol=c;
-      }
-      if (hIdx===i) break;
+    // Extract ordered team names from teamStats tab (col 0 = team name)
+    const teamNames = [];
+    for (let i=1; i<teamTable.rows.length; i++) {
+      const name = cs(teamTable.rows[i], 0);
+      if (name && name.toLowerCase() !== 'driver') teamNames.push(name);
     }
 
-    // If no header found, assume first non-empty row is data with cols: pos, team, pts, gap
-    const startRow = hIdx>=0 ? hIdx+1 : 0;
-    if (posCol<0) posCol=1;
-    if (teamCol<0) teamCol=2;
-    if (ptsCol<0) ptsCol=4;
-    if (gapCol<0) gapCol=5;
+    // Extract points data from constructors tab
+    // Find rows with numeric points - col 4 had points in our data
+    const conRows = conTable.rows;
+    const pointsData = [];
+    for (let i=0; i<conRows.length; i++) {
+      const row = conRows[i];
+      // Look for a row that has a numeric value (points)
+      for (let c=2; c<row.c.length; c++) {
+        const v = cs(row, c);
+        const n = parseFloat(v);
+        if (!isNaN(n) && n > 0) {
+          pointsData.push({ pts: n, gap: cs(row, c+1) });
+          break;
+        }
+      }
+    }
 
-    let pos = 1;
-    for (let i=startRow; i<rows.length; i++) {
-      const row = rows[i];
-      const team = cs(row, teamCol);
-      const ptsRaw = cs(row, ptsCol);
-      const posVal = cs(row, posCol);
-      if (!team || !ptsRaw || team==='Team' || team==='Constructor') continue;
+    // Sort points descending and pair with team names
+    pointsData.sort((a,b) => b.pts - a.pts);
 
-      const pts = parseFloat(ptsRaw);
-      if (isNaN(pts)) continue;
-      const gap = gapCol>=0 ? cs(row, gapCol) : '';
+    let html = '';
+    pointsData.forEach((d, i) => {
+      const team = teamNames[i] || `Team ${i+1}`;
       const color = teamColors[team] || '#555';
-      const pn = parseInt(posVal)||pos;
-      const pc = pClass(pn);
-
+      const pc = pClass(i+1);
+      const gap = d.gap && d.gap !== '0' && parseFloat(d.gap) !== 0 ? d.gap : '—';
       html += `<div class="con-row">
-        <div class="con-pos ${pc}">${posVal||pos}</div>
+        <div class="con-pos ${pc}">${i+1}</div>
         <div class="con-bar" style="background:${color}"></div>
         <div class="con-info">
           <div class="con-name">${team}</div>
-          <div class="con-sub">${Math.round(pts)} points</div>
+          <div class="con-sub">${Math.round(d.pts)} points</div>
         </div>
         <div class="con-right">
-          <div class="con-pts">${Math.round(pts)}</div>
-          <div class="con-gap">${gap&&gap!=='0'&&gap!=='—'?gap:'—'}</div>
+          <div class="con-pts">${Math.round(d.pts)}</div>
+          <div class="con-gap">${gap}</div>
         </div>
       </div>`;
-      pos++;
-    }
+    });
 
     document.getElementById('constructors-list').innerHTML = html || '<div class="loading-msg">No constructor data found</div>';
   } catch(e) {
@@ -730,6 +736,73 @@ async function loadStats() {
   } catch(e) {
     document.getElementById('stats-grid').innerHTML = '<div class="loading-msg" style="grid-column:1/-1">Could not load stats</div>';
     console.error('Stats error:', e);
+  }
+}
+
+async function loadTeamStats() {
+  try {
+    const table = await fetchSheet(currentDiv.sheetId, currentDiv.gids.teamStats);
+    const rows = table.rows;
+    let html = '';
+
+    // Header is row 0: Driver, Wins, Podiums, Avg Finish, Avg Points, Avg Grid, Avg Pos Gained
+    const hRow = rows[0];
+    let cols = { name:0, wins:1, pods:2, avgFin:3, avgPts:4, avgGrid:5, avgGain:6 };
+
+    // Try to find columns by header name
+    for (let c=0; c<hRow.c.length; c++) {
+      const v = cs(hRow,c).toLowerCase();
+      if (v.includes('wins')) cols.wins=c;
+      if (v.includes('podiums')) cols.pods=c;
+      if (v.includes('average finishing')||v.includes('avg finish')) cols.avgFin=c;
+      if (v.includes('average points')||v.includes('avg points')) cols.avgPts=c;
+      if (v.includes('average grid')||v.includes('avg grid')) cols.avgGrid=c;
+      if (v.includes('gained')) cols.avgGain=c;
+    }
+
+    for (let i=1; i<rows.length; i++) {
+      const row = rows[i];
+      const team = cs(row, cols.name);
+      if (!team) continue;
+
+      const wins    = parseFloat(cs(row,cols.wins))||0;
+      const pods    = parseFloat(cs(row,cols.pods))||0;
+      const avgFin  = cs(row,cols.avgFin);
+      const avgPts  = cs(row,cols.avgPts);
+      const avgGain = cs(row,cols.avgGain);
+      const color   = teamColors[team] || '#555';
+
+      const gainNum  = parseFloat(avgGain);
+      const gainStr  = !isNaN(gainNum) ? (gainNum>0?'+':'')+gainNum.toFixed(1) : '—';
+      const gainCls  = !isNaN(gainNum) ? (gainNum>0?'good':gainNum<0?'bad':'') : '';
+
+      html += `<div class="con-row" style="align-items:flex-start;flex-wrap:wrap;gap:8px;">
+        <div class="con-bar" style="background:${color};margin-top:4px;"></div>
+        <div class="con-info" style="flex:1;min-width:140px;">
+          <div class="con-name">${team}</div>
+          <div class="con-sub" style="margin-top:4px;">${wins} win${wins!==1?'s':''} · ${pods} podium${pods!==1?'s':''}</div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;min-width:200px;flex:1;">
+          <div class="stat-metric" style="background:var(--dark3);border-radius:4px;padding:8px 6px;text-align:center;">
+            <div class="stat-metric-val">${avgFin?parseFloat(avgFin).toFixed(1):'—'}</div>
+            <div class="stat-metric-lbl">Avg finish</div>
+          </div>
+          <div class="stat-metric" style="background:var(--dark3);border-radius:4px;padding:8px 6px;text-align:center;">
+            <div class="stat-metric-val">${avgPts?parseFloat(avgPts).toFixed(1):'—'}</div>
+            <div class="stat-metric-lbl">Avg pts</div>
+          </div>
+          <div class="stat-metric" style="background:var(--dark3);border-radius:4px;padding:8px 6px;text-align:center;">
+            <div class="stat-metric-val ${gainCls}">${gainStr}</div>
+            <div class="stat-metric-lbl">Avg gained</div>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    document.getElementById('teamstats-list').innerHTML = html || '<div class="loading-msg">No team stats found</div>';
+  } catch(e) {
+    document.getElementById('teamstats-list').innerHTML = `<div class="loading-msg">Could not load team stats: ${e.message}</div>`;
+    console.error('Team stats error:', e);
   }
 }
 
