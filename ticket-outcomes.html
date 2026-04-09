@@ -435,13 +435,12 @@ function renderTickets() {
         .filter(e => e.startsWith('http'));
 
       const appealed = (row[COLS.appealed] || '').trim().toLowerCase() === 'yes';
-      const appealOutcome = (row[COLS.appealOutcome] || '').trim();
-      const appealVerdict = (row[COLS.appealVerdict] || '').trim();
+      const appealOutcome = (row[COLS.appealOutcome] || '').trim(); // col AC - written reasoning
+      const appealVerdict = (row[COLS.appealVerdict] || '').trim(); // col AD - new verdict/penalty
 
-      // If appealed and verdict changed, show appeal verdict instead
-      const displayPenalty = appealed && appealVerdict ? appealVerdict : penalty;
-      const vc = verdictClass(displayPenalty);
-      const vl = verdictLabel(displayPenalty, points);
+      // Collapsed header always shows original penalty from col T, unchanged
+      const vc = verdictClass(penalty);
+      const vl = verdictLabel(penalty, points);
 
       html += `<div class="ticket">
         <div class="ticket-header" onclick="toggleTicket('${ticketId}')">
@@ -521,13 +520,13 @@ function renderTickets() {
 
           ${appealed ? `<div class="detail-section">
             <div class="detail-label" style="color:#E8B84B;">Appeal outcome</div>
-            ${appealOutcome
-              ? `<div class="detail-text" style="border-left:3px solid #E8B84B;padding-left:14px;">${appealOutcome}</div>`
+            ${appealVerdict
+              ? `<div class="detail-text" style="border-left:3px solid #E8B84B;padding-left:14px;">${appealVerdict}</div>`
               : `<div class="detail-text" style="border-left:3px solid #E8B84B;padding-left:14px;color:var(--text-faint);">Appeal outcome pending</div>`}
             <div style="margin-top:8px;display:flex;align-items:center;gap:8px;">
               <span style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;">Appeal verdict</span>
-              ${appealVerdict
-                ? `<span class="verdict-badge ${verdictClass(appealVerdict)}">${verdictLabel(appealVerdict,'')}</span>`
+              ${appealOutcome
+                ? `<span class="verdict-badge ${verdictClass(appealOutcome)}">${verdictLabel(appealOutcome,'')}</span>`
                 : `<span style="font-size:11px;background:rgba(232,184,75,0.15);color:#E8B84B;border:1px solid rgba(232,184,75,0.25);border-radius:4px;padding:4px 10px;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.5px;text-transform:uppercase;">Pending</span>`}
             </div>
           </div>` : ''}
