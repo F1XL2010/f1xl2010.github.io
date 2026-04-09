@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>F1XL — Ticket Outcomes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red:#E10600;--black:#090909;--dark:#111111;--dark2:#181818;--dark3:#1f1f1f;
+    --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+    --text:#ffffff;--text-muted:rgba(255,255,255,0.45);--text-faint:rgba(255,255,255,0.18);
+    --green:#4aaa6a;--amber:#E8B84B;--red-soft:#ff6b6b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--black);color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;}
+
+  /* NAV */
+  nav{background:rgba(9,9,9,0.97);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;}
+  .nav-left{display:flex;align-items:center;gap:14px;flex-shrink:0;}
+  .nav-logo{background:var(--red);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;padding:5px 11px;border-radius:3px;text-decoration:none;}
+  .nav-title{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:500;letter-spacing:1px;color:var(--text-muted);text-transform:uppercase;}
+  .nav-links{display:flex;align-items:stretch;height:56px;}
+  .nav-item{position:relative;display:flex;align-items:stretch;}
+  .nav-item>a,.nav-item>button{color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:500;letter-spacing:0.5px;padding:0 13px;display:flex;align-items:center;gap:4px;border-bottom:2px solid transparent;border-top:none;border-left:none;border-right:none;background:none;cursor:pointer;font-family:'Barlow',sans-serif;text-transform:uppercase;transition:color 0.2s;white-space:nowrap;}
+  .nav-item>a:hover,.nav-item>button:hover{color:var(--text);}
+  .nav-item>a.active,.nav-item>button.active{color:var(--text);border-bottom-color:var(--red);}
+  .nav-chevron{font-size:8px;opacity:0.5;transition:transform 0.2s;}
+  .nav-item:hover .nav-chevron{transform:rotate(180deg);}
+  .nav-dropdown{display:none;position:absolute;top:100%;left:0;background:#141414;border:1px solid var(--border2);border-top:2px solid var(--red);border-radius:0 0 6px 6px;min-width:180px;padding:6px 0;z-index:300;}
+  .nav-item:hover .nav-dropdown{display:block;}
+  .nav-dropdown a{display:block;padding:9px 16px;color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;transition:color 0.15s,background 0.15s;white-space:nowrap;}
+  .nav-dropdown a:hover{color:var(--text);background:rgba(255,255,255,0.05);}
+  .nav-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:8px;background:none;border:none;}
+  .nav-hamburger span{display:block;width:22px;height:2px;background:var(--text-muted);border-radius:2px;transition:all 0.25s;}
+  .nav-hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+  .nav-hamburger.open span:nth-child(2){opacity:0;}
+  .nav-hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+  .mobile-menu{display:none;position:fixed;top:56px;left:0;right:0;bottom:0;background:#0d0d0d;z-index:150;overflow-y:auto;padding:16px 0 32px;}
+  .mobile-menu.open{display:block;}
+  .mobile-section-header{padding:10px 24px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--red);}
+  .mobile-section a{display:block;padding:11px 32px;color:var(--text-muted);text-decoration:none;font-size:15px;border-bottom:1px solid var(--border);}
+  .mobile-divider{height:1px;background:var(--border);margin:12px 24px;}
+  @media(max-width:860px){.nav-links{display:none;}.nav-title{display:none;}.nav-hamburger{display:flex;}}
+  @media(min-width:861px){.mobile-menu{display:none !important;}}
+
+  /* PAGE HEADER */
+  .page-header{background:var(--dark);border-bottom:1px solid var(--border);padding:24px;}
+  .page-eyebrow{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:2.5px;color:var(--red);text-transform:uppercase;font-weight:600;margin-bottom:4px;}
+  .page-title{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:700;text-transform:uppercase;line-height:1;}
+  .page-meta{font-size:13px;color:var(--text-muted);margin-top:6px;}
+
+  /* FILTERS */
+  .filters{padding:16px 24px;display:flex;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--border);background:var(--dark2);}
+  .filter-btn{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:6px 14px;border-radius:4px;border:1px solid var(--border2);background:none;color:var(--text-muted);cursor:pointer;transition:all 0.2s;}
+  .filter-btn:hover{color:var(--text);border-color:rgba(255,255,255,0.2);}
+  .filter-btn.active{background:var(--red);border-color:var(--red);color:#fff;}
+
+  /* CONTENT */
+  .content{padding:20px 24px;max-width:900px;}
+
+  /* RACE GROUP */
+  .race-group{margin-bottom:12px;}
+  .race-header{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--dark2);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:background 0.2s;user-select:none;}
+  .race-header:hover{background:var(--dark3);}
+  .race-header.open{border-radius:8px 8px 0 0;border-bottom-color:transparent;}
+  .race-header-left{flex:1;}
+  .race-name{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text);}
+  .race-meta{font-size:12px;color:var(--text-muted);margin-top:2px;}
+  .race-chevron{font-size:14px;color:var(--text-faint);transition:transform 0.25s;}
+  .race-chevron.open{transform:rotate(180deg);}
+  .race-body{display:none;border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;overflow:hidden;}
+  .race-body.open{display:block;}
+
+  /* TICKET CARD */
+  .ticket{border-bottom:1px solid var(--border);padding:16px 18px;}
+  .ticket:last-child{border-bottom:none;}
+  .ticket-header{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px;cursor:pointer;}
+  .ticket-num{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--text-faint);flex-shrink:0;margin-top:1px;}
+  .ticket-parties{flex:1;}
+  .ticket-vs{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .ticket-driver{font-size:13px;font-weight:500;color:var(--text);}
+  .ticket-team{font-size:11px;color:var(--text-faint);}
+  .ticket-vs-label{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;}
+  .ticket-div{font-size:11px;color:var(--text-faint);margin-top:3px;}
+  .ticket-verdict{flex-shrink:0;text-align:right;}
+  .verdict-badge{display:inline-block;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:0.5px;padding:4px 10px;border-radius:4px;text-transform:uppercase;}
+  .verdict-nfa{background:rgba(74,170,106,0.15);color:var(--green);border:1px solid rgba(74,170,106,0.25);}
+  .verdict-warning{background:rgba(232,184,75,0.15);color:var(--amber);border:1px solid rgba(232,184,75,0.25);}
+  .verdict-penalty{background:rgba(225,6,0,0.15);color:#ff6b6b;border:1px solid rgba(225,6,0,0.25);}
+  .verdict-ban{background:rgba(225,6,0,0.3);color:#ff4444;border:1px solid rgba(225,6,0,0.4);}
+
+  /* TICKET DETAIL */
+  .ticket-detail{display:none;margin-top:0;}
+  .ticket-detail.open{display:block;}
+  .detail-section{margin-bottom:12px;}
+  .detail-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-faint);font-weight:500;margin-bottom:5px;}
+  .detail-text{font-size:13px;color:var(--text-muted);line-height:1.6;background:var(--dark3);border-radius:4px;padding:10px 12px;}
+  .evidence-links{display:flex;flex-wrap:wrap;gap:6px;}
+  .evidence-link{font-size:11px;padding:4px 10px;background:var(--dark3);border:1px solid var(--border2);border-radius:4px;color:rgba(100,160,255,0.8);text-decoration:none;transition:border-color 0.2s;}
+  .evidence-link:hover{border-color:rgba(100,160,255,0.4);color:rgba(100,160,255,1);}
+  .outcome-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .outcome-box{background:var(--dark3);border-radius:4px;padding:10px 12px;}
+  .outcome-role{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-faint);margin-bottom:4px;}
+  .outcome-driver{font-size:13px;font-weight:500;color:var(--text);margin-bottom:4px;}
+  .outcome-penalty{font-size:12px;color:var(--text-muted);}
+  .outcome-pts{font-size:11px;margin-top:3px;}
+  .pts-added{color:#ff6b6b;}
+  .pts-none{color:var(--text-faint);}
+  .expand-btn{font-size:11px;color:var(--text-faint);cursor:pointer;text-transform:uppercase;letter-spacing:0.5px;margin-top:8px;display:inline-block;transition:color 0.2s;}
+  .expand-btn:hover{color:var(--text-muted);}
+
+  /* LOADING / EMPTY */
+  .loading-msg{text-align:center;padding:48px 24px;color:var(--text-muted);font-size:14px;}
+  .empty-msg{text-align:center;padding:32px 24px;color:var(--text-faint);font-size:13px;}
+
+  /* FOOTER */
+  footer{background:var(--dark);border-top:1px solid var(--border);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:40px;}
+  .footer-logo{background:var(--red);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;padding:4px 9px;border-radius:3px;}
+  .footer-text{font-size:12px;color:var(--text-faint);}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-left">
+    <a href="index.html" class="nav-logo">F1XL</a>
+    <div class="nav-title">Formula Xbox Leagues</div>
+  </div>
+  <div class="nav-links">
+    <div class="nav-item"><a href="index.html">Home</a></div>
+    <div class="nav-item">
+      <button>Standings <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown">
+        <a href="standings.html">Current Season</a>
+        <a href="results.html">Results</a>
+        <a href="past-seasons.html">Past Seasons</a>
+        <a href="winners-records.html">Winners &amp; Records</a>
+      </div>
+    </div>
+    <div class="nav-item">
+      <button>Teams <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown">
+        <a href="current-teams.html">Current Teams</a>
+        <a href="past-teams.html">Past Teams</a>
+      </div>
+    </div>
+    <div class="nav-item">
+      <button class="active">Race Tickets <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown">
+        <a href="submit-ticket.html">Submit Ticket</a>
+        <a href="ticket-outcomes.html">Ticket Outcomes</a>
+        <a href="drivers-licence.html">Drivers Licence</a>
+      </div>
+    </div>
+    <div class="nav-item">
+      <button>Schedule <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown">
+        <a href="schedule.html">S27 Schedule</a>
+        <a href="track-guide.html">Track Guide</a>
+      </div>
+    </div>
+    <div class="nav-item"><a href="track-records.html">Track Records</a></div>
+    <div class="nav-item"><a href="applications.html">Applications</a></div>
+    <div class="nav-item"><a href="league-rules.html">League Rules</a></div>
+  </div>
+  <button class="nav-hamburger" id="hamburger" onclick="toggleMenu()">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<div class="mobile-menu" id="mobile-menu">
+  <div class="mobile-section">
+    <div class="mobile-section-header">Standings</div>
+    <a href="standings.html">Current Season</a>
+    <a href="results.html">Results</a>
+    <a href="past-seasons.html">Past Seasons</a>
+    <a href="winners-records.html">Winners &amp; Records</a>
+  </div>
+  <div class="mobile-divider"></div>
+  <div class="mobile-section">
+    <div class="mobile-section-header">Teams</div>
+    <a href="current-teams.html">Current Teams</a>
+    <a href="past-teams.html">Past Teams</a>
+  </div>
+  <div class="mobile-divider"></div>
+  <div class="mobile-section">
+    <div class="mobile-section-header">Race Tickets</div>
+    <a href="submit-ticket.html">Submit Ticket</a>
+    <a href="ticket-outcomes.html">Ticket Outcomes</a>
+    <a href="drivers-licence.html">Drivers Licence</a>
+  </div>
+  <div class="mobile-divider"></div>
+  <div class="mobile-section">
+    <div class="mobile-section-header">Schedule</div>
+    <a href="schedule.html">S27 Schedule</a>
+    <a href="track-guide.html">Track Guide</a>
+  </div>
+  <div class="mobile-divider"></div>
+  <div class="mobile-section">
+    <a href="track-records.html">Track Records</a>
+    <a href="applications.html">Applications</a>
+    <a href="league-rules.html">League Rules</a>
+  </div>
+</div>
+
+<div class="page-header">
+  <div class="page-eyebrow">Season 27</div>
+  <div class="page-title">Ticket Outcomes</div>
+  <div class="page-meta" id="page-meta">Loading...</div>
+</div>
+
+<div class="filters" id="filters" style="display:none;">
+  <button class="filter-btn active" onclick="filterDiv('all', this)">All Divisions</button>
+  <button class="filter-btn" onclick="filterDiv('1', this)">Division 1</button>
+  <button class="filter-btn" onclick="filterDiv('2', this)">Division 2</button>
+  <button class="filter-btn" onclick="filterDiv('3', this)">Division 3</button>
+  <button class="filter-btn" onclick="filterDiv('4', this)">Division 4</button>
+</div>
+
+<div class="content" id="content">
+  <div class="loading-msg">Loading ticket outcomes...</div>
+</div>
+
+<footer>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="footer-logo">F1XL</div>
+    <div class="footer-text">The UK's longest running F1 league · Est. 2010</div>
+  </div>
+  <div class="footer-text">f1xl.co.uk</div>
+</footer>
+
+<script>
+const SHEET_ID = '1018L2jzNseasQVfNNoZCh_fDUbMIQ93EP2ahJvNc6F0';
+const GID = '1683645163';
+
+// Column indices (0-based) based on what we see in the sheet:
+// A=Race, B=Ticket#, C=Division, D=Submitter, E=SubmitterTeam,
+// F=Offender, G=OffenderTeam, H=Description,
+// I=Ev1, J=Ev2, K=Ev3, L=Ev4,
+// M=DefenceComments, N=DEv1, O=DEv2, P=DEv3, Q=DEv4,
+// R=DriverPunished, S=Points, T=Penalty, U=Evaluation,
+// V=SubmitterOutcome, W=SubmitterPoints, X=SubmitterPenalty,
+// Y=OffenderOutcome, Z=OffenderPoints, AA=OffenderPenalty
+
+const COLS = {
+  race:0, ticketNum:1, division:2, submitter:3, submitterTeam:4,
+  offender:5, offenderTeam:6, description:7,
+  ev1:8, ev2:9, ev3:10, ev4:11,
+  defence:12, dev1:13, dev2:14, dev3:15, dev4:16,
+  driverPunished:17, points:18, penalty:19, evaluation:20,
+  submitterOutcome:21, submitterPoints:22, submitterPenalty:23,
+  offenderOutcome:24, offenderPoints:25, offenderPenalty:26
+};
+
+let allTickets = [];
+let currentFilter = 'all';
+
+async function loadTickets() {
+  try {
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${GID}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text = await res.text();
+    if (text.includes('<!DOCTYPE') || text.includes('<html')) throw new Error('Sheet not published to web');
+
+    const rows = parseCSV(text);
+
+    // Skip header row, collect data rows
+    allTickets = [];
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      const race = (row[COLS.race] || '').trim();
+      const driver = (row[COLS.submitter] || '').trim();
+      if (!race || !driver) continue;
+      allTickets.push(row);
+    }
+
+    document.getElementById('filters').style.display = 'flex';
+    updateMeta();
+    renderTickets();
+
+  } catch(e) {
+    document.getElementById('content').innerHTML = `<div class="loading-msg">Could not load ticket data: ${e.message}</div>`;
+    console.error(e);
+  }
+}
+
+function parseCSV(text) {
+  const lines = text.split(/\r?\n/);
+  return lines.map(line => {
+    const cells = [];
+    let current = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"' && !inQuotes) { inQuotes = true; }
+      else if (ch === '"' && inQuotes) {
+        if (line[i+1] === '"') { current += '"'; i++; }
+        else { inQuotes = false; }
+      } else if (ch === ',' && !inQuotes) {
+        cells.push(current);
+        current = '';
+      } else { current += ch; }
+    }
+    cells.push(current);
+    return cells;
+  });
+}
+
+function getFiltered() {
+  if (currentFilter === 'all') return allTickets;
+  return allTickets.filter(row => (row[COLS.division] || '').trim() === currentFilter);
+}
+
+function updateMeta() {
+  const filtered = getFiltered();
+  const races = [...new Set(filtered.map(r => r[COLS.race]))].length;
+  document.getElementById('page-meta').textContent =
+    `${filtered.length} ticket${filtered.length !== 1 ? 's' : ''} across ${races} race${races !== 1 ? 's' : ''}`;
+}
+
+function verdictClass(penalty) {
+  if (!penalty) return 'verdict-nfa';
+  const p = penalty.toLowerCase();
+  if (p === 'no further action' || p === 'nfa') return 'verdict-nfa';
+  if (p.includes('ban')) return 'verdict-ban';
+  if (p.includes('warning')) return 'verdict-warning';
+  return 'verdict-penalty';
+}
+
+function verdictLabel(penalty, points) {
+  if (!penalty || penalty.toLowerCase() === 'no further action' || penalty.toLowerCase() === 'nfa') return 'No Further Action';
+  if (penalty.toLowerCase().includes('ban')) return penalty;
+  if (penalty.toLowerCase().includes('warning')) return 'Warning';
+  return penalty;
+}
+
+function renderTickets() {
+  const filtered = getFiltered();
+  const content = document.getElementById('content');
+
+  if (filtered.length === 0) {
+    content.innerHTML = '<div class="empty-msg">No tickets found for this division</div>';
+    return;
+  }
+
+  // Group by race - preserve order of first appearance
+  const raceOrder = [];
+  const byRace = {};
+  filtered.forEach(row => {
+    const race = (row[COLS.race] || '').trim();
+    if (!byRace[race]) { byRace[race] = []; raceOrder.push(race); }
+    byRace[race].push(row);
+  });
+
+  // Reverse so most recent race appears first
+  raceOrder.reverse();
+
+  let html = '';
+  raceOrder.forEach((race, rIdx) => {
+    const tickets = byRace[race];
+    const totalPenalties = tickets.filter(t => {
+      const p = (t[COLS.penalty] || '').toLowerCase();
+      return p && p !== 'no further action' && p !== 'nfa' && p !== '0';
+    }).length;
+
+    html += `<div class="race-group" id="race-${rIdx}">
+      <div class="race-header" onclick="toggleRace(${rIdx})" id="race-header-${rIdx}">
+        <div class="race-header-left">
+          <div class="race-name">${race}</div>
+          <div class="race-meta">${tickets.length} ticket${tickets.length !== 1 ? 's' : ''} · ${totalPenalties} penalt${totalPenalties !== 1 ? 'ies' : 'y'}</div>
+        </div>
+        <div class="race-chevron" id="race-chevron-${rIdx}">▼</div>
+      </div>
+      <div class="race-body" id="race-body-${rIdx}">`;
+
+    tickets.forEach((row, tIdx) => {
+      const ticketId = `t-${rIdx}-${tIdx}`;
+      const num = (row[COLS.ticketNum] || '').trim();
+      const div = (row[COLS.division] || '').trim();
+      const submitter = (row[COLS.submitter] || '').trim();
+      const submitterTeam = (row[COLS.submitterTeam] || '').trim();
+      const offender = (row[COLS.offender] || '').trim();
+      const offenderTeam = (row[COLS.offenderTeam] || '').trim();
+      const description = (row[COLS.description] || '').trim();
+      const penalty = (row[COLS.penalty] || '').trim();
+      const points = (row[COLS.points] || '').trim();
+      const evaluation = (row[COLS.evaluation] || '').trim();
+      const defence = (row[COLS.defence] || '').trim();
+      const driverPunished = (row[COLS.driverPunished] || '').trim();
+
+      const submitterOutcome = (row[COLS.submitterOutcome] || '').trim();
+      const submitterPoints = (row[COLS.submitterPoints] || '0').trim();
+      const submitterPenalty = (row[COLS.submitterPenalty] || '').trim();
+      const offenderOutcome = (row[COLS.offenderOutcome] || '').trim();
+      const offenderPoints = (row[COLS.offenderPoints] || '0').trim();
+      const offenderPenalty = (row[COLS.offenderPenalty] || '').trim();
+
+      // Evidence links
+      const evLinks = [row[COLS.ev1], row[COLS.ev2], row[COLS.ev3], row[COLS.ev4]]
+        .filter(e => e && e.trim().startsWith('http'));
+      const devLinks = [row[COLS.dev1], row[COLS.dev2], row[COLS.dev3], row[COLS.dev4]]
+        .filter(e => e && e.trim().startsWith('http'));
+
+      const vc = verdictClass(penalty);
+      const vl = verdictLabel(penalty, points);
+
+      html += `<div class="ticket">
+        <div class="ticket-header" onclick="toggleTicket('${ticketId}')">
+          <div class="ticket-num">#${num}</div>
+          <div class="ticket-parties">
+            <div class="ticket-vs">
+              <div>
+                <div class="ticket-driver">${submitter}</div>
+                <div class="ticket-team">${submitterTeam}</div>
+              </div>
+              <div class="ticket-vs-label">vs</div>
+              <div>
+                <div class="ticket-driver">${offender}</div>
+                <div class="ticket-team">${offenderTeam}</div>
+              </div>
+            </div>
+            <div class="ticket-div">Division ${div}</div>
+          </div>
+          <div class="ticket-verdict">
+            <div class="verdict-badge ${vc}">${vl}</div>
+            ${points && points !== '0' ? `<div style="font-size:11px;color:var(--text-faint);margin-top:4px;text-align:right;">${points} pts</div>` : ''}
+          </div>
+        </div>
+
+        <div class="ticket-detail" id="${ticketId}">
+          ${description ? `<div class="detail-section">
+            <div class="detail-label">Ticket description</div>
+            <div class="detail-text">${description}</div>
+          </div>` : ''}
+
+          ${evLinks.length > 0 ? `<div class="detail-section">
+            <div class="detail-label">Evidence</div>
+            <div class="evidence-links">
+              ${evLinks.map((e,i) => `<a href="${e.trim()}" target="_blank" class="evidence-link">Video ${i+1} ↗</a>`).join('')}
+            </div>
+          </div>` : ''}
+
+          ${defence ? `<div class="detail-section">
+            <div class="detail-label">Defence</div>
+            <div class="detail-text">${defence}</div>
+          </div>` : ''}
+
+          ${devLinks.length > 0 ? `<div class="detail-section">
+            <div class="detail-label">Defence evidence</div>
+            <div class="evidence-links">
+              ${devLinks.map((e,i) => `<a href="${e.trim()}" target="_blank" class="evidence-link">Video ${i+1} ↗</a>`).join('')}
+            </div>
+          </div>` : ''}
+
+          ${evaluation ? `<div class="detail-section">
+            <div class="detail-label">Stewards evaluation</div>
+            <div class="detail-text" style="border-left:3px solid var(--red);padding-left:14px;">${evaluation}</div>
+          </div>` : ''}
+
+          <div class="detail-section">
+            <div class="detail-label">Outcomes</div>
+            <div class="outcome-grid">
+              <div class="outcome-box">
+                <div class="outcome-role">Submitter</div>
+                <div class="outcome-driver">${submitter}</div>
+                <div class="outcome-penalty">${submitterOutcome || 'No action'}</div>
+                <div class="outcome-pts ${parseFloat(submitterPoints) > 0 ? 'pts-added' : 'pts-none'}">
+                  ${parseFloat(submitterPoints) > 0 ? `+${submitterPoints} licence pts` : 'No points added'}
+                </div>
+              </div>
+              <div class="outcome-box">
+                <div class="outcome-role">Offender</div>
+                <div class="outcome-driver">${offender}</div>
+                <div class="outcome-penalty">${offenderOutcome || penalty || 'No action'}</div>
+                <div class="outcome-pts ${parseFloat(offenderPoints) > 0 ? 'pts-added' : 'pts-none'}">
+                  ${parseFloat(offenderPoints) > 0 ? `+${offenderPoints} licence pts` : 'No points added'}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    });
+
+    html += `</div></div>`;
+  });
+
+  content.innerHTML = html;
+
+  // Open the first (most recent) race by default
+  if (raceOrder.length > 0) toggleRace(0);
+}
+
+function toggleRace(idx) {
+  const body = document.getElementById(`race-body-${idx}`);
+  const header = document.getElementById(`race-header-${idx}`);
+  const chevron = document.getElementById(`race-chevron-${idx}`);
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  header.classList.toggle('open', !isOpen);
+  chevron.classList.toggle('open', !isOpen);
+}
+
+function toggleTicket(id) {
+  const detail = document.getElementById(id);
+  detail.classList.toggle('open');
+}
+
+function filterDiv(div, btn) {
+  currentFilter = div;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  updateMeta();
+  renderTickets();
+}
+
+function toggleMenu() {
+  document.getElementById('mobile-menu').classList.toggle('open');
+  document.getElementById('hamburger').classList.toggle('open');
+}
+
+loadTickets();
+</script>
+</body>
+</html>
