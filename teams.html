@@ -264,7 +264,13 @@ async function loadTeams() {
     const winnerData = {}; // winnerData[season] = { tpWinner, tpTeam, driverWinners{col:name}, constructorWinners{col:name}, teamWinners{col:name} }
     let currentSeason = null;
 
-    for (let i = 1; i < rows.length; i++) {
+    // Find start row - skip any header row containing "Season" in col A
+    let startRow = 0;
+    for (let i = 0; i < Math.min(rows.length, 3); i++) {
+      if ((rows[i][0] || '').trim().toLowerCase() === 'season') { startRow = i + 1; break; }
+    }
+
+    for (let i = startRow; i < rows.length; i++) {
       const row = rows[i];
       const col0 = (row[0] || '').trim();
       const col1 = (row[1] || '').trim();
@@ -284,20 +290,19 @@ async function loadTeams() {
           wd.tpTeam = col1;
           wd.tpWinner = col2;
         } else if (rowLabel === 'driver winner') {
-          // Driver name appears in the division column
           for (let c = 3; c < row.length; c++) {
             const v = (row[c] || '').trim();
-            if (v) wd.driverWinners[c] = v;
+            if (v) wd.driverWinners[String(c)] = v;
           }
         } else if (rowLabel === 'league constructor winner') {
           for (let c = 3; c < row.length; c++) {
             const v = (row[c] || '').trim();
-            if (v) wd.constructorWinners[c] = v;
+            if (v) wd.constructorWinners[String(c)] = v;
           }
         } else if (rowLabel === 'team winner') {
           for (let c = 3; c < row.length; c++) {
             const v = (row[c] || '').trim();
-            if (v) wd.teamWinners[c] = v;
+            if (v) wd.teamWinners[String(c)] = v;
           }
         }
         continue;
@@ -347,6 +352,9 @@ async function loadTeams() {
       html += '</div>';
     }
 
+    // Debug: log winner data
+    console.log('Winner data:', JSON.stringify(winnerData, null, 2));
+    console.log('Seasons:', Object.keys(seasons));
     document.getElementById('content').innerHTML = `<div class="content">${html}</div>`;
 
   } catch(e) {
