@@ -10,13 +10,11 @@
   :root {
     --red:#E10600;--black:#090909;--dark:#111111;--dark2:#181818;--dark3:#1f1f1f;
     --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
-    --text:#ffffff;--text-muted:rgba(255,255,255,0.45);--text-faint:rgba(255,255,255,0.18);
+    --text:#ffffff;--text-muted:rgba(255,255,255,0.45);--text-faint:rgba(255,255,255,0.12);
     --gold:#E8B84B;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
   body{background:var(--black);color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;}
-
-  /* NAV */
   nav{background:rgba(9,9,9,0.97);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;}
   .nav-left{display:flex;align-items:center;gap:14px;flex-shrink:0;}
   .nav-logo{background:var(--red);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;padding:5px 11px;border-radius:3px;text-decoration:none;}
@@ -44,83 +42,69 @@
   .mobile-divider{height:1px;background:var(--border);margin:12px 24px;}
   @media(max-width:860px){.nav-links{display:none;}.nav-title{display:none;}.nav-hamburger{display:flex;}}
   @media(min-width:861px){.mobile-menu{display:none !important;}}
-
-  /* PAGE HEADER */
   .page-header{background:var(--dark);border-bottom:1px solid var(--border);padding:24px;}
   .page-eyebrow{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:2.5px;color:var(--red);text-transform:uppercase;font-weight:600;margin-bottom:4px;}
   .page-title{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:700;text-transform:uppercase;line-height:1;}
-  .page-meta{font-size:13px;color:var(--text-muted);margin-top:6px;}
-
-  /* DISCLAIMER */
-  .disclaimer{margin:16px 24px 0;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--text-faint);line-height:1.5;}
-
-  /* SCHEDULE */
+  .page-meta{font-size:13px;color:rgba(255,255,255,0.45);margin-top:6px;}
+  .disclaimer{margin:16px 24px 0;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:6px;font-size:12px;color:rgba(255,255,255,0.25);}
   .schedule{padding:20px 24px 48px;max-width:960px;}
   .loading-msg{text-align:center;padding:48px;color:var(--text-muted);font-size:14px;}
 
-  /* NEXT RACE FEATURE */
-  .next-race{background:var(--dark2);border:1px solid var(--border2);border-top:3px solid var(--red);border-radius:8px;padding:20px;margin-bottom:24px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;}
-  .next-race-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--red);font-weight:600;margin-bottom:4px;}
-  .next-race-name{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;text-transform:uppercase;line-height:1;}
-  .next-race-date{font-size:14px;color:var(--text-muted);margin-top:4px;}
-  .next-race-right{margin-left:auto;text-align:right;}
-  .next-race-round{font-family:'Barlow Condensed',sans-serif;font-size:48px;font-weight:700;color:rgba(255,255,255,0.06);line-height:1;}
-  .next-race-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(225,6,0,0.12);border:1px solid rgba(225,6,0,0.25);border-radius:4px;padding:4px 10px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--red);}
-  .pulse{width:6px;height:6px;background:var(--red);border-radius:50%;animation:pulse 1.5s ease-in-out infinite;}
-  @keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.5;transform:scale(0.8);}}
+  /* NEXT RACE HERO */
+  .next-hero{position:relative;background:var(--dark2);border:1px solid var(--border2);border-top:3px solid var(--red);border-radius:10px;padding:24px 24px 24px 24px;margin-bottom:28px;overflow:hidden;min-height:120px;}
+  .next-hero-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:var(--red);font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+  .next-hero-name{font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:700;text-transform:uppercase;line-height:1;margin-bottom:3px;}
+  .next-hero-circuit{font-size:13px;color:var(--text-muted);margin-bottom:8px;}
+  .next-hero-date{font-size:15px;color:rgba(255,255,255,0.7);}
+  .next-hero-badges{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;}
+  .next-hero-visual{position:absolute;right:0;top:0;bottom:0;width:200px;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+  .next-hero-flag{font-size:80px;position:absolute;right:20px;bottom:-10px;opacity:0.18;line-height:1;}
+  .next-hero-circuit-svg{position:absolute;right:10px;top:50%;transform:translateY(-50%);opacity:0.08;}
 
-  /* TRACK STATS */
-  .track-stats{display:flex;gap:16px;margin-top:14px;flex-wrap:wrap;}
-  .track-stat{text-align:center;background:var(--dark3);border-radius:6px;padding:8px 14px;}
-  .track-stat-val{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--text);}
-  .track-stat-label{font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-faint);margin-top:1px;}
-
-  /* ROUNDS LIST */
-  .rounds-section-title{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border);}
-
-  .round-card{display:flex;align-items:stretch;background:var(--dark2);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;overflow:hidden;transition:border-color 0.2s;cursor:pointer;}
-  .round-card:hover{border-color:rgba(255,255,255,0.15);}
-  .round-card.completed{opacity:0.55;}
-  .round-card.completed:hover{opacity:0.75;}
-  .round-card.next{border-color:var(--red);background:rgba(225,6,0,0.04);}
-  .round-card.allstar{border-color:var(--gold);background:rgba(232,184,75,0.04);}
-
-  .round-num{display:flex;align-items:center;justify-content:center;width:52px;flex-shrink:0;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--text-faint);background:rgba(255,255,255,0.02);border-right:1px solid var(--border);}
-  .round-card.next .round-num{color:var(--red);background:rgba(225,6,0,0.05);}
-  .round-card.allstar .round-num{color:var(--gold);}
-
-  .round-body{flex:1;padding:12px 16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
-  .round-name{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;}
-  .round-card.completed .round-name{color:var(--text-muted);}
-  .round-date{font-size:12px;color:var(--text-muted);}
-  .round-badges{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto;}
-
-  .badge{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;padding:3px 8px;border-radius:3px;}
-  .badge-sprint{background:rgba(100,150,255,0.15);color:rgba(100,150,255,0.9);border:1px solid rgba(100,150,255,0.2);}
-  .badge-done{background:rgba(255,255,255,0.06);color:var(--text-faint);border:1px solid var(--border);}
-  .badge-next{background:rgba(225,6,0,0.12);color:var(--red);border:1px solid rgba(225,6,0,0.25);}
-  .badge-tbc{background:rgba(255,255,255,0.04);color:var(--text-faint);border:1px solid var(--border);font-style:italic;}
+  .badge{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;padding:4px 10px;border-radius:3px;}
+  .badge-round{background:rgba(225,6,0,0.12);color:var(--red);border:1px solid rgba(225,6,0,0.25);display:inline-flex;align-items:center;gap:5px;}
+  .badge-sprint{background:rgba(100,150,255,0.15);color:rgba(130,170,255,0.9);border:1px solid rgba(100,150,255,0.2);}
+  .badge-done{background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.3);border:1px solid var(--border);}
   .badge-allstar{background:rgba(232,184,75,0.12);color:var(--gold);border:1px solid rgba(232,184,75,0.25);}
+  .badge-next{background:rgba(225,6,0,0.12);color:var(--red);border:1px solid rgba(225,6,0,0.25);display:inline-flex;align-items:center;gap:4px;}
+  .pulse{width:6px;height:6px;background:var(--red);border-radius:50%;flex-shrink:0;animation:pulse 1.5s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(0.7);}}
 
-  /* EXPANDED TRACK INFO */
-  .round-expanded{display:none;border-top:1px solid var(--border);padding:14px 16px 14px 68px;background:rgba(255,255,255,0.01);}
-  .round-expanded.open{display:block;}
-  .round-track-stats{display:flex;gap:12px;flex-wrap:wrap;}
-  .round-track-stat{background:var(--dark3);border-radius:6px;padding:8px 14px;text-align:center;}
-  .round-track-stat-val{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;}
-  .round-track-stat-label{font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-faint);margin-top:1px;}
-  .round-country{font-size:12px;color:var(--text-faint);margin-top:8px;}
+  .section-title{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border);}
 
-  /* ALLSTAR SPECIAL */
-  .allstar-banner{background:rgba(232,184,75,0.06);border:1px solid rgba(232,184,75,0.15);border-radius:8px;padding:14px 18px;margin-top:24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
-  .allstar-title{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;text-transform:uppercase;color:var(--gold);}
-  .allstar-date{font-size:13px;color:var(--text-muted);}
-  .allstar-note{font-size:12px;color:var(--text-faint);margin-top:2px;}
+  /* ROUND CARD */
+  .round-card{display:flex;align-items:stretch;background:var(--dark2);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;overflow:hidden;transition:border-color 0.2s,opacity 0.2s;}
+  .round-card:hover{border-color:rgba(255,255,255,0.18);}
+  .round-card.completed{opacity:0.48;}
+  .round-card.is-next{border-color:rgba(225,6,0,0.4);background:rgba(225,6,0,0.02);}
+  .round-card.allstar{border-color:rgba(232,184,75,0.3);background:rgba(232,184,75,0.03);}
 
-  /* FOOTER */
+  .round-visual{width:80px;flex-shrink:0;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;background:rgba(255,255,255,0.025);border-right:1px solid var(--border);}
+  .round-flag{font-size:26px;position:relative;z-index:2;}
+  .round-circuit-bg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0.14;}
+  .round-circuit-bg svg{width:72px;height:72px;}
+  .round-num-overlay{position:absolute;top:4px;left:6px;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;color:rgba(255,255,255,0.18);z-index:3;line-height:1;}
+
+  .round-body{flex:1;padding:12px 16px;display:flex;align-items:center;gap:12px;}
+  .round-info{flex:1;}
+  .round-name{font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;line-height:1;margin-bottom:2px;}
+  .round-circuit-name{font-size:11px;color:rgba(255,255,255,0.3);margin-bottom:3px;}
+  .round-date{font-size:12px;color:rgba(255,255,255,0.35);}
+  .round-badges{display:flex;gap:5px;flex-wrap:wrap;margin-left:auto;align-items:center;}
+
+  /* ALLSTAR */
+  .allstar-card{display:flex;align-items:stretch;background:rgba(232,184,75,0.04);border:1px solid rgba(232,184,75,0.2);border-radius:8px;margin-top:24px;overflow:hidden;}
+  .allstar-visual{width:80px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:28px;background:rgba(232,184,75,0.06);border-right:1px solid rgba(232,184,75,0.15);}
+  .allstar-body{flex:1;padding:14px 16px;}
+  .allstar-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:3px;}
+  .allstar-name{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;text-transform:uppercase;color:var(--gold);}
+  .allstar-date{font-size:12px;color:rgba(255,255,255,0.4);margin-top:2px;}
+  .allstar-time{font-size:11px;color:rgba(232,184,75,0.55);margin-top:2px;}
+  .allstar-right{padding:14px 16px;display:flex;align-items:center;}
+
   footer{background:var(--dark);border-top:1px solid var(--border);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
   .footer-logo{background:var(--red);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;padding:4px 9px;border-radius:3px;}
-  .footer-text{font-size:12px;color:var(--text-faint);}
+  .footer-text{font-size:12px;color:rgba(255,255,255,0.18);}
 </style>
 </head>
 <body>
@@ -174,9 +158,7 @@
     <a href="winners-records.html">Winners &amp; Records</a>
   </div>
   <div class="mobile-divider"></div>
-  <div class="mobile-section">
-    <a href="teams.html">Teams</a>
-  </div>
+  <div class="mobile-section"><a href="teams.html">Teams</a></div>
   <div class="mobile-divider"></div>
   <div class="mobile-section">
     <div class="mobile-section-header">Race Tickets</div>
@@ -202,10 +184,7 @@
   <div class="page-title">Season 27 Schedule</div>
   <div class="page-meta" id="page-meta">Loading...</div>
 </div>
-
-<div class="disclaimer">
-  All races start at 9:00pm BST unless otherwise announced. Check Discord for any schedule changes or postponements.
-</div>
+<div class="disclaimer">All races start at 9:00pm BST unless otherwise announced on Discord.</div>
 
 <div class="schedule" id="schedule">
   <div class="loading-msg">Loading schedule...</div>
@@ -223,45 +202,69 @@
 const SHEET_ID = '17Exg9qlJPzQNUh6egWu7SJZhWJY9AEmDw81Ab38B42I';
 const GID = '0';
 
-// Track data keyed by circuit name (lowercase)
-const TRACK_DATA = {
-  'italy':        { circuit:'Autodromo Nazionale Monza',    country:'Italy',        laps:29, length:'5.793km', corners:11 },
-  'belgium':      { circuit:'Circuit de Spa-Francorchamps', country:'Belgium',      laps:22, length:'7.004km', corners:19 },
-  'abu dhabi':    { circuit:'Yas Marina Circuit',           country:'UAE',          laps:29, length:'5.281km', corners:16 },
-  'japan':        { circuit:'Suzuka International Circuit', country:'Japan',        laps:28, length:'5.807km', corners:18 },
-  'china':        { circuit:'Shanghai International Circuit',country:'China',       laps:28, length:'5.451km', corners:16 },
-  'qatar':        { circuit:'Lusail International Circuit', country:'Qatar',        laps:29, length:'5.380km', corners:16 },
-  'saudi arabia': { circuit:'Jeddah Corniche Circuit',      country:'Saudi Arabia', laps:27, length:'6.174km', corners:27 },
-  'austria':      { circuit:'Red Bull Ring',                country:'Austria',      laps:32, length:'4.318km', corners:10 },
-  'britain':      { circuit:'Silverstone Circuit',          country:'Great Britain',laps:26, length:'5.891km', corners:18 },
-  'canada':       { circuit:'Circuit Gilles Villeneuve',    country:'Canada',       laps:35, length:'4.361km', corners:14 },
-  'singapore':    { circuit:'Marina Bay Street Circuit',    country:'Singapore',    laps:23, length:'4.940km', corners:19 },
-  'australia':    { circuit:'Albert Park Circuit',          country:'Australia',    laps:29, length:'5.278km', corners:16 },
-  'hungary':      { circuit:'Hungaroring',                  country:'Hungary',      laps:31, length:'4.381km', corners:14 },
-  'brazil':       { circuit:'Autodromo José Carlos Pace',   country:'Brazil',       laps:29, length:'4.309km', corners:15 },
-  'azerbaijan':   { circuit:'Baku City Circuit',            country:'Azerbaijan',   laps:24, length:'6.003km', corners:20 },
-  'netherlands':  { circuit:'Circuit Zandvoort',            country:'Netherlands',  laps:32, length:'4.259km', corners:14 },
-  'bahrain':      { circuit:'Bahrain International Circuit',country:'Bahrain',      laps:29, length:'5.412km', corners:15 },
-  'miami':        { circuit:'Miami International Autodrome',country:'USA',          laps:28, length:'5.412km', corners:19 },
-  'monaco':       { circuit:'Circuit de Monaco',            country:'Monaco',       laps:42, length:'3.337km', corners:19 },
-  'spain':        { circuit:'Circuit de Barcelona-Catalunya',country:'Spain',       laps:28, length:'4.675km', corners:14 },
+const TRACKS = {
+  'italy':        { flag:'🇮🇹', name:'Autodromo Nazionale Monza', country:'Italy',
+    path:'M40,20 L40,60 L55,70 L55,55 L65,55 L65,70 L75,70 L75,30 L65,20 L55,20 L55,35 L45,35 L40,20' },
+  'belgium':      { flag:'🇧🇪', name:'Circuit de Spa-Francorchamps', country:'Belgium',
+    path:'M20,55 L30,40 L45,35 L60,40 L65,30 L72,38 L65,52 L55,57 L50,67 L38,67 L28,60 L20,55' },
+  'abu dhabi':    { flag:'🇦🇪', name:'Yas Marina Circuit', country:'UAE',
+    path:'M20,50 L20,33 L35,23 L57,23 L67,35 L67,47 L57,52 L45,52 L45,62 L57,62 L62,57 L67,62 L60,68 L38,68 L28,60 L20,50' },
+  'japan':        { flag:'🇯🇵', name:'Suzuka International Circuit', country:'Japan',
+    path:'M50,18 L62,30 L57,46 L43,46 L38,33 L45,22 L50,18 M43,46 L33,57 L33,67 L50,72 L62,67 L67,57 L57,46' },
+  'china':        { flag:'🇨🇳', name:'Shanghai International Circuit', country:'China',
+    path:'M25,42 L25,23 L62,23 L72,35 L67,47 L50,52 L50,62 L67,67 L72,60 M25,42 L30,57 L25,67 L37,72 L50,67 L50,52' },
+  'qatar':        { flag:'🇶🇦', name:'Lusail International Circuit', country:'Qatar',
+    path:'M50,13 A37,37 0 1,1 49,13 M50,13 L50,32' },
+  'saudi arabia': { flag:'🇸🇦', name:'Jeddah Corniche Circuit', country:'Saudi Arabia',
+    path:'M30,18 L30,67 L36,72 L42,67 L42,55 L47,50 L52,55 L52,67 L58,72 L63,67 L63,18 L57,13 L52,18 L52,30 L47,37 L42,30 L42,18 L36,13 L30,18' },
+  'austria':      { flag:'🇦🇹', name:'Red Bull Ring', country:'Austria',
+    path:'M35,62 L35,33 L47,23 L57,23 L67,35 L67,47 L57,52 L45,52 L45,62 L35,62' },
+  'britain':      { flag:'🇬🇧', name:'Silverstone Circuit', country:'Great Britain',
+    path:'M22,47 L22,30 L40,18 L62,18 L72,30 L72,47 L62,57 L55,52 L45,52 L38,57 L22,47' },
+  'canada':       { flag:'🇨🇦', name:'Circuit Gilles Villeneuve', country:'Canada',
+    path:'M42,18 L42,30 L28,30 L23,42 L23,57 L30,63 L42,63 L47,68 L57,68 L63,63 L63,50 L50,45 L50,33 L63,28 L63,18 L42,18' },
+  'singapore':    { flag:'🇸🇬', name:'Marina Bay Street Circuit', country:'Singapore',
+    path:'M23,52 L23,28 L35,18 L57,18 L67,30 L67,47 L57,52 L45,52 L45,63 L57,68 L67,62 M23,52 L28,63 L23,68 L35,72 L45,67 L45,52' },
+  'australia':    { flag:'🇦🇺', name:'Albert Park Circuit', country:'Australia',
+    path:'M50,18 A32,32 0 1,1 50,82 A32,32 0 1,1 50,18 M38,35 L50,28 L62,35 L62,55 L50,62 L38,55 Z' },
+  'hungary':      { flag:'🇭🇺', name:'Hungaroring', country:'Hungary',
+    path:'M23,57 L28,35 L45,23 L57,28 L63,47 L57,57 L45,62 L40,55 L40,45 L52,40 L52,52 L45,57 L33,57 L28,62 L23,57' },
+  'brazil':       { flag:'🇧🇷', name:'Autodromo José Carlos Pace', country:'Brazil',
+    path:'M28,57 L23,40 L28,23 L50,18 L67,30 L67,47 L57,57 L45,57 L38,63 L45,68 L62,68 L67,62' },
+  'azerbaijan':   { flag:'🇦🇿', name:'Baku City Circuit', country:'Azerbaijan',
+    path:'M18,52 L18,28 L28,18 L67,18 L72,25 L67,37 L33,37 L28,43 L28,58 L33,63 L67,63 L72,57 L72,52' },
+  'netherlands':  { flag:'🇳🇱', name:'Circuit Zandvoort', country:'Netherlands',
+    path:'M33,57 L22,45 L22,28 L35,18 L57,18 L68,30 L68,47 L57,57 L33,57' },
+  'bahrain':      { flag:'🇧🇭', name:'Bahrain International Circuit', country:'Bahrain',
+    path:'M23,62 L23,40 L28,28 L45,18 L62,25 L67,37 L62,53 L50,57 L45,52 L38,57 L38,67 L50,72 L63,67 L68,57' },
 };
 
-const today = new Date();
-today.setHours(0,0,0,0);
+const today = new Date(); today.setHours(0,0,0,0);
 
-function parseDate(str) {
-  if (!str || !str.trim()) return null;
-  const parts = str.trim().split('/');
-  if (parts.length !== 3) return null;
-  return new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+function parseDate(s) {
+  if (!s||!s.trim()) return null;
+  const p=s.trim().split('/');
+  if (p.length!==3) return null;
+  return new Date(+p[2],+p[1]-1,+p[0]);
 }
 
-function formatDate(d) {
+function fmtDate(d) {
   if (!d) return 'TBC';
-  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+  const dy=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${dy[d.getDay()]} ${d.getDate()} ${mo[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+function circuitSVG(path, size=80) {
+  return `<svg viewBox="0 0 90 90" width="${size}" height="${size}"><polyline points="${path.replace(/[ML]/g,' ')}" fill="none" stroke="white" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+}
+
+function circuitPath(path, size=80) {
+  // Handle both L path and A arc commands
+  if (path.includes('A')) {
+    return `<svg viewBox="0 0 90 90" width="${size}" height="${size}"><path d="${path}" fill="none" stroke="white" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+  }
+  return `<svg viewBox="0 0 90 90" width="${size}" height="${size}"><polyline points="${path.replace(/[ML]/g,' ')}" fill="none" stroke="white" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
 }
 
 async function loadSchedule() {
@@ -270,192 +273,125 @@ async function loadSchedule() {
     const res = await fetch(url);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const text = await res.text();
-    if (text.includes('<!DOCTYPE') || text.includes('<html')) throw new Error('Sheet not published to web');
-
+    if (text.includes('<!DOCTYPE')||text.includes('<html')) throw new Error('Sheet not published');
     const rows = parseCSV(text);
-    const rounds = [];
-    let allStar = null;
 
-    for (let i = 1; i < rows.length; i++) {
-      const row = rows[i];
-      const roundRaw = (row[0] || '').trim();
-      const sprintRaw = (row[1] || '').trim().toLowerCase();
-      const dateRaw = (row[2] || '').trim();
-      const circuitRaw = (row[3] || '').trim();
+    const rounds=[], allStars=[];
 
-      if (!roundRaw) continue;
-
-      // All Star Race
-      if (roundRaw.toLowerCase().includes('all star')) {
-        allStar = { date: parseDate(dateRaw), dateRaw };
-        continue;
-      }
-
-      const roundNum = parseInt(roundRaw);
-      if (isNaN(roundNum)) continue;
-
-      const date = parseDate(dateRaw);
-      const isSprint = sprintRaw === 'sprint';
-      const circuit = circuitRaw.toLowerCase();
-      const trackInfo = TRACK_DATA[circuit] || null;
-
-      rounds.push({ round: roundNum, date, dateRaw, circuit: circuitRaw, isSprint, trackInfo });
+    for (let i=1;i<rows.length;i++) {
+      const row=rows[i];
+      const r0=(row[0]||'').trim(), r1=(row[1]||'').trim().toLowerCase();
+      const r2=(row[2]||'').trim(), r3=(row[3]||'').trim();
+      if (!r0) continue;
+      if (r0.toLowerCase().includes('all star')) { allStars.push({date:parseDate(r2)}); continue; }
+      const num=parseInt(r0);
+      if (isNaN(num)) continue;
+      const date=parseDate(r2);
+      // Skip if no date AND no circuit name
+      if (!date && !r3) continue;
+      rounds.push({round:num, date, circuit:r3, isSprint:r1==='sprint', track:TRACKS[r3.toLowerCase()]||null});
     }
 
-    // Determine next race
-    let nextIdx = -1;
-    for (let i = 0; i < rounds.length; i++) {
-      if (rounds[i].date && rounds[i].date >= today) {
-        nextIdx = i;
-        break;
-      }
-    }
+    const completed=rounds.filter(r=>r.date&&r.date<today);
+    const upcoming=rounds.filter(r=>!r.date||r.date>=today);
+    const next=upcoming[0]||null;
 
-    // Update meta
-    const total = rounds.filter(r => r.date).length;
-    const completed = rounds.filter(r => r.date && r.date < today).length;
-    document.getElementById('page-meta').textContent = `${total} rounds · ${completed} completed · ${total - completed} remaining`;
+    document.getElementById('page-meta').textContent =
+      `${rounds.length} rounds · ${completed.length} completed · ${upcoming.length} remaining`;
 
-    renderSchedule(rounds, nextIdx, allStar);
+    let html='';
 
-  } catch(e) {
-    document.getElementById('schedule').innerHTML = `<div class="loading-msg">Could not load schedule: ${e.message}</div>`;
-    console.error(e);
-  }
-}
-
-function renderSchedule(rounds, nextIdx, allStar) {
-  const el = document.getElementById('schedule');
-  let html = '';
-
-  // Next race feature card
-  if (nextIdx >= 0) {
-    const nr = rounds[nextIdx];
-    const td = nr.trackInfo;
-    html += `<div class="next-race">
-      <div>
-        <div class="next-race-label">Next Race</div>
-        <div class="next-race-name">${nr.circuit} Grand Prix</div>
-        ${td ? `<div style="font-size:12px;color:var(--text-faint);margin-top:2px;">${td.circuit}</div>` : ''}
-        <div class="next-race-date">${formatDate(nr.date)}</div>
-        <div style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-          <div class="next-race-badge"><div class="pulse"></div>Round ${nr.round}</div>
-          ${nr.isSprint ? `<div class="next-race-badge" style="background:rgba(100,150,255,0.1);border-color:rgba(100,150,255,0.25);color:rgba(100,150,255,0.9);">Sprint Weekend</div>` : ''}
+    // Hero
+    if (next) {
+      const td=next.track;
+      html+=`<div class="next-hero">
+        <div class="next-hero-label"><div class="pulse"></div>Next Race</div>
+        <div class="next-hero-name">${next.circuit} Grand Prix</div>
+        ${td?`<div class="next-hero-circuit">${td.name} · ${td.country}</div>`:''}
+        <div class="next-hero-date">${fmtDate(next.date)}</div>
+        <div class="next-hero-badges">
+          <div class="badge badge-round">Round ${next.round}</div>
+          ${next.isSprint?`<div class="badge badge-sprint">Sprint Weekend</div>`:''}
         </div>
-        ${td ? `<div class="track-stats">
-          <div class="track-stat"><div class="track-stat-val">${td.laps}</div><div class="track-stat-label">Laps</div></div>
-          <div class="track-stat"><div class="track-stat-val">${td.length}</div><div class="track-stat-label">Circuit Length</div></div>
-          <div class="track-stat"><div class="track-stat-val">${td.corners}</div><div class="track-stat-label">Corners</div></div>
-        </div>` : ''}
-      </div>
-      <div class="next-race-right">
-        <div class="next-race-round">${String(nr.round).padStart(2,'0')}</div>
-      </div>
-    </div>`;
+        ${td?`<div class="next-hero-flag">${td.flag}</div>`:''}
+        ${td?`<div class="next-hero-circuit-svg">${circuitPath(td.path,180)}</div>`:''}
+      </div>`;
+    }
+
+    // Upcoming
+    if (upcoming.length) {
+      html+=`<div class="section-title">Upcoming Rounds</div>`;
+      upcoming.forEach(r=>{ html+=card(r, r===next, false); });
+    }
+
+    // Completed
+    if (completed.length) {
+      html+=`<div class="section-title" style="margin-top:24px;">Completed Rounds</div>`;
+      [...completed].reverse().forEach(r=>{ html+=card(r, false, true); });
+    }
+
+    // All Star
+    if (allStars.length) {
+      allStars.forEach(as=>{
+        const isPast=as.date&&as.date<today;
+        html+=`<div class="allstar-card" style="${isPast?'opacity:0.5':''}">
+          <div class="allstar-visual">⭐</div>
+          <div class="allstar-body">
+            <div class="allstar-label">Special Event</div>
+            <div class="allstar-name">All Star Race</div>
+            <div class="allstar-date">${fmtDate(as.date)}</div>
+            <div class="allstar-time">Starts 8:00pm BST</div>
+          </div>
+          <div class="allstar-right">
+            <div class="badge ${isPast?'badge-done':'badge-allstar'}">${isPast?'Completed':'Special Event'}</div>
+          </div>
+        </div>`;
+      });
+    }
+
+    document.getElementById('schedule').innerHTML=html;
+  } catch(e) {
+    document.getElementById('schedule').innerHTML=`<div class="loading-msg">Could not load schedule: ${e.message}</div>`;
   }
-
-  // Completed rounds
-  const completed = rounds.filter((r, i) => r.date && r.date < today);
-  const upcoming = rounds.filter((r, i) => !r.date || r.date >= today);
-
-  if (upcoming.length > 0) {
-    html += `<div class="rounds-section-title">Upcoming Rounds</div>`;
-    upcoming.forEach((r, i) => {
-      const isNext = r.date && r.date >= today && (i === 0);
-      html += renderRoundCard(r, isNext ? 'next' : 'upcoming');
-    });
-  }
-
-  if (completed.length > 0) {
-    html += `<div class="rounds-section-title" style="margin-top:24px;">Completed Rounds</div>`;
-    [...completed].reverse().forEach(r => {
-      html += renderRoundCard(r, 'completed');
-    });
-  }
-
-  // All Star Race
-  if (allStar) {
-    const aDate = allStar.date;
-    const isPast = aDate && aDate < today;
-    html += `<div class="allstar-banner" style="${isPast ? 'opacity:0.55;' : ''}">
-      <div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:4px;">Special Event</div>
-        <div class="allstar-title">All Star Race</div>
-        <div class="allstar-date">${formatDate(aDate)}</div>
-        <div class="allstar-note">Starts at 8:00pm BST</div>
-      </div>
-      ${isPast ? `<div class="badge badge-done" style="margin-left:auto;">Completed</div>` : `<div class="badge badge-allstar" style="margin-left:auto;">Special Event</div>`}
-    </div>`;
-  }
-
-  el.innerHTML = html;
 }
 
-function renderRoundCard(r, status) {
-  const isCompleted = status === 'completed';
-  const isNext = status === 'next';
-  const td = r.trackInfo;
-  const cardId = `round-${r.round}`;
-
-  return `<div class="round-card ${isCompleted ? 'completed' : ''} ${isNext ? 'next' : ''}" onclick="toggleRound('${cardId}')">
-    <div class="round-num">${r.round}</div>
+function card(r, isNext, isCompleted) {
+  const td=r.track;
+  return `<div class="round-card ${isCompleted?'completed':''} ${isNext?'is-next':''}">
+    <div class="round-visual">
+      <div class="round-num-overlay">${r.round}</div>
+      ${td?`<div class="round-circuit-bg">${circuitPath(td.path,72)}</div>`:''}
+      <div class="round-flag">${td?td.flag:'🏁'}</div>
+    </div>
     <div class="round-body">
-      <div>
+      <div class="round-info">
         <div class="round-name">${r.circuit}</div>
-        <div class="round-date">${formatDate(r.date)}</div>
+        ${td?`<div class="round-circuit-name">${td.name}</div>`:''}
+        <div class="round-date">${fmtDate(r.date)}</div>
       </div>
       <div class="round-badges">
-        ${r.isSprint ? `<div class="badge badge-sprint">Sprint</div>` : ''}
-        ${!r.date ? `<div class="badge badge-tbc">TBC</div>` : ''}
-        ${isCompleted ? `<div class="badge badge-done">Completed</div>` : ''}
-        ${isNext ? `<div class="badge badge-next">Next Race</div>` : ''}
+        ${r.isSprint?`<div class="badge badge-sprint">Sprint</div>`:''}
+        ${isCompleted?`<div class="badge badge-done">Completed</div>`:''}
+        ${isNext?`<div class="badge badge-next"><div class="pulse"></div>Next</div>`:''}
       </div>
     </div>
-  </div>
-  <div class="round-expanded" id="${cardId}">
-    ${td ? `
-    <div class="round-track-stats">
-      <div class="round-track-stat"><div class="round-track-stat-val">${td.laps}</div><div class="round-track-stat-label">Laps</div></div>
-      <div class="round-track-stat"><div class="round-track-stat-val">${td.length}</div><div class="round-track-stat-label">Length</div></div>
-      <div class="round-track-stat"><div class="round-track-stat-val">${td.corners}</div><div class="round-track-stat-label">Corners</div></div>
-    </div>
-    <div class="round-country">${td.circuit} · ${td.country}</div>
-    ` : '<div style="font-size:12px;color:var(--text-faint);">Track info not available</div>'}
   </div>`;
 }
 
-function toggleRound(id) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  const isOpen = el.classList.contains('open');
-  document.querySelectorAll('.round-expanded.open').forEach(e => e.classList.remove('open'));
-  if (!isOpen) el.classList.add('open');
-}
-
 function parseCSV(text) {
-  const rows = [];
-  let cells = [], current = '', inQuotes = false;
-  for (let i = 0; i < text.length; i++) {
-    const ch = text[i], next = text[i+1];
-    if (ch === '"') {
-      if (!inQuotes) { inQuotes = true; }
-      else if (next === '"') { current += '"'; i++; }
-      else { inQuotes = false; }
-    } else if (ch === ',' && !inQuotes) {
-      cells.push(current); current = '';
-    } else if ((ch === '\n' || (ch === '\r' && next === '\n')) && !inQuotes) {
-      if (ch === '\r') i++;
-      cells.push(current); current = '';
-      if (cells.some(c => c.trim())) rows.push(cells);
-      cells = [];
-    } else { current += ch; }
+  const rows=[]; let cells=[],current='',inQ=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i],n=text[i+1];
+    if(c==='"'){if(!inQ)inQ=true;else if(n==='"'){current+='"';i++;}else inQ=false;}
+    else if(c===','&&!inQ){cells.push(current);current='';}
+    else if((c==='\n'||(c==='\r'&&n==='\n'))&&!inQ){if(c==='\r')i++;cells.push(current);current='';if(cells.some(x=>x.trim()))rows.push(cells);cells=[];}
+    else current+=c;
   }
-  cells.push(current);
-  if (cells.some(c => c.trim())) rows.push(cells);
+  cells.push(current);if(cells.some(x=>x.trim()))rows.push(cells);
   return rows;
 }
 
-function toggleMenu() {
+function toggleMenu(){
   document.getElementById('mobile-menu').classList.toggle('open');
   document.getElementById('hamburger').classList.toggle('open');
 }
