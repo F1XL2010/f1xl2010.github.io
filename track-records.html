@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>F1XL — Track Records</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--green:#3DCC47;--teal:#5ECFCF;--red:#E10600;--black:#111816;--dark:#161d1b;--dark2:#1a2320;--dark3:#1e2a27;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);--text:#ffffff;--text-muted:rgba(255,255,255,0.60);--text-faint:rgba(255,255,255,0.30);--gold:#E8B84B;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:#111816;background-image:linear-gradient(rgba(255,255,255,0.025) 0px,rgba(255,255,255,0.025) 4px,rgba(0,0,0,0.06) 4px,rgba(0,0,0,0.06) 8px),linear-gradient(90deg,rgba(0,0,0,0.06) 0px,rgba(0,0,0,0.06) 4px,rgba(255,255,255,0.025) 4px,rgba(255,255,255,0.025) 8px);background-size:8px 8px;color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;}
+
+  nav{background:rgba(17,24,22,0.97);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;}
+  .nav-left{display:flex;align-items:center;gap:14px;flex-shrink:0;}
+  .nav-logo{background:var(--green);color:#000;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;padding:5px 11px;border-radius:3px;text-decoration:none;}
+  .nav-links{display:flex;align-items:stretch;height:56px;}
+  .nav-item{position:relative;display:flex;align-items:stretch;}
+  .nav-item>a,.nav-item>button{color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:500;letter-spacing:0.5px;padding:0 13px;display:flex;align-items:center;gap:4px;border-bottom:2px solid transparent;border-top:none;border-left:none;border-right:none;background:none;cursor:pointer;font-family:'Barlow',sans-serif;text-transform:uppercase;transition:color 0.2s;white-space:nowrap;}
+  .nav-item>a:hover,.nav-item>button:hover{color:var(--text);}
+  .nav-item>a.active{color:var(--text);border-bottom-color:var(--green);}
+  .nav-chevron{font-size:8px;opacity:0.5;transition:transform 0.2s;}
+  .nav-item:hover .nav-chevron{transform:rotate(180deg);}
+  .nav-dropdown{display:none;position:absolute;top:100%;left:0;background:#141a18;border:1px solid var(--border2);border-top:2px solid var(--green);border-radius:0 0 6px 6px;min-width:180px;padding:6px 0;z-index:300;}
+  .nav-item:hover .nav-dropdown{display:block;}
+  .nav-dropdown a{display:block;padding:9px 16px;color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;transition:color 0.15s,background 0.15s;white-space:nowrap;}
+  .nav-dropdown a:hover{color:var(--text);background:rgba(255,255,255,0.05);}
+  .nav-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:8px;background:none;border:none;}
+  .nav-hamburger span{display:block;width:22px;height:2px;background:var(--text-muted);border-radius:2px;transition:all 0.25s;}
+  .nav-hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+  .nav-hamburger.open span:nth-child(2){opacity:0;}
+  .nav-hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+  .mobile-menu{display:none;position:fixed;top:56px;left:0;right:0;bottom:0;background:#0d1210;z-index:150;overflow-y:auto;padding:16px 0 32px;}
+  .mobile-menu.open{display:block;}
+  .mobile-section-header{padding:10px 24px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--green);}
+  .mobile-section a{display:block;padding:11px 32px;color:var(--text-muted);text-decoration:none;font-size:15px;border-bottom:1px solid var(--border);}
+  .mobile-divider{height:1px;background:var(--border);margin:12px 24px;}
+  @media(max-width:860px){.nav-links{display:none;}.nav-hamburger{display:flex;}}
+  @media(min-width:861px){.mobile-menu{display:none !important;}}
+
+  .page-header{background:var(--dark);border-bottom:1px solid var(--border);padding:24px;}
+  .page-eyebrow{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:2.5px;color:var(--teal);text-transform:uppercase;font-weight:600;margin-bottom:4px;}
+  .page-title{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:700;text-transform:uppercase;line-height:1;}
+  .page-meta{font-size:13px;color:var(--text-muted);margin-top:6px;}
+
+  /* DIV TABS */
+  .div-tabs{padding:0 24px;display:flex;gap:4px;flex-wrap:wrap;background:var(--dark);border-bottom:1px solid var(--border);}
+  .div-tab{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:10px 16px;border-radius:4px 4px 0 0;border:none;background:none;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:color 0.2s;margin-bottom:-1px;}
+  .div-tab:hover{color:var(--text);}
+  .div-tab.active{color:var(--green);border-bottom-color:var(--green);}
+
+  /* CONTENT */
+  .content{padding:20px 24px 48px;max-width:900px;}
+  .loading-msg{text-align:center;padding:48px;color:var(--text-muted);font-size:14px;}
+
+  /* SEARCH */
+  .search-wrap{margin-bottom:16px;}
+  .search-input{width:100%;max-width:320px;background:var(--dark2);border:1px solid var(--border2);border-radius:6px;padding:9px 14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:13px;outline:none;transition:border-color 0.2s;}
+  .search-input:focus{border-color:var(--teal);}
+  .search-input::placeholder{color:var(--text-faint);}
+
+  /* RECORDS TABLE */
+  .records-table{width:100%;border-collapse:collapse;}
+  .records-table th{text-align:left;padding:8px 12px;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-faint);border-bottom:1px solid var(--border2);background:var(--dark);}
+  .records-table td{padding:12px 12px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text-muted);vertical-align:middle;}
+  .records-table tr:last-child td{border-bottom:none;}
+  .records-table tr:hover td{background:rgba(255,255,255,0.02);}
+
+  .circuit-name{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;color:var(--text);}
+  .lap-time{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;color:var(--green);letter-spacing:0.5px;}
+  .driver-name{font-size:13px;color:var(--text);font-weight:500;}
+  .team-name{font-size:11px;color:var(--text-muted);margin-top:1px;}
+  .record-season{font-size:11px;color:var(--text-faint);}
+  .record-date{font-size:11px;color:var(--text-faint);}
+
+  /* FLAG col */
+  .flag-cell{font-size:20px;width:40px;text-align:center;}
+
+  /* empty state */
+  .empty-state{text-align:center;padding:40px;color:var(--text-faint);font-size:13px;}
+
+  footer{background:var(--dark);border-top:1px solid var(--border);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:auto;}
+  .footer-logo{background:var(--green);color:#000;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;padding:4px 9px;border-radius:3px;}
+  .footer-text{font-size:12px;color:var(--text-faint);}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-left">
+    <a href="index.html" class="nav-logo">F1XL</a>
+  </div>
+  <div class="nav-links">
+    <div class="nav-item"><a href="index.html">Home</a></div>
+    <div class="nav-item">
+      <button>Standings <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown">
+        <a href="standings.html">Current Season</a>
+        <a href="results.html">Results</a>
+        <a href="past-seasons.html">Past Seasons</a>
+        <a href="winners-records.html">Winners &amp; Records</a>
+      </div>
+    </div>
+    <div class="nav-item"><a href="teams.html">Teams</a></div>
+    <div class="nav-item">
+      <button>Race Tickets <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown">
+        <a href="submit-ticket.html">Submit Ticket</a>
+        <a href="ticket-outcomes.html">Ticket Outcomes</a>
+        <a href="drivers-licence.html">Drivers Licence</a>
+      </div>
+    </div>
+    <div class="nav-item">
+      <button>Schedule <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown">
+        <a href="schedule.html">S27 Schedule</a>
+      </div>
+    </div>
+    <div class="nav-item"><a href="track-records.html" class="active">Track Records</a></div>
+    <div class="nav-item"><a href="applications.html">Applications</a></div>
+    <div class="nav-item"><a href="league-rules.html">League Rules</a></div>
+  </div>
+  <button class="nav-hamburger" id="hamburger" onclick="toggleMenu()">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<div class="mobile-menu" id="mobile-menu">
+  <div class="mobile-section">
+    <div class="mobile-section-header">Standings</div>
+    <a href="standings.html">Current Season</a>
+    <a href="results.html">Results</a>
+    <a href="past-seasons.html">Past Seasons</a>
+    <a href="winners-records.html">Winners &amp; Records</a>
+  </div>
+  <div class="mobile-divider"></div>
+  <div class="mobile-section"><a href="teams.html">Teams</a></div>
+  <div class="mobile-divider"></div>
+  <div class="mobile-section">
+    <div class="mobile-section-header">Race Tickets</div>
+    <a href="submit-ticket.html">Submit Ticket</a>
+    <a href="ticket-outcomes.html">Ticket Outcomes</a>
+    <a href="drivers-licence.html">Drivers Licence</a>
+  </div>
+  <div class="mobile-divider"></div>
+  <div class="mobile-section">
+    <div class="mobile-section-header">Schedule</div>
+    <a href="schedule.html">S27 Schedule</a>
+  </div>
+  <div class="mobile-divider"></div>
+  <div class="mobile-section">
+    <a href="track-records.html">Track Records</a>
+    <a href="applications.html">Applications</a>
+    <a href="league-rules.html">League Rules</a>
+  </div>
+</div>
+
+<div class="page-header">
+  <div class="page-eyebrow">F1XL</div>
+  <div class="page-title">Track Records</div>
+  <div class="page-meta" id="page-meta">Loading...</div>
+</div>
+
+<div class="div-tabs" id="div-tabs">
+  <button class="div-tab active" onclick="loadDiv(0,this)">Division 1</button>
+  <button class="div-tab" onclick="loadDiv(1,this)">Division 2</button>
+  <button class="div-tab" onclick="loadDiv(2,this)">Division 3</button>
+  <button class="div-tab" onclick="loadDiv(3,this)">Division 4</button>
+  <button class="div-tab" onclick="loadDiv(4,this)">Division 5</button>
+  <button class="div-tab" onclick="loadDiv(5,this)">Division 6</button>
+  <button class="div-tab" onclick="loadDiv(6,this)">Division 7</button>
+  <button class="div-tab" onclick="loadDiv(7,this)">Division 8</button>
+</div>
+
+<div class="content">
+  <div class="search-wrap">
+    <input type="text" class="search-input" id="search" placeholder="Search circuit or driver..." oninput="filterRecords(this.value)">
+  </div>
+  <div id="content"><div class="loading-msg">Loading track records...</div></div>
+</div>
+
+<footer>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="footer-logo">F1XL</div>
+    <div class="footer-text">The UK's longest running F1 league · Est. 2010</div>
+  </div>
+  <div class="footer-text">f1xl.co.uk</div>
+</footer>
+
+<script>
+const SHEET_ID = '18vD7g_29uzRSr_GYbXkNjclCHe8F_bsp4cY69TjXrW4';
+const GIDS = ['0','343950932','806509057','557492395','1468409556','1147341365','1917666666','468074839'];
+
+const FLAGS = {
+  'abu dhabi':'🇦🇪','australia':'🇦🇺','austria':'🇦🇹','azerbaijan':'🇦🇿',
+  'bahrain':'🇧🇭','belgium':'🇧🇪','brazil':'🇧🇷','canada':'🇨🇦',
+  'china':'🇨🇳','france':'🇫🇷','great britain':'🇬🇧','britain':'🇬🇧',
+  'hungary':'🇭🇺','imola':'🇮🇹','italy':'🇮🇹','japan':'🇯🇵',
+  'jeddah':'🇸🇦','saudi':'🇸🇦','saudi arabia':'🇸🇦',
+  'las vegas':'🇺🇸','mexico':'🇲🇽','miami':'🇺🇸','monaco':'🇲🇨',
+  'netherlands':'🇳🇱','portimao':'🇵🇹','qatar':'🇶🇦',
+  'russia':'🇷🇺','singapore':'🇸🇬','spain':'🇪🇸',
+  'united states':'🇺🇸','vietnam':'🇻🇳',
+};
+
+let allRecords = [];
+let currentDiv = 0;
+const cache = {};
+
+function getFlag(circuit) {
+  return FLAGS[circuit.toLowerCase()] || '🏁';
+}
+
+function formatDate(str) {
+  if (!str || !str.trim()) return '';
+  const p = str.trim().split('/');
+  if (p.length !== 3) return str;
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${p[0]} ${months[parseInt(p[1])-1]} ${p[2]}`;
+}
+
+async function loadDiv(idx, btn) {
+  currentDiv = idx;
+  document.querySelectorAll('.div-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('search').value = '';
+  document.getElementById('content').innerHTML = '<div class="loading-msg">Loading...</div>';
+
+  if (cache[idx]) {
+    allRecords = cache[idx];
+    renderRecords(allRecords);
+    updateMeta();
+    return;
+  }
+
+  try {
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${GIDS[idx]}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text = await res.text();
+    if (text.includes('<!DOCTYPE') || text.includes('<html')) throw new Error('Not published');
+    const rows = parseCSV(text);
+
+    const records = [];
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      const circuit = (row[0]||'').trim();
+      const time    = (row[1]||'').trim();
+      const driver  = (row[2]||'').trim();
+      const team    = (row[3]||'').trim();
+      const date    = (row[4]||'').trim();
+      const season  = (row[5]||'').trim();
+      if (!circuit || !time) continue;
+      records.push({ circuit, time, driver, team, date, season });
+    }
+
+    records.sort((a,b) => a.circuit.localeCompare(b.circuit));
+    cache[idx] = records;
+    allRecords = records;
+    renderRecords(records);
+    updateMeta();
+
+  } catch(e) {
+    document.getElementById('content').innerHTML = `<div class="loading-msg">Could not load records: ${e.message}</div>`;
+  }
+}
+
+function updateMeta() {
+  document.getElementById('page-meta').textContent =
+    `${allRecords.length} circuit record${allRecords.length !== 1 ? 's' : ''} · Division ${currentDiv + 1}`;
+}
+
+function renderRecords(records) {
+  if (records.length === 0) {
+    document.getElementById('content').innerHTML = '<div class="empty-state">No records found</div>';
+    return;
+  }
+
+  let html = `<table class="records-table">
+    <thead>
+      <tr>
+        <th style="width:40px;"></th>
+        <th>Circuit</th>
+        <th>Lap Time</th>
+        <th>Driver</th>
+        <th>Season</th>
+      </tr>
+    </thead>
+    <tbody>`;
+
+  records.forEach(r => {
+    html += `<tr>
+      <td class="flag-cell">${getFlag(r.circuit)}</td>
+      <td><div class="circuit-name">${r.circuit}</div></td>
+      <td><div class="lap-time">${r.time}</div></td>
+      <td>
+        <div class="driver-name">${r.driver || '—'}</div>
+        <div class="team-name">${r.team || ''}</div>
+        <div class="record-date">${formatDate(r.date)}</div>
+      </td>
+      <td><div class="record-season">S${r.season}</div></td>
+    </tr>`;
+  });
+
+  html += '</tbody></table>';
+  document.getElementById('content').innerHTML = html;
+}
+
+function filterRecords(query) {
+  if (!query.trim()) {
+    renderRecords(allRecords);
+    return;
+  }
+  const q = query.toLowerCase();
+  const filtered = allRecords.filter(r =>
+    r.circuit.toLowerCase().includes(q) ||
+    r.driver.toLowerCase().includes(q) ||
+    r.team.toLowerCase().includes(q)
+  );
+  renderRecords(filtered);
+}
+
+function parseCSV(text) {
+  const rows=[]; let cells=[],current='',inQ=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i],n=text[i+1];
+    if(c==='"'){if(!inQ)inQ=true;else if(n==='"'){current+='"';i++;}else inQ=false;}
+    else if(c===','&&!inQ){cells.push(current);current='';}
+    else if((c==='\n'||(c==='\r'&&n==='\n'))&&!inQ){if(c==='\r')i++;cells.push(current);current='';if(cells.some(x=>x.trim()))rows.push(cells);cells=[];}
+    else current+=c;
+  }
+  cells.push(current);if(cells.some(x=>x.trim()))rows.push(cells);
+  return rows;
+}
+
+function toggleMenu(){
+  document.getElementById('mobile-menu').classList.toggle('open');
+  document.getElementById('hamburger').classList.toggle('open');
+}
+
+loadDiv(0, document.querySelector('.div-tab'));
+</script>
+</body>
+</html>
