@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>F1XL — Season 27 Schedule</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red:#E10600;--black:#090909;--dark:#111111;--dark2:#181818;--dark3:#1f1f1f;
+    --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+    --text:#ffffff;--text-muted:rgba(255,255,255,0.45);--text-faint:rgba(255,255,255,0.18);
+    --gold:#E8B84B;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--black);color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;}
+
+  /* NAV */
+  nav{background:rgba(9,9,9,0.97);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;}
+  .nav-left{display:flex;align-items:center;gap:14px;flex-shrink:0;}
+  .nav-logo{background:var(--red);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;padding:5px 11px;border-radius:3px;text-decoration:none;}
+  .nav-title{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:500;letter-spacing:1px;color:var(--text-muted);text-transform:uppercase;}
+  .nav-links{display:flex;align-items:stretch;height:56px;}
+  .nav-item{position:relative;display:flex;align-items:stretch;}
+  .nav-item>a,.nav-item>button{color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:500;letter-spacing:0.5px;padding:0 13px;display:flex;align-items:center;gap:4px;border-bottom:2px solid transparent;border-top:none;border-left:none;border-right:none;background:none;cursor:pointer;font-family:'Barlow',sans-serif;text-transform:uppercase;transition:color 0.2s;white-space:nowrap;}
+  .nav-item>a:hover,.nav-item>button:hover{color:var(--text);}
+  .nav-item>a.active,.nav-item>button.active{color:var(--text);border-bottom-color:var(--red);}
+  .nav-chevron{font-size:8px;opacity:0.5;transition:transform 0.2s;}
+  .nav-item:hover .nav-chevron{transform:rotate(180deg);}
+  .nav-dropdown{display:none;position:absolute;top:100%;left:0;background:#141414;border:1px solid var(--border2);border-top:2px solid var(--red);border-radius:0 0 6px 6px;min-width:180px;padding:6px 0;z-index:300;}
+  .nav-item:hover .nav-dropdown{display:block;}
+  .nav-dropdown a{display:block;padding:9px 16px;color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;transition:color 0.15s,background 0.15s;white-space:nowrap;}
+  .nav-dropdown a:hover{color:var(--text);background:rgba(255,255,255,0.05);}
+  .nav-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:8px;background:none;border:none;}
+  .nav-hamburger span{display:block;width:22px;height:2px;background:var(--text-muted);border-radius:2px;transition:all 0.25s;}
+  .nav-hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+  .nav-hamburger.open span:nth-child(2){opacity:0;}
+  .nav-hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+  .mobile-menu{display:none;position:fixed;top:56px;left:0;right:0;bottom:0;background:#0d0d0d;z-index:150;overflow-y:auto;padding:16px 0 32px;}
+  .mobile-menu.open{display:block;}
+  .mobile-section-header{padding:10px 24px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--red);}
+  .mobile-section a{display:block;padding:11px 32px;color:var(--text-muted);text-decoration:none;font-size:15px;border-bottom:1px solid var(--border);}
+  .mobile-divider{height:1px;background:var(--border);margin:12px 24px;}
+  @media(max-width:860px){.nav-links{display:none;}.nav-title{display:none;}.nav-hamburger{display:flex;}}
+  @media(min-width:861px){.mobile-menu{display:none !important;}}
+
+  /* PAGE HEADER */
+  .page-header{background:var(--dark);border-bottom:1px solid var(--border);padding:24px;}
+  .page-eyebrow{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:2.5px;color:var(--red);text-transform:uppercase;font-weight:600;margin-bottom:4px;}
+  .page-title{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:700;text-transform:uppercase;line-height:1;}
+  .page-meta{font-size:13px;color:var(--text-muted);margin-top:6px;}
+
+  /* DISCLAIMER */
+  .disclaimer{margin:16px 24px 0;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--text-faint);line-height:1.5;}
+
+  /* SCHEDULE */
+  .schedule{padding:20px 24px 48px;max-width:960px;}
+  .loading-msg{text-align:center;padding:48px;color:var(--text-muted);font-size:14px;}
+
+  /* NEXT RACE FEATURE */
+  .next-race{background:var(--dark2);border:1px solid var(--border2);border-top:3px solid var(--red);border-radius:8px;padding:20px;margin-bottom:24px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;}
+  .next-race-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--red);font-weight:600;margin-bottom:4px;}
+  .next-race-name{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;text-transform:uppercase;line-height:1;}
+  .next-race-date{font-size:14px;color:var(--text-muted);margin-top:4px;}
+  .next-race-right{margin-left:auto;text-align:right;}
+  .next-race-round{font-family:'Barlow Condensed',sans-serif;font-size:48px;font-weight:700;color:rgba(255,255,255,0.06);line-height:1;}
+  .next-race-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(225,6,0,0.12);border:1px solid rgba(225,6,0,0.25);border-radius:4px;padding:4px 10px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--red);}
+  .pulse{width:6px;height:6px;background:var(--red);border-radius:50%;animation:pulse 1.5s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.5;transform:scale(0.8);}}
+
+  /* TRACK STATS */
+  .track-stats{display:flex;gap:16px;margin-top:14px;flex-wrap:wrap;}
+  .track-stat{text-align:center;background:var(--dark3);border-radius:6px;padding:8px 14px;}
+  .track-stat-val{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--text);}
+  .track-stat-label{font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-faint);margin-top:1px;}
+
+  /* ROUNDS LIST */
+  .rounds-section-title{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+
+  .round-card{display:flex;align-items:stretch;background:var(--dark2);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;overflow:hidden;transition:border-color 0.2s;cursor:pointer;}
+  .round-card:hover{border-color:rgba(255,255,255,0.15);}
+  .round-card.completed{opacity:0.55;}
+  .round-card.completed:hover{opacity:0.75;}
+  .round-card.next{border-color:var(--red);background:rgba(225,6,0,0.04);}
+  .round-card.allstar{border-color:var(--gold);background:rgba(232,184,75,0.04);}
+
+  .round-num{display:flex;align-items:center;justify-content:center;width:52px;flex-shrink:0;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--text-faint);background:rgba(255,255,255,0.02);border-right:1px solid var(--border);}
+  .round-card.next .round-num{color:var(--red);background:rgba(225,6,0,0.05);}
+  .round-card.allstar .round-num{color:var(--gold);}
+
+  .round-body{flex:1;padding:12px 16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+  .round-name{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;}
+  .round-card.completed .round-name{color:var(--text-muted);}
+  .round-date{font-size:12px;color:var(--text-muted);}
+  .round-badges{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto;}
+
+  .badge{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;padding:3px 8px;border-radius:3px;}
+  .badge-sprint{background:rgba(100,150,255,0.15);color:rgba(100,150,255,0.9);border:1px solid rgba(100,150,255,0.2);}
+  .badge-done{background:rgba(255,255,255,0.06);color:var(--text-faint);border:1px solid var(--border);}
+  .badge-next{background:rgba(225,6,0,0.12);color:var(--red);border:1px solid rgba(225,6,0,0.25);}
+  .badge-tbc{background:rgba(255,255,255,0.04);color:var(--text-faint);border:1px solid var(--border);font-style:italic;}
+  .badge-allstar{background:rgba(232,184,75,0.12);color:var(--gold);border:1px solid rgba(232,184,75,0.25);}
+
+  /* EXPANDED TRACK INFO */
+  .round-expanded{display:none;border-top:1px solid var(--border);padding:14px 16px 14px 68px;background:rgba(255,255,255,0.01);}
+  .round-expanded.open{display:block;}
+  .round-track-stats{display:flex;gap:12px;flex-wrap:wrap;}
+  .round-track-stat{background:var(--dark3);border-radius:6px;padding:8px 14px;text-align:center;}
+  .round-track-stat-val{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;}
+  .round-track-stat-label{font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-faint);margin-top:1px;}
+  .round-country{font-size:12px;color:var(--text-faint);margin-top:8px;}
+
+  /* ALLSTAR SPECIAL */
+  .allstar-banner{background:rgba(232,184,75,0.06);border:1px solid rgba(232,184,75,0.15);border-radius:8px;padding:14px 18px;margin-top:24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+  .allstar-title{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;text-transform:uppercase;color:var(--gold);}
+  .allstar-date{font-size:13px;color:var(--text-muted);}
+  .allstar-note{font-size:12px;color:var(--text-faint);margin-top:2px;}
+
+  /* FOOTER */
+  footer{background:var(--dark);border-top:1px solid var(--border);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+  .footer-logo{background:var(--red);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;padding:4px 9px;border-radius:3px;}
+  .footer-text{font-size:12px;color:var(--text-faint);}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-left">
+    <a href="index.html" class="nav-logo">F1XL</a>
+    <div class="nav-title">Formula Xbox Leagues</div>
+  </div>
+  <div class="nav-links">
+    <div class="nav-item"><a href="index.html">Home</a></div>
+    <div class="nav-item">
+      <button>Standings <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown">
+        <a href="standings.html">Current Season</a>
+        <a href="results.html">Results</a>
+        <a href="past-seasons.html">Past Seasons</a>
+        <a href="winners-records.html">Winners &amp; Records</a>
+      </div>
+    </div>
+    <div class="nav-item"><a href="teams.html">Teams</a></div>
+    <div class="nav-item">
+      <button>Race Tickets <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown">
+        <a href="submit-ticket.html">Submit Ticket</a>
+        <a href="ticket-outcomes.html">Ticket Outcomes</a>
+        <a href="drivers-licence.html">Drivers Licence</a>
+      </div>
+    </div>
+    <div class="nav-item">
+      <button class="active">Schedule <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown">
+        <a href="schedule.html">S27 Schedule</a>
+      </div>
+    </div>
+    <div class="nav-item"><a href="track-records.html">Track Records</a></div>
+    <div class="nav-item"><a href="applications.html">Applications</a></div>
+    <div class="nav-item"><a href="league-rules.html">League Rules</a></div>
+  </div>
+  <button class="nav-hamburger" id="hamburger" onclick="toggleMenu()">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<div class="mobile-menu" id="mobile-menu">
+  <div class="mobile-section">
+    <div class="mobile-section-header">Standings</div>
+    <a href="standings.html">Current Season</a>
+    <a href="results.html">Results</a>
+    <a href="past-seasons.html">Past Seasons</a>
+    <a href="winners-records.html">Winners &amp; Records</a>
+  </div>
+  <div class="mobile-divider"></div>
+  <div class="mobile-section">
+    <a href="teams.html">Teams</a>
+  </div>
+  <div class="mobile-divider"></div>
+  <div class="mobile-section">
+    <div class="mobile-section-header">Race Tickets</div>
+    <a href="submit-ticket.html">Submit Ticket</a>
+    <a href="ticket-outcomes.html">Ticket Outcomes</a>
+    <a href="drivers-licence.html">Drivers Licence</a>
+  </div>
+  <div class="mobile-divider"></div>
+  <div class="mobile-section">
+    <div class="mobile-section-header">Schedule</div>
+    <a href="schedule.html">S27 Schedule</a>
+  </div>
+  <div class="mobile-divider"></div>
+  <div class="mobile-section">
+    <a href="track-records.html">Track Records</a>
+    <a href="applications.html">Applications</a>
+    <a href="league-rules.html">League Rules</a>
+  </div>
+</div>
+
+<div class="page-header">
+  <div class="page-eyebrow">F1XL</div>
+  <div class="page-title">Season 27 Schedule</div>
+  <div class="page-meta" id="page-meta">Loading...</div>
+</div>
+
+<div class="disclaimer">
+  All races start at 9:00pm BST unless otherwise announced. Check Discord for any schedule changes or postponements.
+</div>
+
+<div class="schedule" id="schedule">
+  <div class="loading-msg">Loading schedule...</div>
+</div>
+
+<footer>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="footer-logo">F1XL</div>
+    <div class="footer-text">The UK's longest running F1 league · Est. 2010</div>
+  </div>
+  <div class="footer-text">f1xl.co.uk</div>
+</footer>
+
+<script>
+const SHEET_ID = '17Exg9qlJPzQNUh6egWu7SJZhWJY9AEmDw81Ab38B42I';
+const GID = '0';
+
+// Track data keyed by circuit name (lowercase)
+const TRACK_DATA = {
+  'italy':        { circuit:'Autodromo Nazionale Monza',    country:'Italy',        laps:29, length:'5.793km', corners:11 },
+  'belgium':      { circuit:'Circuit de Spa-Francorchamps', country:'Belgium',      laps:22, length:'7.004km', corners:19 },
+  'abu dhabi':    { circuit:'Yas Marina Circuit',           country:'UAE',          laps:29, length:'5.281km', corners:16 },
+  'japan':        { circuit:'Suzuka International Circuit', country:'Japan',        laps:28, length:'5.807km', corners:18 },
+  'china':        { circuit:'Shanghai International Circuit',country:'China',       laps:28, length:'5.451km', corners:16 },
+  'qatar':        { circuit:'Lusail International Circuit', country:'Qatar',        laps:29, length:'5.380km', corners:16 },
+  'saudi arabia': { circuit:'Jeddah Corniche Circuit',      country:'Saudi Arabia', laps:27, length:'6.174km', corners:27 },
+  'austria':      { circuit:'Red Bull Ring',                country:'Austria',      laps:32, length:'4.318km', corners:10 },
+  'britain':      { circuit:'Silverstone Circuit',          country:'Great Britain',laps:26, length:'5.891km', corners:18 },
+  'canada':       { circuit:'Circuit Gilles Villeneuve',    country:'Canada',       laps:35, length:'4.361km', corners:14 },
+  'singapore':    { circuit:'Marina Bay Street Circuit',    country:'Singapore',    laps:23, length:'4.940km', corners:19 },
+  'australia':    { circuit:'Albert Park Circuit',          country:'Australia',    laps:29, length:'5.278km', corners:16 },
+  'hungary':      { circuit:'Hungaroring',                  country:'Hungary',      laps:31, length:'4.381km', corners:14 },
+  'brazil':       { circuit:'Autodromo José Carlos Pace',   country:'Brazil',       laps:29, length:'4.309km', corners:15 },
+  'azerbaijan':   { circuit:'Baku City Circuit',            country:'Azerbaijan',   laps:24, length:'6.003km', corners:20 },
+  'netherlands':  { circuit:'Circuit Zandvoort',            country:'Netherlands',  laps:32, length:'4.259km', corners:14 },
+  'bahrain':      { circuit:'Bahrain International Circuit',country:'Bahrain',      laps:29, length:'5.412km', corners:15 },
+  'miami':        { circuit:'Miami International Autodrome',country:'USA',          laps:28, length:'5.412km', corners:19 },
+  'monaco':       { circuit:'Circuit de Monaco',            country:'Monaco',       laps:42, length:'3.337km', corners:19 },
+  'spain':        { circuit:'Circuit de Barcelona-Catalunya',country:'Spain',       laps:28, length:'4.675km', corners:14 },
+};
+
+const today = new Date();
+today.setHours(0,0,0,0);
+
+function parseDate(str) {
+  if (!str || !str.trim()) return null;
+  const parts = str.trim().split('/');
+  if (parts.length !== 3) return null;
+  return new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+}
+
+function formatDate(d) {
+  if (!d) return 'TBC';
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+async function loadSchedule() {
+  try {
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${GID}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text = await res.text();
+    if (text.includes('<!DOCTYPE') || text.includes('<html')) throw new Error('Sheet not published to web');
+
+    const rows = parseCSV(text);
+    const rounds = [];
+    let allStar = null;
+
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      const roundRaw = (row[0] || '').trim();
+      const sprintRaw = (row[1] || '').trim().toLowerCase();
+      const dateRaw = (row[2] || '').trim();
+      const circuitRaw = (row[3] || '').trim();
+
+      if (!roundRaw) continue;
+
+      // All Star Race
+      if (roundRaw.toLowerCase().includes('all star')) {
+        allStar = { date: parseDate(dateRaw), dateRaw };
+        continue;
+      }
+
+      const roundNum = parseInt(roundRaw);
+      if (isNaN(roundNum)) continue;
+
+      const date = parseDate(dateRaw);
+      const isSprint = sprintRaw === 'sprint';
+      const circuit = circuitRaw.toLowerCase();
+      const trackInfo = TRACK_DATA[circuit] || null;
+
+      rounds.push({ round: roundNum, date, dateRaw, circuit: circuitRaw, isSprint, trackInfo });
+    }
+
+    // Determine next race
+    let nextIdx = -1;
+    for (let i = 0; i < rounds.length; i++) {
+      if (rounds[i].date && rounds[i].date >= today) {
+        nextIdx = i;
+        break;
+      }
+    }
+
+    // Update meta
+    const total = rounds.filter(r => r.date).length;
+    const completed = rounds.filter(r => r.date && r.date < today).length;
+    document.getElementById('page-meta').textContent = `${total} rounds · ${completed} completed · ${total - completed} remaining`;
+
+    renderSchedule(rounds, nextIdx, allStar);
+
+  } catch(e) {
+    document.getElementById('schedule').innerHTML = `<div class="loading-msg">Could not load schedule: ${e.message}</div>`;
+    console.error(e);
+  }
+}
+
+function renderSchedule(rounds, nextIdx, allStar) {
+  const el = document.getElementById('schedule');
+  let html = '';
+
+  // Next race feature card
+  if (nextIdx >= 0) {
+    const nr = rounds[nextIdx];
+    const td = nr.trackInfo;
+    html += `<div class="next-race">
+      <div>
+        <div class="next-race-label">Next Race</div>
+        <div class="next-race-name">${nr.circuit} Grand Prix</div>
+        ${td ? `<div style="font-size:12px;color:var(--text-faint);margin-top:2px;">${td.circuit}</div>` : ''}
+        <div class="next-race-date">${formatDate(nr.date)}</div>
+        <div style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <div class="next-race-badge"><div class="pulse"></div>Round ${nr.round}</div>
+          ${nr.isSprint ? `<div class="next-race-badge" style="background:rgba(100,150,255,0.1);border-color:rgba(100,150,255,0.25);color:rgba(100,150,255,0.9);">Sprint Weekend</div>` : ''}
+        </div>
+        ${td ? `<div class="track-stats">
+          <div class="track-stat"><div class="track-stat-val">${td.laps}</div><div class="track-stat-label">Laps</div></div>
+          <div class="track-stat"><div class="track-stat-val">${td.length}</div><div class="track-stat-label">Circuit Length</div></div>
+          <div class="track-stat"><div class="track-stat-val">${td.corners}</div><div class="track-stat-label">Corners</div></div>
+        </div>` : ''}
+      </div>
+      <div class="next-race-right">
+        <div class="next-race-round">${String(nr.round).padStart(2,'0')}</div>
+      </div>
+    </div>`;
+  }
+
+  // Completed rounds
+  const completed = rounds.filter((r, i) => r.date && r.date < today);
+  const upcoming = rounds.filter((r, i) => !r.date || r.date >= today);
+
+  if (upcoming.length > 0) {
+    html += `<div class="rounds-section-title">Upcoming Rounds</div>`;
+    upcoming.forEach((r, i) => {
+      const isNext = r.date && r.date >= today && (i === 0);
+      html += renderRoundCard(r, isNext ? 'next' : 'upcoming');
+    });
+  }
+
+  if (completed.length > 0) {
+    html += `<div class="rounds-section-title" style="margin-top:24px;">Completed Rounds</div>`;
+    [...completed].reverse().forEach(r => {
+      html += renderRoundCard(r, 'completed');
+    });
+  }
+
+  // All Star Race
+  if (allStar) {
+    const aDate = allStar.date;
+    const isPast = aDate && aDate < today;
+    html += `<div class="allstar-banner" style="${isPast ? 'opacity:0.55;' : ''}">
+      <div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:4px;">Special Event</div>
+        <div class="allstar-title">All Star Race</div>
+        <div class="allstar-date">${formatDate(aDate)}</div>
+        <div class="allstar-note">Starts at 8:00pm BST</div>
+      </div>
+      ${isPast ? `<div class="badge badge-done" style="margin-left:auto;">Completed</div>` : `<div class="badge badge-allstar" style="margin-left:auto;">Special Event</div>`}
+    </div>`;
+  }
+
+  el.innerHTML = html;
+}
+
+function renderRoundCard(r, status) {
+  const isCompleted = status === 'completed';
+  const isNext = status === 'next';
+  const td = r.trackInfo;
+  const cardId = `round-${r.round}`;
+
+  return `<div class="round-card ${isCompleted ? 'completed' : ''} ${isNext ? 'next' : ''}" onclick="toggleRound('${cardId}')">
+    <div class="round-num">${r.round}</div>
+    <div class="round-body">
+      <div>
+        <div class="round-name">${r.circuit}</div>
+        <div class="round-date">${formatDate(r.date)}</div>
+      </div>
+      <div class="round-badges">
+        ${r.isSprint ? `<div class="badge badge-sprint">Sprint</div>` : ''}
+        ${!r.date ? `<div class="badge badge-tbc">TBC</div>` : ''}
+        ${isCompleted ? `<div class="badge badge-done">Completed</div>` : ''}
+        ${isNext ? `<div class="badge badge-next">Next Race</div>` : ''}
+      </div>
+    </div>
+  </div>
+  <div class="round-expanded" id="${cardId}">
+    ${td ? `
+    <div class="round-track-stats">
+      <div class="round-track-stat"><div class="round-track-stat-val">${td.laps}</div><div class="round-track-stat-label">Laps</div></div>
+      <div class="round-track-stat"><div class="round-track-stat-val">${td.length}</div><div class="round-track-stat-label">Length</div></div>
+      <div class="round-track-stat"><div class="round-track-stat-val">${td.corners}</div><div class="round-track-stat-label">Corners</div></div>
+    </div>
+    <div class="round-country">${td.circuit} · ${td.country}</div>
+    ` : '<div style="font-size:12px;color:var(--text-faint);">Track info not available</div>'}
+  </div>`;
+}
+
+function toggleRound(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const isOpen = el.classList.contains('open');
+  document.querySelectorAll('.round-expanded.open').forEach(e => e.classList.remove('open'));
+  if (!isOpen) el.classList.add('open');
+}
+
+function parseCSV(text) {
+  const rows = [];
+  let cells = [], current = '', inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i], next = text[i+1];
+    if (ch === '"') {
+      if (!inQuotes) { inQuotes = true; }
+      else if (next === '"') { current += '"'; i++; }
+      else { inQuotes = false; }
+    } else if (ch === ',' && !inQuotes) {
+      cells.push(current); current = '';
+    } else if ((ch === '\n' || (ch === '\r' && next === '\n')) && !inQuotes) {
+      if (ch === '\r') i++;
+      cells.push(current); current = '';
+      if (cells.some(c => c.trim())) rows.push(cells);
+      cells = [];
+    } else { current += ch; }
+  }
+  cells.push(current);
+  if (cells.some(c => c.trim())) rows.push(cells);
+  return rows;
+}
+
+function toggleMenu() {
+  document.getElementById('mobile-menu').classList.toggle('open');
+  document.getElementById('hamburger').classList.toggle('open');
+}
+
+loadSchedule();
+</script>
+</body>
+</html>
