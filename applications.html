@@ -50,21 +50,20 @@
   .page-title{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:700;text-transform:uppercase;line-height:1;}
   .page-meta{font-size:13px;color:var(--text-muted);margin-top:6px;}
 
-  /* TABS */
-  .app-tabs{display:flex;background:var(--dark2);border-bottom:1px solid var(--border);padding:0 24px;overflow-x:auto;}
-  .app-tab{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:14px 20px;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;background:none;border-top:none;border-left:none;border-right:none;white-space:nowrap;transition:color 0.2s;}
-  .app-tab:hover{color:var(--text);}
-  .app-tab.active{color:var(--text);border-bottom-color:var(--red);}
-
-  /* PANELS */
-  .app-panel{display:none;padding:20px 24px 48px;max-width:860px;}
-  .app-panel.active{display:block;}
-
-  .panel-desc{background:var(--dark2);border:1px solid var(--border2);border-left:3px solid var(--red);border-radius:0 8px 8px 0;padding:14px 16px;margin-bottom:20px;}
-  .panel-desc-title{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--red);margin-bottom:6px;}
-  .panel-desc-text{font-size:13px;color:var(--text-muted);line-height:1.7;}
-  .panel-desc-text strong{color:rgba(255,255,255,0.7);}
-
+  /* CARDS */
+  .app-cards{padding:20px 24px 48px;max-width:860px;display:flex;flex-direction:column;gap:10px;}
+  .app-card{background:var(--dark2);border:1px solid var(--border);border-radius:8px;overflow:hidden;transition:border-color 0.2s;}
+  .app-card.open{border-color:var(--red);}
+  .app-card-btn{width:100%;display:flex;align-items:center;gap:16px;padding:18px 20px;background:none;border:none;cursor:pointer;text-align:left;transition:background 0.2s;}
+  .app-card-btn:hover{background:var(--dark3);}
+  .app-card-left{flex:1;}
+  .app-card-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text);margin-bottom:4px;}
+  .app-card.open .app-card-title{color:var(--red);}
+  .app-card-desc{font-size:12px;color:var(--text-muted);line-height:1.5;}
+  .app-card-chevron{font-size:14px;color:var(--text-faint);transition:transform 0.25s;flex-shrink:0;}
+  .app-card.open .app-card-chevron{transform:rotate(180deg);color:var(--red);}
+  .app-form-wrap{display:none;border-top:1px solid var(--border);padding:20px;}
+  .app-card.open .app-form-wrap{display:block;}
   .form-frame{width:100%;border:none;border-radius:8px;min-height:1100px;display:block;}
 
   /* FOOTER */
@@ -155,63 +154,68 @@
   <div class="page-meta">Applications are always open — select the relevant form below</div>
 </div>
 
-<div class="app-tabs">
-  <button class="app-tab active" onclick="showTab('f1', this)">F1 Driver</button>
-  <button class="app-tab" onclick="showTab('f2', this)">F2 Driver</button>
-  <button class="app-tab" onclick="showTab('staff', this)">Staff</button>
-  <button class="app-tab" onclick="showTab('timetrial', this)">Time Trial</button>
-</div>
+<div class="app-cards">
 
-<!-- F1 DRIVER -->
-<div class="app-panel active" id="panel-f1">
-  <div class="panel-desc">
-    <div class="panel-desc-title">F1 Driver Application</div>
-    <div class="panel-desc-text">
-      Apply to race in one of our F1 divisions. <strong>New drivers will be required to complete a time trial</strong> so we can assess and place you in the right division. See the League Rules for full details on the time trial process.
+  <div class="app-card" id="card-f1">
+    <button class="app-card-btn" onclick="toggleForm('f1')">
+      <div class="app-card-left">
+        <div class="app-card-title">F1 Driver Application</div>
+        <div class="app-card-desc">Apply to race in one of our F1 divisions. New drivers will need to complete a time trial.</div>
+      </div>
+      <div class="app-card-chevron" id="chev-f1">▼</div>
+    </button>
+    <div class="app-form-wrap" id="form-f1">
+      <iframe class="form-frame"
+        src="https://docs.google.com/forms/d/e/1FAIpQLSdYT9Bb6x-bPb7NKszdiF5Xc1ZkT1mYVJo4xR5Q4TCAYlZxsA/viewform?embedded=true"
+        frameborder="0" marginheight="0" marginwidth="0">Loading...</iframe>
     </div>
   </div>
-  <iframe class="form-frame"
-    src="https://docs.google.com/forms/d/e/1FAIpQLSdYT9Bb6x-bPb7NKszdiF5Xc1ZkT1mYVJo4xR5Q4TCAYlZxsA/viewform?embedded=true"
-    frameborder="0" marginheight="0" marginwidth="0">Loading...</iframe>
-</div>
 
-<!-- F2 DRIVER -->
-<div class="app-panel" id="panel-f2">
-  <div class="panel-desc">
-    <div class="panel-desc-title">F2 Driver Application</div>
-    <div class="panel-desc-text">
-      Apply to race in the F2 category. Complete the form below and we'll be in touch with next steps via Discord.
+  <div class="app-card" id="card-f2">
+    <button class="app-card-btn" onclick="toggleForm('f2')">
+      <div class="app-card-left">
+        <div class="app-card-title">F2 Driver Application</div>
+        <div class="app-card-desc">Apply to race in the F2 category.</div>
+      </div>
+      <div class="app-card-chevron" id="chev-f2">▼</div>
+    </button>
+    <div class="app-form-wrap" id="form-f2">
+      <iframe class="form-frame"
+        src="https://docs.google.com/forms/d/e/1FAIpQLSf0tZrEGEc6wIeLdHWfOiFOObkWYgouOQN3yBy3cBouY5DfFA/viewform?embedded=true"
+        frameborder="0" marginheight="0" marginwidth="0">Loading...</iframe>
     </div>
   </div>
-  <iframe class="form-frame"
-    src="https://docs.google.com/forms/d/e/1FAIpQLSf0tZrEGEc6wIeLdHWfOiFOObkWYgouOQN3yBy3cBouY5DfFA/viewform?embedded=true"
-    frameborder="0" marginheight="0" marginwidth="0">Loading...</iframe>
-</div>
 
-<!-- STAFF -->
-<div class="app-panel" id="panel-staff">
-  <div class="panel-desc">
-    <div class="panel-desc-title">Staff Application</div>
-    <div class="panel-desc-text">
-      Interested in joining the F1XL team as a steward, race controller, commentator or in another capacity? Fill in the form below and tell us what you can bring to the league.
+  <div class="app-card" id="card-staff">
+    <button class="app-card-btn" onclick="toggleForm('staff')">
+      <div class="app-card-left">
+        <div class="app-card-title">Staff Application</div>
+        <div class="app-card-desc">Join the F1XL team as a steward, race controller, commentator or in another capacity.</div>
+      </div>
+      <div class="app-card-chevron" id="chev-staff">▼</div>
+    </button>
+    <div class="app-form-wrap" id="form-staff">
+      <iframe class="form-frame"
+        src="https://docs.google.com/forms/d/e/1FAIpQLSczd-YDc_6yAuolgyWkRQmboaPzax8sqpYYwJ3f0vFTf8rKgw/viewform?embedded=true"
+        frameborder="0" marginheight="0" marginwidth="0">Loading...</iframe>
     </div>
   </div>
-  <iframe class="form-frame"
-    src="https://docs.google.com/forms/d/e/1FAIpQLSczd-YDc_6yAuolgyWkRQmboaPzax8sqpYYwJ3f0vFTf8rKgw/viewform?embedded=true"
-    frameborder="0" marginheight="0" marginwidth="0">Loading...</iframe>
-</div>
 
-<!-- TIME TRIAL -->
-<div class="app-panel" id="panel-timetrial">
-  <div class="panel-desc">
-    <div class="panel-desc-title">Time Trial Submission</div>
-    <div class="panel-desc-text">
-      Submit your time trial results here. <strong>Before submitting, make sure your recording follows the requirements</strong> set out in Section 16 of the League Rules — videos must start on the main menu showing all lobby settings, and overtake must not be used during the trial.
+  <div class="app-card" id="card-timetrial">
+    <button class="app-card-btn" onclick="toggleForm('timetrial')">
+      <div class="app-card-left">
+        <div class="app-card-title">Time Trial Submission</div>
+        <div class="app-card-desc">Submit your time trial recording. Make sure it meets the requirements in Section 16 of the League Rules before submitting.</div>
+      </div>
+      <div class="app-card-chevron" id="chev-timetrial">▼</div>
+    </button>
+    <div class="app-form-wrap" id="form-timetrial">
+      <iframe class="form-frame"
+        src="https://docs.google.com/forms/d/e/1FAIpQLSdWo3z0h758ZlMGGYuOyg47ky1hZB0hVF54VctH9-RHP8OkvQ/viewform?embedded=true"
+        frameborder="0" marginheight="0" marginwidth="0">Loading...</iframe>
     </div>
   </div>
-  <iframe class="form-frame"
-    src="https://docs.google.com/forms/d/e/1FAIpQLSdWo3z0h758ZlMGGYuOyg47ky1hZB0hVF54VctH9-RHP8OkvQ/viewform?embedded=true"
-    frameborder="0" marginheight="0" marginwidth="0">Loading...</iframe>
+
 </div>
 
 <footer>
@@ -223,11 +227,13 @@
 </footer>
 
 <script>
-function showTab(name, btn) {
-  document.querySelectorAll('.app-tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.app-panel').forEach(p => p.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('panel-' + name).classList.add('active');
+function toggleForm(name) {
+  const card = document.getElementById('card-' + name);
+  const isOpen = card.classList.contains('open');
+  // Close all others
+  document.querySelectorAll('.app-card').forEach(c => c.classList.remove('open'));
+  // Toggle this one
+  if (!isOpen) card.classList.add('open');
 }
 
 function toggleMenu() {
