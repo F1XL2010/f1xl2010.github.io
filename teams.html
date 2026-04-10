@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>F1XL — Teams</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red:#E10600;--black:#090909;--dark:#111111;--dark2:#181818;--dark3:#1f1f1f;
+    --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+    --text:#ffffff;--text-muted:rgba(255,255,255,0.45);--text-faint:rgba(255,255,255,0.18);
+    --gold:#E8B84B;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--black);color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;}
+
+  /* NAV */
+  nav{background:rgba(9,9,9,0.97);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;}
+  .nav-left{display:flex;align-items:center;gap:14px;flex-shrink:0;}
+  .nav-logo{background:var(--red);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;padding:5px 11px;border-radius:3px;text-decoration:none;}
+  .nav-title{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:500;letter-spacing:1px;color:var(--text-muted);text-transform:uppercase;}
+  .nav-links{display:flex;align-items:stretch;height:56px;}
+  .nav-item{position:relative;display:flex;align-items:stretch;}
+  .nav-item>a,.nav-item>button{color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:500;letter-spacing:0.5px;padding:0 13px;display:flex;align-items:center;gap:4px;border-bottom:2px solid transparent;border-top:none;border-left:none;border-right:none;background:none;cursor:pointer;font-family:'Barlow',sans-serif;text-transform:uppercase;transition:color 0.2s;white-space:nowrap;}
+  .nav-item>a:hover,.nav-item>button:hover{color:var(--text);}
+  .nav-item>a.active,.nav-item>button.active{color:var(--text);border-bottom-color:var(--red);}
+  .nav-chevron{font-size:8px;opacity:0.5;transition:transform 0.2s;}
+  .nav-item:hover .nav-chevron{transform:rotate(180deg);}
+  .nav-dropdown{display:none;position:absolute;top:100%;left:0;background:#141414;border:1px solid var(--border2);border-top:2px solid var(--red);border-radius:0 0 6px 6px;min-width:180px;padding:6px 0;z-index:300;}
+  .nav-item:hover .nav-dropdown{display:block;}
+  .nav-dropdown a{display:block;padding:9px 16px;color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;transition:color 0.15s,background 0.15s;white-space:nowrap;}
+  .nav-dropdown a:hover{color:var(--text);background:rgba(255,255,255,0.05);}
+  .nav-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:8px;background:none;border:none;}
+  .nav-hamburger span{display:block;width:22px;height:2px;background:var(--text-muted);border-radius:2px;transition:all 0.25s;}
+  .nav-hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+  .nav-hamburger.open span:nth-child(2){opacity:0;}
+  .nav-hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+  .mobile-menu{display:none;position:fixed;top:56px;left:0;right:0;bottom:0;background:#0d0d0d;z-index:150;overflow-y:auto;padding:16px 0 32px;}
+  .mobile-menu.open{display:block;}
+  .mobile-section-header{padding:10px 24px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--red);}
+  .mobile-section a{display:block;padding:11px 32px;color:var(--text-muted);text-decoration:none;font-size:15px;border-bottom:1px solid var(--border);}
+  .mobile-divider{height:1px;background:var(--border);margin:12px 24px;}
+  @media(max-width:860px){.nav-links{display:none;}.nav-title{display:none;}.nav-hamburger{display:flex;}}
+  @media(min-width:861px){.mobile-menu{display:none !important;}}
+
+  /* PAGE HEADER */
+  .page-header{background:var(--dark);border-bottom:1px solid var(--border);padding:24px;}
+  .page-eyebrow{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:2.5px;color:var(--red);text-transform:uppercase;font-weight:600;margin-bottom:4px;}
+  .page-title{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:700;text-transform:uppercase;line-height:1;}
+  .page-meta{font-size:13px;color:var(--text-muted);margin-top:6px;}
+
+  /* SEASON SELECTOR */
+  .season-tabs{padding:16px 24px 0;display:flex;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--border);background:var(--dark2);}
+  .season-tab{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:8px 16px;border-radius:4px 4px 0 0;border:none;background:none;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:color 0.2s;margin-bottom:-1px;}
+  .season-tab:hover{color:var(--text);}
+  .season-tab.active{color:var(--text);border-bottom-color:var(--red);background:var(--dark3);}
+
+  /* CONTENT */
+  .content{padding:20px 24px 48px;}
+  .loading-msg{text-align:center;padding:48px;color:var(--text-muted);font-size:14px;}
+
+  /* CURRENT SEASON - FEATURE CARDS */
+  .current-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:32px;}
+  @media(min-width:600px){.current-grid{grid-template-columns:repeat(3,1fr);}}
+  @media(min-width:900px){.current-grid{grid-template-columns:repeat(4,1fr);}}
+
+  .team-card{background:var(--dark2);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:border-color 0.2s;}
+  .team-card:hover{border-color:rgba(255,255,255,0.15);}
+  .team-card-top{height:6px;}
+  .team-card-body{padding:14px;}
+  .team-name{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px;}
+  .team-owner{font-size:12px;color:var(--text-muted);margin-bottom:10px;display:flex;align-items:center;gap:5px;}
+  .crown{font-size:12px;}
+  .team-dividers{display:flex;flex-direction:column;gap:4px;}
+  .team-div-row{display:flex;gap:6px;align-items:baseline;}
+  .team-div-label{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;flex-shrink:0;min-width:28px;}
+  .team-div-drivers{font-size:12px;color:var(--text-muted);}
+  .team-div-drivers .champion{color:var(--gold);}
+  .winner-badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;background:rgba(232,184,75,0.15);color:var(--gold);border:1px solid rgba(232,184,75,0.25);border-radius:3px;padding:2px 6px;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.5px;text-transform:uppercase;margin-top:6px;}
+
+  /* PAST SEASONS - COLLAPSIBLE */
+  .past-season{margin-bottom:8px;}
+  .past-season-header{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--dark2);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:background 0.2s;}
+  .past-season-header:hover{background:var(--dark3);}
+  .past-season-header.open{border-radius:8px 8px 0 0;border-bottom-color:transparent;}
+  .past-season-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;text-transform:uppercase;flex:1;}
+  .past-season-meta{font-size:12px;color:var(--text-muted);}
+  .past-season-chev{font-size:13px;color:var(--text-faint);transition:transform 0.25s;}
+  .past-season-chev.open{transform:rotate(180deg);}
+  .past-season-body{display:none;border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;padding:12px;}
+  .past-season-body.open{display:block;}
+  .past-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+  @media(min-width:600px){.past-grid{grid-template-columns:repeat(3,1fr);}}
+  @media(min-width:900px){.past-grid{grid-template-columns:repeat(4,1fr);}}
+
+  /* PAST TEAM CARD - SIMPLER */
+  .past-card{background:var(--dark3);border-radius:6px;overflow:hidden;}
+  .past-card-top{height:4px;}
+  .past-card-body{padding:10px 12px;}
+  .past-card-name{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;text-transform:uppercase;margin-bottom:2px;}
+  .past-card-owner{font-size:11px;color:var(--text-muted);margin-bottom:6px;display:flex;align-items:center;gap:4px;}
+  .past-card-divs{font-size:11px;color:var(--text-faint);line-height:1.6;}
+  .past-card-divs span{color:var(--text-muted);}
+  .past-card-divs .champ{color:var(--gold);}
+
+  /* WINNERS STRIP */
+  .winners-strip{background:rgba(232,184,75,0.06);border:1px solid rgba(232,184,75,0.15);border-radius:6px;padding:10px 14px;margin-bottom:12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+  .winners-strip-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-right:4px;}
+  .winner-pill{font-size:11px;background:rgba(232,184,75,0.1);color:var(--gold);border:1px solid rgba(232,184,75,0.2);border-radius:3px;padding:3px 8px;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.5px;}
+
+  /* FOOTER */
+  footer{background:var(--dark);border-top:1px solid var(--border);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+  .footer-logo{background:var(--red);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;padding:4px 9px;border-radius:3px;}
+  .footer-text{font-size:12px;color:var(--text-faint);}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-left">
+    <a href="index.html" class="nav-logo">F1XL</a>
+    <div class="nav-title">Formula Xbox Leagues</div>
+  </div>
+  <div class="nav-links">
+    <div class="nav-item"><a href="index.html">Home</a></div>
+    <div class="nav-item">
+      <button>Standings <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown">
+        <a href="standings.html">Current Season</a>
+        <a href="results.html">Results</a>
+        <a href="past-seasons.html">Past Seasons</a>
+        <a href="winners-records.html">Winners &amp; Records</a>
+      </div>
+    </div>
+    <div class="nav-item">
+      <button class="active">Teams <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown">
+        <a href="teams.html">Current Teams</a>
+        <a href="teams.html">Past Teams</a>
+      </div>
+    </div>
+    <div class="nav-item">
+      <button>Race Tickets <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown">
+        <a href="submit-ticket.html">Submit Ticket</a>
+        <a href="ticket-outcomes.html">Ticket Outcomes</a>
+        <a href="drivers-licence.html">Drivers Licence</a>
+      </div>
+    </div>
+    <div class="nav-item">
+      <button>Schedule <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown">
+        <a href="schedule.html">S27 Schedule</a>
+        <a href="track-guide.html">Track Guide</a>
+      </div>
+    </div>
+    <div class="nav-item"><a href="track-records.html">Track Records</a></div>
+    <div class="nav-item"><a href="applications.html">Applications</a></div>
+    <div class="nav-item"><a href="league-rules.html">League Rules</a></div>
+  </div>
+  <button class="nav-hamburger" id="hamburger" onclick="toggleMenu()">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<div class="mobile-menu" id="mobile-menu">
+  <div class="mobile-section">
+    <div class="mobile-section-header">Standings</div>
+    <a href="standings.html">Current Season</a>
+    <a href="results.html">Results</a>
+    <a href="past-seasons.html">Past Seasons</a>
+    <a href="winners-records.html">Winners &amp; Records</a>
+  </div>
+  <div class="mobile-divider"></div>
+  <div class="mobile-section">
+    <div class="mobile-section-header">Teams</div>
+    <a href="teams.html">Current Teams</a>
+    <a href="teams.html">Past Teams</a>
+  </div>
+  <div class="mobile-divider"></div>
+  <div class="mobile-section">
+    <div class="mobile-section-header">Race Tickets</div>
+    <a href="submit-ticket.html">Submit Ticket</a>
+    <a href="ticket-outcomes.html">Ticket Outcomes</a>
+    <a href="drivers-licence.html">Drivers Licence</a>
+  </div>
+  <div class="mobile-divider"></div>
+  <div class="mobile-section">
+    <div class="mobile-section-header">Schedule</div>
+    <a href="schedule.html">S27 Schedule</a>
+    <a href="track-guide.html">Track Guide</a>
+  </div>
+  <div class="mobile-divider"></div>
+  <div class="mobile-section">
+    <a href="track-records.html">Track Records</a>
+    <a href="applications.html">Applications</a>
+    <a href="league-rules.html">League Rules</a>
+  </div>
+</div>
+
+<div class="page-header">
+  <div class="page-eyebrow">F1XL</div>
+  <div class="page-title">Teams</div>
+  <div class="page-meta" id="page-meta">Loading...</div>
+</div>
+
+<div id="content">
+  <div class="loading-msg">Loading teams...</div>
+</div>
+
+<footer>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="footer-logo">F1XL</div>
+    <div class="footer-text">The UK's longest running F1 league · Est. 2010</div>
+  </div>
+  <div class="footer-text">f1xl.co.uk</div>
+</footer>
+
+<script>
+const SHEET_ID = '1f2ECx5qJxc18vFq62yUtdn_Hif6o0c-o_oibo6Pfwd8';
+const GID = '637416305';
+
+const teamColors = {
+  'alpine':'#27F4D2','aston martin':'#229971','ferrari':'#E8002D',
+  'haas':'#B6BABD','mclaren':'#FF8000','mercedes':'#27F4D2',
+  'rb':'#6692FF','red bull':'#3671C6','sauber':'#52E252',
+  'kick sauber':'#52E252','williams':'#64C4FF',
+  'red bull / haas':'#3671C6','alpine / sauber':'#27F4D2'
+};
+
+// Column indices (0-based)
+// A=Season(0), B=Team(1), C=Owner(2), D=D1T1(3), E=D1T2(4),
+// F=D2T1(5), G=D2T2(6), H=D3T1(7), I=D3T2(8),
+// J=D4T1(9), K=D4T2(10), L=D5T1(11), M=D5T2(12),
+// N=D6T1(13), O=D6T2(14), P=D7T1(15), Q=D7T2(16),
+// R=D8T1(17), S=D8T2(18)
+
+const DIV_COLS = [
+  {label:'D1', t1:3, t2:4},
+  {label:'D2', t1:5, t2:6},
+  {label:'D3', t1:7, t2:8},
+  {label:'D4', t1:9, t2:10},
+  {label:'D5', t1:11, t2:12},
+  {label:'D6', t1:13, t2:14},
+  {label:'D7', t1:15, t2:16},
+  {label:'D8', t1:17, t2:18},
+];
+
+const WINNER_ROWS = ['team owner winner','driver winner','league constructor winner','team winner'];
+
+async function loadTeams() {
+  try {
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${GID}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text = await res.text();
+    if (text.includes('<!DOCTYPE')) throw new Error('Sheet not published to web');
+    const rows = parseCSV(text);
+
+    // Parse into seasons
+    const seasons = {};
+    const winnerData = {}; // winnerData[season] = { tpWinner, tpTeam, driverWinners{col:name}, constructorWinners{col:name}, teamWinners{col:name} }
+    let currentSeason = null;
+
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      const col0 = (row[0] || '').trim();
+      const col1 = (row[1] || '').trim();
+      const col2 = (row[2] || '').trim();
+
+      if (!col0) continue;
+
+      const rowLabel = col0.toLowerCase();
+
+      // Check if this is a winner row
+      if (WINNER_ROWS.includes(rowLabel)) {
+        if (!currentSeason) continue;
+        if (!winnerData[currentSeason]) winnerData[currentSeason] = { tpWinner:'', tpTeam:'', driverWinners:{}, constructorWinners:{}, teamWinners:{} };
+        const wd = winnerData[currentSeason];
+
+        if (rowLabel === 'team owner winner') {
+          wd.tpTeam = col1;
+          wd.tpWinner = col2;
+        } else if (rowLabel === 'driver winner') {
+          // Driver name appears in the division column
+          for (let c = 3; c < row.length; c++) {
+            const v = (row[c] || '').trim();
+            if (v) wd.driverWinners[c] = v;
+          }
+        } else if (rowLabel === 'league constructor winner') {
+          for (let c = 3; c < row.length; c++) {
+            const v = (row[c] || '').trim();
+            if (v) wd.constructorWinners[c] = v;
+          }
+        } else if (rowLabel === 'team winner') {
+          for (let c = 3; c < row.length; c++) {
+            const v = (row[c] || '').trim();
+            if (v) wd.teamWinners[c] = v;
+          }
+        }
+        continue;
+      }
+
+      // Check if this is a season number row
+      const seasonNum = parseInt(col0);
+      if (!isNaN(seasonNum) && col1 && col2) {
+        currentSeason = seasonNum;
+        if (!seasons[currentSeason]) seasons[currentSeason] = [];
+
+        // Skip reserve and retired rows
+        const teamLower = col1.toLowerCase();
+        if (teamLower === 'n/a' || teamLower.includes('reserve') || teamLower.includes('retired')) continue;
+
+        seasons[currentSeason].push({
+          season: currentSeason,
+          team: col1,
+          owner: col2,
+          drivers: row.slice(3, 19)
+        });
+      }
+    }
+
+    // Sort seasons descending
+    const seasonNums = Object.keys(seasons).map(Number).sort((a,b) => b-a);
+    const currentSeasonNum = seasonNums[0];
+    const pastSeasonNums = seasonNums.slice(1);
+
+    // Update page meta
+    document.getElementById('page-meta').textContent =
+      `Season ${currentSeasonNum} · ${seasons[currentSeasonNum]?.length || 0} teams · ${pastSeasonNums.length} past seasons`;
+
+    // Build page
+    let html = '';
+
+    // Current season
+    html += buildCurrentSeason(currentSeasonNum, seasons[currentSeasonNum] || [], winnerData[currentSeasonNum]);
+
+    // Past seasons
+    if (pastSeasonNums.length > 0) {
+      html += `<div style="margin-top:24px;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px;padding:0 0 8px;border-bottom:1px solid var(--border);">Past Seasons</div>`;
+      pastSeasonNums.forEach((sNum, idx) => {
+        html += buildPastSeason(sNum, seasons[sNum] || [], winnerData[sNum], idx);
+      });
+      html += '</div>';
+    }
+
+    document.getElementById('content').innerHTML = `<div class="content">${html}</div>`;
+
+  } catch(e) {
+    document.getElementById('content').innerHTML = `<div class="loading-msg">Could not load teams: ${e.message}</div>`;
+    console.error(e);
+  }
+}
+
+function getColor(teamName) {
+  const key = teamName.toLowerCase().trim();
+  return teamColors[key] || '#888';
+}
+
+function buildCurrentSeason(season, teams, winners) {
+  let html = `<div style="margin-bottom:8px;">
+    <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:16px;">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;text-transform:uppercase;">Season ${season}</div>
+      <div style="font-size:12px;color:var(--red);font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;text-transform:uppercase;">Current Season</div>
+    </div>`;
+
+  if (winners && (winners.tpWinner || Object.keys(winners.driverWinners).length > 0)) {
+    html += buildWinnersStrip(winners, season);
+  }
+
+  html += `<div class="current-grid">`;
+
+  teams.forEach(t => {
+    const color = getColor(t.team);
+    const isTPChamp = winners && winners.tpTeam.toLowerCase() === t.team.toLowerCase();
+
+    // Find driver champions for this team
+    const driverChampCols = winners ? Object.keys(winners.driverWinners) : [];
+    const constructorChampCols = winners ? Object.keys(winners.constructorWinners) : [];
+
+    html += `<div class="team-card">
+      <div class="team-card-top" style="background:${color}"></div>
+      <div class="team-card-body">
+        <div class="team-name" style="color:${color}">${t.team}</div>
+        <div class="team-owner">
+          ${isTPChamp ? '<span class="crown">👑</span>' : ''}
+          ${t.owner}
+          ${isTPChamp ? '<span class="winner-badge">TP Champion</span>' : ''}
+        </div>
+        <div class="team-dividers">`;
+
+    DIV_COLS.forEach(div => {
+      const d1 = (t.drivers[div.t1 - 3] || '').trim();
+      const d2 = (t.drivers[div.t2 - 3] || '').trim();
+      if (!d1 && !d2) return;
+
+      const d1Champ = driverChampCols.includes(String(div.t1)) && winners.driverWinners[div.t1]?.toLowerCase() === d1.toLowerCase();
+      const d2Champ = driverChampCols.includes(String(div.t2)) && winners.driverWinners[div.t2]?.toLowerCase() === d2.toLowerCase();
+      const conChamp = constructorChampCols.includes(String(div.t1));
+
+      html += `<div class="team-div-row">
+        <div class="team-div-label">${div.label}${conChamp ? ' 👑' : ''}</div>
+        <div class="team-div-drivers">
+          ${d1 ? `<span class="${d1Champ ? 'champion' : ''}">${d1}${d1Champ ? ' 👑' : ''}</span>` : ''}
+          ${d1 && d2 ? ' · ' : ''}
+          ${d2 ? `<span class="${d2Champ ? 'champion' : ''}">${d2}${d2Champ ? ' 👑' : ''}</span>` : ''}
+        </div>
+      </div>`;
+    });
+
+    html += `</div></div></div>`;
+  });
+
+  html += `</div></div>`;
+  return html;
+}
+
+function buildWinnersStrip(winners, season) {
+  let html = `<div class="winners-strip"><span class="winners-strip-label">S${season} Champions</span>`;
+
+  if (winners.tpWinner) {
+    html += `<span class="winner-pill">👑 TP: ${winners.tpWinner} (${winners.tpTeam})</span>`;
+  }
+
+  DIV_COLS.forEach(div => {
+    const driverName = winners.driverWinners[div.t1] || winners.driverWinners[div.t2];
+    const conName = winners.constructorWinners[div.t1] || winners.constructorWinners[div.t2];
+    if (driverName) html += `<span class="winner-pill">👑 ${div.label} Driver: ${driverName}</span>`;
+    if (conName) html += `<span class="winner-pill">👑 ${div.label} Constructor: ${conName}</span>`;
+  });
+
+  html += `</div>`;
+  return html;
+}
+
+function buildPastSeason(season, teams, winners, idx) {
+  let html = `<div class="past-season" id="ps-${season}">
+    <div class="past-season-header" onclick="togglePast(${season})" id="psh-${season}">
+      <div class="past-season-title">Season ${season}</div>
+      <div class="past-season-meta">${teams.length} teams</div>
+      <div class="past-season-chev" id="psc-${season}">▼</div>
+    </div>
+    <div class="past-season-body" id="psb-${season}">`;
+
+  if (winners && (winners.tpWinner || Object.keys(winners.driverWinners).length > 0)) {
+    html += buildWinnersStrip(winners, season);
+  }
+
+  html += `<div class="past-grid">`;
+
+  teams.forEach(t => {
+    const color = getColor(t.team);
+    const isTPChamp = winners && winners.tpTeam.toLowerCase() === t.team.toLowerCase();
+    const driverChampCols = winners ? Object.keys(winners.driverWinners) : [];
+    const constructorChampCols = winners ? Object.keys(winners.constructorWinners) : [];
+
+    html += `<div class="past-card">
+      <div class="past-card-top" style="background:${color}"></div>
+      <div class="past-card-body">
+        <div class="past-card-name" style="color:${color}">${t.team}</div>
+        <div class="past-card-owner">
+          ${isTPChamp ? '👑 ' : ''}${t.owner}
+        </div>
+        <div class="past-card-divs">`;
+
+    DIV_COLS.forEach(div => {
+      const d1 = (t.drivers[div.t1 - 3] || '').trim();
+      const d2 = (t.drivers[div.t2 - 3] || '').trim();
+      if (!d1 && !d2) return;
+
+      const d1Champ = driverChampCols.includes(String(div.t1)) && winners?.driverWinners[div.t1]?.toLowerCase() === d1.toLowerCase();
+      const d2Champ = driverChampCols.includes(String(div.t2)) && winners?.driverWinners[div.t2]?.toLowerCase() === d2.toLowerCase();
+      const conChamp = constructorChampCols.includes(String(div.t1));
+
+      const d1Html = d1 ? `<span class="${d1Champ?'champ':''}">${d1Champ?'👑 ':''}${d1}</span>` : '';
+      const d2Html = d2 ? `<span class="${d2Champ?'champ':''}">${d2Champ?'👑 ':''}${d2}</span>` : '';
+
+      html += `<div><span style="color:var(--text-faint);font-size:10px;">${div.label}${conChamp?' 👑':''} </span>${d1Html}${d1&&d2?' · ':''}${d2Html}</div>`;
+    });
+
+    html += `</div></div></div>`;
+  });
+
+  html += `</div></div></div>`;
+  return html;
+}
+
+function togglePast(season) {
+  const body = document.getElementById(`psb-${season}`);
+  const header = document.getElementById(`psh-${season}`);
+  const chev = document.getElementById(`psc-${season}`);
+  const open = body.classList.toggle('open');
+  header.classList.toggle('open', open);
+  chev.classList.toggle('open', open);
+}
+
+function parseCSV(text) {
+  const rows = [];
+  let cells = [], current = '', inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i], next = text[i+1];
+    if (ch === '"') {
+      if (!inQuotes) { inQuotes = true; }
+      else if (next === '"') { current += '"'; i++; }
+      else { inQuotes = false; }
+    } else if (ch === ',' && !inQuotes) {
+      cells.push(current); current = '';
+    } else if ((ch === '\n' || (ch === '\r' && next === '\n')) && !inQuotes) {
+      if (ch === '\r') i++;
+      cells.push(current); current = '';
+      if (cells.some(c => c.trim())) rows.push(cells);
+      cells = [];
+    } else { current += ch; }
+  }
+  cells.push(current);
+  if (cells.some(c => c.trim())) rows.push(cells);
+  return rows;
+}
+
+function toggleMenu() {
+  document.getElementById('mobile-menu').classList.toggle('open');
+  document.getElementById('hamburger').classList.toggle('open');
+}
+
+loadTeams();
+</script>
+</body>
+</html>
