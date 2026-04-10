@@ -9,6 +9,8 @@
 <style>
   :root {
     --red: #E10600;
+    --green: #3DCC47;
+    --teal: #5ECFCF;
     --red-dark: #b30500;
     --black: #090909;
     --dark: #111111;
@@ -17,7 +19,7 @@
     --border: rgba(255,255,255,0.07);
     --text: #ffffff;
     --text-muted: rgba(255,255,255,0.45);
-    --text-faint: rgba(255,255,255,0.18);
+    --text-faint: rgba(255,255,255,0.35);
     --discord: #5865F2;
   }
 
@@ -57,7 +59,7 @@
   }
 
   .nav-logo {
-    background: var(--red);
+    background: var(--green);
     color: #fff;
     font-family: 'Barlow Condensed', sans-serif;
     font-size: 14px;
@@ -117,7 +119,7 @@
   .nav-item > button:hover { color: var(--text); }
 
   .nav-item > a.active,
-  .nav-item > button.active { color: var(--text); border-bottom-color: var(--red); }
+  .nav-item > button.active { color: var(--text); border-bottom-color: var(--green); }
 
   .nav-chevron {
     font-size: 8px;
@@ -135,7 +137,7 @@
     left: 0;
     background: #141414;
     border: 1px solid var(--border2);
-    border-top: 2px solid var(--red);
+    border-top: 2px solid var(--green);
     border-radius: 0 0 6px 6px;
     min-width: 180px;
     padding: 6px 0;
@@ -213,7 +215,7 @@
     font-weight: 600;
     letter-spacing: 2px;
     text-transform: uppercase;
-    color: var(--red);
+    color: var(--green);
   }
 
   .mobile-section a {
@@ -266,8 +268,8 @@
     position: absolute;
     inset: 0;
     background-image:
-      linear-gradient(rgba(225,6,0,0.06) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(225,6,0,0.06) 1px, transparent 1px);
+      linear-gradient(rgba(61,204,71,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(61,204,71,0.06) 1px, transparent 1px);
     background-size: 40px 40px;
   }
 
@@ -277,7 +279,7 @@
     right: -80px;
     width: 400px;
     height: 400px;
-    background: radial-gradient(circle, rgba(225,6,0,0.12) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(61,204,71,0.12) 0%, transparent 70%);
     pointer-events: none;
   }
 
@@ -291,10 +293,10 @@
     position: absolute;
     top: 0; left: 0; right: 0;
     height: 3px;
-    background: var(--red);
+    background: var(--green);
   }
 
-  .hero-est {
+  .hero-est-unused {
     position: absolute;
     top: 20px;
     right: 24px;
@@ -322,7 +324,7 @@
     width: 7px;
     height: 7px;
     border-radius: 50%;
-    background: var(--red);
+    background: var(--green);
     animation: pulse 2s infinite;
   }
 
@@ -335,9 +337,17 @@
     font-family: 'Barlow Condensed', sans-serif;
     font-size: 12px;
     letter-spacing: 2.5px;
-    color: var(--red);
+    color: var(--green);
     text-transform: uppercase;
     font-weight: 600;
+  }
+
+  .hero-logo {
+    width: 340px;
+    max-width: 90%;
+    margin: 0 auto 24px;
+    display: block;
+    filter: drop-shadow(0 0 24px rgba(61,204,71,0.3));
   }
 
   .hero-title {
@@ -351,7 +361,7 @@
   }
 
   .hero-title em {
-    color: var(--red);
+    color: var(--green);
     font-style: normal;
   }
 
@@ -394,7 +404,7 @@
   .btn:active { transform: scale(0.98); }
 
   .btn-red {
-    background: var(--red);
+    background: var(--green);
     color: #fff;
   }
 
@@ -413,7 +423,7 @@
     border: 1px solid var(--border);
   }
 
-  .btn-outline:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+  .btn-outline:hover { color: var(--text); border-color: rgba(255,255,255,0.35); }
 
   .discord-icon {
     width: 16px;
@@ -442,7 +452,7 @@
     font-family: 'Barlow Condensed', sans-serif;
     font-size: 28px;
     font-weight: 700;
-    color: var(--red);
+    color: var(--green);
     line-height: 1;
   }
 
@@ -471,7 +481,7 @@
   .section-tag-bar {
     width: 3px;
     height: 18px;
-    background: var(--red);
+    background: var(--green);
     border-radius: 1px;
     flex-shrink: 0;
   }
@@ -506,7 +516,7 @@
   .about-card-icon {
     width: 36px;
     height: 36px;
-    background: rgba(225,6,0,0.12);
+    background: rgba(61,204,71,0.12);
     border-radius: 6px;
     display: flex;
     align-items: center;
@@ -517,7 +527,7 @@
   .about-card-icon svg {
     width: 18px;
     height: 18px;
-    fill: var(--red);
+    fill: var(--green);
   }
 
   .about-card h3 {
@@ -554,7 +564,7 @@
   }
 
   .join-banner h2 em {
-    color: var(--red);
+    color: var(--green);
     font-style: normal;
   }
 
@@ -651,7 +661,7 @@
   }
 
   .footer-logo {
-    background: var(--red);
+    background: var(--green);
     color: #fff;
     font-family: 'Barlow Condensed', sans-serif;
     font-size: 12px;
@@ -678,7 +688,6 @@
 <nav>
   <div class="nav-left">
     <a href="index.html" class="nav-logo">F1XL</a>
-    <div class="nav-title">Formula Xbox Leagues</div>
   </div>
 
   <div class="nav-links">
@@ -761,12 +770,12 @@
   <div class="hero-glow"></div>
   <div class="hero-fade"></div>
   <div class="hero-top-bar"></div>
-  <div class="hero-est">Est. 2010</div>
   <div class="hero-content">
     <div class="hero-season">
       <div class="hero-season-dot"></div>
       <div class="hero-season-text">Season 27 · Now racing</div>
     </div>
+    <img src="TRANSPARENT.png" alt="F1XL" class="hero-logo">
     <h1 class="hero-title">The UK's longest<br>running <em>F1 league</em></h1>
     <p class="hero-desc">
       <strong>F1XL has been racing every season since 2010.</strong> Multiplatform, casual, and welcoming to all skill levels — with 4 to 6 divisions every season, there's a place for everyone on the grid. Races every Sunday at 9pm.
