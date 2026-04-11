@@ -24,15 +24,26 @@ let _configPromise = null;
 
 function parseConfigCSV(text) {
   const map = {};
-  const lines = text.split('\n');
+  const lines = text.split(/\r?\n/);
   for (const line of lines) {
     if (!line.trim()) continue;
-    const parts = line.split(',');
-    const key = (parts[0] || '').trim().replace(/^"|"$/g, '').toLowerCase();
-    const val = (parts[1] || '').trim().replace(/^"|"$/g, '');
-    if (key && val && !key.startsWith('key') && !key.startsWith('permanent') && !key.startsWith('past')) {
-      map[key] = val;
+    // Parse CSV properly handling quoted values
+    const parts = [];
+    let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c === '"') { inQ = !inQ; }
+      else if (c === ',' && !inQ) { parts.push(cur.trim()); cur = ''; }
+      else cur += c;
     }
+    parts.push(cur.trim());
+    const key = (parts[0] || '').replace(/^"|"$/g, '').trim().toLowerCase();
+    const val = (parts[1] || '').replace(/^"|"$/g, '').trim();
+    // Skip header rows and label rows
+    if (!key || !val) continue;
+    if (key === 'key' || key === 'value') continue;
+    if (key === 'past seasons' || key === 'permanent rows (never change):') continue;
+    map[key] = val;
   }
   return map;
 }
@@ -43,7 +54,7 @@ async function loadConfig() {
 
   _configPromise = (async () => {
     try {
-      const url = `https://docs.google.com/spreadsheets/d/${F1XL_CONFIG_SHEET_ID}/gviz/tq?tqx=out:csv&gid=${F1XL_CONFIG_GID}`;
+      const url = `https://docs.google.com/spreadsheets/d/${F1XL_CONFIG_SHEET_ID}/export?format=csv&gid=${F1XL_CONFIG_GID}`;
       const res = await fetch(url);
       const text = await res.text();
       const config = parseConfigCSV(text);
@@ -66,7 +77,7 @@ async function loadSeasonConfig(season) {
   if (!gid) return null;
 
   try {
-    const url = `https://docs.google.com/spreadsheets/d/${F1XL_CONFIG_SHEET_ID}/gviz/tq?tqx=out:csv&gid=${gid}`;
+    const url = `https://docs.google.com/spreadsheets/d/${F1XL_CONFIG_SHEET_ID}/export?format=csv&gid=${gid}`;
     const res = await fetch(url);
     const text = await res.text();
     return parseConfigCSV(text);
@@ -87,7 +98,7 @@ async function getCurrentSeasonConfig() {
   const gid = config['current_season_gid'];
   if (gid) {
     try {
-      const url = `https://docs.google.com/spreadsheets/d/${F1XL_CONFIG_SHEET_ID}/gviz/tq?tqx=out:csv&gid=${gid}`;
+      const url = `https://docs.google.com/spreadsheets/d/${F1XL_CONFIG_SHEET_ID}/export?format=csv&gid=${gid}`;
       const res = await fetch(url);
       const text = await res.text();
       return parseConfigCSV(text);
