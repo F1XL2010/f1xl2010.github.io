@@ -72,11 +72,7 @@
   .pts-ban{color:var(--red);font-weight:700;}
   .secs-value{font-size:12px;color:var(--text-faint);}
   .secs-pos{color:rgba(255,150,50,0.8);}
-  .status-badge{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;padding:2px 7px;border-radius:3px;}
-  .status-clean{background:rgba(61,204,71,0.1);color:var(--green);border:1px solid rgba(61,204,71,0.2);}
-  .status-warning{background:rgba(232,184,75,0.1);color:var(--gold);border:1px solid rgba(232,184,75,0.2);}
-  .status-danger{background:rgba(255,100,0,0.1);color:rgba(255,150,50,0.9);border:1px solid rgba(255,100,0,0.2);}
-  .status-ban{background:rgba(225,6,0,0.15);color:#ff6b6b;border:1px solid rgba(225,6,0,0.3);}
+
   .empty-state{text-align:center;padding:32px;color:var(--text-faint);font-size:13px;}
 
   .penalty-guide{background:var(--dark);border-bottom:1px solid var(--border);}
@@ -173,7 +169,7 @@
 </div>
 
 <div class="info-bar">
-  Licence points accumulate across the season. <strong>9 points</strong> = race ban. Points reset at season start unless carried over by stewards.
+  Licence points accumulate across the season. Points reset at season start unless carried over by stewards.
 </div>
 
 <div class="penalty-guide" id="penalty-guide">
@@ -206,6 +202,7 @@
 <div class="div-tabs" id="div-tabs"></div>
 
 <div class="content">
+  <div id="upcoming-bans" style="background:var(--dark2);border:1px solid rgba(225,6,0,0.2);border-radius:8px;padding:16px;margin-bottom:20px;"></div>
   <div class="search-wrap">
     <input type="text" class="search-input" id="search" placeholder="Search driver..." oninput="filterTable(this.value)">
   </div>
@@ -255,51 +252,77 @@ function ptsClass(pts){
   return 'pts-zero';
 }
 
-function statusBadge(pts){
-  if(pts>=9) return '<span class="status-badge status-ban">Ban</span>';
-  if(pts>=6) return '<span class="status-badge status-danger">At Risk</span>';
-  if(pts>=3) return '<span class="status-badge status-warning">Warning</span>';
-  return '<span class="status-badge status-clean">Clean</span>';
-}
+const BANS_GID = '1379123195';
 
 async function init(){
   try{
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${GID}`;
-    const res = await fetch(url);
-    const text = await res.text();
-    if(text.includes('<!DOCTYPE')) throw new Error('Not published');
-    const rows = parseCSV(text);
+    // Load summary and bans in parallel
+    const [summaryRes, bansRes] = await Promise.all([
+      fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${GID}`),
+      fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${BANS_GID}`)
+    ]);
 
-    // Row 0: division headers e.g. "Division 1", "Division 2"
-    // Row 1: column headers (Driver, Points, Seconds Added)
-    // Row 2+: data
+    const summaryText = await summaryRes.text();
+    const bansText = await bansRes.text();
 
-    // Detect how many divisions from row 0
-    const headerRow = rows[0]||[];
+    if(summaryText.includes('<!DOCTYPE')) throw new Error('Not published');
+
+    const rows = parseCSV(summaryText);
+    const bansRows = parseCSV(bansText);
+
+    // Find division header row by scanning for "division" keyword
+    let divHeaderRow = 0;
+    let dataStart = 2;
+    for(let i=0;i<rows.length;i++){
+      if((rows[i][0]||'').toLowerCase().includes('division')){
+        divHeaderRow = i;
+        dataStart = i + 2; // skip div row + column headers row
+        break;
+      }
+    }
+
+    const headerRow = rows[divHeaderRow]||[];
     const divNames = [];
     for(let i=0;i<DIV_COL_STARTS.length;i++){
       const name = g(headerRow, DIV_COL_STARTS[i]);
       if(name.toLowerCase().includes('division')) divNames.push(name);
     }
 
-    // Parse each division
     allDivisions = divNames.map((name, di) => {
       const startCol = DIV_COL_STARTS[di];
       const drivers = [];
-      for(let ri=2; ri<rows.length; ri++){
+      for(let ri=dataStart; ri<rows.length; ri++){
         const row = rows[ri];
         const driver = g(row, startCol);
         if(!driver) continue;
+        // Skip if it looks like a header
+        if(driver.toLowerCase()==='driver') continue;
         const pts = parseFloat(g(row, startCol+1)) || 0;
         const secs = parseFloat(g(row, startCol+2)) || 0;
         drivers.push({driver, pts, secs});
       }
-      // Sort by points descending, then name
       drivers.sort((a,b) => b.pts - a.pts || a.driver.localeCompare(b.driver));
       return {name, drivers};
     });
 
-    // Build division tabs
+    // Parse upcoming bans - skip header row, show only unserved (col 4 empty)
+    const upcomingBans = [];
+    for(let i=1; i<bansRows.length; i++){
+      const row = bansRows[i];
+      const div = g(row,0);
+      const driver = g(row,1);
+      const ban = g(row,2);
+      const race = g(row,3);
+      const served = g(row,4);
+      const incurred = g(row,5);
+      const reason = g(row,6);
+      if(!driver) continue;
+      if(driver.toLowerCase()==='driver') continue;
+      if(!served) upcomingBans.push({div, driver, ban, race, incurred, reason});
+    }
+
+    renderUpcomingBans(upcomingBans);
+
     const tabsEl = document.getElementById('div-tabs');
     tabsEl.innerHTML = allDivisions.map((d,i) =>
       `<button class="div-tab${i===0?' active':''}" onclick="showDiv(${i},this)">${d.name}</button>`
@@ -313,6 +336,26 @@ async function init(){
   } catch(e){
     document.getElementById('content').innerHTML = `<div class="loading-msg">Could not load: ${e.message}</div>`;
   }
+}
+
+function renderUpcomingBans(bans){
+  const el = document.getElementById('upcoming-bans');
+  if(!el) return;
+  if(!bans.length){ el.style.display='none'; return; }
+
+  let html = `<table class="licence-table">
+    <thead><tr><th>Div</th><th>Driver</th><th>Ban</th><th>Race Incurred</th><th>Reason</th></tr></thead><tbody>`;
+  bans.forEach(b=>{
+    html+=`<tr>
+      <td><span class="pts-value" style="font-size:13px;">D${b.div}</span></td>
+      <td><span class="driver-name">${b.driver}</span></td>
+      <td><span style="color:#ff6b6b;font-size:12px;font-weight:500;">${b.ban}</span></td>
+      <td><span style="font-size:12px;color:var(--text-muted);">${b.incurred}</span></td>
+      <td><span style="font-size:12px;color:var(--text-faint);">${b.reason||'—'}</span></td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  el.innerHTML = `<div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#ff6b6b;margin-bottom:10px;">Upcoming Bans</div>` + html;
 }
 
 function showDiv(idx, btn){
@@ -329,13 +372,12 @@ function renderTable(drivers){
     return;
   }
   let html = `<table class="licence-table">
-    <thead><tr><th>Driver</th><th>Pts</th><th>Secs</th><th>Status</th></tr></thead><tbody>`;
+    <thead><tr><th>Driver</th><th>Pts</th><th>Secs Added</th></tr></thead><tbody>`;
   drivers.forEach(d=>{
     html+=`<tr>
       <td><span class="driver-name">${d.driver}</span></td>
       <td><span class="pts-value ${ptsClass(d.pts)}">${d.pts}</span></td>
       <td><span class="${d.secs>0?'secs-pos':'secs-value'}">${d.secs>0?'+'+d.secs+'s':'—'}</span></td>
-      <td>${statusBadge(d.pts)}</td>
     </tr>`;
   });
   document.getElementById('content').innerHTML = html+'</tbody></table>';
