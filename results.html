@@ -185,18 +185,23 @@ const RACE_GIDS = [
   '1837636331','1843119272','1680150111','1743996461','1239960138','139054262'
 ];
 
-// Column offsets (0-based) from section start col
-// Quali: Pos,Nat,#,Driver,Team,[logo],Time,[Tyre],[Tyre],PenPts,Pen
+// Absolute column positions (0-based)
+// Non-sprint Quali: 0-10, Non-sprint Race: 12-24
+// Sprint Quali: 0-11, Sprint Race: 12-23, Main Quali: 24-34, Main Race: 36-48
+
+// Quali offsets (from section start)
 const QO = {pos:0,nat:1,num:2,driver:3,team:4,time:6,penPts:9,pen:10};
-// Race: Pos,Nat,#,Driver,Team,[logo],Stops,Gap,Points,[blank],FL,PenPts,Pen
+// Sprint Race offsets (from section start) - no FL column
+const SRO = {pos:0,nat:1,num:2,driver:3,team:4,stops:6,gap:7,pts:8,penPts:10,pen:11};
+// Main Race offsets (from section start) - has FL
 const RO = {pos:0,nat:1,num:2,driver:3,team:4,stops:6,gap:7,pts:8,fl:10,penPts:11,pen:12};
 
-// Start columns for each section
+// Section start columns
 const NON_SPRINT_RACE_START = 12;
 const SQ_START = 0;   // Sprint Quali
-const SR_START = 12;  // Sprint Race
-const MQ_START = 26;  // Main Quali
-const MR_START = 38;  // Main Race
+const SR_START = 12;  // Sprint Race (no FL)
+const MQ_START = 24;  // Main Quali
+const MR_START = 36;  // Main Race (has FL)
 
 const today = new Date(); today.setHours(0,0,0,0);
 let rounds=[], cache={};
@@ -231,8 +236,9 @@ function g(row,col){return(row&&row[col]!==undefined)?(row[col]||'').trim():'';}
 function isDNF(p){return['dnf','dns','dsq','ret','nc'].includes((p||'').toLowerCase());}
 function posClass(p){if(p==='1')return'p1';if(p==='2')return'p2';if(p==='3')return'p3';return'';}
 
-function extractSection(rows, startCol, isRace){
-  const off=isRace?RO:QO;
+function extractSection(rows, startCol, mode){
+  // mode: 'Q' = quali, 'R' = main race (has FL), 'SR' = sprint race (no FL)
+  const off = mode==='Q' ? QO : mode==='SR' ? SRO : RO;
   const results=[];
   for(let i=5;i<rows.length;i++){
     const row=rows[i];
@@ -241,13 +247,17 @@ function extractSection(rows, startCol, isRace){
     if(pos.toLowerCase()==='pos')continue;
     const driver=g(row,startCol+off.driver);
     if(!driver||driver.toLowerCase()==='driver')continue;
-    if(isRace){
+    if(mode==='Q'){
+      results.push({pos,nat:g(row,startCol+off.nat),num:g(row,startCol+off.num),driver,
+        team:g(row,startCol+off.team),time:g(row,startCol+off.time),pen:g(row,startCol+off.pen)});
+    } else if(mode==='SR'){
+      results.push({pos,nat:g(row,startCol+off.nat),num:g(row,startCol+off.num),driver,
+        team:g(row,startCol+off.team),stops:g(row,startCol+off.stops),gap:g(row,startCol+off.gap),
+        pts:g(row,startCol+off.pts),fl:'',pen:g(row,startCol+off.pen)});
+    } else {
       results.push({pos,nat:g(row,startCol+off.nat),num:g(row,startCol+off.num),driver,
         team:g(row,startCol+off.team),stops:g(row,startCol+off.stops),gap:g(row,startCol+off.gap),
         pts:g(row,startCol+off.pts),fl:g(row,startCol+off.fl),pen:g(row,startCol+off.pen)});
-    } else {
-      results.push({pos,nat:g(row,startCol+off.nat),num:g(row,startCol+off.num),driver,
-        team:g(row,startCol+off.team),time:g(row,startCol+off.time),pen:g(row,startCol+off.pen)});
     }
   }
   return results;
@@ -255,15 +265,15 @@ function extractSection(rows, startCol, isRace){
 
 function getMeta(rows){
   let circuit='',sc='0',rf='0';
-  // Circuit: row 0, col 4 (E)
-  if(rows[0]) circuit=g(rows[0],4)||g(rows[0],1)||'';
-  // Scan first 5 rows for SC/RF
+  if(rows[0]) circuit=g(rows[0],4)||'';
+  // Scan first 5 rows for Safety Cars and Red Flags
+  // Use LAST occurrence of Red Flags (race red flags, not quali)
   for(let i=0;i<5;i++){
     const row=rows[i]||[];
     for(let j=0;j<row.length;j++){
       const v=(row[j]||'').trim();
-      if(v==='Safety Cars')sc=(row[j+1]||'0').trim();
-      if(v==='Red Flags')rf=(row[j+1]||'0').trim();
+      if(v==='Safety Cars'){const val=(row[j+1]||'0').trim();if(val&&val!=='0')sc=val;}
+      if(v==='Red Flags'){const val=(row[j+1]||'0').trim();if(val&&val!=='0')rf=val;}
     }
   }
   return{circuit,sc,rf};
@@ -335,16 +345,16 @@ function render(r,rows){
   let html='';
 
   if(!r.isSprint){
-    const quali=extractSection(rows,0,false);
-    const race=extractSection(rows,NON_SPRINT_RACE_START,true);
+    const quali=extractSection(rows,0,'Q');
+    const race=extractSection(rows,NON_SPRINT_RACE_START,'R');
     const winner=race.find(x=>x.pos==='1');
     html+=header(r,circuit,winner,sc,rf,false);
     html+=`<div class="results-grid">${qTable(quali,'Qualifying')}${rTable(race,'Race')}</div>`;
   } else {
-    const sq=extractSection(rows,SQ_START,false);
-    const sr=extractSection(rows,SR_START,true);
-    const mq=extractSection(rows,MQ_START,false);
-    const mr=extractSection(rows,MR_START,true);
+    const sq=extractSection(rows,SQ_START,'Q');
+    const sr=extractSection(rows,SR_START,'SR');
+    const mq=extractSection(rows,MQ_START,'Q');
+    const mr=extractSection(rows,MR_START,'R');
     const winner=mr.find(x=>x.pos==='1');
     html+=header(r,circuit,winner,sc,rf,true);
     html+=`<div class="section-label">Sprint</div>`;
