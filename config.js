@@ -6,7 +6,7 @@ const F1XL_CONFIG_GID = '0';
 
 // Permanent sheet IDs (never change)
 const F1XL_PERMANENT = {
-  schedule_sheet_id:       '17Exg9qlJPzQNUh6egWu7SJZhWJY9AEmDw81Ab38B42I',
+  schedule_sheet_id:       '1wjUo7Nq3Kbc3x9EIq4hsVdxQ_gMItofYC90xwMvsLoM',
   schedule_gid:            '0',
   ticket_outcomes_sheet_id:'1018L2jzNseasQVfNNoZCh_fDUbMIQ93EP2ahJvNc6F0',
   ticket_outcomes_gid:     '1683645163',
@@ -82,24 +82,38 @@ async function getCurrentSeason() {
 }
 
 async function getCurrentSeasonConfig() {
+  const config = await loadConfig();
+  // Use current_season_gid directly if available
+  const gid = config['current_season_gid'];
+  if (gid) {
+    try {
+      const url = `https://docs.google.com/spreadsheets/d/${F1XL_CONFIG_SHEET_ID}/gviz/tq?tqx=out:csv&gid=${gid}`;
+      const res = await fetch(url);
+      const text = await res.text();
+      return parseConfigCSV(text);
+    } catch(e) {
+      console.warn('Current season config load failed:', e.message);
+    }
+  }
+  // Fallback to season number lookup
   const season = await getCurrentSeason();
   if (!season) return null;
   return loadSeasonConfig(season);
 }
 
 async function getAllSeasons() {
-  // Returns array of season numbers that have a config GID, newest first
+  // Returns array of {season, gid} for past seasons only (not current)
   const config = await loadConfig();
+  const current = parseInt(config['current_season']) || 0;
   const seasons = [];
   for (const key of Object.keys(config)) {
     const match = key.match(/^s(\d+(?:_\d+)?)_gid$/);
-    if (match) {
-      // Convert s7_5 back to 7.5
+    if (match && config[key]) {
       const num = parseFloat(match[1].replace('_', '.'));
-      if (!isNaN(num)) seasons.push(num);
+      if (!isNaN(num) && num !== current) seasons.push({season: num, gid: config[key]});
     }
   }
-  return seasons.sort((a, b) => b - a);
+  return seasons.sort((a, b) => b.season - a.season);
 }
 
 // Helper: get race GIDs array for a season/division from season config

@@ -328,14 +328,12 @@
   <div class="footer-text">f1xl.co.uk</div>
 </footer>
 
+<script src="config.js"></script>
 <script>
-const SHEET_ID = '1QpGnu-whJEj7RIovn7jLy9H-G6EoDAs_kOgMp1F0K80';
-const GIDS = {
-  drivers:      '1326128626',
-  constructors: '342237498',
-  driverStats:  '1021916835',
-  teamStats:    '933178264'
-};
+// Divisions and sheet IDs loaded from config at runtime
+let divisions = [];
+let currentDiv = null;
+let seasonConfig = null;
 
 const teamColors = {
   'Alpine':'#0090FF','Aston Martin':'#006F62','Ferrari':'#DC0000',
@@ -354,14 +352,7 @@ const raceFlags = {
   'Mex':'🇲🇽','Mexico':'🇲🇽','USA':'🇺🇸','Mia':'🇺🇸','Miami':'🇺🇸','Aus2':'🇦🇺','Australia':'🇦🇺'
 };
 
-const divisions = [
-  { id:'D1', name:'Division 1', sheetId:SHEET_ID, gids:GIDS, leader:'Crabz', leaderPts:209 },
-  { id:'D2', name:'Division 2', sheetId:null },
-  { id:'D3', name:'Division 3', sheetId:null },
-  { id:'D4', name:'Division 4', sheetId:null },
-];
 
-let currentDiv = null;
 
 async function fetchSheet(sheetId, gid) {
   const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
@@ -410,7 +401,7 @@ function buildSelector() {
   el.innerHTML = divisions.map((d,i) => {
     const avail = d.sheetId !== null;
     return `<div class="div-card" onclick="${avail?`openDiv(${i})`:''}" style="${!avail?'opacity:0.35;cursor:not-allowed;':''}">
-      <div class="div-card-season">F1XL · S27</div>
+      <div class="div-card-season">F1XL · S${d.season||''}</div>
       <div class="div-card-name">${d.name}</div>
       ${avail ? `
         <div class="div-card-lbl">Championship leader</div>
@@ -803,7 +794,46 @@ function toggleMenu() {
   document.getElementById('hamburger').classList.toggle('open');
 }
 
-buildSelector();
+async function initStandings() {
+  try {
+    // Load season config from config sheet
+    seasonConfig = await getCurrentSeasonConfig();
+    const currentSeason = await getCurrentSeason();
+
+    if (!seasonConfig) {
+      document.getElementById('div-selector').innerHTML = '<div class="loading-msg">Could not load season config.</div>';
+      return;
+    }
+
+    const numDivisions = parseInt(seasonConfig['divisions']) || 1;
+
+    // Build divisions array from config
+    divisions = [];
+    for (let d = 1; d <= numDivisions; d++) {
+      const sheetId = seasonConfig[`d${d}_sheet_id`];
+      const hasStandings = seasonConfig[`d${d}_has_standings`] === 'yes';
+      divisions.push({
+        id: `D${d}`,
+        name: `Division ${d}`,
+        sheetId: hasStandings ? sheetId : null,
+        gids: {
+          drivers:      seasonConfig[`d${d}_driver_results_gid`],
+          constructors: seasonConfig[`d${d}_constructors_gid`],
+          driverStats:  seasonConfig[`d${d}_driver_stats_gid`],
+          teamStats:    seasonConfig[`d${d}_team_stats_gid`],
+        },
+        season: currentSeason
+      });
+    }
+
+    buildSelector();
+  } catch(e) {
+    console.error('Init failed:', e);
+    document.getElementById('div-selector').innerHTML = '<div class="loading-msg">Could not load standings.</div>';
+  }
+}
+
+initStandings();
 </script>
 </body>
 </html>
