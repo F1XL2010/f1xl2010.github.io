@@ -10,7 +10,6 @@
   :root{--green:#3DCC47;--teal:#5ECFCF;--red:#E10600;--black:#111816;--dark:#161d1b;--dark2:#1a2320;--dark3:#1e2a27;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);--text:#ffffff;--text-muted:rgba(255,255,255,0.60);--text-faint:rgba(255,255,255,0.30);--gold:#E8B84B;}
   *{box-sizing:border-box;margin:0;padding:0;}
   body{background:#111816;background-image:linear-gradient(rgba(255,255,255,0.025) 0px,rgba(255,255,255,0.025) 4px,rgba(0,0,0,0.06) 4px,rgba(0,0,0,0.06) 8px),linear-gradient(90deg,rgba(0,0,0,0.06) 0px,rgba(0,0,0,0.06) 4px,rgba(255,255,255,0.025) 4px,rgba(255,255,255,0.025) 8px);background-size:8px 8px;color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;}
-
   nav{background:rgba(17,24,22,0.97);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;}
   .nav-left{display:flex;align-items:center;gap:14px;flex-shrink:0;}
   .nav-logo{background:var(--green);color:#000;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;padding:5px 11px;border-radius:3px;text-decoration:none;}
@@ -37,85 +36,62 @@
   .mobile-divider{height:1px;background:var(--border);margin:12px 24px;}
   @media(max-width:860px){.nav-links{display:none;}.nav-hamburger{display:flex;}}
   @media(min-width:861px){.mobile-menu{display:none !important;}}
-
   .page-header{background:var(--dark);border-bottom:1px solid var(--border);padding:24px;}
   .page-eyebrow{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:2.5px;color:var(--teal);text-transform:uppercase;font-weight:600;margin-bottom:4px;}
   .page-title{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:700;text-transform:uppercase;line-height:1;}
   .page-meta{font-size:13px;color:var(--text-muted);margin-top:6px;}
-
-  /* ROUND SELECTOR */
-  .round-selector{background:var(--dark);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
-  .round-btn{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:0.5px;padding:6px 12px;border-radius:4px;border:1px solid var(--border2);background:none;color:var(--text-muted);cursor:pointer;transition:all 0.2s;white-space:nowrap;}
+  .round-selector{background:var(--dark);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;gap:6px;flex-wrap:wrap;}
+  .round-btn{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:0.5px;padding:5px 11px;border-radius:4px;border:1px solid var(--border2);background:none;color:var(--text-muted);cursor:pointer;transition:all 0.2s;white-space:nowrap;}
   .round-btn:hover{color:var(--text);border-color:rgba(255,255,255,0.25);}
   .round-btn.active{background:var(--green);border-color:var(--green);color:#000;}
-  .round-btn.cancelled{opacity:0.4;text-decoration:line-through;cursor:not-allowed;}
   .round-btn.sprint{border-color:rgba(100,150,255,0.3);}
   .round-btn.sprint.active{background:rgba(100,150,255,0.8);border-color:rgba(100,150,255,0.8);color:#fff;}
-
-  /* CONTENT */
   .content{padding:20px 24px 48px;max-width:1100px;}
   .loading-msg{text-align:center;padding:48px;color:var(--text-muted);font-size:14px;}
-
-  /* RACE HEADER */
   .race-header{background:var(--dark2);border:1px solid var(--border2);border-top:3px solid var(--green);border-radius:8px;padding:18px 20px;margin-bottom:20px;}
-  .race-header.sprint-race{border-top-color:rgba(100,150,255,0.8);}
-  .race-header-top{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+  .race-header.is-sprint{border-top-color:rgba(100,150,255,0.8);}
+  .race-header-inner{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;}
   .race-title{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;text-transform:uppercase;line-height:1;}
   .race-subtitle{font-size:13px;color:var(--text-muted);margin-top:3px;}
-  .race-badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+  .race-badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
   .badge{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;padding:3px 8px;border-radius:3px;}
   .badge-round{background:rgba(61,204,71,0.12);color:var(--green);border:1px solid rgba(61,204,71,0.25);}
   .badge-sprint{background:rgba(100,150,255,0.15);color:rgba(130,170,255,0.9);border:1px solid rgba(100,150,255,0.2);}
   .badge-sc{background:rgba(232,184,75,0.12);color:var(--gold);border:1px solid rgba(232,184,75,0.25);}
   .badge-rf{background:rgba(225,6,0,0.12);color:#ff6b6b;border:1px solid rgba(225,6,0,0.25);}
-  .race-meta-right{text-align:right;}
-  .race-meta-stat{font-size:12px;color:var(--text-faint);}
-
-  /* RESULTS GRID */
-  .results-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;}
-  @media(max-width:700px){.results-grid{grid-template-columns:1fr;}}
-
-  .results-section{background:var(--dark2);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
-  .results-section-title{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);padding:10px 14px;border-bottom:1px solid var(--border);background:rgba(255,255,255,0.02);}
-
-  .results-table{width:100%;border-collapse:collapse;}
-  .results-table th{text-align:left;padding:6px 10px;font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-faint);border-bottom:1px solid var(--border);background:var(--dark3);}
-  .results-table td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.04);font-size:12px;color:var(--text-muted);vertical-align:middle;}
-  .results-table tr:last-child td{border-bottom:none;}
-  .results-table tr:hover td{background:rgba(255,255,255,0.02);}
-
-  .pos-num{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--text-faint);min-width:24px;display:inline-block;text-align:center;}
-  .pos-num.p1{color:var(--gold);}
-  .pos-num.p2{color:rgba(200,200,200,0.9);}
-  .pos-num.p3{color:rgba(200,140,80,0.9);}
-  .pos-dnf{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:rgba(255,100,100,0.7);}
-  .driver-num{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;color:var(--text-faint);min-width:22px;display:inline-block;text-align:center;}
-  .driver-name{font-size:13px;color:var(--text);font-weight:500;}
-  .quali-time{font-family:'Barlow Condensed',sans-serif;font-size:13px;color:var(--teal);letter-spacing:0.3px;}
-  .race-gap{font-size:12px;color:var(--text-muted);}
-  .race-points{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--green);}
-  .race-points.zero{color:var(--text-faint);}
-  .fl-dot{width:8px;height:8px;background:var(--green);border-radius:50%;display:inline-block;}
-  .penalty-tag{font-size:10px;color:#ff6b6b;margin-left:4px;}
-  .stops{font-size:11px;color:var(--text-faint);}
-
-  /* SPRINT FULL WIDTH */
-  .results-full{background:var(--dark2);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:16px;}
-
-  /* SECTION DIVIDER */
-  .section-divider{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin:24px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--border);}
-
+  .race-winner-label{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;}
+  .race-winner-name{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--gold);}
+  .race-winner-team{font-size:11px;color:var(--text-faint);}
+  .section-label{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin:20px 0 10px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+  .results-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:4px;}
+  @media(max-width:680px){.results-grid{grid-template-columns:1fr;}}
+  .results-box{background:var(--dark2);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+  .results-box-title{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);padding:9px 14px;border-bottom:1px solid var(--border);background:rgba(255,255,255,0.02);}
+  table.rt{width:100%;border-collapse:collapse;}
+  table.rt th{text-align:left;padding:5px 10px;font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-faint);border-bottom:1px solid var(--border);background:var(--dark3);}
+  table.rt td{padding:7px 10px;border-bottom:1px solid rgba(255,255,255,0.035);font-size:12px;color:var(--text-muted);vertical-align:middle;}
+  table.rt tr:last-child td{border-bottom:none;}
+  table.rt tr:hover td{background:rgba(255,255,255,0.02);}
+  .p{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;min-width:22px;display:inline-block;text-align:center;color:var(--text-faint);}
+  .p1{color:var(--gold)!important;}.p2{color:rgba(210,210,210,0.9)!important;}.p3{color:rgba(200,140,80,0.9)!important;}
+  .pdnf{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:rgba(255,100,100,0.7);}
+  .dnum{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;color:var(--text-faint);min-width:20px;display:inline-block;text-align:center;}
+  .dname{font-size:13px;color:var(--text);font-weight:500;}
+  .qtime{font-family:'Barlow Condensed',sans-serif;font-size:13px;color:var(--teal);letter-spacing:0.3px;}
+  .rgap{font-size:12px;color:var(--text-muted);}
+  .rpts{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--green);}
+  .rpts.z{color:var(--text-faint);}
+  .fl{width:8px;height:8px;background:var(--green);border-radius:50%;display:inline-block;margin-left:4px;vertical-align:middle;}
+  .pen{font-size:10px;color:#ff6b6b;margin-left:3px;}
+  .stops{font-size:10px;color:var(--text-faint);}
   footer{background:var(--dark);border-top:1px solid var(--border);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
   .footer-logo{background:var(--green);color:#000;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;padding:4px 9px;border-radius:3px;}
   .footer-text{font-size:12px;color:var(--text-faint);}
 </style>
 </head>
 <body>
-
 <nav>
-  <div class="nav-left">
-    <a href="index.html" class="nav-logo">F1XL</a>
-  </div>
+  <div class="nav-left"><a href="index.html" class="nav-logo">F1XL</a></div>
   <div class="nav-links">
     <div class="nav-item"><a href="index.html">Home</a></div>
     <div class="nav-item">
@@ -138,19 +114,14 @@
     </div>
     <div class="nav-item">
       <button>Schedule <span class="nav-chevron">▼</span></button>
-      <div class="nav-dropdown">
-        <a href="schedule.html">S27 Schedule</a>
-      </div>
+      <div class="nav-dropdown"><a href="schedule.html">Schedule</a></div>
     </div>
     <div class="nav-item"><a href="track-records.html">Track Records</a></div>
     <div class="nav-item"><a href="applications.html">Applications</a></div>
     <div class="nav-item"><a href="league-rules.html">League Rules</a></div>
   </div>
-  <button class="nav-hamburger" id="hamburger" onclick="toggleMenu()">
-    <span></span><span></span><span></span>
-  </button>
+  <button class="nav-hamburger" id="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></button>
 </nav>
-
 <div class="mobile-menu" id="mobile-menu">
   <div class="mobile-section">
     <div class="mobile-section-header">Standings</div>
@@ -171,7 +142,7 @@
   <div class="mobile-divider"></div>
   <div class="mobile-section">
     <div class="mobile-section-header">Schedule</div>
-    <a href="schedule.html">S27 Schedule</a>
+    <a href="schedule.html">Schedule</a>
   </div>
   <div class="mobile-divider"></div>
   <div class="mobile-section">
@@ -182,13 +153,13 @@
 </div>
 
 <div class="page-header">
-  <div class="page-eyebrow">Season 27</div>
+  <div class="page-eyebrow">Season 28 · Division 1</div>
   <div class="page-title">Results</div>
   <div class="page-meta" id="page-meta">Loading...</div>
 </div>
 
 <div class="round-selector" id="round-selector">
-  <div class="loading-msg" style="padding:8px;">Loading rounds...</div>
+  <div style="color:var(--text-faint);font-size:13px;">Loading rounds...</div>
 </div>
 
 <div class="content" id="content">
@@ -204,377 +175,246 @@
 </footer>
 
 <script>
-const SHEET_ID = '1sM6lZDQXG2ESn9G-CcPAXeaBuQIdWaFvrz9QSt9qFh8';
-const DATA_GID = '1555391777';
+const SHEET_ID = '1ABi894XALp0Qpoc73XKrwHBJR2vU13Yv2wFOlofxmYw';
+const CAL_GID  = '1359854005';
 
-// Race GIDs in order R1-R16 (R2 cancelled)
 const RACE_GIDS = [
-  '0',           // R1  - Italy
-  null,          // R2  - Cancelled
-  '825699686',   // R3  - Abu Dhabi (sprint)
-  '1076677158',  // R4  - Japan
-  '719587811',   // R5  - China
-  '1167521318',  // R6  - Qatar
-  '1142761123',  // R7  - Saudi Arabia
-  '1628088902',  // R8  - Austria
-  '1295620365',  // R9  - Britain (sprint)
-  '588056749',   // R10 - Canada
-  '748947411',   // R11 - Singapore
-  '1348759414',  // R12 - Australia
-  '1319217825',  // R13 - Hungary
-  '891625123',   // R14 - Brazil (sprint)
-  '1573511775',  // R15 - Azerbaijan
-  '1291998843',  // R16 - Netherlands
+  '237469187','2041214112','725989775','346856347','1326392450',
+  '1601388396','1998190339','1284083176','1173871273','1209433528',
+  '1440518624','1310855257','928568727','1987719493','1080515766',
+  '1837636331','1843119272','1680150111','1743996461','1239960138','139054262'
 ];
 
-let rounds = [];
-let currentRound = null;
-const cache = {};
+// Column offsets (0-based) from section start col
+// Quali: Pos,Nat,#,Driver,Team,[logo],Time,[Tyre],[Tyre],PenPts,Pen
+const QO = {pos:0,nat:1,num:2,driver:3,team:4,time:6,penPts:9,pen:10};
+// Race: Pos,Nat,#,Driver,Team,[logo],Stops,Gap,Points,[blank],FL,PenPts,Pen
+const RO = {pos:0,nat:1,num:2,driver:3,team:4,stops:6,gap:7,pts:8,fl:10,penPts:11,pen:12};
 
-function parseCSV(text) {
-  const rows=[]; let cells=[],current='',inQ=false;
+// Start columns for each section
+const NON_SPRINT_RACE_START = 12;
+const SQ_START = 0;   // Sprint Quali
+const SR_START = 12;  // Sprint Race
+const MQ_START = 26;  // Main Quali
+const MR_START = 38;  // Main Race
+
+const today = new Date(); today.setHours(0,0,0,0);
+let rounds=[], cache={};
+
+function csv(text){
+  const rows=[]; let cells=[],cur='',inQ=false;
   for(let i=0;i<text.length;i++){
     const c=text[i],n=text[i+1];
-    if(c==='"'){if(!inQ)inQ=true;else if(n==='"'){current+='"';i++;}else inQ=false;}
-    else if(c===','&&!inQ){cells.push(current);current='';}
-    else if((c==='\n'||(c==='\r'&&n==='\n'))&&!inQ){if(c==='\r')i++;cells.push(current);current='';if(cells.some(x=>x.trim()))rows.push(cells);cells=[];}
-    else current+=c;
+    if(c==='"'){if(!inQ)inQ=true;else if(n==='"'){cur+='"';i++;}else inQ=false;}
+    else if(c===','&&!inQ){cells.push(cur);cur='';}
+    else if((c==='\n'||(c==='\r'&&n==='\n'))&&!inQ){if(c==='\r')i++;cells.push(cur);cur='';if(cells.some(x=>x.trim()))rows.push(cells);cells=[];}
+    else cur+=c;
   }
-  cells.push(current);if(cells.some(x=>x.trim()))rows.push(cells);
+  cells.push(cur);if(cells.some(x=>x.trim()))rows.push(cells);
   return rows;
 }
 
-function parseDate(s) {
-  if (!s||!s.trim()) return null;
+function pd(s){
+  if(!s||!s.trim())return null;
   const p=s.trim().split('/');
-  if(p.length!==3) return null;
+  if(p.length!==3)return null;
   return new Date(+p[2],+p[1]-1,+p[0]);
 }
 
-function fmtDate(d) {
-  if(!d) return '';
+function fd(d){
+  if(!d)return'';
   const mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  return `${d.getDate()} ${mo[d.getMonth()]} ${d.getFullYear()}`;
+  return`${d.getDate()} ${mo[d.getMonth()]} ${d.getFullYear()}`;
 }
 
-async function init() {
-  try {
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${DATA_GID}`;
-    const res = await fetch(url);
-    const text = await res.text();
-    if(text.includes('<!DOCTYPE')||text.includes('<html')) throw new Error('Not published');
-    const rows = parseCSV(text);
+function g(row,col){return(row&&row[col]!==undefined)?(row[col]||'').trim():'';}
+function isDNF(p){return['dnf','dns','dsq','ret','nc'].includes((p||'').toLowerCase());}
+function posClass(p){if(p==='1')return'p1';if(p==='2')return'p2';if(p==='3')return'p3';return'';}
 
-    const today = new Date(); today.setHours(0,0,0,0);
-    rounds = [];
-    let lastCompleted = -1;
+function extractSection(rows, startCol, isRace){
+  const off=isRace?RO:QO;
+  const results=[];
+  for(let i=5;i<rows.length;i++){
+    const row=rows[i];
+    const pos=g(row,startCol+off.pos);
+    if(!pos)continue;
+    if(pos.toLowerCase()==='pos')continue;
+    const driver=g(row,startCol+off.driver);
+    if(!driver||driver.toLowerCase()==='driver')continue;
+    if(isRace){
+      results.push({pos,nat:g(row,startCol+off.nat),num:g(row,startCol+off.num),driver,
+        team:g(row,startCol+off.team),stops:g(row,startCol+off.stops),gap:g(row,startCol+off.gap),
+        pts:g(row,startCol+off.pts),fl:g(row,startCol+off.fl),pen:g(row,startCol+off.pen)});
+    } else {
+      results.push({pos,nat:g(row,startCol+off.nat),num:g(row,startCol+off.num),driver,
+        team:g(row,startCol+off.team),time:g(row,startCol+off.time),pen:g(row,startCol+off.pen)});
+    }
+  }
+  return results;
+}
 
-    for(let i=1;i<rows.length;i++) {
-      const row = rows[i];
-      const r0=(row[0]||'').trim();
-      const r1=(row[1]||'').trim().toLowerCase();
-      const r2=(row[2]||'').trim();
-      const r3=(row[3]||'').trim();
-      if(!r0) continue;
-      if(r0.toLowerCase().includes('all star')) continue;
+function getMeta(rows){
+  let circuit='',sc='0',rf='0';
+  // Circuit: row 0, col 4 (E)
+  if(rows[0]) circuit=g(rows[0],4)||g(rows[0],1)||'';
+  // Scan first 5 rows for SC/RF
+  for(let i=0;i<5;i++){
+    const row=rows[i]||[];
+    for(let j=0;j<row.length;j++){
+      const v=(row[j]||'').trim();
+      if(v==='Safety Cars')sc=(row[j+1]||'0').trim();
+      if(v==='Red Flags')rf=(row[j+1]||'0').trim();
+    }
+  }
+  return{circuit,sc,rf};
+}
+
+async function init(){
+  try{
+    const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${CAL_GID}`;
+    const res=await fetch(url);
+    const text=await res.text();
+    if(text.includes('<!DOCTYPE'))throw new Error('Sheet not published to web');
+    const rows=csv(text);
+    rounds=[];
+    let lastDone=-1;
+    for(let i=1;i<rows.length;i++){
+      const row=rows[i];
+      const r0=(row[0]||'').trim(),r1=(row[1]||'').trim().toLowerCase();
+      const r2=(row[2]||'').trim(),r3=(row[3]||'').trim();
+      if(!r0)continue;
+      if(r0.toLowerCase().includes('all star'))continue;
       const num=parseInt(r0);
-      if(isNaN(num)) continue;
-      const date=parseDate(r2);
-      const gidIdx = num - 1; // 0-indexed
-      const gid = RACE_GIDS[gidIdx] !== undefined ? RACE_GIDS[gidIdx] : null;
-      const cancelled = gid === null;
-      const completed = date && date < today && !cancelled;
-      if(completed) lastCompleted = rounds.length;
-      rounds.push({ round:num, circuit:r3, date, isSprint:r1==='sprint', gid, cancelled, completed });
+      if(isNaN(num)||num<1||num>21)continue;
+      if(!r3&&!r2)continue;
+      const date=pd(r2);
+      const done=!!(date&&date<today);
+      if(done)lastDone=rounds.length;
+      rounds.push({round:num,circuit:r3,date,isSprint:r1==='sprint',gid:RACE_GIDS[num-1],done});
     }
-
-    // Build round selector
-    const sel = document.getElementById('round-selector');
-    sel.innerHTML = rounds.filter(r=>!r.cancelled).map(r => {
-      const cls = ['round-btn', r.isSprint?'sprint':'', !r.completed?'upcoming':''].filter(Boolean).join(' ');
-      return `<button class="${cls}" id="rbtn-${r.round}" onclick="selectRound(${r.round})">${r.isSprint?'⚡ ':''}R${r.round} · ${r.circuit}</button>`;
-    }).join('');
-
-    document.getElementById('page-meta').textContent =
-      `Season 27 · ${rounds.filter(r=>r.completed).length} races completed`;
-
-    // Auto-select most recent completed
-    if(lastCompleted >= 0) {
-      selectRound(rounds[lastCompleted].round);
-    }
-
-  } catch(e) {
-    document.getElementById('round-selector').innerHTML = `<div style="color:rgba(255,100,100,0.7);font-size:13px;">Could not load rounds: ${e.message}</div>`;
+    const sel=document.getElementById('round-selector');
+    sel.innerHTML=rounds.map(r=>`<button class="round-btn${r.isSprint?' sprint':''}" id="rb${r.round}" onclick="selectRound(${r.round})">${r.isSprint?'⚡ ':''}R${r.round}${r.circuit?' · '+r.circuit:''}</button>`).join('');
+    const done=rounds.filter(r=>r.done).length;
+    document.getElementById('page-meta').textContent=`${rounds.length} rounds · ${done} completed`;
+    if(lastDone>=0)selectRound(rounds[lastDone].round);
+  }catch(e){
+    document.getElementById('round-selector').innerHTML=`<div style="color:#ff6b6b;font-size:13px;">Could not load rounds: ${e.message}</div>`;
   }
 }
 
-async function selectRound(num) {
-  const round = rounds.find(r=>r.round===num);
-  if(!round || round.cancelled) return;
-
-  // Update button states
+async function selectRound(num){
+  const r=rounds.find(x=>x.round===num);
+  if(!r)return;
   document.querySelectorAll('.round-btn').forEach(b=>b.classList.remove('active'));
-  const btn = document.getElementById(`rbtn-${num}`);
-  if(btn) btn.classList.add('active');
-
-  currentRound = round;
-
-  if(!round.completed) {
-    document.getElementById('content').innerHTML = `<div class="loading-msg">This race has not yet taken place.</div>`;
+  const btn=document.getElementById(`rb${num}`);
+  if(btn)btn.classList.add('active');
+  if(!r.done){
+    document.getElementById('content').innerHTML='<div class="loading-msg">This race has not yet taken place.</div>';
     return;
   }
-
-  if(cache[num]) { renderRound(round, cache[num]); return; }
-
-  document.getElementById('content').innerHTML = `<div class="loading-msg">Loading results...</div>`;
-
-  try {
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${round.gid}`;
-    const res = await fetch(url);
-    const text = await res.text();
-    if(text.includes('<!DOCTYPE')||text.includes('<html')) throw new Error('Not published');
-    const rows = parseCSV(text);
-    cache[num] = rows;
-    renderRound(round, rows);
-  } catch(e) {
-    document.getElementById('content').innerHTML = `<div class="loading-msg">Could not load results: ${e.message}</div>`;
+  if(cache[num]){render(r,cache[num]);return;}
+  document.getElementById('content').innerHTML='<div class="loading-msg">Loading...</div>';
+  try{
+    const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${r.gid}`;
+    const res=await fetch(url);
+    const text=await res.text();
+    if(text.includes('<!DOCTYPE'))throw new Error('Sheet not published');
+    const rows=csv(text);
+    cache[num]=rows;
+    render(r,rows);
+  }catch(e){
+    document.getElementById('content').innerHTML=`<div class="loading-msg">Could not load: ${e.message}</div>`;
   }
 }
 
-function parseResultsBlock(rows, startRow, qualiCols, raceCols) {
-  // qualiCols: {pos,num,driver,team,time,penPts,pen}
-  // raceCols:  {pos,num,driver,team,stops,gap,pts,fl,penPts,pen}
-  const quali=[], race=[];
+function render(r,rows){
+  const meta=getMeta(rows);
+  const circuit=meta.circuit||r.circuit;
+  const sc=parseInt(meta.sc)||0;
+  const rf=parseInt(meta.rf)||0;
+  let html='';
 
-  for(let i=startRow;i<rows.length;i++) {
-    const row = rows[i];
-    const qpos = (row[qualiCols.pos]||'').trim();
-    const rpos = (row[raceCols.pos]||'').trim();
-
-    if(!qpos && !rpos) break; // end of results
-
-    if(qpos) {
-      quali.push({
-        pos: qpos,
-        num: (row[qualiCols.num]||'').trim(),
-        driver: (row[qualiCols.driver]||'').trim(),
-        team: (row[qualiCols.team]||'').trim(),
-        time: (row[qualiCols.time]||'').trim(),
-        penPts: (row[qualiCols.penPts]||'').trim(),
-        pen: (row[qualiCols.pen]||'').trim(),
-      });
-    }
-    if(rpos) {
-      race.push({
-        pos: rpos,
-        num: (row[raceCols.num]||'').trim(),
-        driver: (row[raceCols.driver]||'').trim(),
-        team: (row[raceCols.team]||'').trim(),
-        stops: (row[raceCols.stops]||'').trim(),
-        gap: (row[raceCols.gap]||'').trim(),
-        pts: (row[raceCols.pts]||'').trim(),
-        fl: (row[raceCols.fl]||'').trim(),
-        penPts: (row[raceCols.penPts]||'').trim(),
-        pen: (row[raceCols.pen]||'').trim(),
-      });
-    }
-  }
-  return {quali, race};
-}
-
-function renderRound(round, rows) {
-  // Column layout (0-indexed):
-  // Quali: pos=0, nat=1, num=2, driver=3, team=4, time=5, tyre=6, penPts=7, pen=8
-  // Race:  pos=10, nat=11, num=12, driver=13, team=14, stops=15, gap=16, pts=17, fl=18, penPts=19, pen=20
-  // For sprint rounds, there are two sets: sprint quali/race (rows ~5) then main quali/race further down
-
-  const QCOLS = {pos:0,num:2,driver:3,team:4,time:5,penPts:7,pen:8};
-  const RCOLS = {pos:10,num:12,driver:13,team:14,stops:15,gap:16,pts:17,fl:18,penPts:19,pen:20};
-
-  // Find metadata from rows
-  let circuit='', safetyCarCount='0', redFlagCount='0', raceRedFlags='0';
-  let mainResultsRow = 5; // default start of results data
-
-  for(let i=0;i<Math.min(rows.length,6);i++) {
-    const row=rows[i];
-    const r0=(row[0]||'').trim();
-    const r3=(row[3]||'').trim(); // circuit often in col D/E
-    const r4=(row[4]||'').trim();
-
-    // Circuit name tends to be in row 0, col 4
-    if(i===0 && r4) circuit=r4;
-
-    // Safety cars / Red flags
-    if(r0.toLowerCase().includes('round')||r3.toLowerCase().includes('round')) {
-      // scan for safety car count nearby
-    }
-    const rowStr = row.join('|');
-    if(rowStr.includes('Safety Cars')) {
-      const idx = row.findIndex(c=>c.trim()==='Safety Cars');
-      if(idx>=0) safetyCarCount=(row[idx+1]||'0').trim();
-    }
-    if(rowStr.includes('Red Flags')) {
-      const idx = row.findIndex(c=>c.trim()==='Red Flags');
-      if(idx>=0) {
-        const val=(row[idx+1]||'0').trim();
-        // first occurrence = quali red flags, second = race
-        if(safetyCarCount!=='0'||i>2) raceRedFlags=val;
-        else redFlagCount=val;
-      }
-    }
-  }
-
-  // Find actual results start row (row with "Pos" header)
-  let resultsStart = -1;
-  let sprintStart = -1;
-  let mainStart = -1;
-
-  for(let i=0;i<rows.length;i++) {
-    const row=rows[i];
-    const r0=(row[0]||'').trim().toLowerCase();
-    const r10=(row[10]||'').trim().toLowerCase();
-    if(r0==='pos'||r0==='quali') {
-      if(sprintStart===-1 && round.isSprint) sprintStart=i+1;
-      else if(mainStart===-1) mainStart=i+1;
-      else if(resultsStart===-1) resultsStart=i+1;
-    }
-    if(!round.isSprint && r0==='pos') { resultsStart=i+1; break; }
-  }
-
-  if(!round.isSprint) {
-    if(resultsStart<0) resultsStart=5;
-    const {quali,race} = parseResultsBlock(rows, resultsStart, QCOLS, RCOLS);
-    const winner = race.find(r=>r.pos==='1');
-
-    let html = `<div class="race-header">
-      <div class="race-header-top">
-        <div>
-          <div class="race-title">${round.circuit} Grand Prix</div>
-          <div class="race-subtitle">${fmtDate(round.date)}</div>
-          <div class="race-badges">
-            <div class="badge badge-round">Round ${round.round}</div>
-            ${safetyCarCount!=='0'?`<div class="badge badge-sc">SC ×${safetyCarCount}</div>`:''}
-            ${raceRedFlags!=='0'?`<div class="badge badge-rf">Red Flag ×${raceRedFlags}</div>`:''}
-          </div>
-        </div>
-        ${winner?`<div class="race-meta-right">
-          <div style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">Winner</div>
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:var(--gold);">${winner.driver}</div>
-          <div style="font-size:11px;color:var(--text-faint);">${winner.team}</div>
-        </div>`:''}
-      </div>
-    </div>`;
-
-    html += `<div class="results-grid">
-      ${renderQualiTable(quali, 'Qualifying')}
-      ${renderRaceTable(race, 'Race')}
-    </div>`;
-
-    document.getElementById('content').innerHTML = html;
-
+  if(!r.isSprint){
+    const quali=extractSection(rows,0,false);
+    const race=extractSection(rows,NON_SPRINT_RACE_START,true);
+    const winner=race.find(x=>x.pos==='1');
+    html+=header(r,circuit,winner,sc,rf,false);
+    html+=`<div class="results-grid">${qTable(quali,'Qualifying')}${rTable(race,'Race')}</div>`;
   } else {
-    // Sprint weekend — find all four result blocks
-    // Structure: Sprint Quali | Sprint Race | Main Quali | Main Race
-    const posRows = [];
-    for(let i=0;i<rows.length;i++) {
-      if((rows[i][0]||'').trim().toLowerCase()==='pos') posRows.push(i+1);
-    }
+    const sq=extractSection(rows,SQ_START,false);
+    const sr=extractSection(rows,SR_START,true);
+    const mq=extractSection(rows,MQ_START,false);
+    const mr=extractSection(rows,MR_START,true);
+    const winner=mr.find(x=>x.pos==='1');
+    html+=header(r,circuit,winner,sc,rf,true);
+    html+=`<div class="section-label">Sprint</div>`;
+    html+=`<div class="results-grid">${qTable(sq,'Sprint Qualifying')}${rTable(sr,'Sprint Race')}</div>`;
+    html+=`<div class="section-label">Grand Prix</div>`;
+    html+=`<div class="results-grid">${qTable(mq,'Qualifying')}${rTable(mr,'Race')}</div>`;
+  }
+  document.getElementById('content').innerHTML=html;
+}
 
-    const sq = posRows[0]>=0 ? parseResultsBlock(rows,posRows[0],QCOLS,RCOLS) : {quali:[],race:[]};
-    const mq = posRows[1]>=0 ? parseResultsBlock(rows,posRows[1],QCOLS,RCOLS) : {quali:[],race:[]};
-    // Sprint race results are in the race cols of the sprint block
-    // Main race results in race cols of main block
-
-    const sprintWinner = sq.race.find(r=>r.pos==='1');
-    const raceWinner = mq.race.find(r=>r.pos==='1');
-
-    let html = `<div class="race-header sprint-race">
-      <div class="race-header-top">
-        <div>
-          <div class="race-title">${round.circuit} Grand Prix</div>
-          <div class="race-subtitle">${fmtDate(round.date)}</div>
-          <div class="race-badges">
-            <div class="badge badge-round">Round ${round.round}</div>
-            <div class="badge badge-sprint">Sprint Weekend</div>
-          </div>
+function header(r,circuit,winner,sc,rf,isSprint){
+  return`<div class="race-header${isSprint?' is-sprint':''}">
+    <div class="race-header-inner">
+      <div>
+        <div class="race-title">${circuit} Grand Prix</div>
+        <div class="race-subtitle">${fd(r.date)}</div>
+        <div class="race-badges">
+          <div class="badge badge-round">Round ${r.round}</div>
+          ${isSprint?`<div class="badge badge-sprint">Sprint Weekend</div>`:''}
+          ${sc>0?`<div class="badge badge-sc">SC ×${sc}</div>`:''}
+          ${rf>0?`<div class="badge badge-rf">Red Flag ×${rf}</div>`:''}
         </div>
       </div>
-    </div>`;
-
-    html += `<div class="section-divider">Sprint</div>`;
-    html += `<div class="results-grid">
-      ${renderQualiTable(sq.quali,'Sprint Qualifying')}
-      ${renderRaceTable(sq.race,'Sprint Race')}
-    </div>`;
-
-    html += `<div class="section-divider">Grand Prix</div>`;
-    html += `<div class="results-grid">
-      ${renderQualiTable(mq.quali,'Qualifying')}
-      ${renderRaceTable(mq.race,'Race')}
-    </div>`;
-
-    document.getElementById('content').innerHTML = html;
-  }
+      ${winner?`<div>
+        <div class="race-winner-label">Winner</div>
+        <div class="race-winner-name">${winner.driver}</div>
+        <div class="race-winner-team">${winner.team}</div>
+      </div>`:''}
+    </div>
+  </div>`;
 }
 
-function posClass(pos) {
-  if(pos==='1') return 'p1';
-  if(pos==='2') return 'p2';
-  if(pos==='3') return 'p3';
-  return '';
-}
-
-function renderQualiTable(data, title) {
-  if(!data||!data.length) return `<div class="results-section"><div class="results-section-title">${title}</div><div style="padding:16px;font-size:12px;color:var(--text-faint);">No data</div></div>`;
-
-  let html = `<div class="results-section">
-    <div class="results-section-title">${title}</div>
-    <table class="results-table">
-      <thead><tr><th>Pos</th><th>#</th><th>Driver</th><th>Time</th></tr></thead>
-      <tbody>`;
-
-  data.forEach(r => {
-    const isDNF = r.pos.toUpperCase()==='DNF'||r.pos.toUpperCase()==='DNS'||r.pos.toUpperCase()==='DSQ';
-    html += `<tr>
-      <td>${isDNF?`<span class="pos-dnf">${r.pos}</span>`:`<span class="pos-num ${posClass(r.pos)}">${r.pos}</span>`}</td>
-      <td><span class="driver-num">${r.num}</span></td>
-      <td><span class="driver-name">${r.driver}</span>${r.pen?`<span class="penalty-tag">+${r.pen}</span>`:''}</td>
-      <td><span class="quali-time">${r.time||'—'}</span></td>
+function qTable(data,title){
+  if(!data||!data.length)return box(title,'<div style="padding:12px;font-size:12px;color:var(--text-faint);">No data</div>');
+  let r=`<table class="rt"><thead><tr><th>Pos</th><th>#</th><th>Driver</th><th>Time</th></tr></thead><tbody>`;
+  data.forEach(d=>{
+    const dnf=isDNF(d.pos);
+    r+=`<tr>
+      <td>${dnf?`<span class="pdnf">${d.pos}</span>`:`<span class="p ${posClass(d.pos)}">${d.pos}</span>`}</td>
+      <td><span class="dnum">${d.num}</span></td>
+      <td><span class="dname">${d.driver}</span>${d.pen?`<span class="pen">+${d.pen}</span>`:''}</td>
+      <td><span class="qtime">${d.time||'—'}</span></td>
     </tr>`;
   });
-
-  html += `</tbody></table></div>`;
-  return html;
+  return box(title,r+`</tbody></table>`);
 }
 
-function renderRaceTable(data, title) {
-  if(!data||!data.length) return `<div class="results-section"><div class="results-section-title">${title}</div><div style="padding:16px;font-size:12px;color:var(--text-faint);">No data</div></div>`;
-
-  let html = `<div class="results-section">
-    <div class="results-section-title">${title}</div>
-    <table class="results-table">
-      <thead><tr><th>Pos</th><th>#</th><th>Driver</th><th>Gap</th><th>Pts</th></tr></thead>
-      <tbody>`;
-
-  data.forEach(r => {
-    const isDNF = r.pos.toUpperCase()==='DNF'||r.pos.toUpperCase()==='DNS'||r.pos.toUpperCase()==='DSQ';
-    const pts = parseInt(r.pts)||0;
-    html += `<tr>
-      <td>${isDNF?`<span class="pos-dnf">${r.pos}</span>`:`<span class="pos-num ${posClass(r.pos)}">${r.pos}</span>`}</td>
-      <td><span class="driver-num">${r.num}</span></td>
+function rTable(data,title){
+  if(!data||!data.length)return box(title,'<div style="padding:12px;font-size:12px;color:var(--text-faint);">No data</div>');
+  let r=`<table class="rt"><thead><tr><th>Pos</th><th>#</th><th>Driver</th><th>Gap</th><th>Pts</th></tr></thead><tbody>`;
+  data.forEach(d=>{
+    const dnf=isDNF(d.pos);
+    const pts=parseInt(d.pts)||0;
+    const hasFl=d.fl&&d.fl.trim()&&d.fl.trim()!=='0'&&d.fl.toLowerCase()!=='false'&&d.fl.trim()!=='';
+    r+=`<tr>
+      <td>${dnf?`<span class="pdnf">${d.pos}</span>`:`<span class="p ${posClass(d.pos)}">${d.pos}</span>`}</td>
+      <td><span class="dnum">${d.num}</span></td>
       <td>
-        <span class="driver-name">${r.driver}</span>
-        ${r.fl?`<span style="margin-left:5px;"><span class="fl-dot" title="Fastest Lap"></span></span>`:''}
-        ${r.pen?`<span class="penalty-tag">+${r.pen}</span>`:''}
-        ${r.stops?`<br><span class="stops">${r.stops} stop${r.stops==='1'?'':'s'}</span>`:''}
+        <span class="dname">${d.driver}</span>${hasFl?`<span class="fl" title="Fastest Lap"></span>`:''}${d.pen?`<span class="pen">+${d.pen}</span>`:''}
+        ${d.stops?`<br><span class="stops">${d.stops} stop${d.stops==='1'?'':'s'}</span>`:''}
       </td>
-      <td><span class="race-gap">${r.gap||'—'}</span></td>
-      <td><span class="race-points ${pts===0?'zero':''}">${r.pts||'0'}</span></td>
+      <td><span class="rgap">${d.gap||'—'}</span></td>
+      <td><span class="rpts${pts===0?' z':''}">${d.pts||'0'}</span></td>
     </tr>`;
   });
+  return box(title,r+`</tbody></table>`);
+}
 
-  html += `</tbody></table></div>`;
-  return html;
+function box(title,inner){
+  return`<div class="results-box"><div class="results-box-title">${title}</div>${inner}</div>`;
 }
 
 function toggleMenu(){
