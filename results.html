@@ -250,7 +250,6 @@ function findSection(rows, label){
 function extractSection(rows, label, isRace){
   const sec = findSection(rows, label);
   if(!sec) return [];
-  // Find the column offset by locating 'Pos' in the header row
   const headerRow = rows[sec.headerRow]||[];
   let colOffset = 0;
   for(let j=0;j<5;j++){
@@ -267,23 +266,21 @@ function extractSection(rows, label, isRace){
     if(!driver) continue;
     if(isRace){
       results.push({
-        pos:rawPos,
-        num:g(row,colOffset+2),
-        driver,
+        pos:rawPos, num:g(row,colOffset+2), driver,
         team:g(row,colOffset+4),
-        stops:g(row,colOffset+6),
-        gap:g(row,colOffset+7),
-        pts:g(row,colOffset+8),
-        fl:g(row,colOffset+10),
+        stops:g(row,colOffset+6), gap:g(row,colOffset+7),
+        pts:g(row,colOffset+8), fl:g(row,colOffset+10),
         pen:g(row,colOffset+12)
       });
     } else {
+      // Quali: team=col4, time=col6, tyre=col7, tyre2=col8, pen=col10
+      const tyre = g(row,colOffset+7);
+      const tyre2 = g(row,colOffset+8);
       results.push({
-        pos:rawPos,
-        num:g(row,colOffset+2),
-        driver,
+        pos:rawPos, num:g(row,colOffset+2), driver,
         team:g(row,colOffset+4),
         time:g(row,colOffset+6),
+        tyre: tyre2 && tyre2!==tyre ? tyre+'/'+tyre2 : tyre,
         pen:g(row,colOffset+10)
       });
     }
@@ -292,9 +289,8 @@ function extractSection(rows, label, isRace){
 }
 
 function getMeta(rows){
-  // Scan all cells in first 6 rows for known labels
-  // This handles gviz shifting columns differently to downloaded CSV
   let circuit='', sc='0', rf='0', isSprint=false, cancelled=false;
+  let wQuali='', wRace='', wSprintQuali='', wSprintRace='';
   for(let i=0;i<6;i++){
     const row=rows[i]||[];
     for(let j=0;j<row.length;j++){
@@ -305,9 +301,13 @@ function getMeta(rows){
       if(v==='red flag'||v==='red flags') rf=next||'0';
       if(v==='sprint') isSprint=next.toLowerCase()==='yes'||next.toLowerCase()==='y';
       if(v==='cancelled') cancelled=next.toLowerCase()==='y'||next.toLowerCase()==='yes';
+      if(v==='quali weather') wQuali=next;
+      if(v==='race weather') wRace=next;
+      if(v==='sprint quali weather') wSprintQuali=next;
+      if(v==='sprint race weather') wSprintRace=next;
     }
   }
-  return{circuit, sc, rf, isSprint, cancelled};
+  return{circuit, sc, rf, isSprint, cancelled, wQuali, wRace, wSprintQuali, wSprintRace};
 }
 
 async function init(){
@@ -389,7 +389,7 @@ function render(r,rows){
     const race=extractSection(rows,'Race',true);
     const winner=race.find(x=>x.pos==='1');
     html+=header(r,circuit,winner,sc,rf,false);
-    html+=`<div class="results-grid">${qTable(quali,'Qualifying')}${rTable(race,'Race')}</div>`;
+    html+=`<div class="results-grid">${qTable(quali,'Qualifying',meta.wQuali)}${rTable(race,'Race',meta.wRace)}</div>`;
   } else {
     const sq=extractSection(rows,'Sprint Qualifying',false);
     const sr=extractSection(rows,'Sprint Race',false); // Sprint race has no FL — use quali-style race table
@@ -398,9 +398,9 @@ function render(r,rows){
     const winner=mr.find(x=>x.pos==='1');
     html+=header(r,circuit,winner,sc,rf,true);
     html+=`<div class="section-label">Sprint</div>`;
-    html+=`<div class="results-grid">${qTable(sq,'Sprint Qualifying')}${srTable(sr,'Sprint Race')}</div>`;
+    html+=`<div class="results-grid">${qTable(sq,'Sprint Qualifying',meta.wSprintQuali)}${srTable(sr,'Sprint Race',meta.wSprintRace)}</div>`;
     html+=`<div class="section-label">Grand Prix</div>`;
-    html+=`<div class="results-grid">${qTable(mq,'Qualifying')}${rTable(mr,'Race')}</div>`;
+    html+=`<div class="results-grid">${qTable(mq,'Qualifying',meta.wQuali)}${rTable(mr,'Race',meta.wRace)}</div>`;
   }
   document.getElementById('content').innerHTML=html;
 }
@@ -427,22 +427,59 @@ function header(r,circuit,winner,sc,rf,isSprint){
   </div>`;
 }
 
-function qTable(data,title){
+function weatherIcon(w){
+  if(!w) return '';
+  const wl=w.toLowerCase();
+  if(wl.includes('rain')||wl.includes('wet')) return '🌧';
+  if(wl.includes('cloud')) return '⛅';
+  if(wl.includes('sun')||wl==='sun') return '☀️';
+  if(wl.includes('overcast')) return '☁️';
+  return '🌤';
+}
+
+function weatherBadge(w){
+  if(!w) return '';
+  return`<span style="font-size:11px;color:var(--text-faint);margin-left:6px;">${weatherIcon(w)} ${w}</span>`;
+}
+
+function tyreColor(t){
+  if(!t) return 'rgba(255,255,255,0.3)';
+  const tl=t.toLowerCase();
+  if(tl.includes('soft')) return '#e8002d';
+  if(tl.includes('medium')) return '#ffd600';
+  if(tl.includes('hard')) return '#ffffff';
+  if(tl.includes('inter')) return '#43b02a';
+  if(tl.includes('wet')) return '#0067ff';
+  return 'rgba(255,255,255,0.4)';
+}
+
+function tyreBadge(t){
+  if(!t) return '';
+  const parts = t.split('/');
+  return parts.map(p=>`<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${tyreColor(p.trim())};margin-left:3px;vertical-align:middle;" title="${p.trim()}"></span>`).join('');
+}
+
+function qTable(data,title,weather){
   if(!data||!data.length)return box(title,'<div style="padding:12px;font-size:12px;color:var(--text-faint);">No data</div>');
-  let r=`<table class="rt"><thead><tr><th>Pos</th><th>#</th><th>Driver</th><th>Time</th></tr></thead><tbody>`;
+  const titleHtml = weather ? title+weatherBadge(weather) : title;
+  let r=`<table class="rt"><thead><tr><th>Pos</th><th>#</th><th>Driver / Team</th><th>Time</th><th>Tyre</th></tr></thead><tbody>`;
   data.forEach(d=>{
     const dnf=isDNF(d.pos);
     r+=`<tr>
       <td>${dnf?`<span class="pdnf">${d.pos}</span>`:`<span class="p ${posClass(d.pos)}">${d.pos}</span>`}</td>
       <td><span class="dnum">${d.num}</span></td>
-      <td><span class="dname">${d.driver}</span>${d.pen?`<span class="pen">+${d.pen}</span>`:''}</td>
+      <td>
+        <span class="dname">${d.driver}</span>${d.pen?`<span class="pen">+${d.pen}</span>`:''}
+        ${d.team?`<br><span class="stops">${d.team}</span>`:''}
+      </td>
       <td><span class="qtime">${d.time||'—'}</span></td>
+      <td>${tyreBadge(d.tyre)}</td>
     </tr>`;
   });
-  return box(title,r+`</tbody></table>`);
+  return box(titleHtml, r+`</tbody></table>`);
 }
 
-function rTable(data,title){
+function rTable(data,title,weather){
   if(!data||!data.length)return box(title,'<div style="padding:12px;font-size:12px;color:var(--text-faint);">No data</div>');
   let r=`<table class="rt"><thead><tr><th>Pos</th><th>#</th><th>Driver</th><th>Gap</th><th>Pts</th></tr></thead><tbody>`;
   data.forEach(d=>{
@@ -460,10 +497,10 @@ function rTable(data,title){
       <td><span class="rpts${pts===0?' z':''}">${d.pts||'0'}</span></td>
     </tr>`;
   });
-  return box(title,r+`</tbody></table>`);
+  return box(weather?title+weatherBadge(weather):title, r+`</tbody></table>`);
 }
 
-function srTable(data,title){
+function srTable(data,title,weather){
   // Sprint race table - no FL column
   if(!data||!data.length)return box(title,'<div style="padding:12px;font-size:12px;color:var(--text-faint);">No data</div>');
   let r=`<table class="rt"><thead><tr><th>Pos</th><th>#</th><th>Driver</th><th>Gap</th><th>Pts</th></tr></thead><tbody>`;
@@ -481,7 +518,7 @@ function srTable(data,title){
       <td><span class="rpts${pts===0?' z':''}">${d.pts||'0'}</span></td>
     </tr>`;
   });
-  return box(title,r+`</tbody></table>`);
+  return box(weather?title+weatherBadge(weather):title, r+`</tbody></table>`);
 }
 
 function box(title,inner){
