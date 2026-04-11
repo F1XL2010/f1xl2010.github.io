@@ -199,10 +199,13 @@
     </div>
   </div>
 </div>
-<div class="div-tabs" id="div-tabs"></div>
-
 <div class="content">
   <div id="upcoming-bans" style="background:var(--dark2);border:1px solid rgba(225,6,0,0.2);border-radius:8px;padding:16px;margin-bottom:20px;"></div>
+</div>
+
+<div class="div-tabs" id="div-tabs"></div>
+
+<div class="content" style="padding-top:20px;">
   <div class="search-wrap">
     <input type="text" class="search-input" id="search" placeholder="Search driver..." oninput="filterTable(this.value)">
   </div>
@@ -224,7 +227,7 @@ const GID = '1841705621';
 // Divisions are laid out horizontally in the CSV:
 // D1: cols 0-2, D2: cols 4-6, D3: cols 8-10, D4: cols 12-14, D5: cols 16-18
 // (blank col separates each division)
-const DIV_COL_STARTS = [0, 4, 8, 12, 16];
+const DIV_COL_STARTS = [0, 4, 8, 12];
 
 let allDivisions = [];
 let currentDiv = 0;
