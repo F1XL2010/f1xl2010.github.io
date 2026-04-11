@@ -179,7 +179,7 @@ const SHEET_ID = '1ABi894XALp0Qpoc73XKrwHBJR2vU13Yv2wFOlofxmYw';
 const CAL_GID  = '1359854005';
 
 const RACE_GIDS = [
-  '237469187','2041214112','725989775','346856347','1326392450',
+  '782971848','2041214112','725989775','346856347','1326392450',
   '1601388396','1998190339','1284083176','1173871273','1209433528',
   '1440518624','1310855257','928568727','1987719493','1080515766',
   '1837636331','1843119272','1680150111','1743996461','1239960138','139054262'
@@ -225,10 +225,19 @@ function isDNF(p){return['dnf','dns','dsq','ret','nc'].includes((p||'').toLowerC
 function posClass(p){if(p==='1')return'p1';if(p==='2')return'p2';if(p==='3')return'p3';return'';}
 
 function findSection(rows, label){
-  // Find the row with matching label in col 0, return index of header row (label+1) and data start (label+2)
+  // Find the row with matching label in col 0
+  // Also match shorthand: 'Qualifying'='Quali', 'Race'='Race'
   const lbl = label.toLowerCase();
+  const aliases = {
+    'qualifying': ['qualifying','quali'],
+    'race': ['race'],
+    'sprint qualifying': ['sprint qualifying','sprint quali','sprintquali'],
+    'sprint race': ['sprint race','sprintrace'],
+  };
+  const matches = aliases[lbl] || [lbl];
   for(let i=0;i<rows.length;i++){
-    if((rows[i][0]||'').trim().toLowerCase()===lbl){
+    const v=(rows[i][0]||'').trim().toLowerCase();
+    if(matches.includes(v)){
       return{headerRow:i+1, dataStart:i+2};
     }
   }
@@ -264,14 +273,16 @@ function extractSection(rows, label, isRace){
 }
 
 function getMeta(rows){
-  // Fixed cell positions in new layout:
-  // Row 0: Round=col1, Circuit=col4
-  // Row 1: Quali Weather=col1, Race Weather=col4, Sprint=col5
-  // Row 2: Safety Cars=col1, Red Flags=col4
-  const circuit = g(rows[0],4) || g(rows[0],1) || '';
-  const sc = g(rows[2],1) || '0';
-  const rf = g(rows[2],4) || '0';
-  const sprintVal = (g(rows[1],5)||'').toLowerCase();
+  // gviz adds an extra blank/header row at top, so actual data is offset by 1
+  // Scan first 5 rows for the Round row to find the offset
+  let offset = 0;
+  for(let i=0;i<5;i++){
+    if((rows[i][0]||'').trim().toLowerCase()==='round'){offset=i;break;}
+  }
+  const circuit = g(rows[offset],4) || '';
+  const sc = g(rows[offset+2],1) || '0';
+  const rf = g(rows[offset+2],4) || '0';
+  const sprintVal = (g(rows[offset+1],5)||'').toLowerCase();
   const isSprint = sprintVal==='yes'||sprintVal==='true'||sprintVal==='y';
   return{circuit, sc, rf, isSprint};
 }
@@ -328,6 +339,17 @@ async function selectRound(num){
     if(text.includes('<!DOCTYPE'))throw new Error('Sheet not published');
     const rows=csv(text);
     cache[num]=rows;
+    // DEBUG - remove after testing
+    console.log('Total rows:', rows.length);
+    console.log('Row 0:', rows[0]);
+    console.log('Row 1:', rows[1]);
+    console.log('Row 2:', rows[2]);
+    for(let i=0;i<rows.length;i++){
+      const v=(rows[i][0]||'').trim().toLowerCase();
+      if(['round','quali','qualifying','race','sprint qualifying','sprint race'].includes(v)){
+        console.log('Label at row '+i+':', rows[i][0]);
+      }
+    }
     render(r,rows);
   }catch(e){
     document.getElementById('content').innerHTML=`<div class="loading-msg">Could not load: ${e.message}</div>`;
