@@ -294,7 +294,7 @@ function extractSection(rows, label, isRace){
 function getMeta(rows){
   // Scan all cells in first 6 rows for known labels
   // This handles gviz shifting columns differently to downloaded CSV
-  let circuit='', sc='0', rf='0', isSprint=false;
+  let circuit='', sc='0', rf='0', isSprint=false, cancelled=false;
   for(let i=0;i<6;i++){
     const row=rows[i]||[];
     for(let j=0;j<row.length;j++){
@@ -304,9 +304,10 @@ function getMeta(rows){
       if(v==='safety cars'||v==='safety car') sc=next||'0';
       if(v==='red flag'||v==='red flags') rf=next||'0';
       if(v==='sprint') isSprint=next.toLowerCase()==='yes'||next.toLowerCase()==='y';
+      if(v==='cancelled') cancelled=next.toLowerCase()==='y'||next.toLowerCase()==='yes';
     }
   }
-  return{circuit, sc, rf, isSprint};
+  return{circuit, sc, rf, isSprint, cancelled};
 }
 
 async function init(){
@@ -361,17 +362,6 @@ async function selectRound(num){
     if(text.includes('<!DOCTYPE'))throw new Error('Sheet not published');
     const rows=csv(text);
     cache[num]=rows;
-    // DEBUG - remove after testing
-    console.log('Total rows:', rows.length);
-    console.log('Row 0:', rows[0]);
-    console.log('Row 1:', rows[1]);
-    console.log('Row 2:', rows[2]);
-    for(let i=0;i<rows.length;i++){
-      const v=(rows[i][0]||'').trim().toLowerCase();
-      if(['round','quali','qualifying','race','sprint qualifying','sprint race'].includes(v)){
-        console.log('Label at row '+i+':', rows[i][0]);
-      }
-    }
     render(r,rows);
   }catch(e){
     document.getElementById('content').innerHTML=`<div class="loading-msg">Could not load: ${e.message}</div>`;
@@ -383,9 +373,16 @@ function render(r,rows){
   const circuit=meta.circuit||r.circuit;
   const sc=parseInt(meta.sc)||0;
   const rf=parseInt(meta.rf)||0;
-  // Use sprint flag from sheet data, falling back to calendar data
   const isSprint = meta.isSprint || r.isSprint;
   let html='';
+
+  // Cancelled race
+  if(meta.cancelled){
+    html+=header(r,circuit,null,0,0,false);
+    html+=`<div style="background:var(--dark2);border:1px solid var(--border);border-radius:8px;padding:24px;text-align:center;color:var(--text-muted);font-size:14px;">This race was cancelled.</div>`;
+    document.getElementById('content').innerHTML=html;
+    return;
+  }
 
   if(!isSprint){
     const quali=extractSection(rows,'Qualifying',false);
@@ -395,13 +392,13 @@ function render(r,rows){
     html+=`<div class="results-grid">${qTable(quali,'Qualifying')}${rTable(race,'Race')}</div>`;
   } else {
     const sq=extractSection(rows,'Sprint Qualifying',false);
-    const sr=extractSection(rows,'Sprint Race',true);
+    const sr=extractSection(rows,'Sprint Race',false); // Sprint race has no FL — use quali-style race table
     const mq=extractSection(rows,'Qualifying',false);
     const mr=extractSection(rows,'Race',true);
     const winner=mr.find(x=>x.pos==='1');
     html+=header(r,circuit,winner,sc,rf,true);
     html+=`<div class="section-label">Sprint</div>`;
-    html+=`<div class="results-grid">${qTable(sq,'Sprint Qualifying')}${rTable(sr,'Sprint Race')}</div>`;
+    html+=`<div class="results-grid">${qTable(sq,'Sprint Qualifying')}${srTable(sr,'Sprint Race')}</div>`;
     html+=`<div class="section-label">Grand Prix</div>`;
     html+=`<div class="results-grid">${qTable(mq,'Qualifying')}${rTable(mr,'Race')}</div>`;
   }
@@ -457,6 +454,27 @@ function rTable(data,title){
       <td><span class="dnum">${d.num}</span></td>
       <td>
         <span class="dname">${d.driver}</span>${hasFl?`<span class="fl" title="Fastest Lap"></span>`:''}${d.pen?`<span class="pen">+${d.pen}</span>`:''}
+        ${d.stops?`<br><span class="stops">${d.stops} stop${d.stops==='1'?'':'s'}</span>`:''}
+      </td>
+      <td><span class="rgap">${d.gap||'—'}</span></td>
+      <td><span class="rpts${pts===0?' z':''}">${d.pts||'0'}</span></td>
+    </tr>`;
+  });
+  return box(title,r+`</tbody></table>`);
+}
+
+function srTable(data,title){
+  // Sprint race table - no FL column
+  if(!data||!data.length)return box(title,'<div style="padding:12px;font-size:12px;color:var(--text-faint);">No data</div>');
+  let r=`<table class="rt"><thead><tr><th>Pos</th><th>#</th><th>Driver</th><th>Gap</th><th>Pts</th></tr></thead><tbody>`;
+  data.forEach(d=>{
+    const dnf=isDNF(d.pos);
+    const pts=parseInt(d.pts)||0;
+    r+=`<tr>
+      <td>${dnf?`<span class="pdnf">${d.pos}</span>`:`<span class="p ${posClass(d.pos)}">${d.pos}</span>`}</td>
+      <td><span class="dnum">${d.num}</span></td>
+      <td>
+        <span class="dname">${d.driver}</span>${d.pen?`<span class="pen">+${d.pen}</span>`:''}
         ${d.stops?`<br><span class="stops">${d.stops} stop${d.stops==='1'?'':'s'}</span>`:''}
       </td>
       <td><span class="rgap">${d.gap||'—'}</span></td>
