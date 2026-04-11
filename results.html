@@ -185,23 +185,25 @@ const RACE_GIDS = [
   '1837636331','1843119272','1680150111','1743996461','1239960138','139054262'
 ];
 
-// Absolute column positions (0-based)
-// Non-sprint Quali: 0-10, Non-sprint Race: 12-24
-// Sprint Quali: 0-11, Sprint Race: 12-23, Main Quali: 24-34, Main Race: 36-48
+// Confirmed absolute column positions from CSV analysis
+// R1: Quali 0-10, Race 12-24 (FL=22, PenPts=23, Pen=24)
+// R3: SQ 0-10, SR 12-23 (no FL), MQ 25-35, MR 38-50 (FL=48)
 
-// Quali offsets (from section start)
+// Quali offsets (from section start col)
 const QO = {pos:0,nat:1,num:2,driver:3,team:4,time:6,penPts:9,pen:10};
-// Sprint Race offsets (from section start) - no FL column
-const SRO = {pos:0,nat:1,num:2,driver:3,team:4,stops:6,gap:7,pts:8,penPts:10,pen:11};
-// Main Race offsets (from section start) - has FL
+// Non-sprint Race offsets (absolute from col 12)
 const RO = {pos:0,nat:1,num:2,driver:3,team:4,stops:6,gap:7,pts:8,fl:10,penPts:11,pen:12};
+// Sprint Race offsets (absolute from col 12) - no FL
+const SRO = {pos:0,nat:1,num:2,driver:3,team:4,stops:6,gap:7,pts:8,penPts:10,pen:11};
+// Main Race offsets (absolute from col 38)
+const MRO = {pos:0,nat:1,num:2,driver:3,team:4,stops:6,gap:7,pts:8,fl:10,penPts:11,pen:12};
 
 // Section start columns
 const NON_SPRINT_RACE_START = 12;
 const SQ_START = 0;   // Sprint Quali
 const SR_START = 12;  // Sprint Race (no FL)
-const MQ_START = 24;  // Main Quali
-const MR_START = 36;  // Main Race (has FL)
+const MQ_START = 25;  // Main Quali (confirmed col 25)
+const MR_START = 38;  // Main Race (confirmed col 38)
 
 const today = new Date(); today.setHours(0,0,0,0);
 let rounds=[], cache={};
@@ -237,25 +239,32 @@ function isDNF(p){return['dnf','dns','dsq','ret','nc'].includes((p||'').toLowerC
 function posClass(p){if(p==='1')return'p1';if(p==='2')return'p2';if(p==='3')return'p3';return'';}
 
 function extractSection(rows, startCol, mode){
-  // mode: 'Q' = quali, 'R' = main race (has FL), 'SR' = sprint race (no FL)
-  const off = mode==='Q' ? QO : mode==='SR' ? SRO : RO;
+  // mode: 'Q'=quali, 'R'=non-sprint race, 'SR'=sprint race (no FL), 'MR'=main race (has FL)
+  const off = mode==='Q' ? QO : mode==='SR' ? SRO : mode==='MR' ? MRO : RO;
   const results=[];
+  // Start from row index 5 (row 6 in sheet = first data row)
+  // Skip header row at index 4 by checking pos is numeric or DNF
   for(let i=5;i<rows.length;i++){
     const row=rows[i];
-    const pos=g(row,startCol+off.pos);
-    if(!pos)continue;
-    if(pos.toLowerCase()==='pos')continue;
-    const driver=g(row,startCol+off.driver);
-    if(!driver||driver.toLowerCase()==='driver')continue;
+    const rawPos=(row[startCol+off.pos]||'').trim();
+    if(!rawPos)continue;
+    // Skip if this looks like a header
+    if(rawPos.toLowerCase()==='pos'||rawPos.toLowerCase()==='driver')continue;
+    const driver=(row[startCol+off.driver]||'').trim();
+    if(!driver)continue;
+    if(driver.toLowerCase()==='driver'||driver.toLowerCase()==='driver ')continue;
+    // Check it's a real row - pos should be numeric or DNF/DNS/DSQ
+    const posNum=parseInt(rawPos);
+    if(isNaN(posNum)&&!isDNF(rawPos))continue;
     if(mode==='Q'){
-      results.push({pos,nat:g(row,startCol+off.nat),num:g(row,startCol+off.num),driver,
+      results.push({pos:rawPos,nat:g(row,startCol+off.nat),num:g(row,startCol+off.num),driver,
         team:g(row,startCol+off.team),time:g(row,startCol+off.time),pen:g(row,startCol+off.pen)});
     } else if(mode==='SR'){
-      results.push({pos,nat:g(row,startCol+off.nat),num:g(row,startCol+off.num),driver,
+      results.push({pos:rawPos,nat:g(row,startCol+off.nat),num:g(row,startCol+off.num),driver,
         team:g(row,startCol+off.team),stops:g(row,startCol+off.stops),gap:g(row,startCol+off.gap),
         pts:g(row,startCol+off.pts),fl:'',pen:g(row,startCol+off.pen)});
     } else {
-      results.push({pos,nat:g(row,startCol+off.nat),num:g(row,startCol+off.num),driver,
+      results.push({pos:rawPos,nat:g(row,startCol+off.nat),num:g(row,startCol+off.num),driver,
         team:g(row,startCol+off.team),stops:g(row,startCol+off.stops),gap:g(row,startCol+off.gap),
         pts:g(row,startCol+off.pts),fl:g(row,startCol+off.fl),pen:g(row,startCol+off.pen)});
     }
@@ -354,7 +363,7 @@ function render(r,rows){
     const sq=extractSection(rows,SQ_START,'Q');
     const sr=extractSection(rows,SR_START,'SR');
     const mq=extractSection(rows,MQ_START,'Q');
-    const mr=extractSection(rows,MR_START,'R');
+    const mr=extractSection(rows,MR_START,'MR');
     const winner=mr.find(x=>x.pos==='1');
     html+=header(r,circuit,winner,sc,rf,true);
     html+=`<div class="section-label">Sprint</div>`;
