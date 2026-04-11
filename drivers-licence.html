@@ -274,12 +274,21 @@ async function init(){
     const bansRows = parseCSV(bansText);
 
     // Find division header row by scanning for "division" keyword
+    // gviz adds an extra row vs downloaded CSV so we scan rather than hardcode
     let divHeaderRow = 0;
     let dataStart = 2;
     for(let i=0;i<rows.length;i++){
       if((rows[i][0]||'').toLowerCase().includes('division')){
         divHeaderRow = i;
         dataStart = i + 2; // skip div row + column headers row
+        break;
+      }
+    }
+    // Also scan for 'Driver' header row as a secondary check
+    // to make sure dataStart is correct
+    for(let i=divHeaderRow;i<divHeaderRow+3;i++){
+      if((rows[i]&&rows[i][0]||'').trim().toLowerCase()==='driver'){
+        dataStart = i + 1;
         break;
       }
     }
