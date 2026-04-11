@@ -225,20 +225,23 @@ function isDNF(p){return['dnf','dns','dsq','ret','nc'].includes((p||'').toLowerC
 function posClass(p){if(p==='1')return'p1';if(p==='2')return'p2';if(p==='3')return'p3';return'';}
 
 function findSection(rows, label){
-  // Find the row with matching label in col 0
-  // Also match shorthand: 'Qualifying'='Quali', 'Race'='Race'
+  // Find the row containing the label in ANY column (gviz can shift columns)
   const lbl = label.toLowerCase();
   const aliases = {
     'qualifying': ['qualifying','quali'],
     'race': ['race'],
-    'sprint qualifying': ['sprint qualifying','sprint quali','sprintquali'],
-    'sprint race': ['sprint race','sprintrace'],
+    'sprint qualifying': ['sprint qualifying','sprint quali'],
+    'sprint race': ['sprint race'],
   };
   const matches = aliases[lbl] || [lbl];
   for(let i=0;i<rows.length;i++){
-    const v=(rows[i][0]||'').trim().toLowerCase();
-    if(matches.includes(v)){
-      return{headerRow:i+1, dataStart:i+2};
+    const row=rows[i]||[];
+    // Check first 5 columns for the label
+    for(let j=0;j<5;j++){
+      const v=(row[j]||'').trim().toLowerCase();
+      if(matches.includes(v)){
+        return{headerRow:i+1, dataStart:i+2};
+      }
     }
   }
   return null;
@@ -247,25 +250,41 @@ function findSection(rows, label){
 function extractSection(rows, label, isRace){
   const sec = findSection(rows, label);
   if(!sec) return [];
+  // Find the column offset by locating 'Pos' in the header row
+  const headerRow = rows[sec.headerRow]||[];
+  let colOffset = 0;
+  for(let j=0;j<5;j++){
+    if((headerRow[j]||'').trim().toLowerCase()==='pos'){colOffset=j;break;}
+  }
   const results = [];
   for(let i=sec.dataStart; i<rows.length; i++){
     const row = rows[i];
-    const rawPos = (row[0]||'').trim();
+    const rawPos = (row[colOffset]||'').trim();
     if(!rawPos) continue;
     const posNum = parseInt(rawPos);
-    if(isNaN(posNum) && !isDNF(rawPos)) break; // end of section
-    const driver = (row[3]||'').trim();
+    if(isNaN(posNum) && !isDNF(rawPos)) break;
+    const driver = (row[colOffset+3]||'').trim();
     if(!driver) continue;
     if(isRace){
       results.push({
-        pos:rawPos, num:g(row,2), driver, team:g(row,4),
-        stops:g(row,6), gap:g(row,7), pts:g(row,8),
-        fl:g(row,10), pen:g(row,12)
+        pos:rawPos,
+        num:g(row,colOffset+2),
+        driver,
+        team:g(row,colOffset+4),
+        stops:g(row,colOffset+6),
+        gap:g(row,colOffset+7),
+        pts:g(row,colOffset+8),
+        fl:g(row,colOffset+10),
+        pen:g(row,colOffset+12)
       });
     } else {
       results.push({
-        pos:rawPos, num:g(row,2), driver, team:g(row,4),
-        time:g(row,6), pen:g(row,10)
+        pos:rawPos,
+        num:g(row,colOffset+2),
+        driver,
+        team:g(row,colOffset+4),
+        time:g(row,colOffset+6),
+        pen:g(row,colOffset+10)
       });
     }
   }
@@ -273,17 +292,20 @@ function extractSection(rows, label, isRace){
 }
 
 function getMeta(rows){
-  // gviz adds an extra blank/header row at top, so actual data is offset by 1
-  // Scan first 5 rows for the Round row to find the offset
-  let offset = 0;
-  for(let i=0;i<5;i++){
-    if((rows[i][0]||'').trim().toLowerCase()==='round'){offset=i;break;}
+  // Scan all cells in first 6 rows for known labels
+  // This handles gviz shifting columns differently to downloaded CSV
+  let circuit='', sc='0', rf='0', isSprint=false;
+  for(let i=0;i<6;i++){
+    const row=rows[i]||[];
+    for(let j=0;j<row.length;j++){
+      const v=(row[j]||'').trim().toLowerCase();
+      const next=(row[j+1]||'').trim();
+      if(v==='circuit') circuit=next;
+      if(v==='safety cars'||v==='safety car') sc=next||'0';
+      if(v==='red flag'||v==='red flags') rf=next||'0';
+      if(v==='sprint') isSprint=next.toLowerCase()==='yes'||next.toLowerCase()==='y';
+    }
   }
-  const circuit = g(rows[offset],4) || '';
-  const sc = g(rows[offset+2],1) || '0';
-  const rf = g(rows[offset+2],4) || '0';
-  const sprintVal = (g(rows[offset+1],5)||'').toLowerCase();
-  const isSprint = sprintVal==='yes'||sprintVal==='true'||sprintVal==='y';
   return{circuit, sc, rf, isSprint};
 }
 
