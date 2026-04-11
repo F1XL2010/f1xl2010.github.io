@@ -242,18 +242,22 @@ function extractSection(rows, startCol, mode){
   // mode: 'Q'=quali, 'R'=non-sprint race, 'SR'=sprint race (no FL), 'MR'=main race (has FL)
   const off = mode==='Q' ? QO : mode==='SR' ? SRO : mode==='MR' ? MRO : RO;
   const results=[];
-  // Start from row index 5 (row 6 in sheet = first data row)
-  // Skip header row at index 4 by checking pos is numeric or DNF
-  for(let i=5;i<rows.length;i++){
+  // Find the actual data start by scanning for the header row (where col startCol = 'Pos')
+  // then starting from the row AFTER it. This handles gviz adding an extra row.
+  let dataStart = 5; // default
+  for(let i=0;i<rows.length;i++){
+    if((rows[i][startCol+off.pos]||'').trim().toLowerCase()==='pos'){
+      dataStart = i+1;
+      break;
+    }
+  }
+  for(let i=dataStart;i<rows.length;i++){
     const row=rows[i];
     const rawPos=(row[startCol+off.pos]||'').trim();
     if(!rawPos)continue;
-    // Skip if this looks like a header
-    if(rawPos.toLowerCase()==='pos'||rawPos.toLowerCase()==='driver')continue;
     const driver=(row[startCol+off.driver]||'').trim();
     if(!driver)continue;
-    if(driver.toLowerCase()==='driver'||driver.toLowerCase()==='driver ')continue;
-    // Check it's a real row - pos should be numeric or DNF/DNS/DSQ
+    // Must be numeric position or valid DNF type
     const posNum=parseInt(rawPos);
     if(isNaN(posNum)&&!isDNF(rawPos))continue;
     if(mode==='Q'){
