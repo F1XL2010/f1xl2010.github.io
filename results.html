@@ -303,8 +303,9 @@ function getMeta(rows){
       if(v==='cancelled') cancelled=next.toLowerCase()==='y'||next.toLowerCase()==='yes';
       if(v==='quali weather') wQuali=next;
       if(v==='race weather') wRace=next;
-      if(v==='sprint quali weather') wSprintQuali=next;
-      if(v==='sprint race weather') wSprintRace=next;
+      // Sprint weather labels have value 2 cols over (col after label is blank)
+      if(v==='sprint quali weather') wSprintQuali=next||(row[j+2]||'').trim();
+      if(v==='sprint race weather') wSprintRace=next||(row[j+2]||'').trim();
     }
   }
   return{circuit, sc, rf, isSprint, cancelled, wQuali, wRace, wSprintQuali, wSprintRace};
@@ -392,7 +393,7 @@ function render(r,rows){
     html+=`<div class="results-grid">${qTable(quali,'Qualifying',meta.wQuali)}${rTable(race,'Race',meta.wRace)}</div>`;
   } else {
     const sq=extractSection(rows,'Sprint Qualifying',false);
-    const sr=extractSection(rows,'Sprint Race',false); // Sprint race has no FL — use quali-style race table
+    const sr=extractSection(rows,'Sprint Race',true); // Sprint race — is a race, FL col just won't have data
     const mq=extractSection(rows,'Qualifying',false);
     const mr=extractSection(rows,'Race',true);
     const winner=mr.find(x=>x.pos==='1');
