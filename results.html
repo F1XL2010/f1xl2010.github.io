@@ -355,7 +355,7 @@ async function selectRound(num){
   if(cache[num]){render(r,cache[num]);return;}
   document.getElementById('content').innerHTML='<div class="loading-msg">Loading...</div>';
   try{
-    const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${r.gid}`;
+    const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${r.gid}`;
     const res=await fetch(url);
     const text=await res.text();
     if(text.includes('<!DOCTYPE'))throw new Error('Sheet not published');
