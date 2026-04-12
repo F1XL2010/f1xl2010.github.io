@@ -573,14 +573,11 @@ async function loadDrivers() {
 
     races.forEach((r, idx) => {
       const iso = CIRCUIT_TO_ISO[r.short] || CIRCUIT_TO_ISO[r.label.replace(/\(s\)/i,'').trim()] || '';
-      const flagBg = iso ? `https://flagcdn.com/w80/${iso}.png` : '';
       const isFirst = sprintPairs.has(idx) && r.sprint;
       const isLast = sprintPairs.has(idx) && !r.sprint;
       const pairClass = isFirst ? 'sprint-pair-first' : isLast ? 'sprint-pair-last' : '';
-      // Extract round number from label e.g. "R3(s)" -> "R3" or short label
       const roundNum = r.label.replace(/\(s\)/i,'').trim();
       hHtml += `<th class="th-race ${pairClass}">
-        ${flagBg?`<div class="th-race-bg" style="background-image:url('${flagBg}')"></div><div class="th-race-overlay"></div>`:''}
         <div class="th-race-content">
           <div class="th-race-round">${roundNum}</div>
           <div class="th-race-name">${r.short||r.label}</div>
@@ -623,7 +620,7 @@ async function loadDrivers() {
         firstDriver = false;
       }
 
-      const flagImg = natToFlag(nat);
+      const flagImg = ''; // Flag images removed pending custom graphics
       let rHtml = `<tr>
         <td class="col-pos td-pos ${pc}">${pos||''}</td>
         <td class="col-driver td-driver">
