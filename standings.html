@@ -340,6 +340,8 @@
 let divisions = [];
 let currentDiv = null;
 let seasonConfig = null;
+let driverTeams = {};
+let teamOwners = {};
 
 const teamColors = {
   'Alpine':'#0090FF','Aston Martin':'#006F62','Ferrari':'#DC0000',
@@ -518,7 +520,14 @@ async function loadDrivers() {
     if (hIdx<0) throw new Error('Header not found');
 
     const hRow = rows[hIdx];
-    const nameRow = rows[0];
+    // Find circuit name row - it has country names in race cols (col 4+)
+    // It's typically 4 rows before the header row
+    let nameRow = null;
+    for (let i=Math.max(0,hIdx-5); i<hIdx; i++) {
+      const v = cs(rows[i], 4);
+      if (v && isNaN(parseFloat(v)) && v.length > 2) { nameRow = rows[i]; break; }
+    }
+    if (!nameRow) nameRow = rows[Math.max(0,hIdx-4)];
 
     // Map race columns
     const races = [];
@@ -531,7 +540,9 @@ async function loadDrivers() {
       if (h==='Points'){ptsCol=c;continue;}
       if (h==='Gap'){gapCol=c;continue;}
       const sprint = h.toLowerCase().includes('(s)');
-      const short = cs(nameRow,c) || h.replace(/\(s\)/i,'').trim();
+      // Use circuit name from nameRow if available, otherwise use race label
+      const circuitName = nameRow ? cs(nameRow,c) : '';
+      const short = circuitName || h.replace(/\(s\)/i,'').trim();
       races.push({col:c, label:h, short:short.trim(), sprint:sprint});
     }
 
@@ -561,7 +572,7 @@ async function loadDrivers() {
       <th class="col-driver"><div class="th-driver-cell">Driver</div></th>`;
 
     races.forEach((r, idx) => {
-      const iso = CIRCUIT_TO_ISO[r.short] || CIRCUIT_TO_ISO[r.label] || '';
+      const iso = CIRCUIT_TO_ISO[r.short] || CIRCUIT_TO_ISO[r.label.replace(/\(s\)/i,'').trim()] || '';
       const flagBg = iso ? `https://flagcdn.com/w80/${iso}.png` : '';
       const isFirst = sprintPairs.has(idx) && r.sprint;
       const isLast = sprintPairs.has(idx) && !r.sprint;
@@ -596,8 +607,10 @@ async function loadDrivers() {
       if (!driver) continue;
 
       const nat = cs(row,1);
-      const team = cs(row,3);
-      const color = teamColors[team] || '#555';
+      const teamRaw = cs(row,3).trim();
+      // If team col is blank (image), look up from driver-team mapping
+      const team = teamRaw || driverTeams[driver.toLowerCase()] || '';
+      const color = teamColors[team] || teamColors[Object.keys(teamColors).find(k=>k.toLowerCase()===team.toLowerCase())||''] || '#555';
       const posN = parseInt(pos);
       const pc = pClass(posN);
 
@@ -887,19 +900,27 @@ function toggleMenu() {
 async function loadOverallConstructors() {
   const el = document.getElementById('overall-constructors-table');
   try {
-    // Fetch team owners from teams sheet for current season
-    const teamOwners = {};
+    // Fetch team owners and driver-team mapping from teams sheet
+    // teamOwners and driverTeams are module-level vars
     try {
       const currentSeason = await getCurrentSeason();
       const teamsTable = await fetchSheet('1VdV1CEefr4nct-_KZPu9xBzbFMHY3nHVbShm9RBnX0c', '1278748961');
+      // Find title case team name from teamColors
+      const teamNameMap = {};
+      Object.keys(teamColors).forEach(t => { teamNameMap[t.toLowerCase()] = t; });
       for (let i=1; i<teamsTable.rows.length; i++) {
         const row = teamsTable.rows[i];
-        // Teams sheet cols (from earlier): Season, Team, Owner, D1Driver, D2Driver...
         const season = cs(row,0).trim();
-        if (season !== String(currentSeason)) continue; // Only current season
-        const team = cs(row,1).trim();
+        if (season !== String(currentSeason)) continue;
+        const teamRaw = cs(row,1).trim().toLowerCase();
         const owner = cs(row,2).trim();
-        if (team && owner) teamOwners[team] = owner;
+        const teamDisplay = teamNameMap[teamRaw] || cs(row,1).trim();
+        if (teamRaw && owner) teamOwners[teamRaw] = owner;
+        // Map all drivers in this row to this team
+        for (let c=3; c<row.c.length; c++) {
+          const driver = cs(row,c).trim().toLowerCase();
+          if (driver) driverTeams[driver] = teamDisplay;
+        }
       }
     } catch(e) { /* teams fetch optional */ }
 
@@ -969,7 +990,7 @@ async function loadOverallConstructors() {
       const gapToAbove = idx === 0 ? '—' : `-${sorted[idx-1][1] - pts}`;
       const pos = idx + 1;
       const pc = pos===1?'var(--gold)':pos===2?'rgba(210,210,210,0.9)':pos===3?'rgba(200,140,80,0.9)':'var(--text-faint)';
-      const owner = teamOwners[team] || '';
+      const owner = teamOwners[team.toLowerCase()] || '';
       html += `<tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
         <td style="padding:7px 10px;"><span style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:${pc};">${pos}</span></td>
         <td style="padding:7px 10px;">
