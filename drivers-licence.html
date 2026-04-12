@@ -220,9 +220,10 @@
   <div class="footer-text">f1xl.co.uk</div>
 </footer>
 
+<script src="config.js"></script>
 <script>
-const SHEET_ID = '1w097LDtWUgduup-_gZLeo7FOQ9uXkMiS1C9de2k22Kk';
-const GID = '1841705621';
+let SHEET_ID = '1w097LDtWUgduup-_gZLeo7FOQ9uXkMiS1C9de2k22Kk';
+let GID = '1841705621';
 
 // Divisions are laid out horizontally in the CSV:
 // D1: cols 0-2, D2: cols 4-6, D3: cols 8-10, D4: cols 12-14, D5: cols 16-18
@@ -255,9 +256,16 @@ function ptsClass(pts){
   return 'pts-zero';
 }
 
-const BANS_GID = '1379123195';
+let BANS_GID = '1379123195';
 
 async function init(){
+  try {
+    const cfg = await loadConfig();
+    if (cfg['drivers_licence_sheet_id']) SHEET_ID = cfg['drivers_licence_sheet_id'];
+    if (cfg['drivers_licence_summary_gid']) GID = cfg['drivers_licence_summary_gid'];
+    if (cfg['drivers_licence_bans_gid']) BANS_GID = cfg['drivers_licence_bans_gid'];
+    if (cfg['drivers_licence_penalty_guide_gid']) PENALTY_GID = cfg['drivers_licence_penalty_guide_gid'];
+  } catch(e) {}
   try{
     // Load summary and bans in parallel
     const [summaryRes, bansRes] = await Promise.all([

@@ -196,9 +196,10 @@
   <div class="footer-text">f1xl.co.uk</div>
 </footer>
 
+<script src="config.js"></script>
 <script>
-const SHEET_ID = '17Exg9qlJPzQNUh6egWu7SJZhWJY9AEmDw81Ab38B42I';
-const GID = '0';
+let SHEET_ID = '17Exg9qlJPzQNUh6egWu7SJZhWJY9AEmDw81Ab38B42I';
+let GID = '0';
 
 const TRACKS = {
   'italy':        { flag:'🇮🇹', name:'Autodromo Nazionale Monza', country:'Italy',
@@ -266,6 +267,11 @@ function circuitPath(path, size=80) {
 }
 
 async function loadSchedule() {
+  try {
+    const cfg = await loadConfig();
+    if (cfg['schedule_sheet_id']) SHEET_ID = cfg['schedule_sheet_id'];
+    if (cfg['schedule_gid']) GID = cfg['schedule_gid'];
+  } catch(e) {}
   try {
     const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${GID}`;
     const res = await fetch(url);

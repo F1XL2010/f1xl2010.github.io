@@ -55,14 +55,9 @@ async function loadConfig() {
   _configPromise = (async () => {
     try {
       const url = `https://docs.google.com/spreadsheets/d/${F1XL_CONFIG_SHEET_ID}/gviz/tq?tqx=out:csv&gid=${F1XL_CONFIG_GID}`;
-      console.log('Fetching config from:', url);
       const res = await fetch(url);
-      console.log('Config response status:', res.status, res.ok);
       const text = await res.text();
-      console.log('Config raw text (first 200):', text.substring(0,200));
       const config = parseConfigCSV(text);
-      console.log('Config parsed keys:', Object.keys(config));
-      console.log('Config parsed:', JSON.stringify(config));
       _configCache = config;
       return config;
     } catch(e) {
@@ -104,13 +99,9 @@ async function getCurrentSeasonConfig() {
   if (gid) {
     try {
       const url = `https://docs.google.com/spreadsheets/d/${F1XL_CONFIG_SHEET_ID}/gviz/tq?tqx=out:csv&gid=${gid}`;
-      console.log('Fetching season config from:', url);
       const res = await fetch(url);
-      console.log('Season config status:', res.status, res.ok);
       const text = await res.text();
-      console.log('Season config raw (first 500):', text.substring(0,500));
       const parsed = parseConfigCSV(text);
-      console.log('Season config parsed:', JSON.stringify(parsed).substring(0,500));
       return parsed;
     } catch(e) {
       console.error('Current season config load failed:', e.message);

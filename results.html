@@ -174,16 +174,12 @@
   <div class="footer-text">f1xl.co.uk</div>
 </footer>
 
+<script src="config.js"></script>
 <script>
-const SHEET_ID = '1ABi894XALp0Qpoc73XKrwHBJR2vU13Yv2wFOlofxmYw';
-const CAL_GID  = '1359854005';
+let SHEET_ID = '1ABi894XALp0Qpoc73XKrwHBJR2vU13Yv2wFOlofxmYw'; // overridden by config
+let CAL_GID  = '1359854005'; // overridden by config
 
-const RACE_GIDS = [
-  '782971848','2041214112','725989775','346856347','1326392450',
-  '1601388396','1998190339','1284083176','1173871273','1209433528',
-  '1440518624','1310855257','928568727','1987719493','1080515766',
-  '1837636331','1843119272','1680150111','1743996461','1239960138','139054262'
-];
+let RACE_GIDS = []; // populated from config
 
 // New clean vertical layout
 // Quali cols: Pos=0, Nat=1, #=2, Driver=3, Team=4, Time=6, PenPts=9, Pen=10
@@ -312,6 +308,20 @@ function getMeta(rows){
 }
 
 async function init(){
+  // Load config to get current season sheet IDs
+  try {
+    const seasonCfg = await getCurrentSeasonConfig();
+    if (seasonCfg) {
+      SHEET_ID = seasonCfg['d1_sheet_id'] || SHEET_ID;
+      CAL_GID  = seasonCfg['d1_calendar_gid'] || CAL_GID;
+      RACE_GIDS = [];
+      for (let i=1; i<=21; i++) {
+        const gid = seasonCfg[`d1_r${i}_gid`];
+        if (gid) RACE_GIDS.push(gid);
+        else RACE_GIDS.push(null);
+      }
+    }
+  } catch(e) { console.warn('Config load failed, using defaults:', e.message); }
   try{
     const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${CAL_GID}`;
     const res=await fetch(url);

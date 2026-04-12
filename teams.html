@@ -216,9 +216,10 @@
   <div class="footer-text">f1xl.co.uk</div>
 </footer>
 
+<script src="config.js"></script>
 <script>
-const SHEET_ID = '1VdV1CEefr4nct-_KZPu9xBzbFMHY3nHVbShm9RBnX0c';
-const GID = '1278748961';
+let SHEET_ID = '1VdV1CEefr4nct-_KZPu9xBzbFMHY3nHVbShm9RBnX0c';
+let GID = '1278748961';
 
 const teamColors = {
   'alpine':'#27F4D2','aston martin':'#229971','ferrari':'#E8002D',
@@ -249,6 +250,11 @@ const DIV_COLS = [
 const WINNER_ROWS = ['team owner winner','driver winner','league constructor winner','team winner'];
 
 async function loadTeams() {
+  try {
+    const cfg = await loadConfig();
+    if (cfg['teams_sheet_id']) SHEET_ID = cfg['teams_sheet_id'];
+    if (cfg['teams_gid']) GID = cfg['teams_gid'];
+  } catch(e) {}
   try {
     const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${GID}`;
     const res = await fetch(url);
