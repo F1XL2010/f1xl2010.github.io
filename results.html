@@ -358,9 +358,9 @@ async function loadDivision(d) {
       RACE_GIDS.push(gid || null);
     }
   }
-  document.getElementById('page-eyebrow').textContent = `Season ${_currentSeason||''} · Division ${d}`;
+  document.getElementById('page-eyebrow').textContent = `Season ${_currentSeason||''}  · Results`;
   document.getElementById('round-selector').innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Loading...</div>';
-  document.getElementById('results-content').innerHTML = '';
+  document.getElementById('content').innerHTML = '';
   try{
     const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${CAL_GID}`;
     const res=await fetch(url);
