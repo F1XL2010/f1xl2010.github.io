@@ -535,9 +535,11 @@ async function loadDrivers() {
       const sprint = h.toLowerCase().includes('(s)');
       const circuitName = nameRow ? cs(nameRow,c) : '';
       const short = circuitName || h.replace(/\(s\)/i,'').trim();
-      // Only show race column if at least one driver has data in it
-      const hasData = rows.slice(hIdx+1).some(r => { const v = cs(r,c).trim(); return v && v !== ' '; });
-      if (hasData) races.push({col:c, label:h, short:short.trim(), sprint:sprint});
+      // Only include race columns up to the number of rounds in this season
+      // Extract round number from label e.g. R3(s)->3, R3->3
+      const rMatch = h.match(/R(\d+)/i);
+      const rNum = rMatch ? parseInt(rMatch[1]) : 999;
+      if (rNum <= (currentDiv.numRounds || 21)) races.push({col:c, label:h, short:short.trim(), sprint:sprint});
     }
 
     // Identify sprint pairs - a sprint col is followed by its main race col
@@ -1016,6 +1018,12 @@ async function initStandings() {
     for (let d = 1; d <= numDivisions; d++) {
       const sheetId = seasonConfig[`d${d}_sheet_id`];
       const hasStandings = seasonConfig[`d${d}_has_standings`] === 'yes';
+      // Count rounds from config
+      let numRounds = 0;
+      for (let r=1; r<=21; r++) {
+        if (seasonConfig[`d${d}_r${r}_gid`]) numRounds++;
+        else break;
+      }
       divisions.push({
         id: `D${d}`,
         name: `Division ${d}`,
@@ -1026,7 +1034,8 @@ async function initStandings() {
           driverStats:  seasonConfig[`d${d}_driver_stats_gid`],
           teamStats:    seasonConfig[`d${d}_team_stats_gid`],
         },
-        season: currentSeason
+        season: currentSeason,
+        numRounds: numRounds
       });
     }
 
