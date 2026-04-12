@@ -355,11 +355,11 @@ const raceFlags = {
 
 
 async function fetchSheet(sheetId, gid) {
-  const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
+  const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&gid=${gid}`;
   const res = await fetch(url);
-  if (!res.ok) throw new Error(`HTTP ${res.status} - sheet may not be published to web`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const text = await res.text();
-  if (text.includes('<!DOCTYPE') || text.includes('<html')) throw new Error('Sheet returned HTML - check it is published to web');
+  if (text.includes('<!DOCTYPE') || text.includes('<html')) throw new Error('Sheet not published to web');
   return parseCSV(text);
 }
 
@@ -796,9 +796,10 @@ function toggleMenu() {
 
 async function initStandings() {
   try {
-    // Load season config from config sheet
-    seasonConfig = await getCurrentSeasonConfig();
     const currentSeason = await getCurrentSeason();
+    console.log('Current season:', currentSeason);
+    seasonConfig = await getCurrentSeasonConfig();
+    console.log('Season config loaded:', seasonConfig ? Object.keys(seasonConfig) : null);
 
     if (!seasonConfig) {
       document.getElementById('div-selector').innerHTML = '<div class="loading-msg">Could not load season config.</div>';
