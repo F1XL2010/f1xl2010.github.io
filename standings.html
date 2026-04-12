@@ -91,54 +91,48 @@
   @media(max-width:768px){.scroll-hint{display:block;}}
 
   /* TABLE */
-  .table-outer{overflow-x:auto;overflow-y:auto;max-height:calc(100vh - 220px);-webkit-overflow-scrolling:touch;}
-  .table-outer::-webkit-scrollbar{height:4px;width:4px;}
-  .table-outer::-webkit-scrollbar-thumb{background:#333;border-radius:2px;}
-  table{border-collapse:separate;border-spacing:0;font-size:12px;white-space:nowrap;min-width:100%;}
-  th{position:sticky;top:0;z-index:10;background:#1e2a27;border-bottom:2px solid rgba(255,255,255,0.15);border-right:1px solid rgba(255,255,255,0.07);font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#fff;text-align:center;padding:0;}
-  td{background:#1a2320;border-bottom:1px solid rgba(255,255,255,0.07);border-right:1px solid rgba(255,255,255,0.07);padding:0;text-align:center;vertical-align:middle;}
-  .col-pos{position:sticky;left:0;z-index:2;width:40px;min-width:40px;border-right:none!important;}
-  .col-driver{position:sticky;left:40px;z-index:2;min-width:180px;text-align:left;}
-  th.col-pos,th.col-driver{z-index:12;background:#1e2a27;}
-  td.col-pos{background:#1a2320;}
-  td.col-driver{background:#1a2320;text-align:left;}
-  .th-pos-cell{padding:8px 6px;}
-  .th-driver-cell{padding:8px 12px;text-align:left;}
-  .td-pos{padding:8px 4px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:#fff;text-align:center;}
-  .td-pos.p1{color:#E8B84B;}.td-pos.p2{color:#C0C0C0;}.td-pos.p3{color:#cd7f32;}
-  .td-driver{position:relative;overflow:hidden;}
-  .td-driver-inner{padding:6px 8px 6px 4px;display:flex;flex-direction:column;gap:2px;}
-  .td-driver-top{display:flex;align-items:center;gap:6px;}
-  .td-driver-flag{width:18px;height:13px;object-fit:cover;border-radius:1px;flex-shrink:0;}
-  .td-driver-name{font-size:13px;font-weight:500;color:#fff;}
-  .td-driver-team{font-size:10px;color:rgba(255,255,255,0.5);}
-  .th-race{height:110px;vertical-align:bottom;width:40px;min-width:40px;position:relative;overflow:hidden;background:#1e2a27;}
-  .th-race-bg{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0.3;}
-  .th-race-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(20,26,24,0.2) 0%,rgba(20,26,24,0.9) 100%);}
-  .th-race-content{position:relative;z-index:1;height:100%;display:flex;flex-direction:column;justify-content:space-between;padding:5px 3px;}
-  .th-race-round{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;color:#fff;text-align:center;}
-  .th-race-name{writing-mode:vertical-rl;transform:rotate(180deg);font-size:9px;color:#fff;flex:1;display:flex;align-items:center;justify-content:center;}
-  .th-race.sprint-pair-first{border-left:2px solid rgba(100,160,255,0.6);}
-  .th-race.sprint-pair-last{border-right:2px solid rgba(100,160,255,0.6)!important;}
-  .td-result.sprint-pair-first{border-left:2px solid rgba(100,160,255,0.3);}
-  .td-result.sprint-pair-last{border-right:2px solid rgba(100,160,255,0.3)!important;}
-  .th-end{font-family:'Barlow Condensed',sans-serif;font-size:11px;padding:8px 10px;text-align:center;min-width:44px;}
-  tbody tr:hover td{background:rgba(255,255,255,0.04)!important;}
-  tbody tr:hover td.col-pos,tbody tr:hover td.col-driver{background:rgba(40,55,50,0.95)!important;}
-  .td-result{width:40px;min-width:40px;height:44px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:600;padding:0!important;}
-  .result-inner{width:100%;height:44px;display:flex;align-items:center;justify-content:center;}
-  .result-inner.r1{background:#FFD700;color:#5a3e00;}
-  .result-inner.r2{background:#C0C0C0;color:#222;}
-  .result-inner.r3{background:#cd7f32;color:#fff;}
-  .result-inner.r46{background:#1a4a1a;color:#7dcc7d;}
-  .result-inner.r710{background:#0f2e1a;color:#4aaa6a;}
-  .result-inner.rdnf{background:#3a0a0a;color:#ff6b6b;font-size:10px;}
-  .result-inner.rout{color:rgba(255,255,255,0.2);}
-  .td-end{padding:10px;text-align:center;font-family:'Barlow Condensed',sans-serif;min-width:44px;background:#1a2320;}
-  .td-pole{font-size:14px;font-weight:600;color:#E8B84B;}.td-pole.zero{color:rgba(255,255,255,0.25);}
-  .td-fl{font-size:14px;font-weight:600;color:#9146FF;}.td-fl.zero{color:rgba(255,255,255,0.25);}
-  .td-pts{font-size:16px;font-weight:700;color:#fff;}
-  .td-gap{font-size:13px;color:rgba(255,255,255,0.7);}.td-gap.leader{color:rgba(255,255,255,0.3);font-size:11px;}
+  .table-wrap{overflow-x:auto;overflow-y:auto;max-height:calc(100vh - 260px);}
+  .standings-table{border-collapse:separate;border-spacing:0;font-size:12px;white-space:nowrap;width:100%;}
+  .standings-table th{position:sticky;top:0;z-index:5;background:#1a2320;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;padding:0;border-bottom:2px solid rgba(255,255,255,0.15);border-right:1px solid rgba(255,255,255,0.07);}
+  .standings-table td{background:#161d1b;color:#fff;padding:0;border-bottom:1px solid rgba(255,255,255,0.06);border-right:1px solid rgba(255,255,255,0.06);}
+  .standings-table tr:hover td{background:#1e2a27!important;}
+  .st-pos{position:sticky;left:0;z-index:3;width:38px;min-width:38px;}
+  .standings-table th.st-pos{z-index:8;background:#1a2320;}
+  .standings-table td.st-pos{background:#161d1b;}
+  .st-driver{position:sticky;left:38px;z-index:3;min-width:170px;text-align:left;}
+  .standings-table th.st-driver{z-index:8;background:#1a2320;text-align:left;}
+  .standings-table td.st-driver{background:#161d1b;}
+  .standings-table tr:hover td.st-pos,
+  .standings-table tr:hover td.st-driver{background:#1e2a27!important;}
+  .st-pos-cell{padding:10px 5px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:#fff;text-align:center;display:block;}
+  .st-pos-cell.p1{color:#E8B84B;}.st-pos-cell.p2{color:#C0C0C0;}.st-pos-cell.p3{color:#cd7f32;}
+  .st-pos-header{padding:8px 5px;display:block;text-align:center;}
+  .st-driver-header{padding:8px 10px;display:block;}
+  .st-driver-cell{padding:5px 8px;display:flex;flex-direction:column;gap:1px;}
+  .st-driver-name{font-size:13px;font-weight:500;color:#fff;}
+  .st-driver-team{font-size:10px;color:rgba(255,255,255,0.5);}
+  .st-race{width:38px;min-width:38px;text-align:center;}
+  .st-race-header{height:100px;display:flex;flex-direction:column;justify-content:space-between;align-items:center;padding:5px 2px;box-sizing:border-box;}
+  .st-race-round{font-size:9px;font-weight:700;color:#fff;}
+  .st-race-name{writing-mode:vertical-rl;transform:rotate(180deg);font-size:9px;color:rgba(255,255,255,0.8);line-height:1;flex:1;display:flex;align-items:center;justify-content:center;}
+  .st-sprint-first{border-left:2px solid rgba(100,160,255,0.5)!important;}
+  .st-sprint-last{border-right:2px solid rgba(100,160,255,0.5)!important;}
+  .st-result{width:38px;min-width:38px;height:40px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:600;vertical-align:middle;}
+  .st-ri{width:38px;height:40px;display:flex;align-items:center;justify-content:center;}
+  .st-ri.r1{background:#FFD700;color:#5a3e00;}
+  .st-ri.r2{background:#C0C0C0;color:#222;}
+  .st-ri.r3{background:#cd7f32;color:#fff;}
+  .st-ri.r46{background:#1a4a1a;color:#7dcc7d;}
+  .st-ri.r710{background:#0f2e1a;color:#4aaa6a;}
+  .st-ri.rdnf{background:#3a0a0a;color:#ff6b6b;font-size:10px;}
+  .st-ri.rout{color:rgba(255,255,255,0.15);}
+  .st-end{min-width:44px;text-align:center;font-family:'Barlow Condensed',sans-serif;}
+  .st-end-header{padding:8px 8px;display:block;}
+  .st-end-cell{padding:10px 8px;display:block;}
+  .st-pole{color:#E8B84B;font-size:14px;font-weight:600;}.st-pole.zero{color:rgba(255,255,255,0.2);}
+  .st-fl{color:#9146FF;font-size:14px;font-weight:600;}.st-fl.zero{color:rgba(255,255,255,0.2);}
+  .st-pts{color:#fff;font-size:16px;font-weight:700;}
+  .st-gap{color:rgba(255,255,255,0.7);font-size:13px;}.st-gap.leader{color:rgba(255,255,255,0.3);font-size:11px;}
 
   /* CONSTRUCTORS */
   .constructors-list{padding:16px 24px;}
@@ -301,8 +295,8 @@
       <div class="legend-item"><div class="legend-dot" style="background:rgba(100,160,255,0.1);border:1px solid rgba(100,160,255,0.3);color:rgba(100,160,255,0.8);font-size:9px;">S</div>Sprint</div>
     </div>
     <div class="scroll-hint">← Scroll to see all races →</div>
-    <div class="table-outer">
-      <table><thead><tr id="drivers-header"></tr></thead><tbody id="drivers-body"></tbody></table>
+    <div class="table-wrap">
+      <table class="standings-table"><thead><tr id="drivers-header"></tr></thead><tbody id="drivers-body"></tbody></table>
     </div>
   </div>
 
@@ -567,28 +561,24 @@ async function loadDrivers() {
     };
 
     // Header HTML
-    let hHtml = `<th class="col-pos"><div class="th-pos-cell">Pos</div></th>
-      <th class="col-driver"><div class="th-driver-cell">Driver</div></th>`;
+    let hHtml = `<th class="st-pos"><span class="st-pos-header">Pos</span></th>
+      <th class="st-driver"><span class="st-driver-header">Driver</span></th>`;
 
     races.forEach((r, idx) => {
-      const iso = CIRCUIT_TO_ISO[r.short] || CIRCUIT_TO_ISO[r.label.replace(/\(s\)/i,'').trim()] || '';
       const isFirst = sprintPairs.has(idx) && r.sprint;
       const isLast = sprintPairs.has(idx) && !r.sprint;
-      const pairClass = isFirst ? 'sprint-pair-first' : isLast ? 'sprint-pair-last' : '';
+      const sc = isFirst ? 'st-sprint-first' : isLast ? 'st-sprint-last' : '';
       const roundNum = r.label.replace(/\(s\)/i,'').trim();
-      hHtml += `<th class="th-race ${pairClass}">
-        <div class="th-race-content">
-          <div class="th-race-round">${roundNum}</div>
-          <div class="th-race-name">${r.short||r.label}</div>
-        </div>
-      </th>`;
+      hHtml += `<th class="st-race ${sc}"><div class="st-race-header">
+        <span class="st-race-round">${roundNum}</span>
+        <span class="st-race-name">${r.short||r.label}</span>
+      </div></th>`;
     });
-    if (poleCol>=0) hHtml += `<th class="th-end">Pole</th>`;
-    if (flCol>=0) hHtml += `<th class="th-end">F/L</th>`;
-    if (ptsCol>=0) hHtml += `<th class="th-end">Pts</th>`;
-    if (gapCol>=0) hHtml += `<th class="th-end">Gap</th>`;
+    if (poleCol>=0) hHtml += `<th class="st-end"><span class="st-end-header">Pole</span></th>`;
+    if (flCol>=0)   hHtml += `<th class="st-end"><span class="st-end-header">F/L</span></th>`;
+    if (ptsCol>=0)  hHtml += `<th class="st-end"><span class="st-end-header">Pts</span></th>`;
+    if (gapCol>=0)  hHtml += `<th class="st-end"><span class="st-end-header">Gap</span></th>`;
 
-    console.log('HEADER HTML:', hHtml.substring(0,500));
     document.getElementById('drivers-header').innerHTML = hHtml;
 
     // Body
@@ -619,26 +609,21 @@ async function loadDrivers() {
         firstDriver = false;
       }
 
-      const flagImg = ''; // Flag images removed pending custom graphics
       let rHtml = `<tr>
-        <td class="col-pos td-pos ${pc}">${pos||''}</td>
-        <td class="col-driver td-driver">
-          <div class="td-driver-inner">
-            <div class="td-driver-top">
-              ${flagImg}
-              <span class="td-driver-name">${driver}</span>
-            </div>
-            <div class="td-driver-team">${team||''}</div>
-          </div>
-        </td>`;
+        <td class="st-pos"><span class="st-pos-cell ${pc}">${pos||''}</span></td>
+        <td class="st-driver"><div class="st-driver-cell">
+          <span class="st-driver-name">${driver}</span>
+          <span class="st-driver-team">${team||''}</span>
+        </div></td>`;
 
       races.forEach((r, idx) => {
         const v = cs(row, r.col);
-        const rc = rClass(v);
+        const val = v && v.trim() ? v.trim() : '';
+        const rc = rClass(val);
         const isFirst = sprintPairs.has(idx) && r.sprint;
         const isLast = sprintPairs.has(idx) && !r.sprint;
-        const pairClass = isFirst ? 'sprint-pair-first' : isLast ? 'sprint-pair-last' : '';
-        rHtml += `<td class="td-result ${pairClass}"><div class="result-inner ${rc}">${v&&v.trim()?v:''}</div></td>`;
+        const sc = isFirst ? 'st-sprint-first' : isLast ? 'st-sprint-last' : '';
+        rHtml += `<td class="st-result ${sc}"><div class="st-ri ${rc}">${val}</div></td>`;
       });
 
       const pole = poleCol>=0 ? cs(row,poleCol) : '';
@@ -646,16 +631,15 @@ async function loadDrivers() {
       const pts  = ptsCol>=0  ? cs(row,ptsCol)  : '';
       const gap  = gapCol>=0  ? cs(row,gapCol)  : '';
 
-      if (poleCol>=0) rHtml += `<td class="td-end td-pole ${!pole||pole==='0'?'zero':''}">${pole||'—'}</td>`;
-      if (flCol>=0)   rHtml += `<td class="td-end td-fl ${!fl||fl==='0'?'zero':''}">${fl||'—'}</td>`;
-      if (ptsCol>=0)  rHtml += `<td class="td-end td-pts">${pts||'—'}</td>`;
-      if (gapCol>=0)  rHtml += `<td class="td-end td-gap ${!gap||gap==='0'?'leader':''}">${gap||'—'}</td>`;
+      if (poleCol>=0) rHtml += `<td class="st-end"><span class="st-end-cell st-pole ${!pole||pole==='0'?'zero':''}">${pole||'—'}</span></td>`;
+      if (flCol>=0)   rHtml += `<td class="st-end"><span class="st-end-cell st-fl ${!fl||fl==='0'?'zero':''}">${fl||'—'}</span></td>`;
+      if (ptsCol>=0)  rHtml += `<td class="st-end"><span class="st-end-cell st-pts">${pts||'—'}</span></td>`;
+      if (gapCol>=0)  rHtml += `<td class="st-end"><span class="st-end-cell st-gap ${!gap||gap==='0'?'leader':''}">${gap||'—'}</span></td>`;
 
       rHtml += '</tr>';
       bHtml += rHtml;
     }
 
-    console.log('FIRST ROW HTML:', bHtml.substring(0,800));
     document.getElementById('drivers-body').innerHTML = bHtml;
     document.getElementById('div-view-meta').textContent = `${rounds} rounds completed`;
 
