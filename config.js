@@ -61,7 +61,8 @@ async function loadConfig() {
       const text = await res.text();
       console.log('Config raw text (first 200):', text.substring(0,200));
       const config = parseConfigCSV(text);
-      console.log('Config parsed:', config);
+      console.log('Config parsed keys:', Object.keys(config));
+      console.log('Config parsed:', JSON.stringify(config));
       _configCache = config;
       return config;
     } catch(e) {
