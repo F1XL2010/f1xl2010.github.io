@@ -578,12 +578,12 @@ async function loadConstructors() {
     const conTable = await fetchSheet(currentDiv.sheetId, currentDiv.gids.constructors);
     const rows = conTable.rows;
 
-    // Find header row
-    let hIdx = -1, posCol=0, teamCol=1, ptsCol=2, gapLeaderCol=3, gapAboveCol=4;
+    // Find header row - Pos in col 1, Team logo col 2, Team name col 3, Points col 4
+    let hIdx = -1, posCol=1, teamCol=3, ptsCol=4;
     for (let i=0; i<rows.length; i++) {
-      for (let c=0; c<4; c++) {
+      for (let c=0; c<5; c++) {
         if (cs(rows[i],c).trim()==='Pos') {
-          hIdx=i; posCol=c; teamCol=c+1; ptsCol=c+2; gapLeaderCol=c+3; gapAboveCol=c+4; break;
+          hIdx=i; posCol=c; teamCol=c+2; ptsCol=c+3; break;
         }
       }
       if (hIdx>=0) break;
@@ -599,20 +599,19 @@ async function loadConstructors() {
       const ptsRaw = cs(row,ptsCol).trim();
       if (!team) continue;
       const pts = Math.floor(parseFloat(ptsRaw)) || 0;
-      const gapLeader = cs(row,gapLeaderCol).trim();
-      const gapAbove = cs(row,gapAboveCol).trim();
-      teams.push({pos:parseInt(pos), team, pts, gapLeader, gapAbove});
+      teams.push({pos:parseInt(pos), team, pts});
     }
 
-    // Sort by points descending
+    // Sort by points descending and calculate gaps
     teams.sort((a,b) => b.pts - a.pts);
+    const leader = teams.length ? teams[0].pts : 0;
 
     let html = '';
     teams.forEach((d, i) => {
       const color = teamColors[d.team] || '#555';
       const pc = pClass(i+1);
-      const gl = d.gapLeader && parseFloat(d.gapLeader) !== 0 ? d.gapLeader : '—';
-      const ga = d.gapAbove && parseFloat(d.gapAbove) !== 0 ? d.gapAbove : '—';
+      const gl = i===0 ? '—' : `-${leader - d.pts}`;
+      const ga = i===0 ? '—' : `-${teams[i-1].pts - d.pts}`;
       html += `<div class="con-row">
         <div class="con-pos ${pc}">${i+1}</div>
         <div class="con-bar" style="background:${color}"></div>
@@ -819,13 +818,13 @@ async function loadOverallConstructors() {
     for (const result of results) {
       if (!result) continue;
       const rows = result.rows;
-      // Find header row - scan for 'Pos' in first few cols
+      // Find header row - Pos col, team name is col+2, points is col+3
       let hIdx = -1;
-      let posCol = 0, teamCol = 1, ptsCol = 2;
+      let posCol = 1, teamCol = 3, ptsCol = 4;
       for (let i=0; i<rows.length; i++) {
-        for (let c=0; c<4; c++) {
+        for (let c=0; c<5; c++) {
           if (cs(rows[i],c).trim()==='Pos') {
-            hIdx=i; posCol=c; teamCol=c+1; ptsCol=c+2; break;
+            hIdx=i; posCol=c; teamCol=c+2; ptsCol=c+3; break;
           }
         }
         if (hIdx>=0) break;
@@ -839,7 +838,6 @@ async function loadOverallConstructors() {
         const team = cs(row,teamCol).trim();
         const ptsRaw = cs(row,ptsCol).trim();
         if (!team || !ptsRaw) continue;
-        // Strip decimal tiebreaker
         const pts = Math.floor(parseFloat(ptsRaw)) || 0;
         if (!teamPoints[team]) teamPoints[team] = 0;
         teamPoints[team] += pts;
