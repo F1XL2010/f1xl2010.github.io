@@ -260,9 +260,18 @@
 </div>
 
 <!-- DIVISION SELECTOR -->
-<div id="overall-constructors" style="padding:20px 24px 0;background:var(--dark2);border-bottom:1px solid var(--border);">
-  <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--teal);margin-bottom:12px;">Overall Constructors Championship</div>
-  <div id="overall-constructors-table"><div class="loading-msg" style="padding:16px 0;">Loading...</div></div>
+<div id="overall-constructors" style="background:var(--dark2);border-bottom:1px solid var(--border);">
+  <div style="padding:16px 24px 0;">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--teal);margin-bottom:12px;">Overall Constructors Championship</div>
+    <div style="display:flex;gap:0;border-bottom:1px solid rgba(255,255,255,0.1);margin-bottom:0;">
+      <button id="oc-tab-standings" onclick="switchOCTab('standings')" style="padding:8px 16px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;background:none;border:none;border-bottom:2px solid var(--green);color:#fff;cursor:pointer;">Standings</button>
+      <button id="oc-tab-weekly" onclick="switchOCTab('weekly')" style="padding:8px 16px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;background:none;border:none;border-bottom:2px solid transparent;color:rgba(255,255,255,0.5);cursor:pointer;">Weekly Points</button>
+      <button id="oc-tab-chart" onclick="switchOCTab('chart')" style="padding:8px 16px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;background:none;border:none;border-bottom:2px solid transparent;color:rgba(255,255,255,0.5);cursor:pointer;">Position Chart</button>
+    </div>
+  </div>
+  <div id="oc-panel-standings"><div id="overall-constructors-table"><div class="loading-msg" style="padding:16px 0 16px 24px;">Loading...</div></div></div>
+  <div id="oc-panel-weekly" style="display:none;"><div class="loading-msg" style="padding:16px 24px;">Loading weekly points...</div></div>
+  <div id="oc-panel-chart" style="display:none;"><div class="loading-msg" style="padding:16px 24px;">Loading position chart...</div></div>
 </div>
 <div id="selector-view">
   <div class="div-selector" id="div-selector">
@@ -1008,6 +1017,210 @@ async function loadOverallConstructors() {
   } catch(e) {
     el.innerHTML = '<div style="font-size:13px;color:var(--text-faint);padding:8px 0;">Could not load overall standings</div>';
     console.error('Overall constructors error:', e);
+  }
+}
+
+
+function switchOCTab(tab) {
+  ['standings','weekly','chart'].forEach(t => {
+    const btn = document.getElementById('oc-tab-'+t);
+    const panel = document.getElementById('oc-panel-'+t);
+    const active = t === tab;
+    btn.style.borderBottomColor = active ? 'var(--green)' : 'transparent';
+    btn.style.color = active ? '#fff' : 'rgba(255,255,255,0.5)';
+    panel.style.display = active ? '' : 'none';
+  });
+  if (tab === 'weekly' && !window._ocWeeklyLoaded) { loadOCWeekly(); window._ocWeeklyLoaded = true; }
+  if (tab === 'chart' && !window._ocChartLoaded) { loadOCChart(); window._ocChartLoaded = true; }
+}
+
+async function fetchRaceConstructors(sheetId, gid) {
+  // Fetch constructor points from a race tab
+  // Returns {teamName: points} object
+  const table = await fetchSheet(sheetId, gid);
+  const rows = table.rows;
+  // Detect sprint: row 3 contains 'Sprint'
+  let isSprint = false;
+  for (let c=0; c<(rows[3]||{c:[]}).c.length; c++) {
+    if (cs(rows[3],c).toLowerCase().includes('sprint')) { isSprint=true; break; }
+  }
+  // Non-sprint: team=col26, pts=col27. Sprint: team=col52, pts=col53
+  const teamCol = isSprint ? 52 : 26;
+  const ptsCol  = isSprint ? 53 : 27;
+  const result = {};
+  for (let i=5; i<=14; i++) {
+    if (!rows[i]) continue;
+    const team = cs(rows[i], teamCol).trim();
+    const ptsRaw = cs(rows[i], ptsCol).trim();
+    if (!team || !ptsRaw) continue;
+    const pts = Math.floor(parseFloat(ptsRaw)) || 0;
+    if (team) result[team] = (result[team]||0) + pts;
+  }
+  return result;
+}
+
+async function loadOCWeekly() {
+  const el = document.getElementById('oc-panel-weekly');
+  el.innerHTML = '<div class="loading-msg" style="padding:16px 24px;">Loading weekly points...</div>';
+  try {
+    const currentSeason = await getCurrentSeason();
+    // Fetch round GIDs for all divisions
+    const roundData = []; // Array of {round, combined:{team:pts}}
+    const numRounds = divisions[0]?.numRounds || 16;
+
+    for (let r=1; r<=numRounds; r++) {
+      const combined = {};
+      for (const div of divisions) {
+        if (!div.sheetId) continue;
+        const gid = seasonConfig[`d${div.id.toLowerCase()}_r${r}_gid`];
+        if (!gid) continue;
+        try {
+          const pts = await fetchRaceConstructors(div.sheetId, gid);
+          Object.entries(pts).forEach(([team,p]) => { combined[team]=(combined[team]||0)+p; });
+        } catch(e) {}
+      }
+      if (Object.keys(combined).length) roundData.push({round:r, pts:combined});
+    }
+
+    if (!roundData.length) { el.innerHTML='<div class="loading-msg" style="padding:16px 24px;">No data available</div>'; return; }
+
+    // Get all teams
+    const allTeams = [...new Set(roundData.flatMap(r=>Object.keys(r.pts)))].sort();
+    const rounds = roundData.map(r=>r.round);
+
+    // Find max points per round for gold highlight
+    const roundMax = roundData.map(r => Math.max(...Object.values(r.pts)));
+
+    // Build table
+    const thBase = `font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:6px 8px;text-align:center;position:sticky;top:0;background:#1e2a27;color:rgba(255,255,255,0.7);border-bottom:1px solid rgba(255,255,255,0.12);border-right:1px solid rgba(255,255,255,0.07);white-space:nowrap;`;
+    const tdBase = `padding:6px 8px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.05);border-right:1px solid rgba(255,255,255,0.07);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:600;background:#1a2320;`;
+
+    let html = `<div style="overflow-x:auto;overflow-y:auto;max-height:320px;padding:0 0 16px;">
+    <table style="border-collapse:separate;border-spacing:0;min-width:100%;font-size:12px;white-space:nowrap;">
+    <thead><tr>
+      <th style="${thBase}position:sticky;left:0;z-index:12;text-align:left;min-width:120px;">Team</th>`;
+    rounds.forEach(r => { html += `<th style="${thBase}width:36px;">R${r}</th>`; });
+    html += `<th style="${thBase}min-width:50px;color:#3DCC47;">Total</th></tr></thead><tbody>`;
+
+    allTeams.forEach(team => {
+      const color = teamColors[team] || teamColors[Object.keys(teamColors).find(k=>k.toLowerCase()===team.toLowerCase())||''] || '#555';
+      let total = 0;
+      html += `<tr><td style="${tdBase}position:sticky;left:0;z-index:2;text-align:left;background:#1a2320;">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div style="width:3px;height:14px;background:${color};border-radius:1px;flex-shrink:0;"></div>
+          <span style="font-size:12px;color:#fff;">${team}</span>
+        </div></td>`;
+      roundData.forEach((rd, ri) => {
+        const pts = rd.pts[team] || 0;
+        total += pts;
+        const isMax = pts > 0 && pts === roundMax[ri];
+        const bg = isMax ? 'background:#5a3e00;color:#FFD700;' : pts > 0 ? 'color:#fff;' : 'color:rgba(255,255,255,0.2);';
+        html += `<td style="${tdBase}${bg}">${pts||'—'}</td>`;
+      });
+      html += `<td style="${tdBase}color:#3DCC47;font-size:15px;">${total}</td></tr>`;
+    });
+
+    html += '</tbody></table></div>';
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = `<div class="loading-msg" style="padding:16px 24px;">Could not load weekly data: ${e.message}</div>`;
+    console.error('Weekly error:', e);
+  }
+}
+
+async function loadOCChart() {
+  const el = document.getElementById('oc-panel-chart');
+  el.innerHTML = '<div class="loading-msg" style="padding:16px 24px;">Building chart...</div>';
+  try {
+    const numRounds = divisions[0]?.numRounds || 16;
+    const roundData = [];
+
+    for (let r=1; r<=numRounds; r++) {
+      const combined = {};
+      for (const div of divisions) {
+        if (!div.sheetId) continue;
+        const gid = seasonConfig[`d${div.id.toLowerCase()}_r${r}_gid`];
+        if (!gid) continue;
+        try {
+          const pts = await fetchRaceConstructors(div.sheetId, gid);
+          Object.entries(pts).forEach(([team,p]) => { combined[team]=(combined[team]||0)+p; });
+        } catch(e) {}
+      }
+      if (Object.keys(combined).length) roundData.push({round:r, pts:combined});
+    }
+
+    if (!roundData.length) { el.innerHTML='<div class="loading-msg" style="padding:16px 24px;">No data available</div>'; return; }
+
+    // Build cumulative totals
+    const allTeams = [...new Set(roundData.flatMap(r=>Object.keys(r.pts)))].sort();
+    const cumulative = {}; // team -> [cumPts after each round]
+    allTeams.forEach(t => { cumulative[t] = []; });
+    const runningTotal = {};
+    roundData.forEach(rd => {
+      allTeams.forEach(t => {
+        runningTotal[t] = (runningTotal[t]||0) + (rd.pts[t]||0);
+        cumulative[t].push(runningTotal[t]);
+      });
+    });
+
+    // Calculate positions after each round
+    const positions = {}; // team -> [position after each round]
+    allTeams.forEach(t => { positions[t] = []; });
+    roundData.forEach((rd, ri) => {
+      const sorted = [...allTeams].sort((a,b) => (cumulative[b][ri]||0) - (cumulative[a][ri]||0));
+      sorted.forEach((t, pos) => { positions[t].push(pos+1); });
+    });
+
+    // SVG chart
+    const W = 800, H = 300, PL = 10, PR = 90, PT = 20, PB = 30;
+    const CW = W - PL - PR, CH = H - PT - PB;
+    const numTeams = allTeams.length;
+    const rounds = roundData.map(r=>r.round);
+    const xStep = rounds.length > 1 ? CW / (rounds.length-1) : CW;
+    const yStep = CH / (numTeams - 1 || 1);
+
+    const x = (ri) => PL + ri * xStep;
+    const y = (pos) => PT + (pos-1) * yStep;
+
+    let svgLines = '', svgLabels = '', svgDots = '';
+
+    allTeams.forEach(team => {
+      const color = teamColors[team] || teamColors[Object.keys(teamColors).find(k=>k.toLowerCase()===team.toLowerCase())||''] || '#888';
+      const pos = positions[team];
+      if (!pos.length) return;
+      // Line
+      let d = `M ${x(0)} ${y(pos[0])}`;
+      for (let i=1; i<pos.length; i++) d += ` L ${x(i)} ${y(pos[i])}`;
+      svgLines += `<path d="${d}" stroke="${color}" stroke-width="2.5" fill="none" opacity="0.9"/>`;
+      // Dots at each point
+      pos.forEach((p,i) => {
+        svgDots += `<circle cx="${x(i)}" cy="${y(p)}" r="3" fill="${color}"/>`;
+      });
+      // Label at end
+      const lastPos = pos[pos.length-1];
+      svgLabels += `<text x="${x(pos.length-1)+8}" y="${y(lastPos)+4}" fill="${color}" font-size="10" font-family="Barlow Condensed,sans-serif" font-weight="600">${team}</text>`;
+    });
+
+    // Round labels on X axis
+    let xLabels = '';
+    rounds.forEach((r,i) => {
+      xLabels += `<text x="${x(i)}" y="${PT+CH+18}" text-anchor="middle" fill="rgba(255,255,255,0.4)" font-size="9" font-family="Barlow Condensed,sans-serif">R${r}</text>`;
+    });
+
+    // Position labels on Y axis
+    let yLabels = '';
+    for (let p=1; p<=numTeams; p++) {
+      yLabels += `<text x="${PL-4}" y="${y(p)+4}" text-anchor="end" fill="rgba(255,255,255,0.3)" font-size="9" font-family="Barlow Condensed,sans-serif">${p}</text>`;
+    }
+
+    const svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;background:#161d1b;">
+      ${svgLines}${svgDots}${svgLabels}${xLabels}${yLabels}
+    </svg>`;
+
+    el.innerHTML = `<div style="padding:12px 16px 16px;">${svg}</div>`;
+  } catch(e) {
+    el.innerHTML = `<div class="loading-msg" style="padding:16px 24px;">Could not load chart: ${e.message}</div>`;
+    console.error('Chart error:', e);
   }
 }
 
