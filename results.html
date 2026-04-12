@@ -153,11 +153,12 @@
 </div>
 
 <div class="page-header">
-  <div class="page-eyebrow">Season 28 · Division 1</div>
+  <div class="page-eyebrow" id="page-eyebrow">Loading...</div>
   <div class="page-title">Results</div>
   <div class="page-meta" id="page-meta">Loading...</div>
 </div>
 
+<div style="background:var(--dark2);border-bottom:1px solid var(--border);padding:10px 24px;display:flex;gap:6px;flex-wrap:wrap;" id="div-selector-bar"></div>
 <div class="round-selector" id="round-selector">
   <div style="color:var(--text-faint);font-size:13px;">Loading rounds...</div>
 </div>
@@ -307,21 +308,59 @@ function getMeta(rows){
   return{circuit, sc, rf, isSprint, cancelled, wQuali, wRace, wSprintQuali, wSprintRace};
 }
 
+let _seasonCfg = null;
+let _currentSeason = null;
+let _currentDiv = 1;
+
 async function init(){
-  // Load config to get current season sheet IDs
   try {
-    const seasonCfg = await getCurrentSeasonConfig();
-    if (seasonCfg) {
-      SHEET_ID = seasonCfg['d1_sheet_id'] || SHEET_ID;
-      CAL_GID  = seasonCfg['d1_calendar_gid'] || CAL_GID;
-      RACE_GIDS = [];
-      for (let i=1; i<=21; i++) {
-        const gid = seasonCfg[`d1_r${i}_gid`];
-        if (gid) RACE_GIDS.push(gid);
-        else RACE_GIDS.push(null);
+    _seasonCfg = await getCurrentSeasonConfig();
+    _currentSeason = await getCurrentSeason();
+  } catch(e) { console.warn('Config load failed:', e.message); }
+
+  // Build division selector
+  if (_seasonCfg) {
+    const numDivs = parseInt(_seasonCfg['divisions']) || 1;
+    const bar = document.getElementById('div-selector-bar');
+    let btns = '';
+    for (let d=1; d<=numDivs; d++) {
+      if (_seasonCfg[`d${d}_has_results`] === 'yes') {
+        btns += `<button onclick="switchDiv(${d})" id="divbtn${d}" style="padding:5px 14px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;background:${d===1?'rgba(61,204,71,0.15)':'none'};border:1px solid ${d===1?'var(--green)':'var(--border)'};border-radius:4px;color:${d===1?'var(--green)':'var(--text-muted)'};cursor:pointer;">D${d}</button>`;
       }
     }
-  } catch(e) { console.warn('Config load failed, using defaults:', e.message); }
+    bar.innerHTML = btns;
+  }
+
+  await loadDivision(1);
+}
+
+async function switchDiv(d) {
+  _currentDiv = d;
+  // Update button styles
+  for (let i=1; i<=4; i++) {
+    const btn = document.getElementById('divbtn'+i);
+    if (!btn) continue;
+    const active = i === d;
+    btn.style.background = active ? 'rgba(61,204,71,0.15)' : 'none';
+    btn.style.borderColor = active ? 'var(--green)' : 'var(--border)';
+    btn.style.color = active ? 'var(--green)' : 'var(--text-muted)';
+  }
+  await loadDivision(d);
+}
+
+async function loadDivision(d) {
+  if (_seasonCfg) {
+    SHEET_ID = _seasonCfg[`d${d}_sheet_id`] || SHEET_ID;
+    CAL_GID  = _seasonCfg[`d${d}_calendar_gid`] || CAL_GID;
+    RACE_GIDS = [];
+    for (let i=1; i<=21; i++) {
+      const gid = _seasonCfg[`d${d}_r${i}_gid`];
+      RACE_GIDS.push(gid || null);
+    }
+  }
+  document.getElementById('page-eyebrow').textContent = `Season ${_currentSeason||''} · Division ${d}`;
+  document.getElementById('round-selector').innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Loading...</div>';
+  document.getElementById('results-content').innerHTML = '';
   try{
     const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${CAL_GID}`;
     const res=await fetch(url);
