@@ -265,6 +265,10 @@
 </div>
 
 <!-- DIVISION SELECTOR -->
+<div id="overall-constructors" style="padding:20px 24px 0;">
+  <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--teal);margin-bottom:12px;">Overall Constructors Championship</div>
+  <div id="overall-constructors-table"><div class="loading-msg" style="padding:16px 0;">Loading...</div></div>
+</div>
 <div id="selector-view">
   <div class="div-selector" id="div-selector">
     <div class="loading-msg" style="grid-column:1/-1">Loading...</div>
@@ -571,60 +575,59 @@ async function loadDrivers() {
 
 async function loadConstructors() {
   try {
-    // Fetch both tabs simultaneously - cross-reference names from teamStats
-    const [conTable, teamTable] = await Promise.all([
-      fetchSheet(currentDiv.sheetId, currentDiv.gids.constructors),
-      fetchSheet(currentDiv.sheetId, currentDiv.gids.teamStats)
-    ]);
+    const conTable = await fetchSheet(currentDiv.sheetId, currentDiv.gids.constructors);
+    const rows = conTable.rows;
 
-    // Extract ordered team names from teamStats tab (col 0 = team name)
-    const teamNames = [];
-    for (let i=1; i<teamTable.rows.length; i++) {
-      const name = cs(teamTable.rows[i], 0);
-      if (name && name.toLowerCase() !== 'driver') teamNames.push(name);
-    }
-
-    // Extract points data from constructors tab
-    // Find rows with numeric points - col 4 had points in our data
-    const conRows = conTable.rows;
-    const pointsData = [];
-    for (let i=0; i<conRows.length; i++) {
-      const row = conRows[i];
-      // Look for a row that has a numeric value (points)
-      for (let c=2; c<row.c.length; c++) {
-        const v = cs(row, c);
-        const n = parseFloat(v);
-        if (!isNaN(n) && n > 0) {
-          pointsData.push({ pts: n, gap: cs(row, c+1) });
-          break;
+    // Find header row
+    let hIdx = -1, posCol=0, teamCol=1, ptsCol=2, gapLeaderCol=3, gapAboveCol=4;
+    for (let i=0; i<rows.length; i++) {
+      for (let c=0; c<4; c++) {
+        if (cs(rows[i],c).trim()==='Pos') {
+          hIdx=i; posCol=c; teamCol=c+1; ptsCol=c+2; gapLeaderCol=c+3; gapAboveCol=c+4; break;
         }
       }
+      if (hIdx>=0) break;
+    }
+    if (hIdx<0) throw new Error('Header not found');
+
+    const teams = [];
+    for (let i=hIdx+1; i<rows.length; i++) {
+      const row = rows[i];
+      const pos = cs(row,posCol).trim();
+      if (!pos || isNaN(parseInt(pos))) continue;
+      const team = cs(row,teamCol).trim();
+      const ptsRaw = cs(row,ptsCol).trim();
+      if (!team) continue;
+      const pts = Math.floor(parseFloat(ptsRaw)) || 0;
+      const gapLeader = cs(row,gapLeaderCol).trim();
+      const gapAbove = cs(row,gapAboveCol).trim();
+      teams.push({pos:parseInt(pos), team, pts, gapLeader, gapAbove});
     }
 
-    // Sort points descending and pair with team names
-    pointsData.sort((a,b) => b.pts - a.pts);
+    // Sort by points descending
+    teams.sort((a,b) => b.pts - a.pts);
 
     let html = '';
-    pointsData.forEach((d, i) => {
-      const team = teamNames[i] || `Team ${i+1}`;
-      const color = teamColors[team] || '#555';
+    teams.forEach((d, i) => {
+      const color = teamColors[d.team] || '#555';
       const pc = pClass(i+1);
-      const gap = d.gap && d.gap !== '0' && parseFloat(d.gap) !== 0 ? d.gap : '—';
+      const gl = d.gapLeader && parseFloat(d.gapLeader) !== 0 ? d.gapLeader : '—';
+      const ga = d.gapAbove && parseFloat(d.gapAbove) !== 0 ? d.gapAbove : '—';
       html += `<div class="con-row">
         <div class="con-pos ${pc}">${i+1}</div>
         <div class="con-bar" style="background:${color}"></div>
         <div class="con-info">
-          <div class="con-name">${team}</div>
-          <div class="con-sub">${Math.round(d.pts)} points</div>
+          <div class="con-name">${d.team}</div>
         </div>
         <div class="con-right">
-          <div class="con-pts">${Math.round(d.pts)}</div>
-          <div class="con-gap">${gap}</div>
+          <div class="con-pts">${d.pts}</div>
+          <div class="con-gap">${gl}</div>
+          <div class="con-gap" style="font-size:11px;color:var(--text-faint);margin-top:2px;">${ga}</div>
         </div>
       </div>`;
     });
 
-    document.getElementById('constructors-list').innerHTML = html || '<div class="loading-msg">No constructor data found</div>';
+    document.getElementById('constructors-list').innerHTML = html || '<div class="loading-msg">No data found</div>';
   } catch(e) {
     document.getElementById('constructors-list').innerHTML = `<div class="loading-msg">Could not load constructors: ${e.message}</div>`;
     console.error('Constructors error:', e);
@@ -798,6 +801,99 @@ function toggleMenu() {
   document.getElementById('hamburger').classList.toggle('open');
 }
 
+async function loadOverallConstructors() {
+  const el = document.getElementById('overall-constructors-table');
+  try {
+    // Fetch constructors from all available divisions in parallel
+    const results = await Promise.all(
+      divisions.filter(d => d.sheetId).map(async (div) => {
+        try {
+          const table = await fetchSheet(div.sheetId, div.gids.constructors);
+          return {div: div.name, rows: table.rows};
+        } catch(e) { return null; }
+      })
+    );
+
+    // Aggregate points per team
+    const teamPoints = {};
+    for (const result of results) {
+      if (!result) continue;
+      const rows = result.rows;
+      // Find header row - scan for 'Pos' in first few cols
+      let hIdx = -1;
+      let posCol = 0, teamCol = 1, ptsCol = 2;
+      for (let i=0; i<rows.length; i++) {
+        for (let c=0; c<4; c++) {
+          if (cs(rows[i],c).trim()==='Pos') {
+            hIdx=i; posCol=c; teamCol=c+1; ptsCol=c+2; break;
+          }
+        }
+        if (hIdx>=0) break;
+      }
+      if (hIdx < 0) continue;
+      // Data rows
+      for (let i=hIdx+1; i<rows.length; i++) {
+        const row = rows[i];
+        const pos = cs(row,posCol).trim();
+        if (!pos || isNaN(parseInt(pos))) continue;
+        const team = cs(row,teamCol).trim();
+        const ptsRaw = cs(row,ptsCol).trim();
+        if (!team || !ptsRaw) continue;
+        // Strip decimal tiebreaker
+        const pts = Math.floor(parseFloat(ptsRaw)) || 0;
+        if (!teamPoints[team]) teamPoints[team] = 0;
+        teamPoints[team] += pts;
+      }
+    }
+
+    // Sort by points descending
+    const sorted = Object.entries(teamPoints)
+      .sort((a,b) => b[1]-a[1]);
+
+    if (!sorted.length) {
+      el.innerHTML = '<div style="font-size:13px;color:var(--text-faint);padding:8px 0;">No data available</div>';
+      return;
+    }
+
+    const leader = sorted[0][1];
+    let html = `<table style="width:100%;max-width:500px;border-collapse:collapse;margin-bottom:8px;">
+      <thead><tr>
+        <th style="text-align:left;padding:5px 10px;font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-faint);border-bottom:1px solid var(--border2);background:var(--dark3);">Pos</th>
+        <th style="text-align:left;padding:5px 10px;font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-faint);border-bottom:1px solid var(--border2);background:var(--dark3);">Team</th>
+        <th style="text-align:right;padding:5px 10px;font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-faint);border-bottom:1px solid var(--border2);background:var(--dark3);">Pts</th>
+        <th style="text-align:right;padding:5px 10px;font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-faint);border-bottom:1px solid var(--border2);background:var(--dark3);">Gap</th>
+        <th style="text-align:right;padding:5px 10px;font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-faint);border-bottom:1px solid var(--border2);background:var(--dark3);">+/-</th>
+      </tr></thead><tbody>`;
+
+    sorted.forEach(([team, pts], idx) => {
+      const color = teamColors[team] || '#555';
+      const gapToLeader = idx === 0 ? '—' : `-${leader - pts}`;
+      const gapToAbove = idx === 0 ? '—' : `-${sorted[idx-1][1] - pts}`;
+      const pos = idx + 1;
+      const pc = pos===1?'var(--gold)':pos===2?'rgba(210,210,210,0.9)':pos===3?'rgba(200,140,80,0.9)':'var(--text-faint)';
+      html += `<tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+        <td style="padding:7px 10px;"><span style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:${pc};">${pos}</span></td>
+        <td style="padding:7px 10px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="width:3px;height:16px;background:${color};border-radius:1px;flex-shrink:0;"></div>
+            <span style="font-size:13px;color:var(--text);font-weight:500;">${team}</span>
+          </div>
+        </td>
+        <td style="padding:7px 10px;text-align:right;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:var(--green);">${pts}</td>
+        <td style="padding:7px 10px;text-align:right;font-size:12px;color:var(--text-faint);">${gapToLeader}</td>
+        <td style="padding:7px 10px;text-align:right;font-size:12px;color:var(--text-faint);">${gapToAbove}</td>
+      </tr>`;
+    });
+
+    html += '</tbody></table>';
+    el.innerHTML = html;
+
+  } catch(e) {
+    el.innerHTML = '<div style="font-size:13px;color:var(--text-faint);padding:8px 0;">Could not load overall standings</div>';
+    console.error('Overall constructors error:', e);
+  }
+}
+
 async function initStandings() {
   try {
     const currentSeason = await getCurrentSeason();
@@ -861,6 +957,7 @@ async function initStandings() {
     }));
 
     buildSelector();
+    loadOverallConstructors();
   } catch(e) {
     console.error('Init failed:', e);
     document.getElementById('div-selector').innerHTML = '<div class="loading-msg">Could not load standings.</div>';
