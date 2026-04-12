@@ -362,7 +362,7 @@ async function loadDivision(d) {
   document.getElementById('round-selector').innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Loading...</div>';
   document.getElementById('results-content').innerHTML = '';
   try{
-    const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${CAL_GID}`;
+    const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${CAL_GID}`;
     const res=await fetch(url);
     const text=await res.text();
     if(text.includes('<!DOCTYPE'))throw new Error('Sheet not published to web');
