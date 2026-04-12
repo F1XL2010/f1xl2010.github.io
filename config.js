@@ -108,9 +108,9 @@ async function getCurrentSeasonConfig() {
       const res = await fetch(url);
       console.log('Season config status:', res.status, res.ok);
       const text = await res.text();
-      console.log('Season config raw (first 200):', text.substring(0,200));
+      console.log('Season config raw (first 500):', text.substring(0,500));
       const parsed = parseConfigCSV(text);
-      console.log('Season config parsed keys:', Object.keys(parsed));
+      console.log('Season config parsed:', JSON.stringify(parsed).substring(0,500));
       return parsed;
     } catch(e) {
       console.error('Current season config load failed:', e.message);
