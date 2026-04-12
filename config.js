@@ -104,11 +104,16 @@ async function getCurrentSeasonConfig() {
   if (gid) {
     try {
       const url = `https://docs.google.com/spreadsheets/d/${F1XL_CONFIG_SHEET_ID}/gviz/tq?tqx=out:csv&gid=${gid}`;
+      console.log('Fetching season config from:', url);
       const res = await fetch(url);
+      console.log('Season config status:', res.status, res.ok);
       const text = await res.text();
-      return parseConfigCSV(text);
+      console.log('Season config raw (first 200):', text.substring(0,200));
+      const parsed = parseConfigCSV(text);
+      console.log('Season config parsed keys:', Object.keys(parsed));
+      return parsed;
     } catch(e) {
-      console.warn('Current season config load failed:', e.message);
+      console.error('Current season config load failed:', e.message);
     }
   }
   // Fallback to season number lookup
