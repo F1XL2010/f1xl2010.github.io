@@ -107,8 +107,7 @@
   .td-pos{padding:8px 6px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:#fff;text-align:center;}
   .td-pos.p1{color:#E8B84B;}.td-pos.p2{color:#C0C0C0;}.td-pos.p3{color:#cd7f32;}
   .td-driver{position:relative;overflow:hidden;}
-  .td-driver-teambar{position:absolute;left:0;top:0;bottom:0;width:5px;z-index:1;}
-  .td-driver-inner{padding:6px 10px 6px 14px;display:flex;flex-direction:column;gap:2px;}
+  .td-driver-inner{padding:6px 10px 6px 8px;display:flex;flex-direction:column;gap:2px;}
   .td-driver-top{display:flex;align-items:center;gap:6px;}
   .td-driver-flag{width:18px;height:13px;object-fit:cover;border-radius:1px;flex-shrink:0;}
   .td-driver-name{font-size:13px;font-weight:500;color:#fff;}
@@ -624,7 +623,6 @@ async function loadDrivers() {
       let rHtml = `<tr>
         <td class="col-pos td-pos ${pc}">${pos||''}</td>
         <td class="col-driver td-driver">
-          <div class="td-driver-teambar" style="background:${color}"></div>
           <div class="td-driver-inner">
             <div class="td-driver-top">
               ${flagImg}
