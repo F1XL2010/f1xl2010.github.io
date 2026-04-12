@@ -57,13 +57,14 @@
   @media(min-width:600px){.div-selector{grid-template-columns:repeat(4,1fr);}}
   .div-card{background:var(--dark2);border:1px solid var(--border);border-radius:8px;padding:16px;cursor:pointer;transition:border-color 0.2s,background 0.2s;}
   .div-card:hover{background:var(--dark3);border-color:rgba(255,255,255,0.15);}
-  .div-card-season{font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--red);margin-bottom:4px;}
+  .div-card-season{font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--teal);margin-bottom:4px;}
   .div-card-name{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;text-transform:uppercase;color:var(--text);margin-bottom:10px;}
-  .div-card-lbl{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px;}
-  .div-card-leader{font-size:13px;font-weight:500;color:var(--text-muted);margin-bottom:8px;}
-  .div-card-pts{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;color:var(--text);line-height:1;}
-  .div-card-pts-lbl{font-size:10px;color:var(--text-faint);}
-  .div-card-arrow{color:var(--red);font-size:16px;margin-top:10px;display:block;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;font-size:11px;text-transform:uppercase;}
+  .div-card-lbl{font-size:10px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px;}
+  .div-card-leader{font-size:14px;font-weight:500;color:var(--text);margin-bottom:2px;}
+  .div-card-team{font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:8px;}
+  .div-card-pts{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;color:var(--green);line-height:1;}
+  .div-card-pts-lbl{font-size:10px;color:rgba(255,255,255,0.4);}
+  .div-card-arrow{color:var(--green);font-size:11px;margin-top:10px;display:block;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;text-transform:uppercase;}
 
   /* DIVISION VIEW */
   .div-view{display:none;}
@@ -78,7 +79,7 @@
   .inner-tabs{display:flex;background:var(--dark2);border-bottom:1px solid var(--border);}
   .inner-tab{padding:12px 20px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;background:none;border-top:none;border-left:none;border-right:none;transition:color 0.2s;}
   .inner-tab:hover{color:var(--text);}
-  .inner-tab.active{color:var(--text);border-bottom-color:var(--red);}
+  .inner-tab.active{color:var(--text);border-bottom-color:var(--green);}
   .tab-panel{display:none;}
   .tab-panel.active{display:block;}
 
@@ -94,50 +95,68 @@
   .table-outer::-webkit-scrollbar{height:4px;}
   .table-outer::-webkit-scrollbar-thumb{background:#333;border-radius:2px;}
   table{border-collapse:collapse;font-size:12px;white-space:nowrap;min-width:100%;}
-  .col-pos{position:sticky;left:0;z-index:2;background:var(--black);width:36px;}
-  .col-nat{position:sticky;left:36px;z-index:2;background:var(--black);width:32px;}
-  .col-driver{position:sticky;left:68px;z-index:2;background:var(--black);min-width:140px;}
-  .col-team{min-width:120px;}
-  thead th{background:var(--dark2);padding:0;border-bottom:1px solid var(--border2);border-right:1px solid var(--border);font-weight:600;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.5px;text-transform:uppercase;color:var(--text-muted);font-size:11px;text-align:center;}
-  thead th.col-pos,thead th.col-nat,thead th.col-driver{z-index:4;background:var(--dark2);}
-  thead th.col-driver{text-align:left;}
-  .th-pos-cell,.th-driver-cell,.th-team-cell{padding:8px 10px;}
-  .th-race{height:100px;vertical-align:bottom;width:36px;min-width:36px;padding:0 2px 6px;}
-  .th-race.sprint-col{background:var(--dark3);border-bottom:2px solid rgba(100,160,255,0.35);}
-  .th-race-inner{display:flex;flex-direction:column;align-items:center;gap:3px;}
-  .th-race-flag{font-size:14px;line-height:1;}
-  .th-race-name{writing-mode:vertical-rl;transform:rotate(180deg);font-size:10px;color:var(--text-muted);line-height:1;padding-bottom:2px;}
-  .th-race.sprint-col .th-race-name{color:rgba(100,160,255,0.8);}
-  .th-sprint-badge{font-size:8px;background:rgba(100,160,255,0.2);color:rgba(100,160,255,0.9);padding:1px 3px;border-radius:2px;}
+
+  /* Sticky columns */
+  .col-pos{position:sticky;left:0;z-index:2;background:var(--dark2);width:40px;}
+  .col-driver{position:sticky;left:40px;z-index:2;background:var(--dark2);min-width:180px;}
+
+  /* Sticky header */
+  thead{position:sticky;top:0;z-index:10;}
+  thead th{background:var(--dark3);padding:0;border-bottom:2px solid var(--border2);border-right:1px solid var(--border);font-weight:600;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.5px;text-transform:uppercase;color:var(--text);font-size:11px;text-align:center;}
+  thead th.col-pos{z-index:12;background:var(--dark3);}
+  thead th.col-driver{z-index:12;background:var(--dark3);text-align:left;}
+  .th-pos-cell{padding:8px 10px;}
+  .th-driver-cell{padding:8px 12px;}
+
+  /* Race column headers */
+  .th-race{height:110px;vertical-align:bottom;width:40px;min-width:40px;padding:0;position:relative;overflow:hidden;}
+  .th-race-bg{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0.25;}
+  .th-race-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(20,26,24,0.3) 0%,rgba(20,26,24,0.85) 100%);}
+  .th-race-content{position:relative;z-index:1;height:100%;display:flex;flex-direction:column;justify-content:space-between;padding:5px 3px 5px;}
+  .th-race-round{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;color:var(--text);letter-spacing:0.5px;text-align:center;}
+  .th-race-name{writing-mode:vertical-rl;transform:rotate(180deg);font-size:9px;color:var(--text);line-height:1;text-align:center;flex:1;display:flex;align-items:center;justify-content:center;}
+
+  /* Sprint column grouping */
+  .th-race.sprint-pair-first{border-left:2px solid rgba(100,160,255,0.5);}
+  .th-race.sprint-pair-last{border-right:2px solid rgba(100,160,255,0.5)!important;}
+  .td-result.sprint-pair-first{border-left:2px solid rgba(100,160,255,0.3);}
+  .td-result.sprint-pair-last{border-right:2px solid rgba(100,160,255,0.3)!important;}
+
   .th-end{font-family:'Barlow Condensed',sans-serif;font-size:11px;padding:8px 10px;text-align:center;min-width:44px;}
+
+  /* Body */
   tbody tr{border-bottom:1px solid var(--border);}
-  tbody tr:hover td{background:rgba(255,255,255,0.03);}
-  tbody tr:hover td.col-pos,tbody tr:hover td.col-nat,tbody tr:hover td.col-driver{background:#141414;}
-  tbody td{padding:0;border-right:1px solid var(--border);text-align:center;vertical-align:middle;}
-  .td-pos{padding:10px 6px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:var(--text-faint);text-align:center;}
-  .td-pos.p1{color:#E8B84B;}.td-pos.p2{color:#9EA3A8;}.td-pos.p3{color:#cd7f32;}
-  .td-nat{padding:10px 4px;font-size:16px;text-align:center;}
-  .td-driver{padding:10px 12px;text-align:left;}
+  tbody tr:hover td{background:rgba(255,255,255,0.03)!important;}
+  tbody td{padding:0;border-right:1px solid var(--border);text-align:center;vertical-align:middle;background:var(--dark2);}
+  tbody td.col-pos{background:var(--dark2);}
+  tbody td.col-driver{background:var(--dark2);}
+
+  .td-pos{padding:10px 6px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:var(--text);text-align:center;}
+  .td-pos.p1{color:#E8B84B;}.td-pos.p2{color:#C0C0C0;}.td-pos.p3{color:#cd7f32;}
+
+  /* Driver cell - contains team colour bar, flag, name, team name */
+  .td-driver{padding:0;text-align:left;position:relative;overflow:hidden;}
+  .td-driver-teambar{position:absolute;left:0;top:0;bottom:0;width:4px;}
+  .td-driver-inner{padding:6px 10px 6px 14px;display:flex;flex-direction:column;gap:2px;}
+  .td-driver-top{display:flex;align-items:center;gap:6px;}
+  .td-driver-flag{width:18px;height:13px;object-fit:cover;border-radius:1px;flex-shrink:0;}
   .td-driver-name{font-size:13px;font-weight:500;color:var(--text);}
-  .td-team{padding:10px 10px;text-align:left;}
-  .td-team-inner{display:flex;align-items:center;gap:6px;}
-  .td-team-bar{width:3px;height:20px;border-radius:1px;flex-shrink:0;}
-  .td-team-name{font-size:11px;color:var(--text-muted);white-space:nowrap;}
-  .td-result{width:36px;min-width:36px;height:40px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:600;padding:0;border-right:1px solid var(--border);}
-  .td-result.sprint-col{background:rgba(100,160,255,0.04);}
-  .result-inner{width:100%;height:40px;display:flex;align-items:center;justify-content:center;}
+  .td-driver-team{font-size:10px;color:rgba(255,255,255,0.5);font-weight:400;}
+
+  .td-result{width:40px;min-width:40px;height:44px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:600;padding:0;border-right:1px solid var(--border);background:var(--dark2);}
+  .result-inner{width:100%;height:44px;display:flex;align-items:center;justify-content:center;}
   .result-inner.r1{background:var(--p1-bg);color:var(--p1-text);}
   .result-inner.r2{background:var(--p2-bg);color:var(--p2-text);}
   .result-inner.r3{background:var(--p3-bg);color:var(--p3-text);}
   .result-inner.r46{background:var(--p46-bg);color:var(--p46-text);}
   .result-inner.r710{background:var(--p710-bg);color:var(--p710-text);}
   .result-inner.rdnf{background:var(--dnf-bg);color:var(--dnf-text);font-size:10px;}
-  .result-inner.rout{color:var(--text-faint);}
-  .td-end{padding:10px;text-align:center;font-family:'Barlow Condensed',sans-serif;min-width:44px;}
-  .td-pole{font-size:14px;font-weight:600;color:#E8B84B;}.td-pole.zero{color:var(--text-faint);}
-  .td-fl{font-size:14px;font-weight:600;color:#9146FF;}.td-fl.zero{color:var(--text-faint);}
+  .result-inner.rout{color:rgba(255,255,255,0.2);background:var(--dark2);}
+  .td-end{padding:10px;text-align:center;font-family:'Barlow Condensed',sans-serif;min-width:44px;background:var(--dark2);}
+  .td-pole{font-size:14px;font-weight:600;color:#E8B84B;}.td-pole.zero{color:rgba(255,255,255,0.25);}
+  .td-fl{font-size:14px;font-weight:600;color:#9146FF;}.td-fl.zero{color:rgba(255,255,255,0.25);}
   .td-pts{font-size:16px;font-weight:700;color:var(--text);}
-  .td-gap{font-size:13px;color:var(--text-muted);}.td-gap.leader{color:var(--text-faint);font-size:11px;}
+  .td-gap{font-size:13px;color:var(--text);}.td-gap.leader{color:rgba(255,255,255,0.35);font-size:11px;}
 
   /* CONSTRUCTORS */
   .constructors-list{padding:16px 24px;}
@@ -265,7 +284,7 @@
 </div>
 
 <!-- DIVISION SELECTOR -->
-<div id="overall-constructors" style="padding:20px 24px 0;">
+<div id="overall-constructors" style="padding:20px 24px 0;background:var(--dark2);border-bottom:1px solid var(--border);">
   <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--teal);margin-bottom:12px;">Overall Constructors Championship</div>
   <div id="overall-constructors-table"><div class="loading-msg" style="padding:16px 0;">Loading...</div></div>
 </div>
@@ -409,8 +428,9 @@ function buildSelector() {
       <div class="div-card-name">${d.name}</div>
       ${avail ? `
         <div class="div-card-lbl">Championship leader</div>
-        <div class="div-card-leader">${d.leader}</div>
-        <div class="div-card-pts">${d.leaderPts} <span class="div-card-pts-lbl">pts</span></div>
+        <div class="div-card-leader">${d.leader||'—'}</div>
+        <div class="div-card-team">${d.leaderTeam||''}</div>
+        <div class="div-card-pts">${d.leaderPts||'—'} <span class="div-card-pts-lbl">pts</span></div>
         <span class="div-card-arrow">View full standings →</span>
       ` : '<div style="font-size:12px;color:var(--text-faint);margin-top:8px;">Coming soon</div>'}
     </div>`;
@@ -459,6 +479,49 @@ function rClass(v) {
 }
 function pClass(p){return p===1?'p1':p===2?'p2':p===3?'p3':'';}
 
+const NAT_TO_ISO = {
+  'Britain':'gb','England':'gb','Wales':'gb','Scotland':'gb','Northern Ireland':'gb',
+  'USA':'us','United States':'us','United States Virgin Islands':'vi',
+  'Netherlands':'nl','Germany':'de','France':'fr','Italy':'it','Spain':'es',
+  'Belgium':'be','Austria':'at','Australia':'au','Japan':'jp','Canada':'ca',
+  'Brazil':'br','Mexico':'mx','Monaco':'mc','Singapore':'sg','Hungary':'hu',
+  'Azerbaijan':'az','Saudi Arabia':'sa','Qatar':'qa','Abu Dhabi':'ae',
+  'United Arab Emirates':'ae','China':'cn','South Korea':'kr','Romania':'ro',
+  'South Africa':'za','Ireland':'ie','Portugal':'pt','Sweden':'se',
+  'Finland':'fi','Denmark':'dk','Norway':'no','Poland':'pl','Russia':'ru',
+  'Turkey':'tr','Greece':'gr','Switzerland':'ch','Czech Republic':'cz',
+  'Slovakia':'sk','Croatia':'hr','Serbia':'rs','Ukraine':'ua','Israel':'il',
+  'India':'in','Pakistan':'pk','New Zealand':'nz','Argentina':'ar','Chile':'cl',
+  'Colombia':'co','Peru':'pe','Venezuela':'ve','Ecuador':'ec','Uruguay':'uy',
+  'Costa Rica':'cr','Panama':'pa','Guatemala':'gt','Honduras':'hn',
+  'El Salvador':'sv','Nicaragua':'ni','Bolivia':'bo','Paraguay':'py',
+  'Jamaica':'jm','Trinidad and Tobago':'tt','Barbados':'bb','Cuba':'cu',
+  'Haiti':'ht','Dominican Republic':'do','Puerto Rico':'pr',
+  'Egypt':'eg','Nigeria':'ng','Kenya':'ke','Ghana':'gh','Ethiopia':'et',
+  'Tanzania':'tz','Uganda':'ug','Rwanda':'rw','Morocco':'ma','Tunisia':'tn',
+  'Algeria':'dz','Libya':'ly','Sudan':'sd','Senegal':'sn','Cameroon':'cm',
+  'Ivory Coast':'ci','Zimbabwe':'zw','Zambia':'zm','Mozambique':'mz',
+  'Madagascar':'mg','Namibia':'na','Botswana':'bw','Mauritius':'mu',
+  'Thailand':'th','Vietnam':'vn','Indonesia':'id','Malaysia':'my',
+  'Philippines':'ph','Myanmar':'mm','Cambodia':'kh','Bangladesh':'bd',
+  'Sri Lanka':'lk','Nepal':'np','Pakistan':'pk','Iran':'ir','Iraq':'iq',
+  'Saudi Arabia':'sa','Kuwait':'kw','Bahrain':'bh','Oman':'om','Yemen':'ye',
+  'Jordan':'jo','Lebanon':'lb','Syria':'sy','Cyprus':'cy','Malta':'mt',
+  'Iceland':'is','Luxembourg':'lu','Liechtenstein':'li','Andorra':'ad',
+  'San Marino':'sm','Vatican':'va','Kosovo':'xk','Bosnia and Herzegovina':'ba',
+  'Macedonia':'mk','Albania':'al','Montenegro':'me','Moldova':'md',
+  'Belarus':'by','Latvia':'lv','Lithuania':'lt','Estonia':'ee',
+  'Georgia':'ge','Armenia':'am','Azerbaijan':'az','Kazakhstan':'kz',
+  'Uzbekistan':'uz','Kyrgyzstan':'kg','Tajikistan':'tj','Turkmenistan':'tm',
+  'Mongolia':'mn','China':'cn','Hong Kong':'hk','Taiwan':'tw',
+};
+
+function natToFlag(nat) {
+  const iso = NAT_TO_ISO[nat] || NAT_TO_ISO[nat?.trim()] || '';
+  if (!iso) return '';
+  return `<img class="td-driver-flag" src="https://flagcdn.com/w40/${iso}.png" alt="${nat}" onerror="this.style.display='none'">`;
+}
+
 async function loadDrivers() {
   try {
     const table = await fetchSheet(currentDiv.sheetId, currentDiv.gids.drivers);
@@ -489,20 +552,46 @@ async function loadDrivers() {
       races.push({col:c, label:h, short:short.trim(), sprint:sprint});
     }
 
+    // Identify sprint pairs - a sprint col is followed by its main race col
+    // Mark sprint pairs for border grouping
+    const sprintPairs = new Set();
+    for (let i=0; i<races.length; i++) {
+      if (races[i].sprint && i+1<races.length && !races[i+1].sprint) {
+        sprintPairs.add(i);   // sprint qual
+        sprintPairs.add(i+1); // sprint race
+      }
+    }
+
+    // Country to ISO for flag backgrounds
+    const CIRCUIT_TO_ISO = {
+      'Italy':'it','Belgium':'be','Abu Dhabi':'ae','Japan':'jp','China':'cn',
+      'Qatar':'qa','Saudi Arabia':'sa','Austria':'at','Britain':'gb','Canada':'ca',
+      'Singapore':'sg','Australia':'au','Hungary':'hu','Brazil':'br',
+      'Azerbaijan':'az','Netherlands':'nl','Bahrain':'bh','Monaco':'mc',
+      'Spain':'es','Mexico':'mx','USA':'us','Miami':'us','Las Vegas':'us',
+      'France':'fr','Portugal':'pt','Russia':'ru','Vietnam':'vn',
+      'United States':'us','Great Britain':'gb',
+    };
+
     // Header HTML
     let hHtml = `<th class="col-pos"><div class="th-pos-cell">Pos</div></th>
-      <th class="col-nat"></th>
-      <th class="col-driver"><div class="th-driver-cell">Driver</div></th>
-      <th class="col-team"><div class="th-team-cell">Team</div></th>`;
+      <th class="col-driver"><div class="th-driver-cell">Driver</div></th>`;
 
-    races.forEach(r => {
-      const flag = raceFlags[r.short] || '🏁';
-      const sc = r.sprint ? 'sprint-col' : '';
-      hHtml += `<th class="th-race ${sc}"><div class="th-race-inner">
-        ${r.sprint?'<div class="th-sprint-badge">S</div>':''}
-        <div class="th-race-flag">${flag}</div>
-        <div class="th-race-name">${r.short||r.label}</div>
-      </div></th>`;
+    races.forEach((r, idx) => {
+      const iso = CIRCUIT_TO_ISO[r.short] || CIRCUIT_TO_ISO[r.label] || '';
+      const flagBg = iso ? `https://flagcdn.com/w80/${iso}.png` : '';
+      const isFirst = sprintPairs.has(idx) && r.sprint;
+      const isLast = sprintPairs.has(idx) && !r.sprint;
+      const pairClass = isFirst ? 'sprint-pair-first' : isLast ? 'sprint-pair-last' : '';
+      // Extract round number from label e.g. "R3(s)" -> "R3" or short label
+      const roundNum = r.label.replace(/\(s\)/i,'').trim();
+      hHtml += `<th class="th-race ${pairClass}">
+        ${flagBg?`<div class="th-race-bg" style="background-image:url('${flagBg}')"></div><div class="th-race-overlay"></div>`:''}
+        <div class="th-race-content">
+          <div class="th-race-round">${roundNum}</div>
+          <div class="th-race-name">${r.short||r.label}</div>
+        </div>
+      </th>`;
     });
     if (poleCol>=0) hHtml += `<th class="th-end">Pole</th>`;
     if (flCol>=0) hHtml += `<th class="th-end">F/L</th>`;
@@ -537,17 +626,27 @@ async function loadDrivers() {
         firstDriver = false;
       }
 
+      const flagImg = natToFlag(nat);
       let rHtml = `<tr>
         <td class="col-pos td-pos ${pc}">${pos||''}</td>
-        <td class="col-nat td-nat">${nat||''}</td>
-        <td class="col-driver td-driver"><div class="td-driver-name">${driver}</div></td>
-        <td class="col-team td-team"><div class="td-team-inner"><div class="td-team-bar" style="background:${color}"></div><div class="td-team-name">${team||''}</div></div></td>`;
+        <td class="col-driver td-driver">
+          <div class="td-driver-teambar" style="background:${color}"></div>
+          <div class="td-driver-inner">
+            <div class="td-driver-top">
+              ${flagImg}
+              <span class="td-driver-name">${driver}</span>
+            </div>
+            <div class="td-driver-team">${team||''}</div>
+          </div>
+        </td>`;
 
-      races.forEach(r => {
+      races.forEach((r, idx) => {
         const v = cs(row, r.col);
         const rc = rClass(v);
-        const sc = r.sprint ? 'sprint-col' : '';
-        rHtml += `<td class="td-result ${sc}"><div class="result-inner ${rc}">${v||''}</div></td>`;
+        const isFirst = sprintPairs.has(idx) && r.sprint;
+        const isLast = sprintPairs.has(idx) && !r.sprint;
+        const pairClass = isFirst ? 'sprint-pair-first' : isLast ? 'sprint-pair-last' : '';
+        rHtml += `<td class="td-result ${pairClass}"><div class="result-inner ${rc}">${v&&v.trim()?v:''}</div></td>`;
       });
 
       const pole = poleCol>=0 ? cs(row,poleCol) : '';
@@ -803,6 +902,26 @@ function toggleMenu() {
 async function loadOverallConstructors() {
   const el = document.getElementById('overall-constructors-table');
   try {
+    // Fetch team owners from teams sheet
+    const teamOwners = {};
+    try {
+      const teamsTable = await fetchSheet('1VdV1CEefr4nct-_KZPu9xBzbFMHY3nHVbShm9RBnX0c', '1278748961');
+      for (let i=1; i<teamsTable.rows.length; i++) {
+        const row = teamsTable.rows[i];
+        // Teams sheet: col 0=season, col 1=team, col 2=owner (approximate - scan for team name)
+        // From earlier work we know: Team Owner winner col, Driver winner col etc.
+        // Let's scan for team name and owner
+        for (let c=0; c<row.c.length-1; c++) {
+          const v = cs(row, c);
+          if (teamColors[v]) {
+            // Found a team name - owner is likely nearby
+            const owner = cs(row, c+1) || cs(row, c-1) || '';
+            if (owner && !teamOwners[v]) teamOwners[v] = owner;
+          }
+        }
+      }
+    } catch(e) { /* teams fetch optional */ }
+
     // Fetch constructors from all available divisions in parallel
     const results = await Promise.all(
       divisions.filter(d => d.sheetId).map(async (div) => {
@@ -869,17 +988,21 @@ async function loadOverallConstructors() {
       const gapToAbove = idx === 0 ? '—' : `-${sorted[idx-1][1] - pts}`;
       const pos = idx + 1;
       const pc = pos===1?'var(--gold)':pos===2?'rgba(210,210,210,0.9)':pos===3?'rgba(200,140,80,0.9)':'var(--text-faint)';
+      const owner = teamOwners[team] || '';
       html += `<tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
         <td style="padding:7px 10px;"><span style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:${pc};">${pos}</span></td>
         <td style="padding:7px 10px;">
           <div style="display:flex;align-items:center;gap:8px;">
             <div style="width:3px;height:16px;background:${color};border-radius:1px;flex-shrink:0;"></div>
-            <span style="font-size:13px;color:var(--text);font-weight:500;">${team}</span>
+            <div>
+              <span style="font-size:13px;color:var(--text);font-weight:500;">${team}</span>
+              ${owner?`<span style="font-size:11px;color:rgba(255,255,255,0.45);margin-left:5px;">(${owner})</span>`:''}
+            </div>
           </div>
         </td>
         <td style="padding:7px 10px;text-align:right;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:var(--green);">${pts}</td>
-        <td style="padding:7px 10px;text-align:right;font-size:12px;color:var(--text-faint);">${gapToLeader}</td>
-        <td style="padding:7px 10px;text-align:right;font-size:12px;color:var(--text-faint);">${gapToAbove}</td>
+        <td style="padding:7px 10px;text-align:right;font-size:12px;color:rgba(255,255,255,0.6);">${gapToLeader}</td>
+        <td style="padding:7px 10px;text-align:right;font-size:12px;color:rgba(255,255,255,0.45);">${gapToAbove}</td>
       </tr>`;
     });
 
@@ -947,6 +1070,7 @@ async function initStandings() {
         const leaderRow = rows[hIdx+1];
         if (!leaderRow) return;
         divisions[i].leader = cs(leaderRow, 2) || '—';
+        divisions[i].leaderTeam = cs(leaderRow, 3) || '';
         divisions[i].leaderPts = ptsCol >= 0 ? cs(leaderRow, ptsCol) || '—' : '—';
       } catch(e) {
         divisions[i].leader = '—';
