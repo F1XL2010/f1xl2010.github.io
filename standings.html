@@ -1072,7 +1072,7 @@ async function loadOCWeekly() {
       const combined = {};
       for (const div of divisions) {
         if (!div.sheetId) continue;
-        const gid = seasonConfig[`d${div.id.toLowerCase()}_r${r}_gid`];
+        const gid = seasonConfig[`${div.id.toLowerCase()}_r${r}_gid`];
         if (!gid) continue;
         try {
           const pts = await fetchRaceConstructors(div.sheetId, gid);
@@ -1139,7 +1139,7 @@ async function loadOCChart() {
       const combined = {};
       for (const div of divisions) {
         if (!div.sheetId) continue;
-        const gid = seasonConfig[`d${div.id.toLowerCase()}_r${r}_gid`];
+        const gid = seasonConfig[`${div.id.toLowerCase()}_r${r}_gid`];
         if (!gid) continue;
         try {
           const pts = await fetchRaceConstructors(div.sheetId, gid);
