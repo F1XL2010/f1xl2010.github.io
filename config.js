@@ -54,14 +54,18 @@ async function loadConfig() {
 
   _configPromise = (async () => {
     try {
-      const url = `https://docs.google.com/spreadsheets/d/${F1XL_CONFIG_SHEET_ID}/export?format=csv&gid=${F1XL_CONFIG_GID}`;
+      const url = `https://docs.google.com/spreadsheets/d/${F1XL_CONFIG_SHEET_ID}/gviz/tq?tqx=out:csv&gid=${F1XL_CONFIG_GID}`;
+      console.log('Fetching config from:', url);
       const res = await fetch(url);
+      console.log('Config response status:', res.status, res.ok);
       const text = await res.text();
+      console.log('Config raw text (first 200):', text.substring(0,200));
       const config = parseConfigCSV(text);
+      console.log('Config parsed:', config);
       _configCache = config;
       return config;
     } catch(e) {
-      console.warn('Config load failed:', e.message);
+      console.error('Config load failed:', e.message, e);
       return {};
     }
   })();
@@ -77,7 +81,7 @@ async function loadSeasonConfig(season) {
   if (!gid) return null;
 
   try {
-    const url = `https://docs.google.com/spreadsheets/d/${F1XL_CONFIG_SHEET_ID}/export?format=csv&gid=${gid}`;
+    const url = `https://docs.google.com/spreadsheets/d/${F1XL_CONFIG_SHEET_ID}/gviz/tq?tqx=out:csv&gid=${gid}`;
     const res = await fetch(url);
     const text = await res.text();
     return parseConfigCSV(text);
@@ -98,7 +102,7 @@ async function getCurrentSeasonConfig() {
   const gid = config['current_season_gid'];
   if (gid) {
     try {
-      const url = `https://docs.google.com/spreadsheets/d/${F1XL_CONFIG_SHEET_ID}/export?format=csv&gid=${gid}`;
+      const url = `https://docs.google.com/spreadsheets/d/${F1XL_CONFIG_SHEET_ID}/gviz/tq?tqx=out:csv&gid=${gid}`;
       const res = await fetch(url);
       const text = await res.text();
       return parseConfigCSV(text);
