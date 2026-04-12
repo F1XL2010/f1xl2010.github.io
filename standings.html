@@ -685,26 +685,38 @@ async function loadConstructors() {
     teams.sort((a,b) => b.pts - a.pts);
     const leader = teams.length ? teams[0].pts : 0;
 
-    let html = '';
+    const conTableStyle = `width:100%;max-width:560px;border-collapse:collapse;`;
+    const thStyle = `text-align:left;padding:5px 10px;font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.4);border-bottom:1px solid rgba(255,255,255,0.12);background:#1e2a27;`;
+    const tdStyle = `padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.05);font-size:13px;color:#fff;vertical-align:middle;background:#1a2320;`;
+
+    let html = `<div style="padding:16px 24px;"><table style="${conTableStyle}">
+      <thead><tr>
+        <th style="${thStyle}width:36px;">Pos</th>
+        <th style="${thStyle}">Team</th>
+        <th style="${thStyle}text-align:right;">Pts</th>
+        <th style="${thStyle}text-align:right;">Gap</th>
+        <th style="${thStyle}text-align:right;">+/-</th>
+      </tr></thead><tbody>`;
+
     teams.forEach((d, i) => {
-      const color = teamColors[d.team] || '#555';
-      const pc = pClass(i+1);
+      const color = teamColors[d.team] || teamColors[Object.keys(teamColors).find(k=>k.toLowerCase()===d.team.toLowerCase())||''] || '#555';
+      const posNum = i+1;
+      const pc = posNum===1?'#E8B84B':posNum===2?'#C0C0C0':posNum===3?'#cd7f32':'rgba(255,255,255,0.5)';
       const gl = i===0 ? '—' : `-${leader - d.pts}`;
       const ga = i===0 ? '—' : `-${teams[i-1].pts - d.pts}`;
-      html += `<div class="con-row">
-        <div class="con-pos ${pc}">${i+1}</div>
-        <div class="con-bar" style="background:${color}"></div>
-        <div class="con-info">
-          <div class="con-name">${d.team}</div>
-        </div>
-        <div class="con-right">
-          <div class="con-pts">${d.pts}</div>
-          <div class="con-gap">${gl}</div>
-          <div class="con-gap" style="font-size:11px;color:var(--text-faint);margin-top:2px;">${ga}</div>
-        </div>
-      </div>`;
+      html += `<tr>
+        <td style="${tdStyle}"><span style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:${pc};">${posNum}</span></td>
+        <td style="${tdStyle}"><div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:4px;height:18px;background:${color};border-radius:1px;flex-shrink:0;"></div>
+          <span style="font-weight:500;">${d.team}</span>
+        </div></td>
+        <td style="${tdStyle}text-align:right;"><span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#3DCC47;">${d.pts}</span></td>
+        <td style="${tdStyle}text-align:right;color:rgba(255,255,255,0.6);">${gl}</td>
+        <td style="${tdStyle}text-align:right;color:rgba(255,255,255,0.4);font-size:12px;">${ga}</td>
+      </tr>`;
     });
 
+    html += '</tbody></table></div>';
     document.getElementById('constructors-list').innerHTML = html || '<div class="loading-msg">No data found</div>';
   } catch(e) {
     document.getElementById('constructors-list').innerHTML = `<div class="loading-msg">Could not load constructors: ${e.message}</div>`;
