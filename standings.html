@@ -533,10 +533,11 @@ async function loadDrivers() {
       if (h==='Points'){ptsCol=c;continue;}
       if (h==='Gap'){gapCol=c;continue;}
       const sprint = h.toLowerCase().includes('(s)');
-      // Use circuit name from nameRow if available, otherwise use race label
       const circuitName = nameRow ? cs(nameRow,c) : '';
       const short = circuitName || h.replace(/\(s\)/i,'').trim();
-      races.push({col:c, label:h, short:short.trim(), sprint:sprint});
+      // Only show race column if at least one driver has data in it
+      const hasData = rows.slice(hIdx+1).some(r => { const v = cs(r,c).trim(); return v && v !== ' '; });
+      if (hasData) races.push({col:c, label:h, short:short.trim(), sprint:sprint});
     }
 
     // Identify sprint pairs - a sprint col is followed by its main race col
