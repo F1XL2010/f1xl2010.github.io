@@ -525,7 +525,11 @@ async function loadDrivers() {
       const pc = pClass(posN);
 
       if (firstDriver) {
-        races.forEach(r => { if (cs(row,r.col) && !r.sprint) rounds++; });
+        races.forEach(r => {
+          const v = cs(row,r.col).trim();
+          // Count as completed if non-sprint col has a numeric value or DNF
+          if (!r.sprint && v && v !== '' && (parseInt(v) > 0 || ['DNF','DNS','DSQ'].includes(v.toUpperCase()))) rounds++;
+        });
         firstDriver = false;
       }
 
@@ -826,6 +830,35 @@ async function initStandings() {
         season: currentSeason
       });
     }
+
+    // Load leader data for each division to populate splash cards
+    await Promise.all(divisions.map(async (div, i) => {
+      if (!div.sheetId) return;
+      try {
+        const table = await fetchSheet(div.sheetId, div.gids.drivers);
+        const rows = table.rows;
+        // Find header row
+        let hIdx = -1;
+        for (let r=0; r<rows.length; r++) {
+          if (cs(rows[r],0)==='Pos') { hIdx=r; break; }
+        }
+        if (hIdx < 0) return;
+        // Find points column
+        const hRow = rows[hIdx];
+        let ptsCol = -1;
+        for (let c=4; c<hRow.c.length; c++) {
+          if (cs(hRow,c)==='Points') { ptsCol=c; break; }
+        }
+        // Get leader (first data row)
+        const leaderRow = rows[hIdx+1];
+        if (!leaderRow) return;
+        divisions[i].leader = cs(leaderRow, 2) || '—';
+        divisions[i].leaderPts = ptsCol >= 0 ? cs(leaderRow, ptsCol) || '—' : '—';
+      } catch(e) {
+        divisions[i].leader = '—';
+        divisions[i].leaderPts = '—';
+      }
+    }));
 
     buildSelector();
   } catch(e) {
