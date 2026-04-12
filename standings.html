@@ -94,15 +94,14 @@
   .table-outer{overflow-x:auto;overflow-y:auto;max-height:calc(100vh - 220px);-webkit-overflow-scrolling:touch;padding-bottom:0;}
   .table-outer::-webkit-scrollbar{height:4px;}
   .table-outer::-webkit-scrollbar-thumb{background:#333;border-radius:2px;}
-  table{border-collapse:collapse;font-size:12px;white-space:nowrap;min-width:100%;}
+  table{border-collapse:separate;border-spacing:0;font-size:12px;white-space:nowrap;min-width:100%;}
 
   /* Sticky columns */
   .col-pos{position:sticky;left:0;z-index:2;background:var(--dark2);width:40px;}
   .col-driver{position:sticky;left:40px;z-index:2;background:var(--dark2);min-width:180px;}
 
   /* Sticky header */
-  thead tr{position:sticky;top:0;z-index:10;}
-  thead th{background:var(--dark3);padding:0;border-bottom:2px solid var(--border2);border-right:1px solid var(--border);font-weight:600;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.5px;text-transform:uppercase;color:var(--text);font-size:11px;text-align:center;}
+  thead th{position:sticky;top:0;z-index:10;background:var(--dark3);padding:0;border-bottom:2px solid var(--border2);border-right:1px solid var(--border);border-top:1px solid var(--border);font-weight:600;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.5px;text-transform:uppercase;color:var(--text);font-size:11px;text-align:center;}
   thead th.col-pos{z-index:12;background:var(--dark3);}
   thead th.col-driver{z-index:12;background:var(--dark3);text-align:left;}
   .th-pos-cell{padding:8px 10px;}
@@ -127,7 +126,7 @@
   /* Body */
   tbody tr{border-bottom:1px solid var(--border);}
   tbody tr:hover td{background:rgba(255,255,255,0.03)!important;}
-  tbody td{padding:0;border-right:1px solid var(--border);text-align:center;vertical-align:middle;background:var(--dark2);}
+  tbody td{padding:0;border-right:1px solid var(--border);border-bottom:1px solid var(--border);text-align:center;vertical-align:middle;background:var(--dark2);}
   tbody td.col-pos{background:var(--dark2);}
   tbody td.col-driver{background:var(--dark2);}
 
@@ -135,16 +134,16 @@
   .td-pos.p1{color:#E8B84B;}.td-pos.p2{color:#C0C0C0;}.td-pos.p3{color:#cd7f32;}
 
   /* Driver cell - contains team colour bar, flag, name, team name */
-  .td-driver{padding:0;text-align:left;position:relative;overflow:hidden;background:var(--dark3);}
-  .td-driver-teambar{position:absolute;left:0;top:0;bottom:0;width:4px;}
+  .td-driver{padding:0;text-align:left;position:relative;overflow:hidden;background:var(--dark2)!important;}
+  .td-driver-teambar{position:absolute;left:0;top:0;bottom:0;width:5px;z-index:1;}
   .td-driver-inner{padding:6px 10px 6px 14px;display:flex;flex-direction:column;gap:2px;}
   .td-driver-top{display:flex;align-items:center;gap:6px;}
   .td-driver-flag{width:18px;height:13px;object-fit:cover;border-radius:1px;flex-shrink:0;}
   .td-driver-name{font-size:13px;font-weight:500;color:var(--text);}
   .td-driver-team{font-size:10px;color:rgba(255,255,255,0.5);font-weight:400;}
 
-  .td-result{width:40px;min-width:40px;height:44px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:600;padding:0;border-right:1px solid var(--border);background:var(--dark2);}
-  .result-inner{width:100%;height:44px;display:flex;align-items:center;justify-content:center;min-height:44px;}
+  .td-result{width:40px;min-width:40px;height:44px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:600;padding:0!important;border-right:1px solid var(--border);background:var(--dark2);vertical-align:top;}
+  .result-inner{width:100%;height:44px;display:flex;align-items:center;justify-content:center;height:44px;min-height:44px;}
   .result-inner.r1{background:var(--p1-bg);color:var(--p1-text);}
   .result-inner.r2{background:var(--p2-bg);color:var(--p2-text);}
   .result-inner.r3{background:var(--p3-bg);color:var(--p3-text);}
@@ -519,7 +518,7 @@ const NAT_TO_ISO = {
 function natToFlag(nat) {
   const iso = NAT_TO_ISO[nat] || NAT_TO_ISO[nat?.trim()] || '';
   if (!iso) return '';
-  return `<img class="td-driver-flag" src="https://flagcdn.com/w40/${iso}.png" alt="${nat}" onerror="this.style.display='none'">`;
+  return `<img class="td-driver-flag" src="https://flagcdn.com/w40/${iso}.png" alt="${nat}" crossorigin="anonymous" onerror="this.style.display='none'">`;
 }
 
 async function loadDrivers() {
