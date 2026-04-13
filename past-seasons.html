@@ -201,11 +201,11 @@ function formatSeason(num){
 }
 
 async function init(){
-  const seasons = await getAllSeasons();
+  const seasonObjs = await getAllSeasons(); // [{season, gid}, ...]
   const currentSeason = await getCurrentSeason();
 
-  // Filter out current season
-  const pastSeasons = seasons.filter(s => s !== currentSeason);
+  // getAllSeasons already excludes current season, but filter just in case
+  const pastSeasons = seasonObjs.filter(s => s.season !== currentSeason);
 
   if(!pastSeasons.length){
     document.getElementById('content').innerHTML = '<div class="loading-msg">No past seasons available yet.</div>';
@@ -215,8 +215,8 @@ async function init(){
   document.getElementById('page-meta').textContent = `${pastSeasons.length} seasons in the archive`;
 
   let html = '';
-  for(const season of pastSeasons){
-    html += buildSeasonCard(season);
+  for(const obj of pastSeasons){
+    html += buildSeasonCard(obj.season);
   }
   document.getElementById('content').innerHTML = html;
 }

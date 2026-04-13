@@ -1227,9 +1227,7 @@ async function loadOCChart() {
 async function initStandings() {
   try {
     const currentSeason = await getCurrentSeason();
-    console.log('Current season:', currentSeason);
     seasonConfig = await getCurrentSeasonConfig();
-    console.log('Season config loaded:', seasonConfig ? Object.keys(seasonConfig) : null);
 
     if (!seasonConfig) {
       document.getElementById('div-selector').innerHTML = '<div class="loading-msg">Could not load season config.</div>';
