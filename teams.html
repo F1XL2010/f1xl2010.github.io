@@ -164,26 +164,84 @@ function toggleMenu(){document.getElementById('hamburger').classList.toggle('ope
 function parseCSV(text){return text.split(/\r?\n/).map(line=>{const cells=[];let cur='',inQ=false;for(let i=0;i<line.length;i++){const c=line[i];if(c=='"'){inQ=!inQ;}else if(c==','&&!inQ){cells.push(cur.trim());cur='';}else cur+=c;}cells.push(cur.trim());return cells;});}
 function parseSheet(rows){
   const seasons={};let sKey=null;
+  // Track reserve and retired col positions per season
+  let resStartCol=-1,retStartCol=-1;
+
   for(let i=0;i<rows.length;i++){
     const row=rows[i];const f=(row[0]||'').trim();
+
+    // Season header row — has season number + team names
     if(f&&!isNaN(parseFloat(f))&&row.slice(1).some(v=>v.trim())){
       sKey=f;seasons[sKey]={teams:[],reserves:[],retired:[]};const sd=seasons[sKey];
-      let resCol=-1,retCol=-1;
-      row.forEach((v,ci)=>{const u=(v||'').trim().toUpperCase();if(u=='RESERVES'&&resCol==-1)resCol=ci;if(u=='RETIRED'&&retCol==-1)retCol=ci;});
-      const endCol=resCol>0?resCol:row.length;
+      resStartCol=-1;retStartCol=-1;
+      row.forEach((v,ci)=>{const u=(v||'').trim().toUpperCase();if(u=='RESERVES'&&resStartCol==-1)resStartCol=ci;if(u=='RETIRED'&&retStartCol==-1)retStartCol=ci;});
+      // Main teams: groups of 3 cols from col 1 up to reserves section
+      const endCol=resStartCol>0?resStartCol:row.length;
       for(let c=1;c<endCol;c+=3){const n=(row[c]||'').trim();if(n&&n.toUpperCase()!='RESERVES'&&n.toUpperCase()!='RETIRED')sd.teams.push({name:n,color:getColor(n),owner:'',ownerChampion:false,divisions:[],col:c});}
-      if(resCol>0){const resEnd=retCol>0?retCol:row.length;for(let c=resCol+1;c<resEnd;c++){const n=(row[c]||'').trim();if(n&&n.toUpperCase()!='RESERVES'&&n.toUpperCase()!='RETIRED')sd.reserves.push({name:n,color:getColor(n),col:c,entries:[]});}}
+      // Note: reserve team NAMES come from the owner row, not here
       continue;
     }
+
     if(!sKey||!seasons[sKey])continue;const sd=seasons[sKey];
-    if((row[1]||'').trim().toUpperCase()=='TEAM OWNER:'){sd.teams.forEach(t=>{const r=(row[t.col+1]||'').trim();t.owner=clean(r);t.ownerChampion=hasCrown(r);});continue;}
-    row.forEach((v,ci)=>{if((v||'').trim().toUpperCase()=='RETIRED'){for(let c=ci+1;c<row.length;c++){const n=clean((row[c]||'').trim());if(n&&n.toUpperCase()!='RETIRED'&&n.toUpperCase()!='RESERVES')sd.retired.push(n);}}});
+
+    // Owner row — also contains reserve team names after resStartCol
+    if((row[1]||'').trim().toUpperCase()=='TEAM OWNER:'){
+      sd.teams.forEach(t=>{const r=(row[t.col+1]||'').trim();t.owner=clean(r);t.ownerChampion=hasCrown(r);});
+      // Reserve team names are in cols after resStartCol, before retStartCol
+      if(resStartCol>0){
+        const resEnd=retStartCol>0?retStartCol:row.length;
+        for(let c=resStartCol+1;c<resEnd;c++){
+          const n=(row[c]||'').trim();
+          if(n&&n.toUpperCase()!='RESERVES'&&n.toUpperCase()!='RETIRED'){
+            if(!sd.reserves.find(r=>r.col===c))
+              sd.reserves.push({name:n,color:getColor(n),col:c,entries:[]});
+          }
+        }
+      }
+      continue;
+    }
+
     let isDivRow=false;
+
+    // Main team division rows
     sd.teams.forEach(t=>{
       const lbl=(row[t.col]||'').trim();const dm=lbl.match(/^DIVISION\s+(\d+)/i);
       if(dm){isDivRow=true;const dn=parseInt(dm[1]);const dc=hasCrown(lbl);const d1r=(row[t.col+1]||'').trim();const d1=clean(d1r);const d1c=hasCrown(d1r);t.divisions.push({div:dn,champion:dc,drivers:d1?[{name:d1,champion:d1c}]:[]});}
     });
-    sd.reserves.forEach(res=>{const lbl=(row[res.col]||'').trim();const dm=lbl.match(/^DIVISION\s+(\d+)/i);if(dm){const dn=parseInt(dm[1]);const d1=clean((row[res.col+1]||'').trim());if(d1)res.entries.push({div:dn,driver:d1,driver2:''});}});
+
+    // Reserve cols — collect all driver names directly (no division labels)
+    sd.reserves.forEach(res=>{
+      const v=clean((row[res.col]||'').trim());
+      const v2=clean((row[res.col+1]||'').trim());
+      if(v&&v.toUpperCase()!='RESERVES'&&!v.match(/^DIVISION/i))res.drivers=res.drivers||[],res.drivers.push(v);
+      if(v2&&v2.toUpperCase()!='RESERVES'&&!v2.match(/^DIVISION/i))res.drivers=res.drivers||[],res.drivers.push(v2);
+    });
+
+    // Retired section — cols from retStartCol onwards
+    if(retStartCol>0){
+      const lbl=(row[retStartCol]||'').trim().toUpperCase();
+      if(lbl!='RETIRED'){
+        // Scan retired cols for division labels and driver names
+        const dm=(row[retStartCol]||'').trim().match(/^DIVISION\s+(\d+)/i);
+        if(dm){
+          isDivRow=true;
+          const dn=parseInt(dm[1]);
+          // Collect all driver names in cols after retStartCol for this row
+          for(let c=retStartCol+1;c<row.length;c++){
+            const v=clean((row[c]||'').trim());
+            if(v)sd.retired.push({div:dn,driver:v});
+          }
+        } else {
+          // No division label — just collect any names
+          for(let c=retStartCol+1;c<row.length;c++){
+            const v=clean((row[c]||'').trim());
+            if(v&&v.toUpperCase()!='RETIRED')sd.retired.push({div:null,driver:v});
+          }
+        }
+      }
+    }
+
+    // Continuation rows (driver 2 for main teams)
     if(!isDivRow&&(row[0]||'').trim()==''&&(row[1]||'').trim()==''){
       sd.teams.forEach(t=>{const r=(row[t.col+1]||'').trim();const d2=clean(r);if(d2&&t.divisions.length>0){const last=t.divisions[t.divisions.length-1];if(last.drivers.length<2)last.drivers.push({name:d2,champion:hasCrown(r)});}});
       sd.reserves.forEach(res=>{const r=(row[res.col+1]||'').trim();const d2=clean(r);if(d2&&res.entries.length>0){const last=res.entries[res.entries.length-1];if(!last.driver2)last.driver2=d2;}});
@@ -208,14 +266,21 @@ function renderSeason(data,num){
   if(res.length){
     html+='<div class="section-divider"></div><div class="section-label">Reserves</div><div class="reserves-grid">';
     res.forEach(r=>{
-      let entries='';
-      r.entries.forEach(e=>{entries+=e.div?'<div class="rc-entry"><div class="rc-div">Division '+e.div+'</div><div class="rc-driver">'+e.driver+(e.driver2?' &middot; '+e.driver2:'')+'</div></div>':'<div class="rc-entry"><div class="rc-driver">'+e.driver+'</div></div>';});
-      html+='<div class="reserve-card"><div class="rc-name" style="color:'+r.color+'">'+r.name+'</div>'+(entries||'<div class="rc-driver">&mdash;</div>')+'</div>';
+      const drivers=(r.drivers||[]).filter(d=>d);
+      const drvHtml=drivers.length?drivers.map(d=>'<div class="rc-driver">'+d+'</div>').join(''):'<div class="rc-driver">&mdash;</div>';
+      html+='<div class="reserve-card"><div class="rc-name" style="color:'+r.color+'">'+r.name+'</div>'+drvHtml+'</div>';
     });
     html+='</div>';
   }
-  const ret=data.retired.filter(r=>r);
-  if(ret.length){html+='<div class="section-divider"></div><div class="section-label">Retired</div><div class="retired-list">';ret.forEach(r=>{html+='<div class="retired-pill">'+r+'</div>';});html+='</div>';}
+  const ret=data.retired.filter(r=>r&&r.driver);
+  if(ret.length){
+    html+='<div class="section-divider"></div><div class="section-label">Retired</div><div class="retired-list">';
+    ret.forEach(r=>{
+      const label=r.driver+(r.div?' &mdash; D'+r.div:'');
+      html+='<div class="retired-pill">'+label+'</div>';
+    });
+    html+='</div>';
+  }
   return html;
 }
 let allData={};
