@@ -244,7 +244,7 @@ function renderSeason(data,num){
     html+='<div class="section-divider"></div><div class="section-label">Reserves</div>';
     if(resteams.length){
       html+='<div style="padding:0 24px 8px;display:flex;gap:8px;flex-wrap:wrap;">';
-      resteams.forEach(t=>{html+='<div style="background:var(--dark);border:1px solid var(--border);border-left:3px solid '+getColor(t)+';border-radius:4px;padding:5px 12px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);">'+t+'</div>';});
+      resteams.forEach(t=>{html+='<div style="background:var(--dark);border:1px solid var(--border);border-left:3px solid '+getColor(t)+';border-radius:4px;padding:5px 12px;font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);">'+t+'</div>';});
       html+='</div>';
     }
     if(resdrivers.length){
