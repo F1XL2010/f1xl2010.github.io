@@ -361,6 +361,11 @@ function renderSeasonBody(id, season, sc, body){
 
   // Load first division
   loadDivStandings(id, season, 1, sc);
+
+  // For legacy multi-division seasons, load combined constructors immediately
+  if(parseFloat(season) <= LEGACY_MAX_SEASON && divisions > 1){
+    loadCombinedConstructors(season, divisions, sc, `season-${String(season).replace('.','_')}-combined`);
+  }
 }
 
 async function switchDiv(id, season, div, totalDivs){
@@ -422,33 +427,7 @@ async function loadDivStandings(id, season, div, sc){
           }
         }catch(e){}
       }
-      // If this is the last division shown, also build combined constructors
-      // We do this by checking if a combined cache exists or triggering it
-      const totalDivs = parseInt(sc['divisions']) || 1;
-      if(div === totalDivs && totalDivs > 1){
-        // Fetch all divisions' constructors and combine
-        const allConstRows = [];
-        for(let d = 1; d <= totalDivs; d++){
-          const cgid = sc[`d${d}_constructors_gid`];
-          const csid = sc[`d${d}_sheet_id`];
-          if(!cgid || !csid) continue;
-          try{
-            const curl = `https://docs.google.com/spreadsheets/d/${csid}/export?format=csv&gid=${cgid}`;
-            const cres = await fetch(curl);
-            const ctext = await cres.text();
-            if(!ctext.includes('<!DOCTYPE')){
-              allConstRows.push(parseCSV(ctext));
-            }
-          }catch(e){}
-        }
-        if(allConstRows.length > 1){
-          // Update the season-level combined constructors
-          const combinedEl = document.getElementById(`season-${String(season).replace('.','_')}-combined`);
-          if(combinedEl){
-            combinedEl.innerHTML = buildCombinedConstructors(allConstRows);
-          }
-        }
-      }
+
     } else {
       html = buildStandingsTable(rows);
     }
@@ -668,6 +647,30 @@ function buildLegacyConstructors(rows, label){
 
   html += '</tbody></table>';
   return count ? html : '';
+}
+
+async function loadCombinedConstructors(season, totalDivs, sc, elId){
+  const el = document.getElementById(elId);
+  if(!el) return;
+  const cacheKey = `combined-${season}`;
+  if(divCache[cacheKey]){ el.innerHTML = divCache[cacheKey]; return; }
+
+  const allConstRows = [];
+  for(let d = 1; d <= totalDivs; d++){
+    const cgid = sc[`d${d}_constructors_gid`];
+    const csid = sc[`d${d}_sheet_id`];
+    if(!cgid || !csid) continue;
+    try{
+      const curl = `https://docs.google.com/spreadsheets/d/${csid}/export?format=csv&gid=${cgid}`;
+      const cres = await fetch(curl);
+      const ctext = await cres.text();
+      if(!ctext.includes('<!DOCTYPE')) allConstRows.push(parseCSV(ctext));
+    }catch(e){}
+  }
+
+  const html = allConstRows.length > 1 ? buildCombinedConstructors(allConstRows) : '';
+  divCache[cacheKey] = html;
+  el.innerHTML = html;
 }
 
 function buildCombinedConstructors(allConstRows){
