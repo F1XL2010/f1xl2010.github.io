@@ -93,6 +93,24 @@
   .season-action-btn{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;padding:6px 14px;border-radius:4px;border:1px solid var(--border2);background:none;color:var(--text-muted);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:all 0.2s;}
   .season-action-btn:hover{color:var(--text);border-color:rgba(255,255,255,0.25);}
 
+  /* RESULTS TABLE */
+  .results-outer{overflow-x:auto;margin-bottom:16px;}
+  .results-table{border-collapse:collapse;font-size:12px;min-width:100%;}
+  .results-table th{padding:5px 8px;font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-faint);border-bottom:1px solid var(--border2);background:var(--dark3);white-space:nowrap;text-align:center;}
+  .results-table th.th-driver{text-align:left;}
+  .results-table td{padding:6px 8px;border-bottom:1px solid rgba(255,255,255,0.03);color:var(--text-muted);text-align:center;white-space:nowrap;}
+  .results-table td.td-pos{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;}
+  .results-table td.td-driver{text-align:left;color:var(--text);font-weight:500;}
+  .results-table td.td-team{text-align:left;font-size:11px;color:var(--text-faint);}
+  .results-table td.td-pts{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--green);}
+  .results-table td.td-dnf{color:rgba(255,80,80,0.7);}
+  .results-table td.td-dsq{color:rgba(255,140,0,0.7);}
+  .results-table tr:hover td{background:rgba(255,255,255,0.02);}
+  .section-subhead{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--teal);padding:12px 0 6px;border-top:1px solid var(--border);margin-top:8px;}
+  /* DISCLAIMER */
+  .legacy-disclaimer{background:rgba(232,184,75,0.06);border:1px solid rgba(232,184,75,0.2);border-radius:6px;padding:14px 16px;margin-bottom:12px;}
+  .legacy-disclaimer-title{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:6px;}
+  .legacy-disclaimer-text{font-size:12px;color:var(--text-muted);line-height:1.6;}
   footer{background:var(--dark);border-top:1px solid var(--border);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
   .footer-logo{background:var(--green);color:#000;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;padding:4px 9px;border-radius:3px;}
   .footer-text{font-size:12px;color:var(--text-faint);}
@@ -216,7 +234,15 @@ async function init(){
 
   let html = '';
   for(const obj of pastSeasons){
-    html += buildSeasonCard(obj.season);
+    const s = obj.season;
+    // Insert disclaimer between S13 and S12
+    if(s === 12){
+      html += `<div class="legacy-disclaimer">
+        <div class="legacy-disclaimer-title">Please Note</div>
+        <div class="legacy-disclaimer-text">Information for older seasons is difficult to obtain, and as such the information provided may be incomplete. If there is a final score table in place we know that that is the correct final outcome, but be aware that the results table will not show the scores as we have no information regarding penalties that may have been applied after the race. Whilst attendance, wins etc is recorded on the Total Stats records, this is subject to change as more information becomes available. If a season is incomplete in its results and no final score table is available then no individual or constructors winner will be determined.</div>
+      </div>`;
+    }
+    html += buildSeasonCard(s);
   }
   document.getElementById('content').innerHTML = html;
 }
@@ -344,6 +370,8 @@ async function switchDiv(id, season, div, totalDivs){
   if(sc) loadDivStandings(id, season, div, sc);
 }
 
+const LEGACY_MAX_SEASON = 13;
+
 async function loadDivStandings(id, season, div, sc){
   const cacheKey = `${season}-d${div}`;
   const contentEl = document.getElementById(`${id}-dcontent-${div}`);
@@ -355,9 +383,10 @@ async function loadDivStandings(id, season, div, sc){
   }
 
   const sheetId = sc[`d${div}_sheet_id`];
-  const gid = sc[`d${div}_driver_results_gid`];
+  const driverGid = sc[`d${div}_driver_results_gid`];
+  const constructorsGid = sc[`d${div}_constructors_gid`];
 
-  if(!sheetId || !gid){
+  if(!sheetId || !driverGid){
     const html = '<div class="div-loading">No standings data available.</div>';
     divCache[cacheKey] = html;
     contentEl.innerHTML = html;
@@ -365,18 +394,237 @@ async function loadDivStandings(id, season, div, sc){
   }
 
   try {
-    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&gid=${gid}`;
+    const isLegacy = parseFloat(season) <= LEGACY_MAX_SEASON;
+    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${driverGid}`;
     const res = await fetch(url);
     const text = await res.text();
+    if(text.includes('<!DOCTYPE')) throw new Error('Sheet not published');
     const rows = parseCSV(text);
-    const html = buildStandingsTable(rows);
+
+    let html = '';
+    if(isLegacy){
+      html = buildLegacyContent(rows, season);
+      // Also fetch constructors if available
+      if(constructorsGid){
+        try{
+          const curl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${constructorsGid}`;
+          const cres = await fetch(curl);
+          const ctext = await cres.text();
+          if(!ctext.includes('<!DOCTYPE')){
+            const crows = parseCSV(ctext);
+            html += buildLegacyConstructors(crows);
+          }
+        }catch(e){}
+      }
+    } else {
+      html = buildStandingsTable(rows);
+    }
+
     divCache[cacheKey] = html;
     contentEl.innerHTML = html;
   } catch(e) {
-    const html = '<div class="div-loading">Could not load standings.</div>';
+    const html = `<div class="div-loading">Could not load standings: ${e.message}</div>`;
     divCache[cacheKey] = html;
     contentEl.innerHTML = html;
   }
+}
+
+function buildLegacyContent(rows, season){
+  // Filter out #REF! rows and empty rows
+  const cleanRows = rows.filter(r => {
+    const hasRef = r.some(v => (v||'').trim().startsWith('#'));
+    const hasData = r.some(v => (v||'').trim());
+    return hasData && !hasRef;
+  });
+
+  if(!cleanRows.length) return '<div class="div-loading">No data available.</div>';
+
+  // S1-S2: simple list format (Driver, Team, Races Won, Podiums, Points)
+  const firstDataRow = cleanRows[0];
+  const isSimple = (firstDataRow[1]||'').trim().toLowerCase() === 'driver';
+
+  if(isSimple) return buildSimpleStandings(cleanRows);
+
+  // S3-S13: race grid format
+  // Row 0: round numbers (blank, blank, blank, blank, 1, 2, 3...)
+  // Row 1: circuit codes
+  // Row 2: headers (blank, Pos., Driver, Team, r1, r2..., Pole, Points)
+  // Data rows: (blank, pos, driver, team, r1result, r2result..., pole, points)
+
+  let roundRow = null, circuitRow = null, headerRow = null, dataStart = -1;
+
+  for(let i = 0; i < cleanRows.length; i++){
+    const r = cleanRows[i];
+    // Round number row: col 4+ has numeric values
+    if(!roundRow && (r[4]||'').trim() === '1') { roundRow = r; continue; }
+    // Circuit row: col 4+ has 3-letter codes
+    if(roundRow && !circuitRow && (r[4]||'').trim().length <= 4 && isNaN(parseInt(r[4]||''))) { circuitRow = r; continue; }
+    // Header row: has 'Pos.' or 'Pos'
+    if(circuitRow && !headerRow && (r[1]||'').trim().toLowerCase().startsWith('pos')) { headerRow = r; dataStart = i+1; break; }
+  }
+
+  if(!headerRow || dataStart < 0) return buildSimpleStandings(cleanRows);
+
+  // Find round columns: from col 4 up to first non-round col
+  // Points col: find 'Points' in header row
+  let pointsCol = -1;
+  for(let c = 4; c < headerRow.length; c++){
+    if((headerRow[c]||'').trim().toLowerCase() === 'points'){ pointsCol = c; break; }
+  }
+  // If no Points header, find it by looking for largest numeric value in first data row
+  // Or default to col 25
+  if(pointsCol < 0) pointsCol = 25;
+
+  // Number of rounds = pointsCol - 4 (cols 4 through pointsCol-2 are rounds, col pointsCol-1 is Pole)
+  const numRounds = pointsCol - 4 - 1; // -1 for Pole col before Points
+
+  // Get circuit codes
+  const circuits = circuitRow ? circuitRow.slice(4, 4 + numRounds) : [];
+
+  // Build standings table with round columns
+  let html = '<div class="results-outer"><table class="results-table">';
+
+  // Header
+  html += '<thead><tr>';
+  html += '<th style="text-align:left;padding:5px 8px;">Pos</th>';
+  html += '<th class="th-driver">Driver</th>';
+  html += '<th class="th-driver">Team</th>';
+  circuits.forEach((c,i) => {
+    html += `<th>${(c||'').trim() || (i+1)}</th>`;
+  });
+  html += '<th>Pts</th>';
+  html += '</tr></thead><tbody>';
+
+  // Data rows
+  let count = 0;
+  for(let i = dataStart; i < cleanRows.length; i++){
+    const row = cleanRows[i];
+    const pos = (row[1]||'').trim();
+    if(!pos || isNaN(parseInt(pos))) continue;
+    const driver = (row[2]||'').trim();
+    const team = (row[3]||'').trim();
+    if(!driver) continue;
+
+    const posClass = pos==='1'?'pos-1':pos==='2'?'pos-2':pos==='3'?'pos-3':'';
+    html += `<tr><td class="td-pos"><span class="pos-num ${posClass}">${pos}</span></td>`;
+    html += `<td class="td-driver">${driver}</td>`;
+    html += `<td class="td-team">${team||'&mdash;'}</td>`;
+
+    for(let r = 0; r < numRounds; r++){
+      const val = (row[4 + r]||'').trim();
+      if(!val){
+        html += '<td style="color:var(--text-faint);">&mdash;</td>';
+      } else if(val === 'DNF'){
+        html += `<td class="td-dnf">DNF</td>`;
+      } else if(val === 'DSQ'){
+        html += `<td class="td-dsq">DSQ</td>`;
+      } else {
+        html += `<td>${val}</td>`;
+      }
+    }
+
+    const pts = pointsCol < row.length ? (row[pointsCol]||'').trim() : '';
+    html += `<td class="td-pts">${pts||'0'}</td>`;
+    html += '</tr>';
+    count++;
+    if(count > 50) break;
+  }
+
+  html += '</tbody></table></div>';
+  if(!count) return '<div class="div-loading">No driver data found.</div>';
+  return html;
+}
+
+function buildSimpleStandings(rows){
+  // S1-S2 format: Driver, Team, Races Won, Podiums, Overall Points
+  // Find header row
+  let dataStart = -1;
+  for(let i = 0; i < rows.length; i++){
+    if((rows[i][1]||'').trim().toLowerCase() === 'driver'){ dataStart = i+1; break; }
+  }
+  if(dataStart < 0) return '<div class="div-loading">No data found.</div>';
+
+  let html = `<table class="standings-table"><thead><tr>
+    <th>Pos</th><th>Driver</th><th>Team</th><th>W</th><th>Pod</th><th>Pts</th>
+  </tr></thead><tbody>`;
+
+  let count = 0;
+  for(let i = dataStart; i < rows.length; i++){
+    const row = rows[i];
+    const driver = (row[1]||'').trim();
+    if(!driver) continue;
+    const team = (row[2]||'').trim();
+    const wins = (row[3]||'').trim();
+    const pods = (row[4]||'').trim();
+    const pts = (row[5]||'').trim();
+    const pos = count + 1;
+    const posClass = pos===1?'pos-1':pos===2?'pos-2':pos===3?'pos-3':'';
+    html += `<tr>
+      <td><span class="pos-num ${posClass}">${pos}</span></td>
+      <td><span class="driver-name">${driver}</span></td>
+      <td><span class="team-name">${team||'&mdash;'}</span></td>
+      <td>${wins||'&mdash;'}</td>
+      <td>${pods||'&mdash;'}</td>
+      <td><span class="points">${pts||'&mdash;'}</span></td>
+    </tr>`;
+    count++;
+  }
+
+  html += '</tbody></table>';
+  return count ? html : '<div class="div-loading">No driver data found.</div>';
+}
+
+function buildLegacyConstructors(rows){
+  // Two formats:
+  // S3: Team, Races Won, Podiums, Overall Points (no position col)
+  // S4+: Position, Team, Points
+  const cleanRows = rows.filter(r => r.some(v => (v||'').trim()) && !r.some(v => (v||'').trim().startsWith('#')));
+  if(!cleanRows.length) return '';
+
+  // Find header row
+  let dataStart = -1, hasPos = false;
+  for(let i = 0; i < cleanRows.length; i++){
+    const r = cleanRows[i];
+    const vals = r.map(v => (v||'').trim().toLowerCase());
+    if(vals.includes('team')){ dataStart = i+1; hasPos = vals.includes('position') || vals.includes('pos'); break; }
+  }
+  if(dataStart < 0) return '';
+
+  let html = '<div class="section-subhead">Constructors</div>';
+  html += `<table class="standings-table"><thead><tr>
+    <th>Pos</th><th>Team</th><th>Points</th>
+  </tr></thead><tbody>`;
+
+  let count = 0;
+  for(let i = dataStart; i < cleanRows.length; i++){
+    const row = cleanRows[i];
+    let pos, team, pts;
+    if(hasPos){
+      pos = (row[1]||'').trim();
+      team = (row[2]||'').trim();
+      pts = (row[3]||'').trim();
+    } else {
+      pos = String(count + 1);
+      team = (row[1]||'').trim();
+      // Find points — last non-empty numeric col
+      pts = '';
+      for(let c = row.length-1; c >= 2; c--){
+        const v = (row[c]||'').trim();
+        if(v && !isNaN(parseFloat(v))){ pts = v; break; }
+      }
+    }
+    if(!team) continue;
+    const posClass = pos==='1'?'pos-1':pos==='2'?'pos-2':pos==='3'?'pos-3':'';
+    html += `<tr>
+      <td><span class="pos-num ${posClass}">${pos}</span></td>
+      <td><span class="driver-name">${team}</span></td>
+      <td><span class="points">${pts||'&mdash;'}</span></td>
+    </tr>`;
+    count++;
+  }
+
+  html += '</tbody></table>';
+  return count ? html : '';
 }
 
 function buildStandingsTable(rows){
