@@ -336,6 +336,12 @@ function renderSeasonBody(id, season, sc, body){
     </div>`;
   }
 
+  // Combined constructors placeholder for legacy multi-division seasons
+  const isLegacy = parseFloat(season) <= LEGACY_MAX_SEASON;
+  if(isLegacy && divisions > 1){
+    html += `<div id="season-${String(season).replace('.','_')}-combined" class="div-content" style="padding:0 20px 16px;"></div>`;
+  }
+
   // Actions
   if(hasResults){
     html += `<div class="season-actions">
@@ -404,7 +410,7 @@ async function loadDivStandings(id, season, div, sc){
     let html = '';
     if(isLegacy){
       html = buildLegacyContent(rows, season);
-      // Also fetch constructors if available
+      // Fetch this division's constructors
       if(constructorsGid){
         try{
           const curl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${constructorsGid}`;
@@ -412,9 +418,36 @@ async function loadDivStandings(id, season, div, sc){
           const ctext = await cres.text();
           if(!ctext.includes('<!DOCTYPE')){
             const crows = parseCSV(ctext);
-            html += buildLegacyConstructors(crows);
+            html += buildLegacyConstructors(crows, `Division ${div} Constructors`);
           }
         }catch(e){}
+      }
+      // If this is the last division shown, also build combined constructors
+      // We do this by checking if a combined cache exists or triggering it
+      const totalDivs = parseInt(sc['divisions']) || 1;
+      if(div === totalDivs && totalDivs > 1){
+        // Fetch all divisions' constructors and combine
+        const allConstRows = [];
+        for(let d = 1; d <= totalDivs; d++){
+          const cgid = sc[`d${d}_constructors_gid`];
+          const csid = sc[`d${d}_sheet_id`];
+          if(!cgid || !csid) continue;
+          try{
+            const curl = `https://docs.google.com/spreadsheets/d/${csid}/export?format=csv&gid=${cgid}`;
+            const cres = await fetch(curl);
+            const ctext = await cres.text();
+            if(!ctext.includes('<!DOCTYPE')){
+              allConstRows.push(parseCSV(ctext));
+            }
+          }catch(e){}
+        }
+        if(allConstRows.length > 1){
+          // Update the season-level combined constructors
+          const combinedEl = document.getElementById(`season-${String(season).replace('.','_')}-combined`);
+          if(combinedEl){
+            combinedEl.innerHTML = buildCombinedConstructors(allConstRows);
+          }
+        }
       }
     } else {
       html = buildStandingsTable(rows);
@@ -495,15 +528,25 @@ function buildLegacyContent(rows, season){
   html += '<th>Pts</th>';
   html += '</tr></thead><tbody>';
 
-  // Data rows
-  let count = 0;
+  // Collect data rows and sort by points descending
+  const driverRows = [];
   for(let i = dataStart; i < cleanRows.length; i++){
     const row = cleanRows[i];
-    const pos = (row[1]||'').trim();
-    if(!pos || isNaN(parseInt(pos))) continue;
+    const p = (row[1]||'').trim();
+    if(!p || isNaN(parseInt(p))) continue;
+    if(!(row[2]||'').trim()) continue;
+    const pts = pointsCol < row.length ? parseFloat((row[pointsCol]||'').trim()) || 0 : 0;
+    driverRows.push({row, pts});
+  }
+  driverRows.sort((a,b) => b.pts - a.pts);
+
+  // Data rows
+  let count = 0;
+  for(let i = 0; i < driverRows.length; i++){
+    const row = driverRows[i].row;
+    const pos = String(i + 1);
     const driver = (row[2]||'').trim();
     const team = (row[3]||'').trim();
-    if(!driver) continue;
 
     const posClass = pos==='1'?'pos-1':pos==='2'?'pos-2':pos==='3'?'pos-3':'';
     html += `<tr><td class="td-pos"><span class="pos-num ${posClass}">${pos}</span></td>`;
@@ -527,7 +570,7 @@ function buildLegacyContent(rows, season){
     html += `<td class="td-pts">${pts||'0'}</td>`;
     html += '</tr>';
     count++;
-    if(count > 50) break;
+
   }
 
   html += '</tbody></table></div>';
@@ -574,7 +617,7 @@ function buildSimpleStandings(rows){
   return count ? html : '<div class="div-loading">No driver data found.</div>';
 }
 
-function buildLegacyConstructors(rows){
+function buildLegacyConstructors(rows, label){
   // Two formats:
   // S3: Team, Races Won, Podiums, Overall Points (no position col)
   // S4+: Position, Team, Points
@@ -590,7 +633,7 @@ function buildLegacyConstructors(rows){
   }
   if(dataStart < 0) return '';
 
-  let html = '<div class="section-subhead">Constructors</div>';
+  let html = `<div class="section-subhead">${label||'Constructors'}</div>`;
   html += `<table class="standings-table"><thead><tr>
     <th>Pos</th><th>Team</th><th>Points</th>
   </tr></thead><tbody>`;
@@ -625,6 +668,61 @@ function buildLegacyConstructors(rows){
 
   html += '</tbody></table>';
   return count ? html : '';
+}
+
+function buildCombinedConstructors(allConstRows){
+  // Merge points from multiple division constructors tables into one
+  const totals = {};
+
+  allConstRows.forEach(rows => {
+    const cleanRows = rows.filter(r => r.some(v => (v||'').trim()) && !r.some(v => (v||'').trim().startsWith('#')));
+    let dataStart = -1, hasPos = false;
+    for(let i = 0; i < cleanRows.length; i++){
+      const vals = cleanRows[i].map(v => (v||'').trim().toLowerCase());
+      if(vals.includes('team')){ dataStart = i+1; hasPos = vals.includes('position') || vals.includes('pos'); break; }
+    }
+    if(dataStart < 0) return;
+    for(let i = dataStart; i < cleanRows.length; i++){
+      const row = cleanRows[i];
+      let team, pts;
+      if(hasPos){
+        team = (row[2]||'').trim();
+        pts = parseFloat((row[3]||'').trim()) || 0;
+      } else {
+        team = (row[1]||'').trim();
+        pts = 0;
+        for(let c = row.length-1; c >= 2; c--){
+          const v = (row[c]||'').trim();
+          if(v && !isNaN(parseFloat(v))){ pts = parseFloat(v); break; }
+        }
+      }
+      if(!team) continue;
+      const key = team.toLowerCase().trim();
+      if(!totals[key]) totals[key] = {team, pts: 0};
+      totals[key].pts += pts;
+    }
+  });
+
+  const sorted = Object.values(totals).sort((a,b) => b.pts - a.pts);
+  if(!sorted.length) return '';
+
+  let html = '<div class="section-subhead">Overall Constructors</div>';
+  html += `<table class="standings-table"><thead><tr>
+    <th>Pos</th><th>Team</th><th>Points</th>
+  </tr></thead><tbody>`;
+
+  sorted.forEach((entry, idx) => {
+    const pos = idx + 1;
+    const posClass = pos===1?'pos-1':pos===2?'pos-2':pos===3?'pos-3':'';
+    html += `<tr>
+      <td><span class="pos-num ${posClass}">${pos}</span></td>
+      <td><span class="driver-name">${entry.team}</span></td>
+      <td><span class="points">${entry.pts}</span></td>
+    </tr>`;
+  });
+
+  html += '</tbody></table>';
+  return html;
 }
 
 function buildStandingsTable(rows){
