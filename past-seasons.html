@@ -406,9 +406,9 @@ async function renderS3(id, season, sc, body){
       try{
         const rows = await fetchCSV(sid, dgid);
         divHtml += buildRaceGridDrivers(rows);
-      }catch(e){ divHtml += '<div class="div-loading">Could not load drivers: '+e.message+'</div>'; }
+      }catch(e){ divHtml += '<div class="div-loading">Could not load drivers ('+sid+'/'+dgid+'): '+e.message+'</div>'; }
     } else {
-      divHtml += '<div class="div-loading">No driver data available.</div>';
+      divHtml += '<div class="div-loading">No config data for Division '+d+' (sid='+sid+' dgid='+dgid+')</div>';
     }
 
     // Constructors only for D1 on S3
