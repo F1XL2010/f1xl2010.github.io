@@ -293,7 +293,7 @@ async function loadSeason(id, season, body){
   if(!sc){ body.innerHTML='<div class="div-loading" style="padding:16px 20px;">No config data for this season.</div>'; return; }
   const s = parseFloat(season);
   if(s<=2) await renderS1S2(id, season, sc, body);
-  else if(s>=3 && s<=7) await renderS3to5(id, season, sc, body);
+  else if(s>=3 && s<=7.5) await renderS3to5(id, season, sc, body);
   else body.innerHTML = '<div class="div-loading" style="padding:16px 20px;">Parser for Season '+season+' not yet built.</div>';
 }
 
