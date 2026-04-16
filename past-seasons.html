@@ -544,9 +544,13 @@ function buildS3Constructors(rows){
 // INIT
 // ============================================================
 async function init(){
-  const seasonObjs = await getAllSeasons();
-  const currentSeason = await getCurrentSeason();
-  const past = seasonObjs.filter(s => s.season !== currentSeason);
+  let seasonObjs = [];
+  try{ seasonObjs = await getAllSeasons(); }
+  catch(e){ document.getElementById('content').innerHTML='<div class="loading-msg">Config error: '+e.message+'</div>'; return; }
+
+  // current_season may be blank - just use all seasons getAllSeasons returns
+  // (getAllSeasons already excludes current season internally)
+  const past = seasonObjs;
 
   if(!past.length){
     document.getElementById('content').innerHTML = '<div class="loading-msg">No past seasons available.</div>';
