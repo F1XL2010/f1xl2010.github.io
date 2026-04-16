@@ -91,10 +91,12 @@
   .st tr.p2:hover td{background:rgba(192,192,192,0.08);}
   .st tr.p3:hover td{background:rgba(180,115,60,0.10);}
   .pos-cell{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:4px;font-family:"Barlow Condensed",sans-serif;font-size:14px;font-weight:700;margin:0 auto;}
-  .pos-cell.p1{background:rgba(232,184,75,0.2);color:var(--gold);}
-  .pos-cell.p2{background:rgba(192,192,192,0.12);color:rgba(220,220,220,0.95);}
-  .pos-cell.p3{background:rgba(180,115,60,0.18);color:rgba(210,150,90,0.95);}
-  .pos-cell.pn{color:rgba(255,255,255,0.3);background:none;}
+  .pos-cell.p1{background:#E8B84B;color:#111816;}
+  .pos-cell.p2{background:#C0C0C0;color:#111816;}
+  .pos-cell.p3{background:#CD7F32;color:#111816;}
+  .pos-cell.pp{background:#3DCC47;color:#111816;}
+  .pos-cell.pout{background:#e05c8a;color:#111816;}
+  .pos-cell.pdnf{background:#111816;color:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.15);}
   .dname{font-size:13px;color:#fff;font-weight:500;letter-spacing:0.2px;}
   .tname{font-size:11px;color:rgba(255,255,255,0.35);margin-top:1px;}
   .pts{font-family:"Barlow Condensed",sans-serif;font-size:15px;font-weight:700;color:var(--green);}
@@ -222,8 +224,7 @@ async function fetchCSV(sheetId, gid){
   return rows;
 }
 
-function posClass(p){return p===1?'p1':p===2?'p2':p===3?'p3':'';}
-function posStyle(p){return p===1?' class="p1"':p===2?' class="p2"':p===3?' class="p3"':'';}
+function posClass(p){return p===1?'p1':p===2?'p2':p===3?'p3':p<=10?'pp':p>10?'pout':'';}
 function trClass(p){return p===1?' class="p1"':p===2?' class="p2"':p===3?' class="p3"':'';}
 
 function toggleMenu(){
@@ -492,15 +493,15 @@ function buildRaceGridDrivers(rows){
     const pts=(r[ptsCol]||'').trim();
     const pc=posClass(pos);
     html += '<tr'+trClass(pos)+'>';
-    html += '<td><div class="pos-cell '+(pc?pc:'pn')+'">'+pos+'</div></td>';
+    html += '<td><div class="pos-cell '+pc+'">'+pos+'</div></td>';
     html += '<td class="td-l"><span class="dname">'+driver+'</span></td>';
     html += '<td class="td-l"><span class="tname">'+(team||'&mdash;')+'</span></td>';
     for(let c=0;c<numRounds;c++){
       const val=(r[4+c]||'').trim();
       if(!val) html += '<td class="rr-blank">&mdash;</td>';
-      else if(val==='DNF') html += '<td class="rr-dnf">DNF</td>';
-      else if(val==='DSQ') html += '<td class="rr-dsq">DSQ</td>';
-      else if(val==='1') html += '<td class="rr-p1">1</td>';
+      else if(val==='DNF') html += '<td><div class="pos-cell pdnf" style="font-size:10px;width:32px;">DNF</div></td>';
+      else if(val==='DSQ') html += '<td><div class="pos-cell pdnf" style="font-size:10px;width:32px;">DSQ</div></td>';
+      else if(val==='1') html += '<td><div class="pos-cell p1" style="font-size:12px;">1</div></td>';
       else html += '<td class="rr-val">'+val+'</td>';
     }
     html += '<td><span class="pts">'+(pts||'&mdash;')+'</span></td>';
