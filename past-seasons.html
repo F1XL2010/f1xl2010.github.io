@@ -544,9 +544,19 @@ function buildS3Constructors(rows){
 // INIT
 // ============================================================
 async function init(){
+  // DEBUG: test raw config fetch
+  try{
+    const testUrl = 'https://docs.google.com/spreadsheets/d/1ThIh7aKlGOuv83v9IJVSGpuspZLl0c9ajE0GJBpuCtk/gviz/tq?tqx=out:csv&gid=0';
+    const testRes = await fetch(testUrl);
+    const testText = await testRes.text();
+    console.log('Config fetch status:', testRes.status);
+    console.log('Config first 200 chars:', testText.substring(0,200));
+  }catch(e){ console.error('Config fetch error:', e.message); }
+
   let seasonObjs = [];
   try{ seasonObjs = await getAllSeasons(); }
   catch(e){ document.getElementById('content').innerHTML='<div class="loading-msg">Config error: '+e.message+'</div>'; return; }
+  console.log('Season objects found:', seasonObjs.length, seasonObjs.slice(0,3));
 
   // current_season may be blank - just use all seasons getAllSeasons returns
   // (getAllSeasons already excludes current season internally)
