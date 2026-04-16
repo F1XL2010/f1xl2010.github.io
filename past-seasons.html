@@ -437,7 +437,9 @@ async function renderS3to5(id, season, sc, body){
       try{
         const rows = await fetchCSV(sid, cgid);
         divHtml += buildS3Constructors(rows);
-      }catch(e){}
+      }catch(e){ divHtml += '<div class="div-loading">Constructors error: '+e.message+' (sid='+sid+' cgid='+cgid+')</div>'; }
+    } else {
+      divHtml += '<div class="div-loading">No constructors GID (cgid='+cgid+')</div>';
     }
 
     contentHtml += '<div class="div-content'+(d===1?'':' hidden')+'" id="'+id+'-dcontent-'+d+'">'+divHtml+'</div>';
