@@ -73,29 +73,36 @@
   .section-label{font-family:"Barlow Condensed",sans-serif;font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--teal);padding:14px 0 6px;border-top:1px solid var(--border);margin-top:4px;}
   .section-label:first-child{border-top:none;padding-top:0;}
 
-  /* STANDINGS TABLE - same style as standings page */
-  .st-wrap{overflow-x:auto;margin-bottom:16px;}
+  /* STANDINGS TABLE */
+  .st-wrap{overflow-x:auto;margin-bottom:16px;border-radius:6px;border:1px solid var(--border);}
   .st{width:100%;border-collapse:separate;border-spacing:0;font-size:13px;}
-  .st th{padding:7px 10px;font-family:"Barlow Condensed",sans-serif;font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-faint);border-bottom:1px solid var(--border2);background:var(--dark3);white-space:nowrap;text-align:center;}
+  .st thead tr{background:var(--dark3);}
+  .st th{padding:8px 10px;font-family:"Barlow Condensed",sans-serif;font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.4);border-bottom:1px solid var(--border2);white-space:nowrap;text-align:center;}
   .st th.th-l{text-align:left;}
-  .st td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,0.04);color:var(--text-muted);text-align:center;white-space:nowrap;vertical-align:middle;}
+  .st th.th-pos{width:36px;text-align:center;}
+  .st td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,0.035);color:rgba(255,255,255,0.65);text-align:center;white-space:nowrap;vertical-align:middle;}
   .st td.td-l{text-align:left;}
-  .st tr:hover td{background:rgba(255,255,255,0.02);}
-  .st tr.p1 td{background:rgba(232,184,75,0.07);}
-  .st tr.p2 td{background:rgba(200,200,200,0.04);}
-  .st tr.p3 td{background:rgba(180,115,60,0.06);}
-  .st tr:last-child td{border-bottom:none;}
-  .pos{font-family:"Barlow Condensed",sans-serif;font-size:15px;font-weight:700;color:var(--text-faint);}
-  .pos.p1{color:var(--gold);}
-  .pos.p2{color:rgba(210,210,210,0.9);}
-  .pos.p3{color:rgba(200,140,80,0.9);}
-  .dname{font-size:14px;color:#fff;font-weight:500;}
-  .tname{font-size:11px;color:var(--text-faint);}
+  .st tbody tr:last-child td{border-bottom:none;}
+  .st tbody tr:hover td{background:rgba(255,255,255,0.025);}
+  .st tr.p1 td{background:rgba(232,184,75,0.09);}
+  .st tr.p2 td{background:rgba(192,192,192,0.05);}
+  .st tr.p3 td{background:rgba(180,115,60,0.07);}
+  .st tr.p1:hover td{background:rgba(232,184,75,0.13);}
+  .st tr.p2:hover td{background:rgba(192,192,192,0.08);}
+  .st tr.p3:hover td{background:rgba(180,115,60,0.10);}
+  .pos-cell{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:4px;font-family:"Barlow Condensed",sans-serif;font-size:14px;font-weight:700;margin:0 auto;}
+  .pos-cell.p1{background:rgba(232,184,75,0.2);color:var(--gold);}
+  .pos-cell.p2{background:rgba(192,192,192,0.12);color:rgba(220,220,220,0.95);}
+  .pos-cell.p3{background:rgba(180,115,60,0.18);color:rgba(210,150,90,0.95);}
+  .pos-cell.pn{color:rgba(255,255,255,0.3);background:none;}
+  .dname{font-size:13px;color:#fff;font-weight:500;letter-spacing:0.2px;}
+  .tname{font-size:11px;color:rgba(255,255,255,0.35);margin-top:1px;}
   .pts{font-family:"Barlow Condensed",sans-serif;font-size:15px;font-weight:700;color:var(--green);}
-  .rr-val{font-size:12px;color:var(--text-muted);}
-  .rr-dnf{font-size:12px;color:rgba(255,80,80,0.85);font-weight:600;}
-  .rr-dsq{font-size:12px;color:rgba(255,160,0,0.9);font-weight:600;}
-  .rr-blank{color:var(--text-faint);}
+  .rr-val{font-size:12px;color:rgba(255,255,255,0.6);}
+  .rr-p1{font-size:12px;font-weight:700;color:var(--gold);}
+  .rr-dnf{font-size:11px;font-weight:700;color:rgba(220,60,60,0.9);letter-spacing:0.3px;}
+  .rr-dsq{font-size:11px;font-weight:700;color:rgba(255,140,0,0.9);letter-spacing:0.3px;}
+  .rr-blank{color:rgba(255,255,255,0.15);}
 
   /* DISCLAIMER */
   .disclaimer{background:rgba(232,184,75,0.06);border:1px solid rgba(232,184,75,0.2);border-radius:6px;padding:14px 16px;margin-bottom:12px;}
@@ -270,10 +277,6 @@ function switchDiv(id, div, total){
 async function loadSeason(id, season, body){
   const sc = await loadSeasonConfig(season);
   if(!sc){ body.innerHTML='<div class="div-loading" style="padding:16px 20px;">No config data for this season.</div>'; return; }
-  // DEBUG - show raw config keys and values
-  const debugKeys = Object.keys(sc).filter(k=>k.includes('sheet_id')||k.includes('divisions'));
-  body.innerHTML = '<div style="padding:16px;font-size:11px;color:#5ECFCF;">CONFIG DEBUG: '+JSON.stringify(debugKeys.reduce((o,k)=>{o[k]=sc[k];return o;},{}))+'</div>';
-  await new Promise(r=>setTimeout(r,3000));
   const s = parseFloat(season);
   if(s<=2) await renderS1S2(id, season, sc, body);
   else if(s===3) await renderS3(id, season, sc, body);
@@ -410,9 +413,9 @@ async function renderS3(id, season, sc, body){
       try{
         const rows = await fetchCSV(sid, dgid);
         divHtml += buildRaceGridDrivers(rows);
-      }catch(e){ divHtml += '<div class="div-loading">Could not load drivers ('+sid+'/'+dgid+'): '+e.message+'</div>'; }
+      }catch(e){ divHtml += '<div class="div-loading">Could not load drivers: '+e.message+'</div>'; }
     } else {
-      divHtml += '<div class="div-loading">No config data for Division '+d+' (sid='+sid+' dgid='+dgid+')</div>';
+      divHtml += '<div class="div-loading">No driver data available.</div>';
     }
 
     // Constructors only for D1 on S3
@@ -487,8 +490,9 @@ function buildRaceGridDrivers(rows){
     const driver=(r[2]||'').trim();
     const team=(r[3]||'').trim();
     const pts=(r[ptsCol]||'').trim();
+    const pc=posClass(pos);
     html += '<tr'+trClass(pos)+'>';
-    html += '<td><span class="pos'+(posClass(pos)?' '+posClass(pos):'')+'">'+pos+'</span></td>';
+    html += '<td><div class="pos-cell '+(pc?pc:'pn')+'">'+pos+'</div></td>';
     html += '<td class="td-l"><span class="dname">'+driver+'</span></td>';
     html += '<td class="td-l"><span class="tname">'+(team||'&mdash;')+'</span></td>';
     for(let c=0;c<numRounds;c++){
@@ -496,6 +500,7 @@ function buildRaceGridDrivers(rows){
       if(!val) html += '<td class="rr-blank">&mdash;</td>';
       else if(val==='DNF') html += '<td class="rr-dnf">DNF</td>';
       else if(val==='DSQ') html += '<td class="rr-dsq">DSQ</td>';
+      else if(val==='1') html += '<td class="rr-p1">1</td>';
       else html += '<td class="rr-val">'+val+'</td>';
     }
     html += '<td><span class="pts">'+(pts||'&mdash;')+'</span></td>';
@@ -548,19 +553,9 @@ function buildS3Constructors(rows){
 // INIT
 // ============================================================
 async function init(){
-  // DEBUG: test raw config fetch
-  try{
-    const testUrl = 'https://docs.google.com/spreadsheets/d/1ThIh7aKlGOuv83v9IJVSGpuspZLl0c9ajE0GJBpuCtk/gviz/tq?tqx=out:csv&gid=0';
-    const testRes = await fetch(testUrl);
-    const testText = await testRes.text();
-    console.log('Config fetch status:', testRes.status);
-    console.log('Config first 200 chars:', testText.substring(0,200));
-  }catch(e){ console.error('Config fetch error:', e.message); }
-
   let seasonObjs = [];
   try{ seasonObjs = await getAllSeasons(); }
   catch(e){ document.getElementById('content').innerHTML='<div class="loading-msg">Config error: '+e.message+'</div>'; return; }
-  console.log('Season objects found:', seasonObjs.length, seasonObjs.slice(0,3));
 
   // current_season may be blank - just use all seasons getAllSeasons returns
   // (getAllSeasons already excludes current season internally)
