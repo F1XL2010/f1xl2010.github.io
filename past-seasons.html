@@ -432,8 +432,8 @@ async function renderS3to5(id, season, sc, body){
       divHtml += '<div class="div-loading">No driver data available.</div>';
     }
 
-    // Constructors only for D1 on S3
-    if(d===1 && cgid!==undefined && cgid!==''){
+    // Constructors for any division that has a constructors GID
+    if(cgid!==undefined && cgid!==''){
       try{
         const rows = await fetchCSV(sid, cgid);
         divHtml += buildS3Constructors(rows);
