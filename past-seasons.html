@@ -390,7 +390,7 @@ async function renderS3(id, season, sc, body){
   if(divisions > 1){
     tabsHtml = '<div class="div-tabs">';
     for(let d=1;d<=divisions;d++){
-      tabsHtml += '<button class="div-tab'+(d===1?' active':'')+'" id="'+id+'-dtab-'+d+'" onclick="switchDiv(''+id+'','+d+','+divisions+')">Division '+d+'</button>';
+      tabsHtml += '<button class="div-tab'+(d===1?' active':'')+'" id="'+id+'-dtab-'+d+'" onclick="switchDiv(\''+id+'\',' +d+','+divisions+')">Division '+d+'</button>';
     }
     tabsHtml += '</div>';
   }
