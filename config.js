@@ -71,7 +71,7 @@ async function loadSeasonConfig(season) {
   const gid = config[key];
   if (!gid) return null;
   try {
-    const url = `https://docs.google.com/spreadsheets/d/${F1XL_CONFIG_SHEET_ID}/gviz/tq?tqx=out:csv&gid=${gid}`;
+    const url = `https://docs.google.com/spreadsheets/d/${F1XL_CONFIG_SHEET_ID}/export?format=csv&gid=${gid}`;
     const res = await fetch(url);
     const text = await res.text();
     if (text.includes('<!DOCTYPE')) return null;
