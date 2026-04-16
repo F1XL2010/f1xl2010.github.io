@@ -3,20 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1XL — Past Seasons</title>
+<title>F1XL &mdash; Past Seasons</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="config.js"></script>
 <style>
-  :root{--green:#3DCC47;--teal:#5ECFCF;--red:#E10600;--black:#111816;--dark:#161d1b;--dark2:#1a2320;--dark3:#1e2a27;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);--text:#ffffff;--text-muted:rgba(255,255,255,0.60);--text-faint:rgba(255,255,255,0.30);--gold:#E8B84B;}
+  :root{--green:#3DCC47;--teal:#5ECFCF;--red:#E10600;--black:#111816;--dark:#161d1b;--dark2:#1a2320;--dark3:#1e2a27;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);--text:#ffffff;--text-muted:rgba(255,255,255,0.70);--text-faint:rgba(255,255,255,0.35);--gold:#E8B84B;}
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{background:#111816;background-image:linear-gradient(rgba(255,255,255,0.025) 0px,rgba(255,255,255,0.025) 4px,rgba(0,0,0,0.06) 4px,rgba(0,0,0,0.06) 8px),linear-gradient(90deg,rgba(0,0,0,0.06) 0px,rgba(0,0,0,0.06) 4px,rgba(255,255,255,0.025) 4px,rgba(255,255,255,0.025) 8px);background-size:8px 8px;color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;}
+  body{background:#111816;background-image:linear-gradient(rgba(255,255,255,0.025) 0px,rgba(255,255,255,0.025) 4px,rgba(0,0,0,0.06) 4px,rgba(0,0,0,0.06) 8px),linear-gradient(90deg,rgba(0,0,0,0.06) 0px,rgba(0,0,0,0.06) 4px,rgba(255,255,255,0.025) 4px,rgba(255,255,255,0.025) 8px);background-size:8px 8px;color:var(--text);font-family:"Barlow",sans-serif;min-height:100vh;}
   nav{background:rgba(17,24,22,0.97);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;}
   .nav-left{display:flex;align-items:center;gap:14px;flex-shrink:0;}
-  .nav-logo{background:var(--green);color:#000;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;padding:5px 11px;border-radius:3px;text-decoration:none;}
+  .nav-logo{background:var(--green);color:#000;font-family:"Barlow Condensed",sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;padding:5px 11px;border-radius:3px;text-decoration:none;}
   .nav-links{display:flex;align-items:stretch;height:56px;}
   .nav-item{position:relative;display:flex;align-items:stretch;}
-  .nav-item>a,.nav-item>button{color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:500;letter-spacing:0.5px;padding:0 13px;display:flex;align-items:center;gap:4px;border-bottom:2px solid transparent;border-top:none;border-left:none;border-right:none;background:none;cursor:pointer;font-family:'Barlow',sans-serif;text-transform:uppercase;transition:color 0.2s;white-space:nowrap;}
+  .nav-item>a,.nav-item>button{color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:500;letter-spacing:0.5px;padding:0 13px;display:flex;align-items:center;gap:4px;border-bottom:2px solid transparent;border-top:none;border-left:none;border-right:none;background:none;cursor:pointer;font-family:"Barlow",sans-serif;text-transform:uppercase;transition:color 0.2s;white-space:nowrap;}
   .nav-item>a:hover,.nav-item>button:hover{color:var(--text);}
   .nav-item>a.active,.nav-item>button.active{color:var(--text);border-bottom-color:var(--green);}
   .nav-chevron{font-size:8px;opacity:0.5;transition:transform 0.2s;}
@@ -32,18 +32,18 @@
   .nav-hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
   .mobile-menu{display:none;position:fixed;top:56px;left:0;right:0;bottom:0;background:#0d1210;z-index:150;overflow-y:auto;padding:16px 0 32px;}
   .mobile-menu.open{display:block;}
-  .mobile-section-header{padding:10px 24px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--green);}
+  .mobile-section-header{padding:10px 24px;font-family:"Barlow Condensed",sans-serif;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--green);}
   .mobile-section a{display:block;padding:11px 32px;color:var(--text-muted);text-decoration:none;font-size:15px;border-bottom:1px solid var(--border);}
   .mobile-divider{height:1px;background:var(--border);margin:12px 24px;}
   @media(max-width:860px){.nav-links{display:none;}.nav-hamburger{display:flex;}}
   @media(min-width:861px){.mobile-menu{display:none !important;}}
 
   .page-header{background:var(--dark);border-bottom:1px solid var(--border);padding:24px;}
-  .page-eyebrow{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:2.5px;color:var(--teal);text-transform:uppercase;font-weight:600;margin-bottom:4px;}
-  .page-title{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:700;text-transform:uppercase;line-height:1;}
+  .page-eyebrow{font-family:"Barlow Condensed",sans-serif;font-size:11px;letter-spacing:2.5px;color:var(--teal);text-transform:uppercase;font-weight:600;margin-bottom:4px;}
+  .page-title{font-family:"Barlow Condensed",sans-serif;font-size:32px;font-weight:700;text-transform:uppercase;line-height:1;}
   .page-meta{font-size:13px;color:var(--text-muted);margin-top:6px;}
 
-  .content{padding:20px 24px 48px;max-width:900px;}
+  .content{padding:20px 24px 48px;max-width:960px;}
   .loading-msg{text-align:center;padding:48px;color:var(--text-muted);font-size:14px;}
 
   /* SEASON CARDS */
@@ -51,71 +51,59 @@
   .season-card-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;cursor:pointer;transition:background 0.15s;gap:12px;}
   .season-card-header:hover{background:rgba(255,255,255,0.03);}
   .season-card-header.open{border-bottom:1px solid var(--border);}
-  .season-title{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;}
+  .season-title{font-family:"Barlow Condensed",sans-serif;font-size:22px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;}
   .season-meta{display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-top:4px;}
-  .season-badge{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;padding:2px 7px;border-radius:3px;background:rgba(255,255,255,0.06);color:var(--text-muted);}
-  .season-champion{font-size:13px;color:var(--text-muted);}
-  .season-champion span{color:var(--gold);font-weight:500;}
+  .season-badge{font-family:"Barlow Condensed",sans-serif;font-size:10px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;padding:2px 7px;border-radius:3px;background:rgba(255,255,255,0.06);color:var(--text-muted);}
   .season-chevron{font-size:12px;color:var(--text-faint);transition:transform 0.2s;flex-shrink:0;}
   .season-chevron.open{transform:rotate(180deg);}
   .season-no-data{font-size:12px;color:var(--text-faint);font-style:italic;}
-
-  /* SEASON BODY */
   .season-body{display:none;padding:0;}
   .season-body.open{display:block;}
 
-  /* DIV TABS */
+  /* DIVISION TABS */
   .div-tabs{display:flex;gap:4px;padding:14px 20px 0;flex-wrap:wrap;}
-  .div-tab{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:6px 14px;border-radius:4px 4px 0 0;border:none;background:rgba(255,255,255,0.05);color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:color 0.2s;margin-bottom:0;}
+  .div-tab{font-family:"Barlow Condensed",sans-serif;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:6px 14px;border-radius:4px 4px 0 0;border:none;background:rgba(255,255,255,0.05);color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:color 0.2s;}
   .div-tab:hover{color:var(--text);}
   .div-tab.active{color:var(--green);border-bottom-color:var(--green);background:rgba(61,204,71,0.06);}
-
-  /* DIV CONTENT */
-  .div-content{padding:16px 20px 20px;}
+  .div-content{padding:16px 20px 4px;}
+  .div-content.hidden{display:none;}
   .div-loading{font-size:13px;color:var(--text-faint);padding:12px 0;}
 
-  /* STANDINGS TABLE */
-  .standings-table{width:100%;border-collapse:collapse;margin-bottom:16px;}
-  .standings-table th{text-align:left;padding:6px 10px;font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-faint);border-bottom:1px solid var(--border2);background:var(--dark3);}
-  .standings-table td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.04);font-size:13px;color:rgba(255,255,255,0.8);vertical-align:middle;}
-  .standings-table tr:last-child td{border-bottom:none;}
-  .standings-table tr:hover td{background:rgba(255,255,255,0.02);}
-  .pos-num{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:var(--text-faint);}
-  .pos-1{color:var(--gold)!important;}
-  .pos-2{color:rgba(210,210,210,0.9)!important;}
-  .pos-3{color:rgba(200,140,80,0.9)!important;}
-  .driver-name{font-size:14px;color:var(--text);font-weight:500;}
-  .team-name{font-size:11px;color:var(--text-faint);}
-  .points{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:var(--green);}
+  /* SECTION LABEL */
+  .section-label{font-family:"Barlow Condensed",sans-serif;font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--teal);padding:14px 0 6px;border-top:1px solid var(--border);margin-top:4px;}
+  .section-label:first-child{border-top:none;padding-top:0;}
 
-  /* SEASON ACTIONS */
-  .season-actions{display:flex;gap:8px;flex-wrap:wrap;padding:0 20px 16px;}
-  .season-action-btn{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;padding:6px 14px;border-radius:4px;border:1px solid var(--border2);background:none;color:var(--text-muted);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:all 0.2s;}
-  .season-action-btn:hover{color:var(--text);border-color:rgba(255,255,255,0.25);}
+  /* STANDINGS TABLE - same style as standings page */
+  .st-wrap{overflow-x:auto;margin-bottom:16px;}
+  .st{width:100%;border-collapse:separate;border-spacing:0;font-size:13px;}
+  .st th{padding:7px 10px;font-family:"Barlow Condensed",sans-serif;font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-faint);border-bottom:1px solid var(--border2);background:var(--dark3);white-space:nowrap;text-align:center;}
+  .st th.th-l{text-align:left;}
+  .st td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,0.04);color:var(--text-muted);text-align:center;white-space:nowrap;vertical-align:middle;}
+  .st td.td-l{text-align:left;}
+  .st tr:hover td{background:rgba(255,255,255,0.02);}
+  .st tr.p1 td{background:rgba(232,184,75,0.07);}
+  .st tr.p2 td{background:rgba(200,200,200,0.04);}
+  .st tr.p3 td{background:rgba(180,115,60,0.06);}
+  .st tr:last-child td{border-bottom:none;}
+  .pos{font-family:"Barlow Condensed",sans-serif;font-size:15px;font-weight:700;color:var(--text-faint);}
+  .pos.p1{color:var(--gold);}
+  .pos.p2{color:rgba(210,210,210,0.9);}
+  .pos.p3{color:rgba(200,140,80,0.9);}
+  .dname{font-size:14px;color:#fff;font-weight:500;}
+  .tname{font-size:11px;color:var(--text-faint);}
+  .pts{font-family:"Barlow Condensed",sans-serif;font-size:15px;font-weight:700;color:var(--green);}
+  .rr-val{font-size:12px;color:var(--text-muted);}
+  .rr-dnf{font-size:12px;color:rgba(255,80,80,0.85);font-weight:600;}
+  .rr-dsq{font-size:12px;color:rgba(255,160,0,0.9);font-weight:600;}
+  .rr-blank{color:var(--text-faint);}
 
-  /* RESULTS TABLE */
-  .results-outer{overflow-x:auto;margin-bottom:16px;}
-  .results-table{border-collapse:collapse;font-size:12px;min-width:100%;}
-  .results-table th{padding:5px 8px;font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.5);border-bottom:1px solid var(--border2);background:var(--dark3);white-space:nowrap;text-align:center;}
-  .results-table th.th-driver{text-align:left;}
-  .results-table td{padding:6px 8px;border-bottom:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.75);text-align:center;white-space:nowrap;font-size:13px;}
-  .results-table td.td-pos{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--text);}
-  .results-table td.td-driver{text-align:left;color:#fff;font-weight:500;font-size:13px;}
-  .results-table td.td-team{text-align:left;font-size:11px;color:rgba(255,255,255,0.45);}
-  .results-table td.td-pts{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--green);}
-  .results-table td.td-dnf{color:rgba(255,80,80,0.8);font-weight:600;}
-  .results-table td.td-dsq{color:rgba(255,140,0,0.9);font-weight:600;}
-  .results-table tr:hover td{background:rgba(255,255,255,0.03);}
-  .results-table tr.row-p1 td{background:rgba(232,184,75,0.08);}
-  .results-table tr.row-p2 td{background:rgba(200,200,200,0.05);}
-  .results-table tr.row-p3 td{background:rgba(180,115,60,0.07);}
-  .section-subhead{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--teal);padding:12px 0 6px;border-top:1px solid var(--border);margin-top:8px;}
   /* DISCLAIMER */
-  .legacy-disclaimer{background:rgba(232,184,75,0.06);border:1px solid rgba(232,184,75,0.2);border-radius:6px;padding:14px 16px;margin-bottom:12px;}
-  .legacy-disclaimer-title{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:6px;}
-  .legacy-disclaimer-text{font-size:12px;color:var(--text-muted);line-height:1.6;}
+  .disclaimer{background:rgba(232,184,75,0.06);border:1px solid rgba(232,184,75,0.2);border-radius:6px;padding:14px 16px;margin-bottom:12px;}
+  .disclaimer-title{font-family:"Barlow Condensed",sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:6px;}
+  .disclaimer-text{font-size:12px;color:var(--text-muted);line-height:1.6;}
+
   footer{background:var(--dark);border-top:1px solid var(--border);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
-  .footer-logo{background:var(--green);color:#000;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;padding:4px 9px;border-radius:3px;}
+  .footer-logo{background:var(--green);color:#000;font-family:"Barlow Condensed",sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;padding:4px 9px;border-radius:3px;}
   .footer-text{font-size:12px;color:var(--text-faint);}
 </style>
 </head>
@@ -125,17 +113,17 @@
   <div class="nav-links">
     <div class="nav-item"><a href="index.html">Home</a></div>
     <div class="nav-item">
-      <button class="active">Standings <span class="nav-chevron">▼</span></button>
+      <button class="active">Standings <span class="nav-chevron">&#9660;</span></button>
       <div class="nav-dropdown">
         <a href="standings.html">Current Season</a>
         <a href="results.html">Results</a>
-        <a href="past-seasons.html">Past Seasons</a>
+        <a href="past-seasons.html" class="active">Past Seasons</a>
         <a href="winners-records.html">Winners &amp; Records</a>
       </div>
     </div>
     <div class="nav-item"><a href="teams.html">Teams</a></div>
     <div class="nav-item">
-      <button>Race Tickets <span class="nav-chevron">▼</span></button>
+      <button>Race Tickets <span class="nav-chevron">&#9660;</span></button>
       <div class="nav-dropdown">
         <a href="submit-ticket.html">Submit Ticket</a>
         <a href="ticket-outcomes.html">Ticket Outcomes</a>
@@ -143,7 +131,7 @@
       </div>
     </div>
     <div class="nav-item">
-      <button>Schedule <span class="nav-chevron">▼</span></button>
+      <button>Schedule <span class="nav-chevron">&#9660;</span></button>
       <div class="nav-dropdown"><a href="schedule.html">Schedule</a></div>
     </div>
     <div class="nav-item"><a href="track-records.html">Track Records</a></div>
@@ -171,11 +159,7 @@
   </div>
   <div class="mobile-divider"></div>
   <div class="mobile-section">
-    <div class="mobile-section-header">Schedule</div>
     <a href="schedule.html">Schedule</a>
-  </div>
-  <div class="mobile-divider"></div>
-  <div class="mobile-section">
     <a href="track-records.html">Track Records</a>
     <a href="applications.html">Applications</a>
     <a href="league-rules.html">League Rules</a>
@@ -195,17 +179,19 @@
 <footer>
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="footer-logo">F1XL</div>
-    <div class="footer-text">The UK's longest running F1 league · Est. 2010</div>
+    <div class="footer-text">The UK's longest running F1 league &middot; Est. 2010</div>
   </div>
   <div class="footer-text">f1xl.co.uk</div>
 </footer>
 
 <script>
-const divCache = {};
-const seasonConfigCache = {};
+// ============================================================
+// UTILITIES
+// ============================================================
+const cache = {};
 
 function parseCSV(text){
-  const rows=[]; let cells=[],cur='',inQ=false;
+  const rows=[];let cells=[],cur='',inQ=false;
   for(let i=0;i<text.length;i++){
     const c=text[i],n=text[i+1];
     if(c==='"'){if(!inQ)inQ=true;else if(n==='"'){cur+='"';i++;}else inQ=false;}
@@ -217,578 +203,203 @@ function parseCSV(text){
   return rows;
 }
 
-function formatSeason(num){
-  return Number.isInteger(num) ? `Season ${num}` : `Season ${num}`;
+async function fetchCSV(sheetId, gid){
+  const key = sheetId+'|'+gid;
+  if(cache[key]) return cache[key];
+  const url = 'https://docs.google.com/spreadsheets/d/'+sheetId+'/export?format=csv&gid='+gid;
+  const res = await fetch(url);
+  const text = await res.text();
+  if(text.includes('<!DOCTYPE')) throw new Error('Sheet not published');
+  const rows = parseCSV(text).filter(r=>r.some(v=>v.trim())&&!r.some(v=>(v||'').trim().startsWith('#')));
+  cache[key] = rows;
+  return rows;
 }
 
-async function init(){
-  const seasonObjs = await getAllSeasons(); // [{season, gid}, ...]
-  const currentSeason = await getCurrentSeason();
+function posClass(p){return p===1?'p1':p===2?'p2':p===3?'p3':'';}
+function posStyle(p){return p===1?' class="p1"':p===2?' class="p2"':p===3?' class="p3"':'';}
+function trClass(p){return p===1?' class="p1"':p===2?' class="p2"':p===3?' class="p3"':'';}
 
-  // getAllSeasons already excludes current season, but filter just in case
-  const pastSeasons = seasonObjs.filter(s => s.season !== currentSeason);
-
-  if(!pastSeasons.length){
-    document.getElementById('content').innerHTML = '<div class="loading-msg">No past seasons available yet.</div>';
-    return;
-  }
-
-  document.getElementById('page-meta').textContent = `${pastSeasons.length} seasons in the archive`;
-
-  let html = '';
-  for(const obj of pastSeasons){
-    const s = obj.season;
-    // Insert disclaimer between S13 and S12
-    if(s === 12){
-      html += `<div class="legacy-disclaimer">
-        <div class="legacy-disclaimer-title">Please Note</div>
-        <div class="legacy-disclaimer-text">Information for older seasons is difficult to obtain, and as such the information provided may be incomplete. If there is a final score table in place we know that that is the correct final outcome, but be aware that the results table will not show the scores as we have no information regarding penalties that may have been applied after the race. Whilst attendance, wins etc is recorded on the Total Stats records, this is subject to change as more information becomes available. If a season is incomplete in its results and no final score table is available then no individual or constructors winner will be determined.</div>
-      </div>`;
-    }
-    html += buildSeasonCard(s);
-  }
-  document.getElementById('content').innerHTML = html;
+function toggleMenu(){
+  document.getElementById('hamburger').classList.toggle('open');
+  document.getElementById('mobile-menu').classList.toggle('open');
 }
 
+// ============================================================
+// SEASON CARD SHELL
+// ============================================================
 function buildSeasonCard(season){
-  const id = `season-${String(season).replace('.','_')}`;
-  return `<div class="season-card" id="${id}">
-    <div class="season-card-header" onclick="toggleSeason('${id}', ${season})">
-      <div>
-        <div class="season-title">${formatSeason(season)}</div>
-        <div class="season-meta" id="${id}-meta">
-          <span class="season-no-data">Click to load</span>
-        </div>
-      </div>
-      <div class="season-chevron" id="${id}-chevron">▼</div>
-    </div>
-    <div class="season-body" id="${id}-body"></div>
-  </div>`;
+  const id = 's'+String(season).replace('.','_');
+  return '<div class="season-card" id="'+id+'">'+
+    '<div class="season-card-header" onclick="toggleSeason(\''+id+'\',\''+season+'\')">'+
+    '<div><div class="season-title">Season '+season+'</div>'+
+    '<div class="season-meta" id="'+id+'-meta"><span class="season-no-data">Click to load</span></div></div>'+
+    '<div class="season-chevron" id="'+id+'-chev">&#9660;</div>'+
+    '</div><div class="season-body" id="'+id+'-body"></div></div>';
 }
 
 async function toggleSeason(id, season){
-  const body = document.getElementById(`${id}-body`);
-  const chevron = document.getElementById(`${id}-chevron`);
-  const header = document.querySelector(`#${id} .season-card-header`);
+  const body = document.getElementById(id+'-body');
+  const chev = document.getElementById(id+'-chev');
+  const hdr = document.querySelector('#'+id+' .season-card-header');
   const isOpen = body.classList.contains('open');
-
-  if(isOpen){
-    body.classList.remove('open');
-    chevron.classList.remove('open');
-    header.classList.remove('open');
-    return;
-  }
-
-  body.classList.add('open');
-  chevron.classList.add('open');
-  header.classList.add('open');
-
-  // Already loaded
+  if(isOpen){body.classList.remove('open');chev.classList.remove('open');hdr.classList.remove('open');return;}
+  body.classList.add('open');chev.classList.add('open');hdr.classList.add('open');
   if(body.innerHTML) return;
-
   body.innerHTML = '<div class="div-loading" style="padding:16px 20px;">Loading...</div>';
-
-  // Load season config
-  let sc = seasonConfigCache[season];
-  if(!sc){
-    sc = await loadSeasonConfig(season);
-    if(sc) seasonConfigCache[season] = sc;
+  try{
+    await loadSeason(id, season, body);
+  }catch(e){
+    body.innerHTML = '<div class="div-loading" style="padding:16px 20px;">Could not load: '+e.message+'</div>';
   }
-
-  if(!sc){
-    body.innerHTML = '<div class="div-loading" style="padding:16px 20px;">No data available for this season.</div>';
-    updateSeasonMeta(id, season, null);
-    return;
-  }
-
-  updateSeasonMeta(id, season, sc);
-  renderSeasonBody(id, season, sc, body);
 }
 
-function updateSeasonMeta(id, season, sc){
-  const metaEl = document.getElementById(`${id}-meta`);
-  if(!sc){ metaEl.innerHTML = '<span class="season-no-data">No data available</span>'; return; }
-
-  const divisions = parseInt(sc['divisions']) || 1;
-  const badges = [`<span class="season-badge">${divisions} Division${divisions>1?'s':''}</span>`];
-  if(sc['d1_has_standings']==='yes') badges.push('<span class="season-badge">Standings</span>');
-  if(sc['d1_has_results']==='yes') badges.push('<span class="season-badge">Results</span>');
-  metaEl.innerHTML = badges.join('');
+function switchDiv(id, div, total){
+  for(let d=1;d<=total;d++){
+    const tab = document.getElementById(id+'-dtab-'+d);
+    const con = document.getElementById(id+'-dcontent-'+d);
+    if(tab) tab.classList.toggle('active', d===div);
+    if(con) con.classList.toggle('hidden', d!==div);
+  }
 }
 
-function renderSeasonBody(id, season, sc, body){
-  const divisions = parseInt(sc['divisions']) || 1;
-  const hasStandings = sc['d1_has_standings']==='yes';
-  const hasResults = sc['d1_has_results']==='yes';
+// ============================================================
+// SEASON DISPATCHER
+// Season config loaded from config sheet, then routed to
+// the correct parser based on season number
+// ============================================================
+async function loadSeason(id, season, body){
+  const sc = await loadSeasonConfig(season);
+  if(!sc){ body.innerHTML='<div class="div-loading" style="padding:16px 20px;">No config data for this season.</div>'; return; }
+  const s = parseFloat(season);
+  if(s<=2) await renderS1S2(id, season, sc, body);
+  else body.innerHTML = '<div class="div-loading" style="padding:16px 20px;">Parser for Season '+season+' not yet built.</div>';
+}
+
+// ============================================================
+// S1 / S2 PARSER
+// Data: Driver list + Constructors list, no race-by-race data
+// Columns: Driver/Team, Races Won, Podiums, Overall Points
+//          (all values blank - just participant list)
+// ============================================================
+async function renderS1S2(id, season, sc, body){
+  const sheetId = sc['d1_sheet_id'];
+  const dGid = sc['d1_driver_results_gid'];
+  const cGid = sc['d1_constructors_gid'];
 
   let html = '';
 
-  // Division tabs if more than one
-  if(divisions > 1){
-    html += '<div class="div-tabs">';
-    for(let d=1;d<=divisions;d++){
-      html += `<button class="div-tab${d===1?' active':''}" id="${id}-dtab-${d}" onclick="switchDiv('${id}',${season},${d},${divisions})"">Division ${d}</button>`;
-    }
-    html += '</div>';
+  // Drivers
+  try{
+    const rows = await fetchCSV(sheetId, dGid===undefined||dGid===''?'0':dGid);
+    html += buildS1S2Drivers(rows);
+  }catch(e){ html += '<div class="div-loading">Could not load drivers: '+e.message+'</div>'; }
+
+  // Constructors
+  if(cGid!==undefined && cGid!==''){
+    try{
+      const rows = await fetchCSV(sheetId, cGid);
+      html += buildS1S2Constructors(rows);
+    }catch(e){}
   }
 
-  // Division content areas
-  for(let d=1;d<=divisions;d++){
-    html += `<div class="div-content${d===1?'':' hidden'}" id="${id}-dcontent-${d}">
-      <div class="div-loading">Loading Division ${d}...</div>
-    </div>`;
-  }
+  body.innerHTML = '<div class="div-content">'+html+'</div>';
 
-  // Combined constructors placeholder for legacy multi-division seasons
-  const isLegacy = parseFloat(season) <= LEGACY_MAX_SEASON;
-  if(isLegacy && divisions > 1){
-    html += `<div id="season-${String(season).replace('.','_')}-combined" class="div-content" style="padding:0 20px 16px;"></div>`;
-  }
-
-  // Actions
-  if(hasResults){
-    html += `<div class="season-actions">
-      <a href="results.html" class="season-action-btn">View Results</a>
-    </div>`;
-  }
-
-  body.innerHTML = html;
-
-  // Add hidden class CSS if not present
-  if(!document.getElementById('hidden-style')){
-    const s = document.createElement('style');
-    s.id = 'hidden-style';
-    s.textContent = '.hidden{display:none!important;}';
-    document.head.appendChild(s);
-  }
-
-  // Load first division
-  loadDivStandings(id, season, 1, sc);
-
-  // For legacy multi-division seasons, load combined constructors immediately
-  if(parseFloat(season) <= LEGACY_MAX_SEASON && divisions > 1){
-    loadCombinedConstructors(season, divisions, sc, `season-${String(season).replace('.','_')}-combined`);
-  }
+  // Update meta badge
+  document.getElementById(id+'-meta').innerHTML = '<span class="season-badge">1 Division</span>';
 }
 
-async function switchDiv(id, season, div, totalDivs){
-  // Update tabs
-  for(let d=1;d<=totalDivs;d++){
-    const tab = document.getElementById(`${id}-dtab-${d}`);
-    const content = document.getElementById(`${id}-dcontent-${d}`);
-    if(tab) tab.classList.toggle('active', d===div);
-    if(content) content.classList.toggle('hidden', d!==div);
-  }
-  // Load if not already loaded
-  const sc = seasonConfigCache[season];
-  if(sc) loadDivStandings(id, season, div, sc);
-}
-
-const LEGACY_MAX_SEASON = 13;
-
-async function loadDivStandings(id, season, div, sc){
-  const cacheKey = `${season}-d${div}`;
-  const contentEl = document.getElementById(`${id}-dcontent-${div}`);
-  if(!contentEl) return;
-
-  if(divCache[cacheKey]){
-    contentEl.innerHTML = divCache[cacheKey];
-    return;
-  }
-
-  const sheetId = sc[`d${div}_sheet_id`];
-  const driverGid = sc[`d${div}_driver_results_gid`];
-  const constructorsGid = sc[`d${div}_constructors_gid`];
-
-  if(!sheetId || driverGid === undefined || driverGid === null || driverGid === ''){
-    const html = '<div class="div-loading">No standings data available.</div>';
-    divCache[cacheKey] = html;
-    contentEl.innerHTML = html;
-    return;
-  }
-
-  try {
-    const isLegacy = parseFloat(season) <= LEGACY_MAX_SEASON;
-    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${driverGid}`;
-    const res = await fetch(url);
-    const text = await res.text();
-    if(text.includes('<!DOCTYPE')) throw new Error('Sheet not published');
-    const rows = parseCSV(text);
-
-    let html = '';
-    if(isLegacy){
-      html = buildLegacyContent(rows, season);
-      // Fetch this division's constructors
-      if(constructorsGid){
-        try{
-          const curl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${constructorsGid}`;
-          const cres = await fetch(curl);
-          const ctext = await cres.text();
-          if(!ctext.includes('<!DOCTYPE')){
-            const crows = parseCSV(ctext);
-            html += buildLegacyConstructors(crows, `Division ${div} Constructors`);
-          }
-        }catch(e){}
-      }
-
-    } else {
-      html = buildStandingsTable(rows);
-    }
-
-    divCache[cacheKey] = html;
-    contentEl.innerHTML = html;
-  } catch(e) {
-    const html = `<div class="div-loading">Could not load standings: ${e.message}</div>`;
-    divCache[cacheKey] = html;
-    contentEl.innerHTML = html;
-  }
-}
-
-function buildLegacyContent(rows, season){
-  // Filter out #REF! rows and empty rows
-  const cleanRows = rows.filter(r => {
-    const hasRef = r.some(v => (v||'').trim().startsWith('#'));
-    const hasData = r.some(v => (v||'').trim());
-    return hasData && !hasRef;
-  });
-
-  if(!cleanRows.length) return '<div class="div-loading">No data available.</div>';
-
-  // S1-S2: simple list format (Driver, Team, Races Won, Podiums, Points)
-  const firstDataRow = cleanRows[0];
-  const isSimple = (firstDataRow[1]||'').trim().toLowerCase() === 'driver';
-
-  if(isSimple) return buildSimpleStandings(cleanRows);
-
-  // S3-S13: race grid format
-  // Row 0: round numbers (blank, blank, blank, blank, 1, 2, 3...)
-  // Row 1: circuit codes
-  // Row 2: headers (blank, Pos., Driver, Team, r1, r2..., Pole, Points)
-  // Data rows: (blank, pos, driver, team, r1result, r2result..., pole, points)
-
-  let roundRow = null, circuitRow = null, headerRow = null, dataStart = -1;
-
-  for(let i = 0; i < cleanRows.length; i++){
-    const r = cleanRows[i];
-    // Round number row: col 4+ has numeric values
-    if(!roundRow && (r[4]||'').trim() === '1') { roundRow = r; continue; }
-    // Circuit row: col 4+ has 3-letter codes
-    if(roundRow && !circuitRow && (r[4]||'').trim().length <= 4 && isNaN(parseInt(r[4]||''))) { circuitRow = r; continue; }
-    // Header row: has 'Pos.' or 'Pos'
-    if(circuitRow && !headerRow && (r[1]||'').trim().toLowerCase().startsWith('pos')) { headerRow = r; dataStart = i+1; break; }
-  }
-
-  if(!headerRow || dataStart < 0) return buildSimpleStandings(cleanRows);
-
-  // Find round columns: from col 4 up to first non-round col
-  // Points col: find 'Points' in header row
-  let pointsCol = -1;
-  for(let c = 4; c < headerRow.length; c++){
-    if((headerRow[c]||'').trim().toLowerCase() === 'points'){ pointsCol = c; break; }
-  }
-  // If no Points header, find it by looking for largest numeric value in first data row
-  // Or default to col 25
-  if(pointsCol < 0) pointsCol = 25;
-
-  // Number of rounds = pointsCol - 4 (cols 4 through pointsCol-2 are rounds, col pointsCol-1 is Pole)
-  const numRounds = pointsCol - 4 - 1; // -1 for Pole col before Points
-
-  // Get circuit codes
-  const circuits = circuitRow ? circuitRow.slice(4, 4 + numRounds) : [];
-
-  // Build standings table with round columns
-  let html = '<div class="results-outer"><table class="results-table">';
-
-  // Header
-  html += '<thead><tr>';
-  html += '<th style="text-align:left;padding:5px 8px;">Pos</th>';
-  html += '<th class="th-driver">Driver</th>';
-  html += '<th class="th-driver">Team</th>';
-  circuits.forEach((c,i) => {
-    html += `<th>${(c||'').trim() || (i+1)}</th>`;
-  });
-  html += '<th>Pts</th>';
-  html += '</tr></thead><tbody>';
-
-  // Collect data rows and sort by points descending
-  const driverRows = [];
-  for(let i = dataStart; i < cleanRows.length; i++){
-    const row = cleanRows[i];
-    const p = (row[1]||'').trim();
-    if(!p || isNaN(parseInt(p))) continue;
-    if(!(row[2]||'').trim()) continue;
-    const pts = pointsCol < row.length ? parseFloat((row[pointsCol]||'').trim()) || 0 : 0;
-    driverRows.push({row, pts});
-  }
-  driverRows.sort((a,b) => b.pts - a.pts);
-
-  // Data rows
-  let count = 0;
-  for(let i = 0; i < driverRows.length; i++){
-    const row = driverRows[i].row;
-    const pos = String(i + 1);
-    const driver = (row[2]||'').trim();
-    const team = (row[3]||'').trim();
-
-    const posClass = pos==='1'?'pos-1':pos==='2'?'pos-2':pos==='3'?'pos-3':'';
-    const rowClass = pos==='1'?' class="row-p1"':pos==='2'?' class="row-p2"':pos==='3'?' class="row-p3"':'';
-    html += `<tr${rowClass}><td class="td-pos"><span class="pos-num ${posClass}">${pos}</span></td>`;
-    html += `<td class="td-driver">${driver}</td>`;
-    html += `<td class="td-team">${team||'&mdash;'}</td>`;
-
-    for(let r = 0; r < numRounds; r++){
-      const val = (row[4 + r]||'').trim();
-      if(!val){
-        html += '<td style="color:var(--text-faint);">&mdash;</td>';
-      } else if(val === 'DNF'){
-        html += `<td class="td-dnf">DNF</td>`;
-      } else if(val === 'DSQ'){
-        html += `<td class="td-dsq">DSQ</td>`;
-      } else {
-        html += `<td>${val}</td>`;
-      }
-    }
-
-    const pts = pointsCol < row.length ? (row[pointsCol]||'').trim() : '';
-    html += `<td class="td-pts">${pts||'0'}</td>`;
-    html += '</tr>';
-    count++;
-
-  }
-
-  html += '</tbody></table></div>';
-  if(!count) return '<div class="div-loading">No driver data found.</div>';
-  return html;
-}
-
-function buildSimpleStandings(rows){
-  // S1-S2 format: Driver, Team, Races Won, Podiums, Overall Points
+function buildS1S2Drivers(rows){
   // Find header row
-  let dataStart = -1;
-  for(let i = 0; i < rows.length; i++){
-    if((rows[i][1]||'').trim().toLowerCase() === 'driver'){ dataStart = i+1; break; }
+  let start = -1;
+  for(let i=0;i<rows.length;i++){
+    if((rows[i][1]||'').trim().toLowerCase()==='driver'){ start=i+1; break; }
   }
-  if(dataStart < 0) return '<div class="div-loading">No data found.</div>';
+  if(start<0) return '<div class="div-loading">No driver data.</div>';
 
-  let html = `<table class="standings-table"><thead><tr>
-    <th>Pos</th><th>Driver</th><th>Team</th><th>W</th><th>Pod</th><th>Pts</th>
-  </tr></thead><tbody>`;
+  let html = '<div class="section-label">Drivers</div><div class="st-wrap"><table class="st">';
+  html += '<thead><tr><th class="th-l" style="width:30px">Pos</th><th class="th-l">Driver</th><th class="th-l">Team</th><th>Wins</th><th>Podiums</th><th>Points</th></tr></thead><tbody>';
 
-  let count = 0;
-  for(let i = dataStart; i < rows.length; i++){
+  let pos = 1;
+  for(let i=start;i<rows.length;i++){
     const row = rows[i];
     const driver = (row[1]||'').trim();
     if(!driver) continue;
     const team = (row[2]||'').trim();
     const wins = (row[3]||'').trim();
     const pods = (row[4]||'').trim();
-    const pts = (row[5]||'').trim();
-    const pos = count + 1;
-    const posClass = pos===1?'pos-1':pos===2?'pos-2':pos===3?'pos-3':'';
-    html += `<tr>
-      <td><span class="pos-num ${posClass}">${pos}</span></td>
-      <td><span class="driver-name">${driver}</span></td>
-      <td><span class="team-name">${team||'&mdash;'}</span></td>
-      <td>${wins||'&mdash;'}</td>
-      <td>${pods||'&mdash;'}</td>
-      <td><span class="points">${pts||'&mdash;'}</span></td>
-    </tr>`;
-    count++;
+    const pts  = (row[5]||'').trim();
+    const pc = posClass(pos);
+    html += '<tr'+trClass(pos)+'>'+
+      '<td><span class="pos'+( pc?' '+pc:'')+'">'+(pos)+'</span></td>'+
+      '<td class="td-l"><span class="dname">'+driver+'</span></td>'+
+      '<td class="td-l"><span class="tname">'+( team||'&mdash;')+'</span></td>'+
+      '<td><span class="rr-val">'+( wins||'&mdash;')+'</span></td>'+
+      '<td><span class="rr-val">'+( pods||'&mdash;')+'</span></td>'+
+      '<td><span class="pts">'+( pts||'&mdash;')+'</span></td>'+
+      '</tr>';
+    pos++;
   }
-
-  html += '</tbody></table>';
-  return count ? html : '<div class="div-loading">No driver data found.</div>';
-}
-
-function buildLegacyConstructors(rows, label){
-  // Two formats:
-  // S3: Team, Races Won, Podiums, Overall Points (no position col)
-  // S4+: Position, Team, Points
-  const cleanRows = rows.filter(r => r.some(v => (v||'').trim()) && !r.some(v => (v||'').trim().startsWith('#')));
-  if(!cleanRows.length) return '';
-
-  // Find header row
-  let dataStart = -1, hasPos = false;
-  for(let i = 0; i < cleanRows.length; i++){
-    const r = cleanRows[i];
-    const vals = r.map(v => (v||'').trim().toLowerCase());
-    if(vals.includes('team')){ dataStart = i+1; hasPos = vals.includes('position') || vals.includes('pos'); break; }
-  }
-  if(dataStart < 0) return '';
-
-  let html = `<div class="section-subhead">${label||'Constructors'}</div>`;
-  html += `<table class="standings-table"><thead><tr>
-    <th>Pos</th><th>Team</th><th>Points</th>
-  </tr></thead><tbody>`;
-
-  let count = 0;
-  for(let i = dataStart; i < cleanRows.length; i++){
-    const row = cleanRows[i];
-    let pos, team, pts;
-    if(hasPos){
-      pos = (row[1]||'').trim();
-      team = (row[2]||'').trim();
-      pts = (row[3]||'').trim();
-    } else {
-      pos = String(count + 1);
-      team = (row[1]||'').trim();
-      // Find points — last non-empty numeric col
-      pts = '';
-      for(let c = row.length-1; c >= 2; c--){
-        const v = (row[c]||'').trim();
-        if(v && !isNaN(parseFloat(v))){ pts = v; break; }
-      }
-    }
-    if(!team) continue;
-    const posClass = pos==='1'?'pos-1':pos==='2'?'pos-2':pos==='3'?'pos-3':'';
-    html += `<tr>
-      <td><span class="pos-num ${posClass}">${pos}</span></td>
-      <td><span class="driver-name">${team}</span></td>
-      <td><span class="points">${pts||'&mdash;'}</span></td>
-    </tr>`;
-    count++;
-  }
-
-  html += '</tbody></table>';
-  return count ? html : '';
-}
-
-async function loadCombinedConstructors(season, totalDivs, sc, elId){
-  const el = document.getElementById(elId);
-  if(!el) return;
-  const cacheKey = `combined-${season}`;
-  if(divCache[cacheKey]){ el.innerHTML = divCache[cacheKey]; return; }
-
-  const allConstRows = [];
-  for(let d = 1; d <= totalDivs; d++){
-    const cgid = sc[`d${d}_constructors_gid`];
-    const csid = sc[`d${d}_sheet_id`];
-    if(!cgid || !csid) continue;
-    try{
-      const curl = `https://docs.google.com/spreadsheets/d/${csid}/export?format=csv&gid=${cgid}`;
-      const cres = await fetch(curl);
-      const ctext = await cres.text();
-      if(!ctext.includes('<!DOCTYPE')) allConstRows.push(parseCSV(ctext));
-    }catch(e){}
-  }
-
-  const html = allConstRows.length > 1 ? buildCombinedConstructors(allConstRows) : '';
-  divCache[cacheKey] = html;
-  el.innerHTML = html;
-}
-
-function buildCombinedConstructors(allConstRows){
-  // Merge points from multiple division constructors tables into one
-  const totals = {};
-
-  allConstRows.forEach(rows => {
-    const cleanRows = rows.filter(r => r.some(v => (v||'').trim()) && !r.some(v => (v||'').trim().startsWith('#')));
-    let dataStart = -1, hasPos = false;
-    for(let i = 0; i < cleanRows.length; i++){
-      const vals = cleanRows[i].map(v => (v||'').trim().toLowerCase());
-      if(vals.includes('team')){ dataStart = i+1; hasPos = vals.includes('position') || vals.includes('pos'); break; }
-    }
-    if(dataStart < 0) return;
-    for(let i = dataStart; i < cleanRows.length; i++){
-      const row = cleanRows[i];
-      let team, pts;
-      if(hasPos){
-        team = (row[2]||'').trim();
-        pts = parseFloat((row[3]||'').trim()) || 0;
-      } else {
-        team = (row[1]||'').trim();
-        pts = 0;
-        for(let c = row.length-1; c >= 2; c--){
-          const v = (row[c]||'').trim();
-          if(v && !isNaN(parseFloat(v))){ pts = parseFloat(v); break; }
-        }
-      }
-      if(!team) continue;
-      const key = team.toLowerCase().trim();
-      if(!totals[key]) totals[key] = {team, pts: 0};
-      totals[key].pts += pts;
-    }
-  });
-
-  const sorted = Object.values(totals).sort((a,b) => b.pts - a.pts);
-  if(!sorted.length) return '';
-
-  let html = '<div class="section-subhead">Overall Constructors</div>';
-  html += `<table class="standings-table"><thead><tr>
-    <th>Pos</th><th>Team</th><th>Points</th>
-  </tr></thead><tbody>`;
-
-  sorted.forEach((entry, idx) => {
-    const pos = idx + 1;
-    const posClass = pos===1?'pos-1':pos===2?'pos-2':pos===3?'pos-3':'';
-    html += `<tr>
-      <td><span class="pos-num ${posClass}">${pos}</span></td>
-      <td><span class="driver-name">${entry.team}</span></td>
-      <td><span class="points">${entry.pts}</span></td>
-    </tr>`;
-  });
-
-  html += '</tbody></table>';
+  html += '</tbody></table></div>';
   return html;
 }
 
-function buildStandingsTable(rows){
-  // Find header row - scan for 'Pos' or 'Driver'
-  let dataStart = 0;
+function buildS1S2Constructors(rows){
+  let start = -1;
   for(let i=0;i<rows.length;i++){
-    const r=rows[i];
-    for(let j=0;j<r.length;j++){
-      if((r[j]||'').trim().toLowerCase()==='pos'){ dataStart=i+1; break; }
-    }
-    if(dataStart) break;
+    if((rows[i][1]||'').trim().toLowerCase()==='team'){ start=i+1; break; }
   }
-  if(!dataStart) return '<div class="div-loading">Could not parse standings.</div>';
+  if(start<0) return '';
 
-  let html = `<table class="standings-table">
-    <thead><tr><th>Pos</th><th>Driver</th><th>Team</th><th>Points</th></tr></thead><tbody>`;
+  let html = '<div class="section-label">Constructors</div><div class="st-wrap"><table class="st">';
+  html += '<thead><tr><th class="th-l" style="width:30px">Pos</th><th class="th-l">Team</th><th>Wins</th><th>Podiums</th><th>Points</th></tr></thead><tbody>';
 
-  let count = 0;
-  for(let i=dataStart;i<rows.length;i++){
-    const row=rows[i];
-    // Find pos col
-    const pos=(row[0]||'').trim();
-    if(!pos||isNaN(parseInt(pos))) continue;
-    // Driver Results tab: Pos=0, Nat=1, Driver=2, Team=3, then race cols, Points near end
-    const driver=(row[2]||'').trim();
-    const team=(row[3]||'').trim();
-    if(!driver) continue;
-
-    // Points - find last non-empty numeric value that looks like points
-    let pts='';
-    // Scan backwards for Points col - it should be after all the race cols
-    for(let j=row.length-1;j>5;j--){
-      const v=(row[j]||'').trim();
-      if(v&&!isNaN(parseFloat(v))&&parseFloat(v)>=0){
-        // Check it's not a tiebreaker (no decimal)
-        if(!v.includes('.')){pts=v;break;}
-        // Allow if it's a whole number stored as float
-        if(parseFloat(v)===Math.floor(parseFloat(v))){pts=String(Math.floor(parseFloat(v)));break;}
-      }
-    }
-
-    const posClass = pos==='1'?'pos-1':pos==='2'?'pos-2':pos==='3'?'pos-3':'';
-    html+=`<tr>
-      <td><span class="pos-num ${posClass}">${pos}</span></td>
-      <td><span class="driver-name">${driver}</span></td>
-      <td><span class="team-name">${team}</span></td>
-      <td><span class="points">${pts||'0'}</span></td>
-    </tr>`;
-    count++;
-    if(count>30) break; // safety limit
+  let pos = 1;
+  for(let i=start;i<rows.length;i++){
+    const row = rows[i];
+    const team = (row[1]||'').trim();
+    if(!team) continue;
+    const wins = (row[2]||'').trim();
+    const pods = (row[3]||'').trim();
+    const pts  = (row[4]||'').trim();
+    const pc = posClass(pos);
+    html += '<tr'+trClass(pos)+'>'+
+      '<td><span class="pos'+( pc?' '+pc:'')+'">'+(pos)+'</span></td>'+
+      '<td class="td-l"><span class="dname">'+team+'</span></td>'+
+      '<td><span class="rr-val">'+( wins||'&mdash;')+'</span></td>'+
+      '<td><span class="rr-val">'+( pods||'&mdash;')+'</span></td>'+
+      '<td><span class="pts">'+( pts||'&mdash;')+'</span></td>'+
+      '</tr>';
+    pos++;
   }
-
-  if(!count) return '<div class="div-loading">No standings data found.</div>';
-  return html + '</tbody></table>';
+  html += '</tbody></table></div>';
+  return html;
 }
 
-function toggleMenu(){
-  document.getElementById('mobile-menu').classList.toggle('open');
-  document.getElementById('hamburger').classList.toggle('open');
+// ============================================================
+// INIT
+// ============================================================
+async function init(){
+  const seasonObjs = await getAllSeasons();
+  const currentSeason = await getCurrentSeason();
+  const past = seasonObjs.filter(s => s.season !== currentSeason);
+
+  if(!past.length){
+    document.getElementById('content').innerHTML = '<div class="loading-msg">No past seasons available.</div>';
+    return;
+  }
+
+  document.getElementById('page-meta').textContent = past.length+' seasons in the archive';
+
+  let html = '';
+  for(const obj of past){
+    // Disclaimer between S13 and S12
+    if(obj.season === 12){
+      html += '<div class="disclaimer"><div class="disclaimer-title">Please Note</div>'+
+        '<div class="disclaimer-text">Information for older seasons is difficult to obtain, and as such the information provided may be incomplete. If there is a final score table in place we know that that is the correct final outcome, but be aware that the results table will not show the scores as we have no information regarding penalties that may have been applied after the race. Whilst attendance, wins etc is recorded on the Total Stats records, this is subject to change as more information becomes available. If a season is incomplete in its results and no final score table is available then no individual or constructors winner will be determined.</div></div>';
+    }
+    html += buildSeasonCard(obj.season);
+  }
+  document.getElementById('content').innerHTML = html;
 }
 
 init();
