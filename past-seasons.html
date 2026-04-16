@@ -293,7 +293,7 @@ async function loadSeason(id, season, body){
   if(!sc){ body.innerHTML='<div class="div-loading" style="padding:16px 20px;">No config data for this season.</div>'; return; }
   const s = parseFloat(season);
   if(s<=2) await renderS1S2(id, season, sc, body);
-  else if(s===3) await renderS3(id, season, sc, body);
+  else if(s>=3 && s<=5) await renderS3to5(id, season, sc, body);
   else body.innerHTML = '<div class="div-loading" style="padding:16px 20px;">Parser for Season '+season+' not yet built.</div>';
 }
 
@@ -399,11 +399,11 @@ function buildS1S2Constructors(rows){
 
 
 // ============================================================
-// S3 PARSER
-// 2 divisions, 20 rounds, no sprint races
-// D1 has constructors, D2 does not, no overall combined
+// S3-S5 PARSER
+// S3: 2 divisions, S4: 2 divisions (F1/F2), S5: 3 divisions
+// All share identical data format
 // ============================================================
-async function renderS3(id, season, sc, body){
+async function renderS3to5(id, season, sc, body){
   const divisions = parseInt(sc['divisions'])||1;
 
   // Build division tabs
@@ -444,7 +444,7 @@ async function renderS3(id, season, sc, body){
   }
 
   body.innerHTML = tabsHtml + contentHtml;
-  document.getElementById(id+'-meta').innerHTML = '<span class="season-badge">'+divisions+' Division'+(divisions>1?'s':'')+'</span><span class="season-badge">20 Rounds</span>';
+  document.getElementById(id+'-meta').innerHTML = '<span class="season-badge">'+divisions+' Division'+(divisions>1?'s':'')+'</span>';
 }
 
 function buildRaceGridDrivers(rows){
