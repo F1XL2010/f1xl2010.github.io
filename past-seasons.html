@@ -90,13 +90,26 @@
   .st tr.p1:hover td{background:rgba(232,184,75,0.13);}
   .st tr.p2:hover td{background:rgba(192,192,192,0.08);}
   .st tr.p3:hover td{background:rgba(180,115,60,0.10);}
-  .pos-cell{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:4px;font-family:"Barlow Condensed",sans-serif;font-size:14px;font-weight:700;margin:0 auto;}
+  .pos-cell{display:inline-flex;align-items:center;justify-content:center;width:28px;height:22px;border-radius:3px;font-family:"Barlow Condensed",sans-serif;font-size:12px;font-weight:700;}
   .pos-cell.p1{background:#E8B84B;color:#111816;}
   .pos-cell.p2{background:#C0C0C0;color:#111816;}
   .pos-cell.p3{background:#CD7F32;color:#111816;}
   .pos-cell.pp{background:#3DCC47;color:#111816;}
-  .pos-cell.pout{background:#e05c8a;color:#111816;}
-  .pos-cell.pdnf{background:#111816;color:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.15);}
+  .pos-cell.pout{background:rgba(180,60,100,0.35);color:rgba(255,180,200,0.9);}
+  .pos-cell.pdnf{background:#0d1412;color:rgba(255,255,255,0.45);border:1px solid rgba(255,255,255,0.12);}
+  .st-pos{font-family:"Barlow Condensed",sans-serif;font-size:15px;font-weight:700;color:rgba(255,255,255,0.3);}
+  .st th.sticky{position:sticky;left:0;z-index:2;background:#1e2a27;}
+  .st td.sticky{position:sticky;left:0;z-index:1;background:#1a2320;}
+  .st tr.p1 td.sticky{background:#1e2b1a;}
+  .st tr.p2 td.sticky{background:#1d2320;}
+  .st tr.p3 td.sticky{background:#1e2119;}
+  .st tbody tr:hover td.sticky{background:#202e29;}
+  .st th.sticky2{position:sticky;left:44px;z-index:2;background:#1e2a27;}
+  .st td.sticky2{position:sticky;left:44px;z-index:1;background:#1a2320;}
+  .st tr.p1 td.sticky2{background:#1e2b1a;}
+  .st tr.p2 td.sticky2{background:#1d2320;}
+  .st tr.p3 td.sticky2{background:#1e2119;}
+  .st tbody tr:hover td.sticky2{background:#202e29;}
   .dname{font-size:13px;color:#fff;font-weight:500;letter-spacing:0.2px;}
   .tname{font-size:11px;color:rgba(255,255,255,0.35);margin-top:1px;}
   .pts{font-family:"Barlow Condensed",sans-serif;font-size:15px;font-weight:700;color:var(--green);}
@@ -478,9 +491,8 @@ function buildRaceGridDrivers(rows){
   let html = '<div class="section-label">Drivers</div><div class="st-wrap"><table class="st">';
   // Headers
   html += '<thead><tr>';
-  html += '<th class="th-l" style="width:30px">Pos</th>';
-  html += '<th class="th-l">Driver</th>';
-  html += '<th class="th-l">Team</th>';
+  html += '<th class="th-l sticky" style="width:36px">Pos</th>';
+  html += '<th class="th-l sticky2">Driver</th>';
   circuits.forEach(c=>{ html += '<th>'+(c||'?')+'</th>'; });
   html += '<th>Pts</th>';
   html += '</tr></thead><tbody>';
@@ -493,16 +505,18 @@ function buildRaceGridDrivers(rows){
     const pts=(r[ptsCol]||'').trim();
     const pc=posClass(pos);
     html += '<tr'+trClass(pos)+'>';
-    html += '<td><div class="pos-cell '+pc+'">'+pos+'</div></td>';
-    html += '<td class="td-l"><span class="dname">'+driver+'</span></td>';
-    html += '<td class="td-l"><span class="tname">'+(team||'&mdash;')+'</span></td>';
+    html += '<td class="sticky"><span class="st-pos">'+pos+'</span></td>';
+    html += '<td class="td-l sticky2"><span class="dname">'+driver+'</span><br><span class="tname">'+(team||'&mdash;')+'</span></td>';
     for(let c=0;c<numRounds;c++){
       const val=(r[4+c]||'').trim();
       if(!val) html += '<td class="rr-blank">&mdash;</td>';
-      else if(val==='DNF') html += '<td><div class="pos-cell pdnf" style="font-size:10px;width:32px;">DNF</div></td>';
-      else if(val==='DSQ') html += '<td><div class="pos-cell pdnf" style="font-size:10px;width:32px;">DSQ</div></td>';
-      else if(val==='1') html += '<td><div class="pos-cell p1" style="font-size:12px;">1</div></td>';
-      else html += '<td class="rr-val">'+val+'</td>';
+      else if(val==='DNF') html += '<td><span class="pos-cell pdnf" style="width:34px;font-size:10px;">DNF</span></td>';
+      else if(val==='DSQ') html += '<td><span class="pos-cell pdnf" style="width:34px;font-size:10px;">DSQ</span></td>';
+      else{
+        const n=parseInt(val);
+        const rc=n===1?'p1':n===2?'p2':n===3?'p3':n<=10?'pp':isNaN(n)?'':'pout';
+        html += '<td><span class="pos-cell '+rc+'">'+val+'</span></td>';
+      }
     }
     html += '<td><span class="pts">'+(pts||'&mdash;')+'</span></td>';
     html += '</tr>';
