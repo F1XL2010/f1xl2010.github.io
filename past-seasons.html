@@ -272,6 +272,7 @@ async function loadSeason(id, season, body){
   if(!sc){ body.innerHTML='<div class="div-loading" style="padding:16px 20px;">No config data for this season.</div>'; return; }
   const s = parseFloat(season);
   if(s<=2) await renderS1S2(id, season, sc, body);
+  else if(s===3) await renderS3(id, season, sc, body);
   else body.innerHTML = '<div class="div-loading" style="padding:16px 20px;">Parser for Season '+season+' not yet built.</div>';
 }
 
@@ -371,6 +372,149 @@ function buildS1S2Constructors(rows){
       '</tr>';
     pos++;
   }
+  html += '</tbody></table></div>';
+  return html;
+}
+
+
+// ============================================================
+// S3 PARSER
+// 1 division, 20 rounds, no sprint races
+// Drivers: Pos, Driver, Team, R1-R20 finish positions, Points
+// Constructors: Team, Races Won, Podiums, Overall Points
+// ============================================================
+async function renderS3(id, season, sc, body){
+  const sheetId = sc['d1_sheet_id'];
+  const dGid = sc['d1_driver_results_gid'];
+  const cGid = sc['d1_constructors_gid'];
+  let html = '';
+
+  try{
+    const rows = await fetchCSV(sheetId, dGid===''||dGid===undefined?'0':dGid);
+    html += buildRaceGridDrivers(rows);
+  }catch(e){ html += '<div class="div-loading">Could not load drivers: '+e.message+'</div>'; }
+
+  if(cGid!==undefined && cGid!==''){
+    try{
+      const rows = await fetchCSV(sheetId, cGid);
+      html += buildS3Constructors(rows);
+    }catch(e){}
+  }
+
+  body.innerHTML = '<div class="div-content">'+html+'</div>';
+  document.getElementById(id+'-meta').innerHTML = '<span class="season-badge">1 Division</span><span class="season-badge">20 Rounds</span>';
+}
+
+function buildRaceGridDrivers(rows){
+  // Row 0: round numbers (col 4+)
+  // Row 1: circuit codes (col 4+)
+  // Row 2: headers — Pos., Driver, Team, then race cols, then Pole, Points
+  // Data rows: col1=pos, col2=driver, col3=team, col4+= race results, pointsCol=25
+
+  // Find the three header rows
+  let roundRow=null, circuitRow=null, headerRow=null, dataStart=-1;
+  for(let i=0;i<rows.length;i++){
+    const r=rows[i];
+    if(!roundRow && (r[4]||'').trim()==='1'){ roundRow=r; continue; }
+    if(roundRow && !circuitRow && (r[4]||'').trim().length>=2 && isNaN(parseInt(r[4]||''))){ circuitRow=r; continue; }
+    if(circuitRow && !headerRow && (r[1]||'').trim().toLowerCase().startsWith('pos')){ headerRow=r; dataStart=i+1; break; }
+  }
+  if(!headerRow) return '<div class="div-loading">Could not parse driver data.</div>';
+
+  // Find Points col — look for 'Points' or 'points' in header row
+  let ptsCol = -1;
+  for(let c=4;c<headerRow.length;c++){
+    if((headerRow[c]||'').trim().toLowerCase()==='points'){ ptsCol=c; break; }
+  }
+  if(ptsCol<0) ptsCol=25; // fallback
+
+  // Rounds are cols 4 through ptsCol-2 (ptsCol-1 is Pole)
+  const numRounds = ptsCol - 4 - 1;
+  const circuits = circuitRow ? circuitRow.slice(4, 4+numRounds).map(v=>v.trim()) : [];
+
+  // Collect data rows, sort by points desc
+  const dataRows = [];
+  for(let i=dataStart;i<rows.length;i++){
+    const r=rows[i];
+    const pos=(r[1]||'').trim();
+    if(!pos||isNaN(parseInt(pos))) continue;
+    const driver=(r[2]||'').trim();
+    if(!driver) continue;
+    const pts=parseFloat((r[ptsCol]||'').trim())||0;
+    dataRows.push({r, pts});
+  }
+  dataRows.sort((a,b)=>b.pts-a.pts);
+  if(!dataRows.length) return '<div class="div-loading">No driver data found.</div>';
+
+  let html = '<div class="section-label">Drivers</div><div class="st-wrap"><table class="st">';
+  // Headers
+  html += '<thead><tr>';
+  html += '<th class="th-l" style="width:30px">Pos</th>';
+  html += '<th class="th-l">Driver</th>';
+  html += '<th class="th-l">Team</th>';
+  circuits.forEach(c=>{ html += '<th>'+(c||'?')+'</th>'; });
+  html += '<th>Pts</th>';
+  html += '</tr></thead><tbody>';
+
+  dataRows.forEach((entry,idx)=>{
+    const r=entry.r;
+    const pos=idx+1;
+    const driver=(r[2]||'').trim();
+    const team=(r[3]||'').trim();
+    const pts=(r[ptsCol]||'').trim();
+    html += '<tr'+trClass(pos)+'>';
+    html += '<td><span class="pos'+(posClass(pos)?' '+posClass(pos):'')+'">'+pos+'</span></td>';
+    html += '<td class="td-l"><span class="dname">'+driver+'</span></td>';
+    html += '<td class="td-l"><span class="tname">'+(team||'&mdash;')+'</span></td>';
+    for(let c=0;c<numRounds;c++){
+      const val=(r[4+c]||'').trim();
+      if(!val) html += '<td class="rr-blank">&mdash;</td>';
+      else if(val==='DNF') html += '<td class="rr-dnf">DNF</td>';
+      else if(val==='DSQ') html += '<td class="rr-dsq">DSQ</td>';
+      else html += '<td class="rr-val">'+val+'</td>';
+    }
+    html += '<td><span class="pts">'+(pts||'&mdash;')+'</span></td>';
+    html += '</tr>';
+  });
+
+  html += '</tbody></table></div>';
+  return html;
+}
+
+function buildS3Constructors(rows){
+  // Format: Team, Races Won, Podiums, Overall Points (no position col)
+  let start=-1;
+  for(let i=0;i<rows.length;i++){
+    if((rows[i][1]||'').trim().toLowerCase()==='team'){ start=i+1; break; }
+  }
+  if(start<0) return '';
+
+  // Sort by points desc
+  const data=[];
+  for(let i=start;i<rows.length;i++){
+    const r=rows[i];
+    const team=(r[1]||'').trim();
+    if(!team) continue;
+    const wins=(r[2]||'').trim();
+    const pods=(r[3]||'').trim();
+    const pts=parseFloat((r[4]||'').trim())||0;
+    data.push({team,wins,pods,pts});
+  }
+  data.sort((a,b)=>b.pts-a.pts);
+  if(!data.length) return '';
+
+  let html = '<div class="section-label">Constructors</div><div class="st-wrap"><table class="st">';
+  html += '<thead><tr><th class="th-l" style="width:30px">Pos</th><th class="th-l">Team</th><th>Wins</th><th>Podiums</th><th>Points</th></tr></thead><tbody>';
+  data.forEach((d,idx)=>{
+    const pos=idx+1;
+    html += '<tr'+trClass(pos)+'>';
+    html += '<td><span class="pos'+(posClass(pos)?' '+posClass(pos):'')+'">'+pos+'</span></td>';
+    html += '<td class="td-l"><span class="dname">'+d.team+'</span></td>';
+    html += '<td><span class="rr-val">'+(d.wins||'&mdash;')+'</span></td>';
+    html += '<td><span class="rr-val">'+(d.pods||'&mdash;')+'</span></td>';
+    html += '<td><span class="pts">'+(d.pts||'&mdash;')+'</span></td>';
+    html += '</tr>';
+  });
   html += '</tbody></table></div>';
   return html;
 }
