@@ -379,30 +379,51 @@ function buildS1S2Constructors(rows){
 
 // ============================================================
 // S3 PARSER
-// 1 division, 20 rounds, no sprint races
-// Drivers: Pos, Driver, Team, R1-R20 finish positions, Points
-// Constructors: Team, Races Won, Podiums, Overall Points
+// 2 divisions, 20 rounds, no sprint races
+// D1 has constructors, D2 does not, no overall combined
 // ============================================================
 async function renderS3(id, season, sc, body){
-  const sheetId = sc['d1_sheet_id'];
-  const dGid = sc['d1_driver_results_gid'];
-  const cGid = sc['d1_constructors_gid'];
-  let html = '';
+  const divisions = parseInt(sc['divisions'])||1;
 
-  try{
-    const rows = await fetchCSV(sheetId, dGid===''||dGid===undefined?'0':dGid);
-    html += buildRaceGridDrivers(rows);
-  }catch(e){ html += '<div class="div-loading">Could not load drivers: '+e.message+'</div>'; }
-
-  if(cGid!==undefined && cGid!==''){
-    try{
-      const rows = await fetchCSV(sheetId, cGid);
-      html += buildS3Constructors(rows);
-    }catch(e){}
+  // Build division tabs
+  let tabsHtml = '';
+  if(divisions > 1){
+    tabsHtml = '<div class="div-tabs">';
+    for(let d=1;d<=divisions;d++){
+      tabsHtml += '<button class="div-tab'+(d===1?' active':'')+'" id="'+id+'-dtab-'+d+'" onclick="switchDiv(''+id+'','+d+','+divisions+')">Division '+d+'</button>';
+    }
+    tabsHtml += '</div>';
   }
 
-  body.innerHTML = '<div class="div-content">'+html+'</div>';
-  document.getElementById(id+'-meta').innerHTML = '<span class="season-badge">1 Division</span><span class="season-badge">20 Rounds</span>';
+  let contentHtml = '';
+  for(let d=1;d<=divisions;d++){
+    const sid = sc['d'+d+'_sheet_id'];
+    const dgid = sc['d'+d+'_driver_results_gid'];
+    const cgid = sc['d'+d+'_constructors_gid'];
+    let divHtml = '';
+
+    if(sid && (dgid!==undefined && dgid!=='')){
+      try{
+        const rows = await fetchCSV(sid, dgid);
+        divHtml += buildRaceGridDrivers(rows);
+      }catch(e){ divHtml += '<div class="div-loading">Could not load drivers: '+e.message+'</div>'; }
+    } else {
+      divHtml += '<div class="div-loading">No driver data available.</div>';
+    }
+
+    // Constructors only for D1 on S3
+    if(d===1 && cgid!==undefined && cgid!==''){
+      try{
+        const rows = await fetchCSV(sid, cgid);
+        divHtml += buildS3Constructors(rows);
+      }catch(e){}
+    }
+
+    contentHtml += '<div class="div-content'+(d===1?'':' hidden')+'" id="'+id+'-dcontent-'+d+'">'+divHtml+'</div>';
+  }
+
+  body.innerHTML = tabsHtml + contentHtml;
+  document.getElementById(id+'-meta').innerHTML = '<span class="season-badge">'+divisions+' Division'+(divisions>1?'s':'')+'</span><span class="season-badge">20 Rounds</span>';
 }
 
 function buildRaceGridDrivers(rows){
