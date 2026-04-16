@@ -270,6 +270,10 @@ function switchDiv(id, div, total){
 async function loadSeason(id, season, body){
   const sc = await loadSeasonConfig(season);
   if(!sc){ body.innerHTML='<div class="div-loading" style="padding:16px 20px;">No config data for this season.</div>'; return; }
+  // DEBUG - show raw config keys and values
+  const debugKeys = Object.keys(sc).filter(k=>k.includes('sheet_id')||k.includes('divisions'));
+  body.innerHTML = '<div style="padding:16px;font-size:11px;color:#5ECFCF;">CONFIG DEBUG: '+JSON.stringify(debugKeys.reduce((o,k)=>{o[k]=sc[k];return o;},{}))+'</div>';
+  await new Promise(r=>setTimeout(r,3000));
   const s = parseFloat(season);
   if(s<=2) await renderS1S2(id, season, sc, body);
   else if(s===3) await renderS3(id, season, sc, body);
