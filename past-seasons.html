@@ -437,9 +437,7 @@ async function renderS3to5(id, season, sc, body){
       try{
         const rows = await fetchCSV(sid, cgid);
         divHtml += buildS3Constructors(rows);
-      }catch(e){ divHtml += '<div class="div-loading">Constructors error: '+e.message+' (sid='+sid+' cgid='+cgid+')</div>'; }
-    } else {
-      divHtml += '<div class="div-loading">No constructors GID (cgid='+cgid+')</div>';
+      }catch(e){}
     }
 
     contentHtml += '<div class="div-content'+(d===1?'':' hidden')+'" id="'+id+'-dcontent-'+d+'">'+divHtml+'</div>';
@@ -529,10 +527,14 @@ function buildRaceGridDrivers(rows){
 }
 
 function buildS3Constructors(rows){
-  // Format: Team, Races Won, Podiums, Overall Points (no position col)
-  let start=-1;
+  // Handles two formats:
+  // S3: col1=Team, col2=Wins, col3=Podiums, col4=Points
+  // S4/S5: col1=Position, col2=Team, col3=Points (no wins/podiums)
+  let start=-1, teamCol=1, hasPos=false;
   for(let i=0;i<rows.length;i++){
-    if((rows[i][1]||'').trim().toLowerCase()==='team'){ start=i+1; break; }
+    const r=rows[i];
+    if((r[1]||'').trim().toLowerCase()==='team'){ start=i+1; teamCol=1; hasPos=false; break; }
+    if((r[2]||'').trim().toLowerCase()==='team'){ start=i+1; teamCol=2; hasPos=true; break; }
   }
   if(start<0) return '';
 
@@ -540,25 +542,37 @@ function buildS3Constructors(rows){
   const data=[];
   for(let i=start;i<rows.length;i++){
     const r=rows[i];
-    const team=(r[1]||'').trim();
+    const team=(r[teamCol]||'').trim();
     if(!team) continue;
-    const wins=(r[2]||'').trim();
-    const pods=(r[3]||'').trim();
-    const pts=parseFloat((r[4]||'').trim())||0;
-    data.push({team,wins,pods,pts});
+    let wins='', pods='', pts=0;
+    if(hasPos){
+      // S4/S5 format: Position, Team, Points
+      pts=parseFloat((r[teamCol+1]||'').trim())||0;
+    } else {
+      // S3 format: Team, Wins, Podiums, Points
+      wins=(r[2]||'').trim();
+      pods=(r[3]||'').trim();
+      pts=parseFloat((r[4]||'').trim())||0;
+    }
+    data.push({team,wins,pods,pts,hasPos});
   }
   data.sort((a,b)=>b.pts-a.pts);
   if(!data.length) return '';
 
+  const showWinsPods = data.length > 0 && !data[0].hasPos;
   let html = '<div class="section-label">Constructors</div><div class="st-wrap"><table class="st">';
-  html += '<thead><tr><th class="th-l" style="width:30px">Pos</th><th class="th-l">Team</th><th>Wins</th><th>Podiums</th><th>Points</th></tr></thead><tbody>';
+  html += '<thead><tr><th class="th-l" style="width:30px">Pos</th><th class="th-l">Team</th>';
+  if(showWinsPods) html += '<th>Wins</th><th>Podiums</th>';
+  html += '<th>Points</th></tr></thead><tbody>';
   data.forEach((d,idx)=>{
     const pos=idx+1;
     html += '<tr'+trClass(pos)+'>';
-    html += '<td><span class="pos'+(posClass(pos)?' '+posClass(pos):'')+'">'+pos+'</span></td>';
+    html += '<td><span class="st-pos">'+pos+'</span></td>';
     html += '<td class="td-l"><span class="dname">'+d.team+'</span></td>';
-    html += '<td><span class="rr-val">'+(d.wins||'&mdash;')+'</span></td>';
-    html += '<td><span class="rr-val">'+(d.pods||'&mdash;')+'</span></td>';
+    if(showWinsPods){
+      html += '<td><span class="rr-val">'+(d.wins||'&mdash;')+'</span></td>';
+      html += '<td><span class="rr-val">'+(d.pods||'&mdash;')+'</span></td>';
+    }
     html += '<td><span class="pts">'+(d.pts||'&mdash;')+'</span></td>';
     html += '</tr>';
   });
