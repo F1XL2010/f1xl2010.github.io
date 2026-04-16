@@ -77,7 +77,7 @@
   /* STANDINGS TABLE */
   .standings-table{width:100%;border-collapse:collapse;margin-bottom:16px;}
   .standings-table th{text-align:left;padding:6px 10px;font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-faint);border-bottom:1px solid var(--border2);background:var(--dark3);}
-  .standings-table td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.04);font-size:13px;color:var(--text-muted);vertical-align:middle;}
+  .standings-table td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.04);font-size:13px;color:rgba(255,255,255,0.8);vertical-align:middle;}
   .standings-table tr:last-child td{border-bottom:none;}
   .standings-table tr:hover td{background:rgba(255,255,255,0.02);}
   .pos-num{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:var(--text-faint);}
@@ -96,16 +96,19 @@
   /* RESULTS TABLE */
   .results-outer{overflow-x:auto;margin-bottom:16px;}
   .results-table{border-collapse:collapse;font-size:12px;min-width:100%;}
-  .results-table th{padding:5px 8px;font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-faint);border-bottom:1px solid var(--border2);background:var(--dark3);white-space:nowrap;text-align:center;}
+  .results-table th{padding:5px 8px;font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.5);border-bottom:1px solid var(--border2);background:var(--dark3);white-space:nowrap;text-align:center;}
   .results-table th.th-driver{text-align:left;}
-  .results-table td{padding:6px 8px;border-bottom:1px solid rgba(255,255,255,0.03);color:var(--text-muted);text-align:center;white-space:nowrap;}
-  .results-table td.td-pos{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;}
-  .results-table td.td-driver{text-align:left;color:var(--text);font-weight:500;}
-  .results-table td.td-team{text-align:left;font-size:11px;color:var(--text-faint);}
+  .results-table td{padding:6px 8px;border-bottom:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.75);text-align:center;white-space:nowrap;font-size:13px;}
+  .results-table td.td-pos{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--text);}
+  .results-table td.td-driver{text-align:left;color:#fff;font-weight:500;font-size:13px;}
+  .results-table td.td-team{text-align:left;font-size:11px;color:rgba(255,255,255,0.45);}
   .results-table td.td-pts{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--green);}
-  .results-table td.td-dnf{color:rgba(255,80,80,0.7);}
-  .results-table td.td-dsq{color:rgba(255,140,0,0.7);}
-  .results-table tr:hover td{background:rgba(255,255,255,0.02);}
+  .results-table td.td-dnf{color:rgba(255,80,80,0.8);font-weight:600;}
+  .results-table td.td-dsq{color:rgba(255,140,0,0.9);font-weight:600;}
+  .results-table tr:hover td{background:rgba(255,255,255,0.03);}
+  .results-table tr.row-p1 td{background:rgba(232,184,75,0.08);}
+  .results-table tr.row-p2 td{background:rgba(200,200,200,0.05);}
+  .results-table tr.row-p3 td{background:rgba(180,115,60,0.07);}
   .section-subhead{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--teal);padding:12px 0 6px;border-top:1px solid var(--border);margin-top:8px;}
   /* DISCLAIMER */
   .legacy-disclaimer{background:rgba(232,184,75,0.06);border:1px solid rgba(232,184,75,0.2);border-radius:6px;padding:14px 16px;margin-bottom:12px;}
@@ -397,7 +400,7 @@ async function loadDivStandings(id, season, div, sc){
   const driverGid = sc[`d${div}_driver_results_gid`];
   const constructorsGid = sc[`d${div}_constructors_gid`];
 
-  if(!sheetId || !driverGid){
+  if(!sheetId || driverGid === undefined || driverGid === null || driverGid === ''){
     const html = '<div class="div-loading">No standings data available.</div>';
     divCache[cacheKey] = html;
     contentEl.innerHTML = html;
@@ -528,7 +531,8 @@ function buildLegacyContent(rows, season){
     const team = (row[3]||'').trim();
 
     const posClass = pos==='1'?'pos-1':pos==='2'?'pos-2':pos==='3'?'pos-3':'';
-    html += `<tr><td class="td-pos"><span class="pos-num ${posClass}">${pos}</span></td>`;
+    const rowClass = pos==='1'?' class="row-p1"':pos==='2'?' class="row-p2"':pos==='3'?' class="row-p3"':'';
+    html += `<tr${rowClass}><td class="td-pos"><span class="pos-num ${posClass}">${pos}</span></td>`;
     html += `<td class="td-driver">${driver}</td>`;
     html += `<td class="td-team">${team||'&mdash;'}</td>`;
 
