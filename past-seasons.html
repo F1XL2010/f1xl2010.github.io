@@ -905,11 +905,20 @@ async function loadS20DivContent(id, d, sc){
 
 function buildS20Drivers(rows){
   // Row 0: circuit names (col 4+)
-  // Row 4: header — Pos, Nat, Driver, Team, R1, R2, R3(s)...Points
-  // Data rows from row 5
+  // Header row: contains 'Pos','Driver','Points' — find dynamically
+  // Data rows follow the header
+
+  // Find circuit row — first row with circuit names in col 4+
   const circuitRow = rows[0] || [];
-  const headerRow = rows[4] || [];
-  if(!headerRow.length) return '<div class="div-loading">Could not parse driver data.</div>';
+
+  // Find header row — look for row with 'Pos' in col 0
+  let headerIdx = -1;
+  for(let i=0;i<rows.length;i++){
+    if((rows[i][0]||'').trim().toLowerCase()==='pos'){ headerIdx=i; break; }
+  }
+  if(headerIdx<0) return '<div class="div-loading">Could not parse driver data.</div>';
+  const headerRow = rows[headerIdx];
+  const dataStart = headerIdx + 1;
 
   const ptsCol = headerRow.findIndex(v=>(v||'').trim().toLowerCase()==='points');
   if(ptsCol<0) return '<div class="div-loading">Could not find points column.</div>';
@@ -933,7 +942,7 @@ function buildS20Drivers(rows){
   }
 
   // Collect data rows
-  const dataRows = rows.slice(5).filter(r=>{
+  const dataRows = rows.slice(dataStart).filter(r=>{
     const pos = (r[0]||'').trim();
     return pos && !isNaN(parseInt(pos)) && (r[2]||'').trim();
   });
