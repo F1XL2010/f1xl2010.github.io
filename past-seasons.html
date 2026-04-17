@@ -45,6 +45,11 @@
   .s-btn{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:5px 14px;border-radius:4px;border:1px solid rgba(255,255,255,0.25);background:none;color:rgba(255,255,255,0.85);cursor:pointer;transition:all 0.15s;}
   .s-btn:hover{color:#fff;border-color:rgba(255,255,255,0.5);background:rgba(255,255,255,0.05);}
   .s-btn.active{background:rgba(61,204,71,0.15);border-color:var(--green);color:var(--green);}
+  .s-btn-wrap{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+  .s-select{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:6px 12px;border-radius:4px;border:1px solid rgba(255,255,255,0.25);background:var(--dark3);color:var(--text);cursor:pointer;width:100%;}
+  .s-select:focus{outline:none;border-color:var(--green);}
+  @media(max-width:860px){.s-btn-wrap{display:none;}.s-select-wrap{display:block;}}
+  @media(min-width:861px){.s-btn-wrap{display:flex;}.s-select-wrap{display:none;}}
   .content{padding:0 0 48px;}
   .loading-msg{text-align:center;padding:48px;color:var(--text-muted);font-size:14px;}
   .disclaimer{background:#2a2208;border:1px solid rgba(232,184,75,0.35);border-radius:6px;padding:14px 16px;margin:16px 24px;}
@@ -654,6 +659,8 @@ async function showSeason(season){
   document.querySelectorAll('.s-btn').forEach(b=>b.classList.remove('active'));
   const btn = document.getElementById('sbtn-'+String(season).replace('.','_'));
   if(btn) btn.classList.add('active');
+  const sel = document.getElementById('s-select');
+  if(sel) sel.value = String(season);
 
   const el = document.getElementById('season-content');
   el.innerHTML = '<div class="loading-msg">Loading Season '+season+'...</div>';
@@ -698,9 +705,16 @@ async function init(){
 
   document.getElementById('page-meta').textContent = seasonObjs.length+' seasons in the archive';
 
-  document.getElementById('season-bar').innerHTML = seasonObjs.map(obj=>
+  const btns = seasonObjs.map(obj=>
     '<button class="s-btn" onclick="showSeason('+obj.season+')" id="sbtn-'+String(obj.season).replace('.','_')+'">S'+obj.season+'</button>'
   ).join('');
+  const opts = seasonObjs.map(obj=>
+    '<option value="'+obj.season+'">Season '+obj.season+'</option>'
+  ).join('');
+
+  document.getElementById('season-bar').innerHTML =
+    '<div class="s-btn-wrap">'+btns+'</div>'+
+    '<div class="s-select-wrap"><select class="s-select" id="s-select" onchange="showSeason(this.value)">'+opts+'</select></div>';
 
   showSeason(seasonObjs[0].season);
 }
