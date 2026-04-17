@@ -290,6 +290,7 @@ async function loadSeason(id, season, body){
   if(s<=2) await renderS1S2(id, season, sc, body);
   else if(s>=3 && s<=9 || s===11 || s===12 || s===13 || s===14 || s===15 || s===16 || s===17 || s===18 || s===19) await renderS3to5(id, season, sc, body);
   else if(s===10) await renderS10(id, season, sc, body);
+  else if(s>=20) await renderS20plus(id, season, sc, body);
   else body.innerHTML = '<div class="div-loading" style="padding:16px 20px;">Parser for Season '+season+' not yet built.</div>';
 }
 
@@ -488,7 +489,9 @@ function switchDivTab(id, tabKey){
   if(anyContent.dataset.loaded === 'false'){
     const divNum = parseInt(tabKey);
     if(!isNaN(divNum) && _currentSeasonConfig){
-      loadDivContent(id, divNum, _currentSeasonConfig);
+      const s = parseFloat(_currentSeason||0);
+      if(s>=20) loadS20DivContent(id, divNum, _currentSeasonConfig);
+      else loadDivContent(id, divNum, _currentSeasonConfig);
     }
   }
 }
@@ -823,6 +826,338 @@ function buildDriverStats(rows){
   return html;
 }
 
+
+// ============================================================
+// S20+ PARSER
+// New format: col0=Pos, col1=Nat(#REF), col2=Driver, col3=Team
+// Circuit names in row 0, round labels in row 4 with (s) for sprints
+// Constructors: blank, Pos, blank, Team, Points
+// Driver stats: header at row 0, col 0=Driver
+// Team stats: col 0=Team, cols 1-6 = stats
+// ============================================================
+async function renderS20plus(id, season, sc, body){
+  const divisions = parseInt(sc['divisions'])||1;
+
+  // Build tabs
+  let tabsHtml = '<div class="div-tabs">';
+  let firstTab = true;
+  for(let d=1;d<=divisions;d++){
+    const active = firstTab ? ' active' : '';
+    tabsHtml += '<button class="div-tab'+active+'" id="'+id+'-dtab-'+d+'" onclick="switchDivTab(\''+id+'\',\''+d+'\')">Division '+d+'</button>';
+    firstTab = false;
+    const sgid = sc['d'+d+'_driver_stats_gid'];
+    if(sgid!==undefined && sgid!==''){
+      tabsHtml += '<button class="div-tab" id="'+id+'-dtab-'+d+'s" onclick="switchDivTab(\''+id+'\',\''+d+'s\')">D'+d+' Stats</button>';
+    }
+  }
+  tabsHtml += '</div>';
+
+  // Placeholders for lazy loading
+  let contentHtml = '';
+  for(let d=1;d<=divisions;d++){
+    const sgid = sc['d'+d+'_driver_stats_gid'];
+    const hidden = d===1 ? '' : ' hidden';
+    contentHtml += '<div class="div-content'+hidden+'" id="'+id+'-dcontent-'+d+'" data-loaded="false" data-div="'+d+'"><div class="div-loading">Loading...</div></div>';
+    if(sgid!==undefined && sgid!==''){
+      contentHtml += '<div class="div-content hidden" id="'+id+'-dcontent-'+d+'s" data-loaded="false"></div>';
+    }
+  }
+
+  body.innerHTML = tabsHtml + contentHtml;
+  document.getElementById(id+'-meta').innerHTML = '<span class="season-badge">'+divisions+' Division'+(divisions>1?'s':'')+'</span>';
+
+  await loadS20DivContent(id, 1, sc);
+}
+
+async function loadS20DivContent(id, d, sc){
+  const divEl = document.getElementById(id+'-dcontent-'+d);
+  if(!divEl || divEl.dataset.loaded === 'true') return;
+  divEl.dataset.loaded = 'true';
+
+  const sid = sc['d'+d+'_sheet_id'];
+  const dgid = sc['d'+d+'_driver_results_gid'];
+  const cgid = sc['d'+d+'_constructors_gid'];
+  const sgid = sc['d'+d+'_driver_stats_gid'];
+  const tgid = sc['d'+d+'_team_stats_gid'];
+
+  const [driverRows, constRows, statsRows, teamStatsRows] = await Promise.all([
+    (sid && dgid!==undefined && dgid!=='') ? fetchCSV(sid, dgid).catch(()=>null) : Promise.resolve(null),
+    (cgid!==undefined && cgid!=='') ? fetchCSV(sid, cgid).catch(()=>null) : Promise.resolve(null),
+    (sgid!==undefined && sgid!=='') ? fetchCSV(sid, sgid).catch(()=>null) : Promise.resolve(null),
+    (tgid!==undefined && tgid!=='') ? fetchCSV(sid, tgid).catch(()=>null) : Promise.resolve(null)
+  ]);
+
+  let divHtml = '';
+  if(driverRows) divHtml += buildS20Drivers(driverRows);
+  else divHtml += '<div class="div-loading">No driver data available.</div>';
+
+  // Constructors + Team Stats as sub-tabbed section
+  if(constRows || teamStatsRows){
+    divHtml += buildS20ConstructorsWithTeamStats(id, d, constRows, teamStatsRows);
+  }
+
+  divEl.innerHTML = divHtml;
+
+  // Driver stats tab
+  if(statsRows){
+    const statsEl = document.getElementById(id+'-dcontent-'+d+'s');
+    if(statsEl){
+      statsEl.innerHTML = buildS20DriverStats(statsRows);
+      statsEl.dataset.loaded = 'true';
+    }
+  }
+}
+
+function buildS20Drivers(rows){
+  // Row 0: circuit names (col 4+)
+  // Row 4: header — Pos, Nat, Driver, Team, R1, R2, R3(s)...Points
+  // Data rows from row 5
+  const circuitRow = rows[0] || [];
+  const headerRow = rows[4] || [];
+  if(!headerRow.length) return '<div class="div-loading">Could not parse driver data.</div>';
+
+  const ptsCol = headerRow.findIndex(v=>(v||'').trim().toLowerCase()==='points');
+  if(ptsCol<0) return '<div class="div-loading">Could not find points column.</div>';
+
+  // Build round labels — use circuit name from row 0 if available, else header label
+  const roundCols = [];
+  for(let c=4;c<ptsCol-1;c++){ // ptsCol-1 = Pole col
+    const label = (headerRow[c]||'').trim();
+    if(!label) continue;
+    const circuit = (circuitRow[c]||'').trim();
+    const isSprint = label.toLowerCase().includes('(s)');
+    roundCols.push({col:c, label: circuit || label, isSprint});
+  }
+
+  // Trim trailing rounds with no data
+  while(roundCols.length > 0){
+    const col = roundCols[roundCols.length-1].col;
+    const hasData = rows.slice(5).some(r=>r[col]&&r[col].trim()&&r[col].trim()!==' ');
+    if(hasData) break;
+    roundCols.pop();
+  }
+
+  // Collect data rows
+  const dataRows = rows.slice(5).filter(r=>{
+    const pos = (r[0]||'').trim();
+    return pos && !isNaN(parseInt(pos)) && (r[2]||'').trim();
+  });
+
+  if(!dataRows.length) return '<div class="div-loading">No driver data found.</div>';
+
+  const hasPointsData = dataRows.some(r=>parseFloat((r[ptsCol]||'').trim())>0);
+
+  let html = '<div class="section-label">Drivers</div><div class="st-wrap"><table class="st"><thead><tr>';
+  html += '<th class="th-l sticky" style="width:28px">Pos</th>';
+  html += '<th class="th-l sticky2">Driver</th>';
+  roundCols.forEach(rc=>{
+    html += '<th'+(rc.isSprint?' style="color:rgba(130,170,255,0.8)"':'')+'>'+(rc.label||'?')+'</th>';
+  });
+  if(hasPointsData) html += '<th>Pts</th>';
+  html += '</tr></thead><tbody>';
+
+  dataRows.forEach((r,idx)=>{
+    const pos = parseInt((r[0]||'').trim());
+    const driver = (r[2]||'').trim();
+    const team = (r[3]||'').trim();
+    const pts = (r[ptsCol]||'').trim();
+    html += '<tr'+trClass(pos)+'>';
+    html += '<td class="sticky"><span class="st-pos">'+pos+'</span></td>';
+    html += '<td class="td-l sticky2"><span class="dname">'+driver+'</span>'+(team?'<br><span class="tname">'+team+'</span>':'')+'</td>';
+    roundCols.forEach(rc=>{
+      const val = (r[rc.col]||'').trim().replace(/^ $/, '');
+      if(!val) html += '<td class="rr-blank">&mdash;</td>';
+      else if(val==='DNF'||val==='DNS'||val==='DSQ'||val==='BAN'){
+        html += '<td><span class="pos-cell pdnf" style="width:34px;font-size:10px;">'+val+'</span></td>';
+      } else {
+        const n=parseInt(val);
+        const rc2=n===1?'p1':n===2?'p2':n===3?'p3':n<=10?'pp':isNaN(n)?'':'pout';
+        html += '<td><span class="pos-cell '+rc2+'">'+val+'</span></td>';
+      }
+    });
+    if(hasPointsData) html += '<td><span class="pts">'+(pts||'&mdash;')+'</span></td>';
+    html += '</tr>';
+  });
+
+  html += '</tbody></table></div>';
+  return html;
+}
+
+function buildS20ConstructorsWithTeamStats(id, d, constRows, teamStatsRows){
+  const tabId = id+'-ctab-'+d;
+  let html = '<div class="section-label">Constructors</div>';
+
+  // Sub-tabs if team stats available
+  if(teamStatsRows){
+    html += '<div class="div-tabs" style="padding:0 0 0 0;margin-bottom:-1px;">';
+    html += '<button class="div-tab active" id="'+tabId+'-c" onclick="switchSubTab(\''+tabId+'\',\'c\')">Constructors</button>';
+    html += '<button class="div-tab" id="'+tabId+'-t" onclick="switchSubTab(\''+tabId+'\',\'t\')">Team Stats</button>';
+    html += '</div>';
+  }
+
+  // Constructors table
+  let constHtml = '';
+  if(constRows){
+    // Find header: look for row with 'Pos' or 'Team'
+    let start = -1, teamCol = -1, ptsCol = -1;
+    for(let i=0;i<constRows.length;i++){
+      const r = constRows[i];
+      const posIdx = r.findIndex(v=>(v||'').trim().toLowerCase()==='pos');
+      if(posIdx>=0){
+        // Team is col with 'Team' label, or first non-empty col after pos
+        teamCol = r.findIndex(v=>(v||'').trim().toLowerCase()==='team');
+        if(teamCol<0) teamCol = posIdx+1;
+        ptsCol = r.findIndex(v=>(v||'').trim().toLowerCase()==='points');
+        start = i+1; break;
+      }
+    }
+    if(start>=0 && teamCol>=0 && ptsCol>=0){
+      const data = [];
+      for(let i=start;i<constRows.length;i++){
+        const r=constRows[i];
+        const team=(r[teamCol]||'').trim();
+        if(!team||team.startsWith('#')) continue;
+        // Find actual team name — sometimes in next col
+        let actualTeam = team;
+        if(!actualTeam && teamCol+1<r.length) actualTeam=(r[teamCol+1]||'').trim();
+        // Handle col offset: pos,blank,team in some formats
+        let t = team;
+        if(!t) t = (r[teamCol+1]||'').trim();
+        if(!t || t.startsWith('#')) continue;
+        const pts = parseFloat((r[ptsCol]||'').trim())||0;
+        data.push({team:t, pts});
+      }
+      // Sort by points
+      data.sort((a,b)=>b.pts-a.pts);
+      if(data.length){
+        constHtml = '<div class="st-wrap"><table class="st"><thead><tr>';
+        constHtml += '<th style="width:30px">Pos</th><th class="th-l">Team</th><th>Points</th>';
+        constHtml += '</tr></thead><tbody>';
+        data.forEach((d2,idx)=>{
+          const pos=idx+1;
+          constHtml += '<tr'+trClass(pos)+'><td><span class="st-pos">'+pos+'</span></td>';
+          constHtml += '<td class="td-l"><span class="dname">'+d2.team+'</span></td>';
+          constHtml += '<td><span class="pts">'+d2.pts+'</span></td></tr>';
+        });
+        constHtml += '</tbody></table></div>';
+      }
+    }
+  }
+
+  // Team stats table
+  let teamHtml = '';
+  if(teamStatsRows){
+    // Header at row 0 or 1 — find row with 'Wins' in it
+    let hdrIdx = teamStatsRows.findIndex(r=>r.some(v=>(v||'').trim().toLowerCase()==='wins'));
+    if(hdrIdx>=0){
+      const hdr = teamStatsRows[hdrIdx];
+      const labelMap = {
+        'wins':'Wins','podiums':'Pods','average finishing position':'Avg Fin',
+        'average points':'Avg Pts','average grid':'Avg Grid','average pos. gained':'Pos Gain',
+        'average position gained':'Pos Gain'
+      };
+      const cols = hdr.map((v,i)=>({label:(v||'').trim(),col:i})).filter(c=>c.label&&c.col>0);
+      const dataRows2 = teamStatsRows.slice(hdrIdx+1).filter(r=>(r[0]||'').trim()&&!(r[0]||'').trim().startsWith('#'));
+      if(dataRows2.length){
+        teamHtml = '<div class="st-wrap"><table class="st"><thead><tr>';
+        teamHtml += '<th class="th-l">Team</th>';
+        cols.forEach(c=>{ teamHtml += '<th title="'+c.label+'">'+(labelMap[c.label.toLowerCase()]||c.label)+'</th>'; });
+        teamHtml += '</tr></thead><tbody>';
+        dataRows2.forEach(r=>{
+          const team=(r[0]||'').trim();
+          teamHtml += '<tr><td class="td-l"><span class="dname">'+team+'</span></td>';
+          cols.forEach(c=>{
+            const val=(r[c.col]||'').trim();
+            const n=parseFloat(val);
+            if(c.label.toLowerCase().includes('gained')){
+              const clr=isNaN(n)?'':n>0?'color:var(--green)':n<0?'color:var(--red)':'';
+              teamHtml += '<td><span style="'+clr+'">'+(val?parseFloat(n.toFixed(2)):'&mdash;')+'</span></td>';
+            } else if(c.label.toLowerCase()==='wins'){
+              teamHtml += '<td><span style="'+(val&&val!=='0'?'color:var(--gold);font-weight:700;':'')+'">'+(val||'0')+'</span></td>';
+            } else {
+              teamHtml += '<td>'+(isNaN(n)?val||'&mdash;':parseFloat(n.toFixed(2)))+'</td>';
+            }
+          });
+          teamHtml += '</tr>';
+        });
+        teamHtml += '</tbody></table></div>';
+      }
+    }
+  }
+
+  if(teamStatsRows){
+    html += '<div id="'+tabId+'-c-content">'+constHtml+'</div>';
+    html += '<div id="'+tabId+'-t-content" style="display:none">'+teamHtml+'</div>';
+  } else {
+    html += constHtml;
+  }
+
+  return html;
+}
+
+function switchSubTab(tabId, key){
+  ['c','t'].forEach(k=>{
+    const el=document.getElementById(tabId+'-'+k+'-content');
+    const btn=document.getElementById(tabId+'-'+k);
+    if(el) el.style.display = k===key?'':'none';
+    if(btn) btn.classList.toggle('active', k===key);
+  });
+}
+
+function buildS20DriverStats(rows){
+  // Header at row 0, data from row 1
+  if(!rows.length) return '<div class="div-loading">No stats data.</div>';
+  const hdr = rows[0];
+  const labelMap = {
+    'total wins':'Wins','total podiums':'Pods','total poles':'Poles',
+    'average finish pos.':'Avg Fin','average finishing pos.':'Avg Fin',
+    'average points':'Avg Pts','average grid pos.':'Avg Grid',
+    'average gained pos.':'Pos Gain','average pos. gained':'Pos Gain',
+    'total stops':'Stops','average stops':'Avg Stops',
+    'races started':'Started','races finished':'Finished',
+    'races dns':'DNS','races dnf':'DNF','races dsq':'DSQ','reliability':'Rel%'
+  };
+  const cols = hdr.map((v,i)=>({label:(v||'').trim(),col:i})).filter(c=>c.label&&c.col>0&&c.label!=='');
+  const dataRows = rows.slice(1).filter(r=>(r[0]||'').trim()&&!(r[0]||'').trim().startsWith('#'));
+  if(!dataRows.length) return '<div class="div-loading">No driver stats found.</div>';
+
+  let html = '<div class="section-label">Driver Statistics</div>';
+  html += '<div class="st-wrap"><table class="st"><thead><tr>';
+  html += '<th class="th-l sticky">Driver</th>';
+  cols.forEach(c=>{
+    const short = labelMap[c.label.toLowerCase()]||c.label;
+    html += '<th title="'+c.label+'">'+short+'</th>';
+  });
+  html += '</tr></thead><tbody>';
+
+  dataRows.forEach(r=>{
+    const name=(r[0]||'').trim();
+    html += '<tr><td class="td-l sticky"><span class="dname">'+name+'</span></td>';
+    cols.forEach(c=>{
+      const val=(r[c.col]||'').trim();
+      const lbl=c.label.toLowerCase();
+      if(lbl==='reliability'){
+        const pct=parseFloat(val)||0;
+        const clr=pct>=90?'var(--green)':pct>=70?'var(--gold)':'var(--red)';
+        html += '<td><span style="color:'+clr+';font-weight:600;">'+(val||'—')+'</span>';
+        html += '<span class="rel-bar-wrap"><span class="rel-bar-fill" style="width:'+Math.max(0,Math.min(100,pct))+'%;background:'+clr+';"></span></span></td>';
+      } else if(lbl.includes('gained')){
+        const n=parseFloat(val);
+        const clr=isNaN(n)?'':n>0?'color:var(--green)':n<0?'color:var(--red)':'';
+        html += '<td><span style="'+clr+'">'+(val||'—')+'</span></td>';
+      } else if(lbl==='total wins'){
+        html += '<td><span style="'+(val&&val!=='0'?'color:var(--gold);font-weight:700;':'')+'">'+(val||'0')+'</span></td>';
+      } else {
+        html += '<td>'+(val||'—')+'</td>';
+      }
+    });
+    html += '</tr>';
+  });
+
+  html += '</tbody></table></div>';
+  return html;
+}
+
 // ============================================================
 // INIT
 // ============================================================
@@ -878,6 +1213,7 @@ async function showSeason(season){
   if(s<=2) await renderS1S2('ps', season, sc, bodyEl);
   else if(s>=3 && s<=9 || s===11 || s===12 || s===13 || s===14 || s===15 || s===16 || s===17 || s===18 || s===19) await renderS3to5('ps', season, sc, bodyEl);
   else if(s===10) await renderS10('ps', season, sc, bodyEl);
+  else if(s>=20) await renderS20plus('ps', season, sc, bodyEl);
   else bodyEl.innerHTML = '<div class="loading-msg" style="padding:24px;">Data for Season '+season+' coming soon.</div>';
 
   // Cache the rendered DOM for instant revisits
