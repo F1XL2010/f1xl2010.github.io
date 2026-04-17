@@ -120,7 +120,7 @@
   .rr-blank{color:rgba(255,255,255,0.15);}
 
   /* DISCLAIMER */
-  .disclaimer{background:rgba(232,184,75,0.06);border:1px solid rgba(232,184,75,0.2);border-radius:6px;padding:14px 16px;margin-bottom:12px;}
+  .disclaimer{background:#2a2208;border:1px solid rgba(232,184,75,0.35);border-radius:6px;padding:14px 16px;margin-bottom:12px;}
   .disclaimer-title{font-family:"Barlow Condensed",sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:6px;}
   .disclaimer-text{font-size:12px;color:var(--text-muted);line-height:1.6;}
 
@@ -705,8 +705,11 @@ async function init(){
 
   document.getElementById('page-meta').textContent = past.length+' seasons in the archive';
 
-  let html = '<div class="disclaimer"><div class="disclaimer-title">Please Note</div><div class="disclaimer-text">Information for older seasons is difficult to obtain, and as such the information provided may be incomplete. If there is a final score table in place we know that that is the correct final outcome, but be aware that the results table will not show the scores as we have no information regarding penalties that may have been applied after the race. Whilst attendance, wins etc is recorded on the Total Stats records, this is subject to change as more information becomes available. If a season is incomplete in its results and no final score table is available then no individual or constructors winner will be determined.</div></div>';
+  let html = '';
   for(const obj of past){
+    if(obj.season === 12){
+      html += '<div class="disclaimer"><div class="disclaimer-title">Please Note</div><div class="disclaimer-text">Information for older seasons is difficult to obtain, and as such the information provided may be incomplete. If there is a final score table in place we know that that is the correct final outcome, but be aware that the results table will not show the scores as we have no information regarding penalties that may have been applied after the race. Whilst attendance, wins etc is recorded on the Total Stats records, this is subject to change as more information becomes available. If a season is incomplete in its results and no final score table is available then no individual or constructors winner will be determined.</div></div>';
+    }
     html += buildSeasonCard(obj.season);
   }
   document.getElementById('content').innerHTML = html;
