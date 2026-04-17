@@ -923,10 +923,7 @@ function buildS20Drivers(rows, roundNames){
   // Data rows follow the header
   roundNames = roundNames || {};
 
-  // Find circuit row — first row with circuit names in col 4+
-  const circuitRow = rows[0] || [];
-
-  // Find header row — look for row with 'Pos' in col 0
+  // Find header row dynamically — row with 'Pos' in col 0
   let headerIdx = -1;
   for(let i=0;i<rows.length;i++){
     if((rows[i][0]||'').trim().toLowerCase()==='pos'){ headerIdx=i; break; }
@@ -934,6 +931,9 @@ function buildS20Drivers(rows, roundNames){
   if(headerIdx<0) return '<div class="div-loading">Could not parse driver data.</div>';
   const headerRow = rows[headerIdx];
   const dataStart = headerIdx + 1;
+
+  // Circuit row is the row immediately before the header row
+  const circuitRow = headerIdx > 0 ? rows[headerIdx-1] : [];
 
   const ptsCol = headerRow.findIndex(v=>(v||'').trim().toLowerCase()==='points');
   if(ptsCol<0) return '<div class="div-loading">Could not find points column.</div>';
