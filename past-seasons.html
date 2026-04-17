@@ -96,6 +96,12 @@
   .rr-val{color:rgba(255,255,255,0.65);}
   .rr-blank{color:rgba(255,255,255,0.15);}
   .sticky{position:sticky;left:0;background:var(--dark2);z-index:2;}
+  .stats-summary{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:16px;}
+  .stats-card{background:var(--dark3);border:1px solid var(--border);border-radius:6px;padding:10px 12px;}
+  .stats-card-val{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--text);}
+  .stats-card-lbl{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;margin-top:2px;}
+  .rel-bar-wrap{width:48px;height:6px;background:rgba(255,255,255,0.08);border-radius:3px;display:inline-block;vertical-align:middle;margin-left:4px;}
+  .rel-bar-fill{height:6px;border-radius:3px;}
   .sticky2{position:sticky;left:36px;background:var(--dark2);z-index:2;}
   .st tr.p1 td.sticky,.st tr.p1 td.sticky2{background:rgb(45,38,18);}
   .st tr.p2 td.sticky,.st tr.p2 td.sticky2{background:rgb(32,32,30);}
@@ -414,6 +420,15 @@ async function renderS3to5(id, season, sc, body){
       }catch(e){}
     }
 
+    // Driver stats if available
+    const sgid = sc['d'+d+'_driver_stats_gid'];
+    if(sgid!==undefined && sgid!==''){
+      try{
+        const rows = await fetchCSV(sid, sgid);
+        divHtml += buildDriverStats(rows);
+      }catch(e){}
+    }
+
     contentHtml += '<div class="div-content'+(d===1?'':' hidden')+'" id="'+id+'-dcontent-'+d+'">'+divHtml+'</div>';
   }
 
@@ -450,14 +465,16 @@ function buildRaceGridDrivers(rows){
 
   // Rounds are cols 4 through ptsCol-2 (ptsCol-1 is Pole)
   const numRounds = ptsCol - 4 - 1;
-  // Circuit codes: use circuitRow if it has values, else read from headerRow (S8+)
+  // Circuit codes: circuitRow first, then headerRow, then round numbers as fallback
   let circuits = [];
   if(circuitRow && circuitRow.slice(4, 4+numRounds).some(v=>v.trim())){
     circuits = circuitRow.slice(4, 4+numRounds).map(v=>v.trim());
-  } else {
+  } else if(headerRow.slice(4, 4+numRounds).some(v=>v.trim())){
     circuits = headerRow.slice(4, 4+numRounds).map(v=>v.trim());
+  } else if(roundRow){
+    circuits = roundRow.slice(4, 4+numRounds).map((v,i)=>{ const n=(v||'').trim(); return n?'R'+n:'R'+(i+1); });
   }
-  // Trim trailing blank circuit slots (unused race columns)
+  // Trim trailing blank slots
   while(circuits.length > 0 && !circuits[circuits.length-1]) circuits.pop();
   const activeRounds = circuits.length;
 
@@ -623,6 +640,14 @@ async function renderS10(id, season, sc, body){
       }catch(e){}
     }
 
+    const sgid10 = sc['d'+d+'_driver_stats_gid'];
+    if(sgid10!==undefined && sgid10!==''){
+      try{
+        const rows = await fetchCSV(sid, sgid10);
+        divHtml += buildDriverStats(rows);
+      }catch(e){}
+    }
+
     contentHtml += '<div class="div-content'+(d===1?'':' hidden')+'" id="'+id+'-dcontent-'+d+'">'+divHtml+'</div>';
   }
 
@@ -659,6 +684,101 @@ function buildS10Drivers(rows){
   return html;
 }
 
+
+
+// ============================================================
+// DRIVER STATS RENDERER
+// ============================================================
+function buildDriverStats(rows){
+  // Find summary block (rows 1-6) and driver data header (row with 'Driver' in col 1)
+  const summary = {};
+  let headerRowIdx = -1;
+
+  for(let i=0;i<rows.length;i++){
+    const r = rows[i];
+    const label = (r[1]||'').trim();
+    const val = (r[3]||'').trim();
+    if(label && val && !isNaN(parseFloat(val))) summary[label] = val;
+    if(label.toLowerCase() === 'driver' && (r[2]||'').trim()) { headerRowIdx = i; break; }
+  }
+
+  // Summary cards
+  let html = '<div class="section-label">Season Summary</div>';
+  if(Object.keys(summary).length){
+    html += '<div class="stats-summary">';
+    for(const [lbl,val] of Object.entries(summary)){
+      html += `<div class="stats-card"><div class="stats-card-val">${val}</div><div class="stats-card-lbl">${lbl}</div></div>`;
+    }
+    html += '</div>';
+  }
+
+  if(headerRowIdx < 0) return html + '<div class="div-loading">No driver stats found.</div>';
+
+  // Build column map from header row — skip blank cols
+  const hdr = rows[headerRowIdx];
+  const cols = [];
+  for(let c=1;c<hdr.length;c++){
+    const v = (hdr[c]||'').trim();
+    if(v) cols.push({label:v, col:c});
+  }
+
+  // Driver data rows
+  const driverRows = [];
+  for(let i=headerRowIdx+1;i<rows.length;i++){
+    const r = rows[i];
+    const name = (r[1]||'').trim();
+    if(!name) continue;
+    driverRows.push(r);
+  }
+  if(!driverRows.length) return html + '<div class="div-loading">No driver data.</div>';
+
+  // Shorten column labels for display
+  const labelMap = {
+    'Total Wins':'Wins','Total Podiums':'Pods','Total Poles':'Poles',
+    'Average Finish Pos.':'Avg Fin','Average Points':'Avg Pts',
+    'Average Grid Pos.':'Avg Grid','Average Pos. Gained':'Pos Gain',
+    'Total Stops':'Stops','Average Stops':'Avg Stops',
+    'Races Started':'Started','Races Finished':'Finished',
+    'Races DNS':'DNS','Races DNF':'DNF','Races DSQ':'DSQ','Reliability':'Rel%'
+  };
+
+  html += '<div class="section-label">Driver Statistics</div>';
+  html += '<div class="st-wrap"><table class="st"><thead><tr>';
+  html += '<th class="th-l sticky">Driver</th>';
+  cols.forEach(c => {
+    if(c.label === 'Driver') return;
+    const short = labelMap[c.label] || c.label;
+    html += `<th title="${c.label}">${short}</th>`;
+  });
+  html += '</tr></thead><tbody>';
+
+  driverRows.forEach(r => {
+    const name = (r[1]||'').trim();
+    html += '<tr><td class="td-l sticky"><span class="dname">' + name + '</span></td>';
+    cols.forEach(c => {
+      if(c.label === 'Driver') return;
+      const val = (r[c.col]||'').trim();
+      if(c.label === 'Reliability'){
+        const pct = parseFloat(val)||0;
+        const clr = pct>=90?'var(--green)':pct>=70?'var(--gold)':'var(--red)';
+        html += `<td><span style="color:${clr};font-weight:600;">${val||'—'}</span>`;
+        html += `<span class="rel-bar-wrap"><span class="rel-bar-fill" style="width:${Math.max(0,Math.min(100,pct))}%;background:${clr};"></span></span></td>`;
+      } else if(c.label === 'Average Pos. Gained'){
+        const n = parseFloat(val);
+        const clr = isNaN(n)?'':n>0?'color:var(--green)':n<0?'color:var(--red)':'';
+        html += `<td><span style="${clr}">${val||'—'}</span></td>`;
+      } else if(c.label === 'Total Wins'){
+        html += `<td><span style="${val&&val!=='0'?'color:var(--gold);font-weight:700;':''}">${val||'0'}</span></td>`;
+      } else {
+        html += `<td>${val||'—'}</td>`;
+      }
+    });
+    html += '</tr>';
+  });
+
+  html += '</tbody></table></div>';
+  return html;
+}
 
 // ============================================================
 // INIT
