@@ -982,7 +982,8 @@ function buildS20Drivers(rows, roundNames){
     let style = '';
     if(rc.isSprint) style = 'color:rgba(130,170,255,0.9);border-left:2px solid rgba(100,150,255,0.4);';
     else if(rc.isSprintRace) style = 'color:rgba(130,170,255,0.7);border-right:2px solid rgba(100,150,255,0.4);';
-    html += '<th'+(style?' style="'+style+'"':'')+' title="'+rc.label+'">'+(rc.label||'?')+'</th>';
+    const suffix = rc.isSprint ? ' (S)' : rc.isSprintRace ? ' (R)' : '';
+    html += '<th'+(style?' style="'+style+'"':'')+' title="'+rc.label+'">'+(rc.label||'?')+suffix+'</th>';
   });
   if(hasPointsData) html += '<th>Pts</th>';
   html += '</tr></thead><tbody>';
