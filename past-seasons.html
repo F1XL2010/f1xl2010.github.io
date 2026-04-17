@@ -288,7 +288,7 @@ async function loadSeason(id, season, body){
   if(!sc){ body.innerHTML='<div class="div-loading" style="padding:16px 20px;">No config data for this season.</div>'; return; }
   const s = parseFloat(season);
   if(s<=2) await renderS1S2(id, season, sc, body);
-  else if(s>=3 && s<=9 || s===11 || s===12 || s===13 || s===14 || s===15 || s===16 || s===17 || s===18) await renderS3to5(id, season, sc, body);
+  else if(s>=3 && s<=9 || s===11 || s===12 || s===13 || s===14 || s===15 || s===16 || s===17 || s===18 || s===19) await renderS3to5(id, season, sc, body);
   else if(s===10) await renderS10(id, season, sc, body);
   else body.innerHTML = '<div class="div-loading" style="padding:16px 20px;">Parser for Season '+season+' not yet built.</div>';
 }
@@ -876,7 +876,7 @@ async function showSeason(season){
   wrap.appendChild(bodyEl);
 
   if(s<=2) await renderS1S2('ps', season, sc, bodyEl);
-  else if(s>=3 && s<=9 || s===11 || s===12 || s===13 || s===14 || s===15 || s===16 || s===17 || s===18) await renderS3to5('ps', season, sc, bodyEl);
+  else if(s>=3 && s<=9 || s===11 || s===12 || s===13 || s===14 || s===15 || s===16 || s===17 || s===18 || s===19) await renderS3to5('ps', season, sc, bodyEl);
   else if(s===10) await renderS10('ps', season, sc, bodyEl);
   else bodyEl.innerHTML = '<div class="loading-msg" style="padding:24px;">Data for Season '+season+' coming soon.</div>';
 
