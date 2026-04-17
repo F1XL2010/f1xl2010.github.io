@@ -293,7 +293,7 @@ async function loadSeason(id, season, body){
   if(!sc){ body.innerHTML='<div class="div-loading" style="padding:16px 20px;">No config data for this season.</div>'; return; }
   const s = parseFloat(season);
   if(s<=2) await renderS1S2(id, season, sc, body);
-  else if(s>=3 && s<=9 || s===11) await renderS3to5(id, season, sc, body);
+  else if(s>=3 && s<=9 || s===11 || s===12) await renderS3to5(id, season, sc, body);
   else if(s===10) await renderS10(id, season, sc, body);
   else body.innerHTML = '<div class="div-loading" style="padding:16px 20px;">Parser for Season '+season+' not yet built.</div>';
 }
@@ -482,9 +482,11 @@ function buildRaceGridDrivers(rows){
   if(circuitRow && circuitRow.slice(4, 4+numRounds).some(v=>v.trim())){
     circuits = circuitRow.slice(4, 4+numRounds).map(v=>v.trim());
   } else {
-    // S8+: circuit codes are in the header row itself
     circuits = headerRow.slice(4, 4+numRounds).map(v=>v.trim());
   }
+  // Trim trailing blank circuit slots (unused race columns)
+  while(circuits.length > 0 && !circuits[circuits.length-1]) circuits.pop();
+  const activeRounds = circuits.length;
 
   // Collect data rows — check if pts col actually has data
   const dataRows = [];
@@ -521,7 +523,7 @@ function buildRaceGridDrivers(rows){
     html += '<tr'+trClass(pos)+'>';
     html += '<td class="sticky"><span class="st-pos">'+pos+'</span></td>';
     html += '<td class="td-l sticky2"><span class="dname">'+driver+'</span><br><span class="tname">'+(team||'&mdash;')+'</span></td>';
-    for(let c=0;c<numRounds;c++){
+    for(let c=0;c<activeRounds;c++){
       const val=(r[4+c]||'').trim();
       if(!val) html += '<td class="rr-blank">&mdash;</td>';
       else if(val==='DNF') html += '<td><span class="pos-cell pdnf" style="width:34px;font-size:10px;">DNF</span></td>';
@@ -703,13 +705,8 @@ async function init(){
 
   document.getElementById('page-meta').textContent = past.length+' seasons in the archive';
 
-  let html = '';
+  let html = '<div class="disclaimer"><div class="disclaimer-title">Please Note</div><div class="disclaimer-text">Information for older seasons is difficult to obtain, and as such the information provided may be incomplete. If there is a final score table in place we know that that is the correct final outcome, but be aware that the results table will not show the scores as we have no information regarding penalties that may have been applied after the race. Whilst attendance, wins etc is recorded on the Total Stats records, this is subject to change as more information becomes available. If a season is incomplete in its results and no final score table is available then no individual or constructors winner will be determined.</div></div>';
   for(const obj of past){
-    // Disclaimer between S13 and S12
-    if(obj.season === 12){
-      html += '<div class="disclaimer"><div class="disclaimer-title">Please Note</div>'+
-        '<div class="disclaimer-text">Information for older seasons is difficult to obtain, and as such the information provided may be incomplete. If there is a final score table in place we know that that is the correct final outcome, but be aware that the results table will not show the scores as we have no information regarding penalties that may have been applied after the race. Whilst attendance, wins etc is recorded on the Total Stats records, this is subject to change as more information becomes available. If a season is incomplete in its results and no final score table is available then no individual or constructors winner will be determined.</div></div>';
-    }
     html += buildSeasonCard(obj.season);
   }
   document.getElementById('content').innerHTML = html;
