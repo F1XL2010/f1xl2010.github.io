@@ -8,20 +8,20 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="config.js"></script>
 <style>
-  :root{--green:#3DCC47;--teal:#5ECFCF;--red:#E10600;--black:#111816;--dark:#161d1b;--dark2:#1a2320;--dark3:#1e2a27;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);--text:#ffffff;--text-muted:rgba(255,255,255,0.70);--text-faint:rgba(255,255,255,0.35);--gold:#E8B84B;}
+  :root{--green:#3DCC47;--teal:#5ECFCF;--red:#E10600;--black:#111816;--dark:#161d1b;--dark2:#1a2320;--dark3:#1e2a27;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);--text:#ffffff;--text-muted:rgba(255,255,255,0.60);--text-faint:rgba(255,255,255,0.30);--gold:#E8B84B;}
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{background:#111816;background-image:linear-gradient(rgba(255,255,255,0.025) 0px,rgba(255,255,255,0.025) 4px,rgba(0,0,0,0.06) 4px,rgba(0,0,0,0.06) 8px),linear-gradient(90deg,rgba(0,0,0,0.06) 0px,rgba(0,0,0,0.06) 4px,rgba(255,255,255,0.025) 4px,rgba(255,255,255,0.025) 8px);background-size:8px 8px;color:var(--text);font-family:"Barlow",sans-serif;min-height:100vh;}
-  nav{background:rgba(17,24,22,0.97);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;}
+  body{background:#111816;background-image:linear-gradient(rgba(255,255,255,0.025) 0px,rgba(255,255,255,0.025) 4px,rgba(0,0,0,0.06) 4px,rgba(0,0,0,0.06) 8px),linear-gradient(90deg,rgba(0,0,0,0.06) 0px,rgba(0,0,0,0.06) 4px,rgba(255,255,255,0.025) 4px,rgba(255,255,255,0.025) 8px);background-size:8px 8px;color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;}
+  nav{background:rgba(9,9,9,0.97);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;}
   .nav-left{display:flex;align-items:center;gap:14px;flex-shrink:0;}
-  .nav-logo{background:var(--green);color:#000;font-family:"Barlow Condensed",sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;padding:5px 11px;border-radius:3px;text-decoration:none;}
+  .nav-logo{background:var(--green);color:#000;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;padding:5px 11px;border-radius:3px;text-decoration:none;}
   .nav-links{display:flex;align-items:stretch;height:56px;}
   .nav-item{position:relative;display:flex;align-items:stretch;}
-  .nav-item>a,.nav-item>button{color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:500;letter-spacing:0.5px;padding:0 13px;display:flex;align-items:center;gap:4px;border-bottom:2px solid transparent;border-top:none;border-left:none;border-right:none;background:none;cursor:pointer;font-family:"Barlow",sans-serif;text-transform:uppercase;transition:color 0.2s;white-space:nowrap;}
+  .nav-item>a,.nav-item>button{color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:500;letter-spacing:0.5px;padding:0 13px;display:flex;align-items:center;gap:4px;border-bottom:2px solid transparent;border-top:none;border-left:none;border-right:none;background:none;cursor:pointer;font-family:'Barlow',sans-serif;text-transform:uppercase;transition:color 0.2s;white-space:nowrap;}
   .nav-item>a:hover,.nav-item>button:hover{color:var(--text);}
   .nav-item>a.active,.nav-item>button.active{color:var(--text);border-bottom-color:var(--green);}
   .nav-chevron{font-size:8px;opacity:0.5;transition:transform 0.2s;}
   .nav-item:hover .nav-chevron{transform:rotate(180deg);}
-  .nav-dropdown{display:none;position:absolute;top:100%;left:0;background:#141a18;border:1px solid var(--border2);border-top:2px solid var(--green);border-radius:0 0 6px 6px;min-width:180px;padding:6px 0;z-index:300;}
+  .nav-dropdown{display:none;position:absolute;top:100%;left:0;background:#141414;border:1px solid var(--border2);border-top:2px solid var(--green);border-radius:0 0 6px 6px;min-width:180px;padding:6px 0;z-index:300;}
   .nav-item:hover .nav-dropdown{display:block;}
   .nav-dropdown a{display:block;padding:9px 16px;color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;transition:color 0.15s,background 0.15s;white-space:nowrap;}
   .nav-dropdown a:hover{color:var(--text);background:rgba(255,255,255,0.05);}
@@ -30,56 +30,41 @@
   .nav-hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
   .nav-hamburger.open span:nth-child(2){opacity:0;}
   .nav-hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
-  .mobile-menu{display:none;position:fixed;top:56px;left:0;right:0;bottom:0;background:#0d1210;z-index:150;overflow-y:auto;padding:16px 0 32px;}
+  .mobile-menu{display:none;position:fixed;top:56px;left:0;right:0;bottom:0;background:#0d0d0d;z-index:150;overflow-y:auto;padding:16px 0 32px;}
   .mobile-menu.open{display:block;}
-  .mobile-section-header{padding:10px 24px;font-family:"Barlow Condensed",sans-serif;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--green);}
+  .mobile-section-header{padding:10px 24px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--green);}
   .mobile-section a{display:block;padding:11px 32px;color:var(--text-muted);text-decoration:none;font-size:15px;border-bottom:1px solid var(--border);}
   .mobile-divider{height:1px;background:var(--border);margin:12px 24px;}
   @media(max-width:860px){.nav-links{display:none;}.nav-hamburger{display:flex;}}
   @media(min-width:861px){.mobile-menu{display:none !important;}}
-
   .page-header{background:var(--dark);border-bottom:1px solid var(--border);padding:24px;}
-  .page-eyebrow{font-family:"Barlow Condensed",sans-serif;font-size:11px;letter-spacing:2.5px;color:var(--teal);text-transform:uppercase;font-weight:600;margin-bottom:4px;}
-  .page-title{font-family:"Barlow Condensed",sans-serif;font-size:32px;font-weight:700;text-transform:uppercase;line-height:1;}
+  .page-eyebrow{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:2.5px;color:var(--teal);text-transform:uppercase;font-weight:600;margin-bottom:4px;}
+  .page-title{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:700;text-transform:uppercase;line-height:1;}
   .page-meta{font-size:13px;color:var(--text-muted);margin-top:6px;}
-
-  .content{padding:20px 24px 48px;max-width:960px;}
+  .season-bar{background:var(--dark2);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+  .s-btn{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:5px 14px;border-radius:4px;border:1px solid rgba(255,255,255,0.25);background:none;color:rgba(255,255,255,0.85);cursor:pointer;transition:all 0.15s;}
+  .s-btn:hover{color:#fff;border-color:rgba(255,255,255,0.5);background:rgba(255,255,255,0.05);}
+  .s-btn.active{background:rgba(61,204,71,0.15);border-color:var(--green);color:var(--green);}
+  .content{padding:0 0 48px;}
   .loading-msg{text-align:center;padding:48px;color:var(--text-muted);font-size:14px;}
-
-  /* SEASON CARDS */
-  .season-card{background:var(--dark2);border:1px solid var(--border);border-radius:8px;margin-bottom:12px;overflow:hidden;}
-  .season-card-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;cursor:pointer;transition:background 0.15s;gap:12px;}
-  .season-card-header:hover{background:rgba(255,255,255,0.03);}
-  .season-card-header.open{border-bottom:1px solid var(--border);}
-  .season-title{font-family:"Barlow Condensed",sans-serif;font-size:22px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;}
-  .season-meta{display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-top:4px;}
-  .season-badge{font-family:"Barlow Condensed",sans-serif;font-size:10px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;padding:2px 7px;border-radius:3px;background:rgba(255,255,255,0.06);color:var(--text-muted);}
-  .season-chevron{font-size:12px;color:var(--text-faint);transition:transform 0.2s;flex-shrink:0;}
-  .season-chevron.open{transform:rotate(180deg);}
-  .season-no-data{font-size:12px;color:var(--text-faint);font-style:italic;}
-  .season-body{display:none;padding:0;}
-  .season-body.open{display:block;}
-
-  /* DIVISION TABS */
-  .div-tabs{display:flex;gap:4px;padding:14px 20px 0;flex-wrap:wrap;}
-  .div-tab{font-family:"Barlow Condensed",sans-serif;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:6px 14px;border-radius:4px 4px 0 0;border:none;background:rgba(255,255,255,0.05);color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:color 0.2s;}
+  .disclaimer{background:#2a2208;border:1px solid rgba(232,184,75,0.35);border-radius:6px;padding:14px 16px;margin:16px 24px;}
+  .disclaimer-title{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:6px;}
+  .disclaimer-text{font-size:12px;color:var(--text-muted);line-height:1.6;}
+  .season-heading{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;text-transform:uppercase;padding:20px 24px 4px;letter-spacing:0.5px;}
+  .div-tabs{display:flex;gap:4px;padding:14px 24px 0;flex-wrap:wrap;}
+  .div-tab{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:6px 14px;border-radius:4px 4px 0 0;border:none;background:rgba(255,255,255,0.05);color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:color 0.2s;}
   .div-tab:hover{color:var(--text);}
   .div-tab.active{color:var(--green);border-bottom-color:var(--green);background:rgba(61,204,71,0.06);}
-  .div-content{padding:16px 20px 4px;}
+  .div-content{padding:16px 24px 4px;}
   .div-content.hidden{display:none;}
   .div-loading{font-size:13px;color:var(--text-faint);padding:12px 0;}
-
-  /* SECTION LABEL */
-  .section-label{font-family:"Barlow Condensed",sans-serif;font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--teal);padding:14px 0 6px;border-top:1px solid var(--border);margin-top:4px;}
+  .section-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--teal);padding:14px 0 6px;border-top:1px solid var(--border);margin-top:4px;}
   .section-label:first-child{border-top:none;padding-top:0;}
-
-  /* STANDINGS TABLE */
   .st-wrap{overflow-x:auto;margin-bottom:16px;border-radius:6px;border:1px solid var(--border);}
   .st{width:100%;border-collapse:separate;border-spacing:0;font-size:13px;}
   .st thead tr{background:var(--dark3);}
-  .st th{padding:8px 10px;font-family:"Barlow Condensed",sans-serif;font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.4);border-bottom:1px solid var(--border2);white-space:nowrap;text-align:center;}
+  .st th{padding:8px 10px;font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.4);border-bottom:1px solid var(--border2);white-space:nowrap;text-align:center;}
   .st th.th-l{text-align:left;}
-  .st th.th-pos{width:36px;text-align:center;}
   .st td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,0.035);color:rgba(255,255,255,0.65);text-align:center;white-space:nowrap;vertical-align:middle;}
   .st td.td-l{text-align:left;}
   .st tbody tr:last-child td{border-bottom:none;}
@@ -90,42 +75,23 @@
   .st tr.p1:hover td{background:rgba(232,184,75,0.13);}
   .st tr.p2:hover td{background:rgba(192,192,192,0.08);}
   .st tr.p3:hover td{background:rgba(180,115,60,0.10);}
-  .pos-cell{display:inline-flex;align-items:center;justify-content:center;width:28px;height:22px;border-radius:3px;font-family:"Barlow Condensed",sans-serif;font-size:12px;font-weight:700;}
+  .pos-cell{display:inline-flex;align-items:center;justify-content:center;width:28px;height:22px;border-radius:3px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;}
   .pos-cell.p1{background:#E8B84B;color:#111816;}
   .pos-cell.p2{background:#C0C0C0;color:#111816;}
   .pos-cell.p3{background:#CD7F32;color:#111816;}
   .pos-cell.pp{background:#3DCC47;color:#111816;}
   .pos-cell.pout{background:rgba(180,60,100,0.35);color:rgba(255,180,200,0.9);}
   .pos-cell.pdnf{background:#0d1412;color:rgba(255,255,255,0.45);border:1px solid rgba(255,255,255,0.12);}
-  .st-pos{font-family:"Barlow Condensed",sans-serif;font-size:15px;font-weight:700;color:rgba(255,255,255,0.3);}
-  .st th.sticky{position:sticky;left:0;z-index:2;background:#1e2a27;}
-  .st td.sticky{position:sticky;left:0;z-index:1;background:#1a2320;}
-  .st tr.p1 td.sticky{background:#1e2b1a;}
-  .st tr.p2 td.sticky{background:#1d2320;}
-  .st tr.p3 td.sticky{background:#1e2119;}
-  .st tbody tr:hover td.sticky{background:#202e29;}
-  .st th.sticky2{position:sticky;left:44px;z-index:2;background:#1e2a27;}
-  .st td.sticky2{position:sticky;left:44px;z-index:1;background:#1a2320;}
-  .st tr.p1 td.sticky2{background:#1e2b1a;}
-  .st tr.p2 td.sticky2{background:#1d2320;}
-  .st tr.p3 td.sticky2{background:#1e2119;}
-  .st tbody tr:hover td.sticky2{background:#202e29;}
-  .dname{font-size:13px;color:#fff;font-weight:500;letter-spacing:0.2px;}
-  .tname{font-size:11px;color:rgba(255,255,255,0.35);margin-top:1px;}
-  .pts{font-family:"Barlow Condensed",sans-serif;font-size:15px;font-weight:700;color:var(--green);}
-  .rr-val{font-size:12px;color:rgba(255,255,255,0.6);}
-  .rr-p1{font-size:12px;font-weight:700;color:var(--gold);}
-  .rr-dnf{font-size:11px;font-weight:700;color:rgba(220,60,60,0.9);letter-spacing:0.3px;}
-  .rr-dsq{font-size:11px;font-weight:700;color:rgba(255,140,0,0.9);letter-spacing:0.3px;}
+  .st-pos{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:rgba(255,255,255,0.3);}
+  .dname{color:rgba(255,255,255,0.9);font-weight:500;}
+  .tname{font-size:11px;color:rgba(255,255,255,0.4);}
+  .pts{color:var(--green);font-weight:600;}
+  .rr-val{color:rgba(255,255,255,0.65);}
   .rr-blank{color:rgba(255,255,255,0.15);}
-
-  /* DISCLAIMER */
-  .disclaimer{background:#2a2208;border:1px solid rgba(232,184,75,0.35);border-radius:6px;padding:14px 16px;margin-bottom:12px;}
-  .disclaimer-title{font-family:"Barlow Condensed",sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:6px;}
-  .disclaimer-text{font-size:12px;color:var(--text-muted);line-height:1.6;}
-
-  footer{background:var(--dark);border-top:1px solid var(--border);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
-  .footer-logo{background:var(--green);color:#000;font-family:"Barlow Condensed",sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;padding:4px 9px;border-radius:3px;}
+  .sticky{position:sticky;left:0;background:var(--dark2);z-index:2;}
+  .sticky2{position:sticky;left:36px;background:var(--dark2);z-index:2;}
+  footer{background:var(--dark);border-top:1px solid var(--border);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:20px;}
+  .footer-logo{background:var(--green);color:#000;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;padding:4px 9px;border-radius:3px;}
   .footer-text{font-size:12px;color:var(--text-faint);}
 </style>
 </head>
@@ -135,7 +101,7 @@
   <div class="nav-links">
     <div class="nav-item"><a href="index.html">Home</a></div>
     <div class="nav-item">
-      <button class="active">Standings <span class="nav-chevron">&#9660;</span></button>
+      <button>Standings <span class="nav-chevron">&#9660;</span></button>
       <div class="nav-dropdown">
         <a href="standings.html">Current Season</a>
         <a href="results.html">Results</a>
@@ -157,6 +123,7 @@
       <div class="nav-dropdown"><a href="schedule.html">Schedule</a></div>
     </div>
     <div class="nav-item"><a href="track-records.html">Track Records</a></div>
+    <div class="nav-item"><a href="asr.html">All Star Race</a></div>
     <div class="nav-item"><a href="applications.html">Applications</a></div>
     <div class="nav-item"><a href="league-rules.html">League Rules</a></div>
   </div>
@@ -183,21 +150,18 @@
   <div class="mobile-section">
     <a href="schedule.html">Schedule</a>
     <a href="track-records.html">Track Records</a>
+    <a href="asr.html">All Star Race</a>
     <a href="applications.html">Applications</a>
     <a href="league-rules.html">League Rules</a>
   </div>
 </div>
-
 <div class="page-header">
   <div class="page-eyebrow">F1XL</div>
   <div class="page-title">Past Seasons</div>
   <div class="page-meta" id="page-meta">Loading...</div>
 </div>
-
-<div class="content" id="content">
-  <div class="loading-msg">Loading seasons...</div>
-</div>
-
+<div class="season-bar" id="season-bar"><div class="loading-msg" style="padding:4px 0;">Loading seasons...</div></div>
+<div class="content" id="season-content"><div class="loading-msg">Loading...</div></div>
 <footer>
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="footer-logo">F1XL</div>
@@ -205,25 +169,8 @@
   </div>
   <div class="footer-text">f1xl.co.uk</div>
 </footer>
-
 <script>
-// ============================================================
-// UTILITIES
-// ============================================================
-const cache = {};
-
-function parseCSV(text){
-  const rows=[];let cells=[],cur='',inQ=false;
-  for(let i=0;i<text.length;i++){
-    const c=text[i],n=text[i+1];
-    if(c==='"'){if(!inQ)inQ=true;else if(n==='"'){cur+='"';i++;}else inQ=false;}
-    else if(c===','&&!inQ){cells.push(cur);cur='';}
-    else if((c==='\n'||(c==='\r'&&n==='\n'))&&!inQ){if(c==='\r')i++;cells.push(cur);cur='';if(cells.some(x=>x.trim()))rows.push(cells);cells=[];}
-    else cur+=c;
-  }
-  cells.push(cur);if(cells.some(x=>x.trim()))rows.push(cells);
-  return rows;
-}
+function toggleMenu(){document.getElementById('hamburger').classList.toggle('open');document.getElementById('mobile-menu').classList.toggle('open');}
 
 async function fetchCSV(sheetId, gid){
   const key = sheetId+'|'+gid;
@@ -686,33 +633,64 @@ function buildS10Drivers(rows){
   return html;
 }
 
+
 // ============================================================
 // INIT
 // ============================================================
-async function init(){
-  let seasonObjs = [];
-  try{ seasonObjs = await getAllSeasons(); }
-  catch(e){ document.getElementById('content').innerHTML='<div class="loading-msg">Config error: '+e.message+'</div>'; return; }
 
-  // current_season may be blank - just use all seasons getAllSeasons returns
-  // (getAllSeasons already excludes current season internally)
-  const past = seasonObjs;
+async function showSeason(season){
+  document.querySelectorAll('.s-btn').forEach(b=>b.classList.remove('active'));
+  const btn = document.getElementById('sbtn-'+String(season).replace('.','_'));
+  if(btn) btn.classList.add('active');
 
-  if(!past.length){
-    document.getElementById('content').innerHTML = '<div class="loading-msg">No past seasons available.</div>';
+  const el = document.getElementById('season-content');
+  el.innerHTML = '<div class="loading-msg">Loading Season '+season+'...</div>';
+
+  const s = parseFloat(season);
+
+  // Disclaimer for S12 and older
+  let disclaimerHtml = '';
+  if(s <= 12){
+    disclaimerHtml = '<div class="disclaimer"><div class="disclaimer-title">Please Note</div><div class="disclaimer-text">Information for older seasons may be incomplete. Where a final score table is provided that represents the correct final outcome, but results tables may not reflect post-race penalties. If no final score table is available no individual or constructors winner has been determined.</div></div>';
+  }
+
+  const sc = await loadSeasonConfig(season);
+  if(!sc){
+    el.innerHTML = disclaimerHtml + '<div class="loading-msg">No data available for this season.</div>';
     return;
   }
 
-  document.getElementById('page-meta').textContent = past.length+' seasons in the archive';
+  const wrap = document.createElement('div');
+  wrap.innerHTML = disclaimerHtml + '<div class="season-heading">Season '+season+'</div>';
+  el.innerHTML = '';
+  el.appendChild(wrap);
 
-  let html = '';
-  for(const obj of past){
-    if(obj.season === 12){
-      html += '<div class="disclaimer"><div class="disclaimer-title">Please Note</div><div class="disclaimer-text">Information for older seasons is difficult to obtain, and as such the information provided may be incomplete. If there is a final score table in place we know that that is the correct final outcome, but be aware that the results table will not show the scores as we have no information regarding penalties that may have been applied after the race. Whilst attendance, wins etc is recorded on the Total Stats records, this is subject to change as more information becomes available. If a season is incomplete in its results and no final score table is available then no individual or constructors winner will be determined.</div></div>';
-    }
-    html += buildSeasonCard(obj.season);
+  const bodyEl = document.createElement('div');
+  wrap.appendChild(bodyEl);
+
+  if(s<=2) await renderS1S2('ps', season, sc, bodyEl);
+  else if(s>=3 && s<=9 || s===11 || s===12 || s===13) await renderS3to5('ps', season, sc, bodyEl);
+  else if(s===10) await renderS10('ps', season, sc, bodyEl);
+  else bodyEl.innerHTML = '<div class="loading-msg" style="padding:24px;">Data for Season '+season+' coming soon.</div>';
+}
+
+async function init(){
+  let seasonObjs = [];
+  try{ seasonObjs = await getAllSeasons(); }
+  catch(e){ document.getElementById('season-content').innerHTML='<div class="loading-msg">Config error: '+e.message+'</div>'; return; }
+
+  if(!seasonObjs.length){
+    document.getElementById('season-content').innerHTML='<div class="loading-msg">No seasons available.</div>';
+    return;
   }
-  document.getElementById('content').innerHTML = html;
+
+  document.getElementById('page-meta').textContent = seasonObjs.length+' seasons in the archive';
+
+  document.getElementById('season-bar').innerHTML = seasonObjs.map(obj=>
+    '<button class="s-btn" onclick="showSeason('+obj.season+')" id="sbtn-'+String(obj.season).replace('.','_')+'">S'+obj.season+'</button>'
+  ).join('');
+
+  showSeason(seasonObjs[0].season);
 }
 
 init();
