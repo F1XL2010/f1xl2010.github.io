@@ -1048,13 +1048,8 @@ function buildS20ConstructorsWithTeamStats(id, d, constRows, teamStatsRows){
       const data = [];
       for(let i=start;i<constRows.length;i++){
         const r=constRows[i];
-        const team=(r[teamCol]||'').trim();
-        if(!team||team.startsWith('#')) continue;
-        // Find actual team name — sometimes in next col
-        let actualTeam = team;
-        if(!actualTeam && teamCol+1<r.length) actualTeam=(r[teamCol+1]||'').trim();
-        // Handle col offset: pos,blank,team in some formats
-        let t = team;
+        // Team name may be in teamCol or teamCol+1 (blank col between header and value)
+        let t = (r[teamCol]||'').trim();
         if(!t) t = (r[teamCol+1]||'').trim();
         if(!t || t.startsWith('#')) continue;
         const pts = parseFloat((r[ptsCol]||'').trim())||0;
