@@ -486,9 +486,9 @@ function switchDivTab(id, tabKey){
     anyTab.classList.add('active');
   }
   // Lazy load if not yet loaded — get div number from tabKey (strip trailing 's' for stats)
-  if(anyContent.dataset.loaded === 'false'){
+  if(anyContent.dataset.loaded === 'false' && _currentSeasonConfig){
     const divNum = parseInt(tabKey);
-    if(!isNaN(divNum) && _currentSeasonConfig){
+    if(!isNaN(divNum)){
       const s = parseFloat(_currentSeason||0);
       if(s>=20) loadS20DivContent(id, divNum, _currentSeasonConfig);
       else loadDivContent(id, divNum, _currentSeasonConfig);
@@ -864,8 +864,6 @@ async function renderS20plus(id, season, sc, body){
   }
 
   body.innerHTML = tabsHtml + contentHtml;
-  document.getElementById(id+'-meta').innerHTML = '<span class="season-badge">'+divisions+' Division'+(divisions>1?'s':'')+'</span>';
-
   await loadS20DivContent(id, 1, sc);
 }
 
@@ -1199,6 +1197,7 @@ async function showSeason(season){
     return;
   }
   _currentSeasonConfig = sc;
+  _currentSeason = season;
 
   const wrap = document.createElement('div');
   const hasCal = sc && Object.keys(sc).some(k=>k.endsWith('_has_results') && sc[k]==='yes');
