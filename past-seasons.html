@@ -293,7 +293,7 @@ async function loadSeason(id, season, body){
   if(!sc){ body.innerHTML='<div class="div-loading" style="padding:16px 20px;">No config data for this season.</div>'; return; }
   const s = parseFloat(season);
   if(s<=2) await renderS1S2(id, season, sc, body);
-  else if(s>=3 && s<=8) await renderS3to5(id, season, sc, body);
+  else if(s>=3 && s<=9) await renderS3to5(id, season, sc, body);
   else body.innerHTML = '<div class="div-loading" style="padding:16px 20px;">Parser for Season '+season+' not yet built.</div>';
 }
 
@@ -485,7 +485,7 @@ function buildRaceGridDrivers(rows){
     circuits = headerRow.slice(4, 4+numRounds).map(v=>v.trim());
   }
 
-  // Collect data rows, sort by points desc
+  // Collect data rows — check if pts col actually has data
   const dataRows = [];
   for(let i=dataStart;i<rows.length;i++){
     const r=rows[i];
@@ -496,8 +496,10 @@ function buildRaceGridDrivers(rows){
     const pts=parseFloat((r[ptsCol]||'').trim())||0;
     dataRows.push({r, pts});
   }
-  dataRows.sort((a,b)=>b.pts-a.pts);
   if(!dataRows.length) return '<div class="div-loading">No driver data found.</div>';
+  // Only sort by points if at least one driver has a non-zero value (incomplete seasons may have no pts col)
+  const hasPointsData = dataRows.some(d=>d.pts>0);
+  if(hasPointsData) dataRows.sort((a,b)=>b.pts-a.pts);
 
   let html = '<div class="section-label">Drivers</div><div class="st-wrap"><table class="st">';
   // Headers
@@ -505,7 +507,7 @@ function buildRaceGridDrivers(rows){
   html += '<th class="th-l sticky" style="width:36px">Pos</th>';
   html += '<th class="th-l sticky2">Driver</th>';
   circuits.forEach(c=>{ html += '<th>'+(c||'?')+'</th>'; });
-  html += '<th>Pts</th>';
+  if(hasPointsData) html += '<th>Pts</th>';
   html += '</tr></thead><tbody>';
 
   dataRows.forEach((entry,idx)=>{
@@ -523,13 +525,15 @@ function buildRaceGridDrivers(rows){
       if(!val) html += '<td class="rr-blank">&mdash;</td>';
       else if(val==='DNF') html += '<td><span class="pos-cell pdnf" style="width:34px;font-size:10px;">DNF</span></td>';
       else if(val==='DSQ') html += '<td><span class="pos-cell pdnf" style="width:34px;font-size:10px;">DSQ</span></td>';
+      else if(val==='BAN') html += '<td><span class="pos-cell pdnf" style="width:34px;font-size:10px;">BAN</span></td>';
+      else if(val==='DNS') html += '<td><span class="pos-cell pdnf" style="width:34px;font-size:10px;">DNS</span></td>';
       else{
         const n=parseInt(val);
         const rc=n===1?'p1':n===2?'p2':n===3?'p3':n<=10?'pp':isNaN(n)?'':'pout';
         html += '<td><span class="pos-cell '+rc+'">'+val+'</span></td>';
       }
     }
-    html += '<td><span class="pts">'+(pts||'&mdash;')+'</span></td>';
+    if(hasPointsData) html += '<td><span class="pts">'+(pts||'&mdash;')+'</span></td>';
     html += '</tr>';
   });
 
