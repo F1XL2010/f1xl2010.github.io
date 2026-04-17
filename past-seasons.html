@@ -400,21 +400,27 @@ function buildS1S2Constructors(rows){
 async function renderS3to5(id, season, sc, body){
   const divisions = parseInt(sc['divisions'])||1;
 
-  // Build division tabs
-  let tabsHtml = '';
-  if(divisions > 1){
-    tabsHtml = '<div class="div-tabs">';
-    for(let d=1;d<=divisions;d++){
-      tabsHtml += '<button class="div-tab'+(d===1?' active':'')+'" id="'+id+'-dtab-'+d+'" onclick="switchDiv(\''+id+'\',' +d+','+divisions+')">Division '+d+'</button>';
+  // Build tabs — division + optional stats tab per division
+  let tabsHtml = '<div class="div-tabs">';
+  let firstTab = true;
+  for(let d=1;d<=divisions;d++){
+    const active = firstTab ? ' active' : '';
+    tabsHtml += '<button class="div-tab'+active+'" id="'+id+'-dtab-'+d+'" onclick="switchDivTab(\''+id+'\',\''+d+'\')">Division '+d+'</button>';
+    firstTab = false;
+    const sgid = sc['d'+d+'_driver_stats_gid'];
+    if(sgid!==undefined && sgid!==''){
+      tabsHtml += '<button class="div-tab" id="'+id+'-dtab-'+d+'s" onclick="switchDivTab(\''+id+'\',\''+d+'s\')">D'+d+' Stats</button>';
     }
-    tabsHtml += '</div>';
   }
+  tabsHtml += '</div>';
 
   let contentHtml = '';
+  let firstContent = true;
   for(let d=1;d<=divisions;d++){
     const sid = sc['d'+d+'_sheet_id'];
     const dgid = sc['d'+d+'_driver_results_gid'];
     const cgid = sc['d'+d+'_constructors_gid'];
+    const sgid = sc['d'+d+'_driver_stats_gid'];
     let divHtml = '';
 
     if(sid && (dgid!==undefined && dgid!=='')){
@@ -426,7 +432,6 @@ async function renderS3to5(id, season, sc, body){
       divHtml += '<div class="div-loading">No driver data available.</div>';
     }
 
-    // Constructors for any division that has a constructors GID
     if(cgid!==undefined && cgid!==''){
       try{
         const rows = await fetchCSV(sid, cgid);
@@ -434,14 +439,35 @@ async function renderS3to5(id, season, sc, body){
       }catch(e){}
     }
 
-    // Driver stats if available
-    const sgid = sc['d'+d+'_driver_stats_gid'];
+    contentHtml += '<div class="div-content'+(firstContent?'':' hidden')+'" id="'+id+'-dcontent-'+d+'">'+divHtml+'</div>';
+    firstContent = false;
+
     if(sgid!==undefined && sgid!==''){
+      let statsHtml = '';
       try{
         const rows = await fetchCSV(sid, sgid);
-        divHtml += buildDriverStats(rows);
-      }catch(e){}
+        statsHtml = buildDriverStats(rows);
+      }catch(e){ statsHtml = '<div class="div-loading">Could not load stats.</div>'; }
+      contentHtml += '<div class="div-content hidden" id="'+id+'-dcontent-'+d+'s">'+statsHtml+'</div>';
     }
+  }
+
+  body.innerHTML = tabsHtml + contentHtml;
+  document.getElementById(id+'-meta').innerHTML = '<span class="season-badge">'+divisions+' Division'+(divisions>1?'s':'')+'</span>';
+}
+
+function switchDivTab(id, tabKey){
+  const anyContent = document.getElementById(id+'-dcontent-'+tabKey);
+  if(!anyContent) return;
+  anyContent.parentElement.querySelectorAll('.div-content').forEach(el=>el.classList.add('hidden'));
+  anyContent.classList.remove('hidden');
+  const anyTab = document.getElementById(id+'-dtab-'+tabKey);
+  if(anyTab){
+    anyTab.parentElement.querySelectorAll('.div-tab').forEach(b=>b.classList.remove('active'));
+    anyTab.classList.add('active');
+  }
+}
+
 
     contentHtml += '<div class="div-content'+(d===1?'':' hidden')+'" id="'+id+'-dcontent-'+d+'">'+divHtml+'</div>';
   }
