@@ -875,15 +875,28 @@ async function loadS20DivContent(id, d, sc){
   const sgid = sc['d'+d+'_driver_stats_gid'];
   const tgid = sc['d'+d+'_team_stats_gid'];
 
-  const [driverRows, constRows, statsRows, teamStatsRows] = await Promise.all([
+  const calgid = sc['d'+d+'_calendar_gid'];
+
+  const [driverRows, constRows, statsRows, teamStatsRows, calRows] = await Promise.all([
     (sid && dgid!==undefined && dgid!=='') ? fetchCSV(sid, dgid).catch(()=>null) : Promise.resolve(null),
     (cgid!==undefined && cgid!=='') ? fetchCSV(sid, cgid).catch(()=>null) : Promise.resolve(null),
     (sgid!==undefined && sgid!=='') ? fetchCSV(sid, sgid).catch(()=>null) : Promise.resolve(null),
-    (tgid!==undefined && tgid!=='') ? fetchCSV(sid, tgid).catch(()=>null) : Promise.resolve(null)
+    (tgid!==undefined && tgid!=='') ? fetchCSV(sid, tgid).catch(()=>null) : Promise.resolve(null),
+    (calgid!==undefined && calgid!=='') ? fetchCSV(sid, calgid).catch(()=>null) : Promise.resolve(null)
   ]);
 
+  // Build round->country map from calendar
+  const roundNames = {};
+  if(calRows){
+    for(const r of calRows){
+      const num = parseInt((r[0]||'').trim());
+      const name = (r[3]||'').trim();
+      if(!isNaN(num) && name) roundNames[num] = name;
+    }
+  }
+
   let divHtml = '';
-  if(driverRows) divHtml += buildS20Drivers(driverRows);
+  if(driverRows) divHtml += buildS20Drivers(driverRows, roundNames);
   else divHtml += '<div class="div-loading">No driver data available.</div>';
 
   // Constructors + Team Stats as sub-tabbed section
@@ -903,10 +916,12 @@ async function loadS20DivContent(id, d, sc){
   }
 }
 
-function buildS20Drivers(rows){
-  // Row 0: circuit names (col 4+)
+function buildS20Drivers(rows, roundNames){
+  // roundNames: optional map of {roundNum: countryName} from calendar
+  // Row 0: circuit names (col 4+) — fallback if no calendar
   // Header row: contains 'Pos','Driver','Points' — find dynamically
   // Data rows follow the header
+  roundNames = roundNames || {};
 
   // Find circuit row — first row with circuit names in col 4+
   const circuitRow = rows[0] || [];
@@ -923,14 +938,20 @@ function buildS20Drivers(rows){
   const ptsCol = headerRow.findIndex(v=>(v||'').trim().toLowerCase()==='points');
   if(ptsCol<0) return '<div class="div-loading">Could not find points column.</div>';
 
-  // Build round labels — use circuit name from row 0 if available, else header label
+  // Build round labels — calendar roundNames > row 0 circuit > header label
   const roundCols = [];
   for(let c=4;c<ptsCol-1;c++){ // ptsCol-1 = Pole col
     const label = (headerRow[c]||'').trim();
     if(!label) continue;
-    const circuit = (circuitRow[c]||'').trim();
     const isSprint = label.toLowerCase().includes('(s)');
-    roundCols.push({col:c, label: circuit || label, isSprint});
+    // Extract round number from label (R3, R3(s), R10 etc)
+    const roundMatch = label.match(/R(\d+)/i);
+    const roundNum = roundMatch ? parseInt(roundMatch[1]) : null;
+    // Priority: calendar > row 0 circuit > header label
+    const calName = roundNum && roundNames[roundNum] ? roundNames[roundNum] : null;
+    const circuit = (circuitRow[c]||'').trim();
+    const displayLabel = calName || circuit || label;
+    roundCols.push({col:c, label: isSprint ? displayLabel+'*' : displayLabel, isSprint});
   }
 
   // Trim trailing rounds with no data
