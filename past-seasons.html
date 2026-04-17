@@ -453,7 +453,9 @@ function buildRaceGridDrivers(rows){
   // Row 2: headers — Pos., Driver, Team, then race cols, then Pole, Points
   // Data rows: col1=pos, col2=driver, col3=team, col4+= race results, pointsCol=25
 
-  // Find header rows — circuit row may be blank (S8+)
+  // Find header rows — supports:
+  // Classic: roundRow, circuitRow, headerRow (separate rows)
+  // S8+: roundRow, blank, headerRow with circuits embedded in cols 4+
   let roundRow=null, circuitRow=null, headerRow=null, dataStart=-1;
   for(let i=0;i<rows.length;i++){
     const r=rows[i];
@@ -461,12 +463,6 @@ function buildRaceGridDrivers(rows){
     if(roundRow && !headerRow){
       if((r[1]||'').trim().toLowerCase().startsWith('pos')){ headerRow=r; dataStart=i+1; break; }
       if(!circuitRow){ circuitRow=r; continue; }
-    }
-  }
-  // Second pass if circuit row was blank and headerRow not found yet
-  if(!headerRow){
-    for(let i=0;i<rows.length;i++){
-      if((rows[i][1]||'').trim().toLowerCase().startsWith('pos')){ headerRow=rows[i]; dataStart=i+1; break; }
     }
   }
   if(!headerRow) return '<div class="div-loading">Could not parse driver data.</div>';
@@ -480,11 +476,13 @@ function buildRaceGridDrivers(rows){
 
   // Rounds are cols 4 through ptsCol-2 (ptsCol-1 is Pole)
   const numRounds = ptsCol - 4 - 1;
-  // Use circuit codes if available, else round numbers as fallback
-  let circuits = circuitRow ? circuitRow.slice(4, 4+numRounds).map(v=>v.trim()) : [];
-  const hasCircuits = circuits.some(c=>c.length>0);
-  if(!hasCircuits && roundRow){
-    circuits = roundRow.slice(4, 4+numRounds).map((v,i)=>{ const n=(v||'').trim(); return n?'R'+n:'R'+(i+1); });
+  // Circuit codes: use circuitRow if it has values, else read from headerRow (S8+)
+  let circuits = [];
+  if(circuitRow && circuitRow.slice(4, 4+numRounds).some(v=>v.trim())){
+    circuits = circuitRow.slice(4, 4+numRounds).map(v=>v.trim());
+  } else {
+    // S8+: circuit codes are in the header row itself
+    circuits = headerRow.slice(4, 4+numRounds).map(v=>v.trim());
   }
 
   // Collect data rows, sort by points desc
@@ -551,7 +549,7 @@ function buildS3Constructors(rows){
   }
   if(start<0) return '';
 
-  // Find Points column dynamically from header row (handles blank cols like S8)
+  // Find Points column dynamically (handles blank cols like S8)
   let ptsCol = -1;
   if(start > 0){
     const hdr = rows[start-1];
@@ -567,8 +565,7 @@ function buildS3Constructors(rows){
     const team=(r[teamCol]||'').trim();
     if(!team) continue;
     let wins='', pods='', pts=0;
-    if(ptsCol > 0){
-      // Dynamic points column (S8+)
+    if(ptsCol>=0){
       pts=parseFloat((r[ptsCol]||'').trim())||0;
     } else if(hasPos){
       // S4/S5 format: Position, Team, Points
