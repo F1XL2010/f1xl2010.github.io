@@ -87,6 +87,19 @@
   footer{background:var(--dark);border-top:1px solid var(--border);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
   .footer-logo{background:var(--green);color:#000;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;padding:4px 9px;border-radius:3px;}
   .footer-text{font-size:12px;color:var(--text-faint);}
+  .season-bar{background:var(--dark2);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+  .s-btn{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:5px 14px;border-radius:4px;border:1px solid rgba(255,255,255,0.25);background:none;color:rgba(255,255,255,0.85);cursor:pointer;transition:all 0.15s;}
+  .s-btn:hover{color:#fff;border-color:rgba(255,255,255,0.5);background:rgba(255,255,255,0.05);}
+  .s-btn.active{background:rgba(61,204,71,0.15);border-color:var(--green);color:var(--green);}
+  .s-btn-wrap{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+  .s-select{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:6px 12px;border-radius:4px;border:1px solid rgba(255,255,255,0.25);background:var(--dark3);color:var(--text);cursor:pointer;width:100%;}
+  .s-select:focus{outline:none;border-color:var(--green);}
+  .div-bar{background:var(--dark2);border-bottom:1px solid var(--border);padding:10px 24px;display:flex;gap:6px;flex-wrap:wrap;}
+  .div-btn{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:5px 14px;border-radius:4px;border:1px solid var(--border);background:none;color:var(--text-muted);cursor:pointer;transition:all 0.15s;}
+  .div-btn:hover{color:var(--text);border-color:rgba(255,255,255,0.25);}
+  .div-btn.active{background:rgba(61,204,71,0.15);border-color:var(--green);color:var(--green);}
+  @media(max-width:860px){.s-btn-wrap{display:none;}.s-select-wrap{display:block;width:100%;}}
+  @media(min-width:861px){.s-btn-wrap{display:flex;}.s-select-wrap{display:none;}}
 </style>
 </head>
 <body>
@@ -117,6 +130,7 @@
       <div class="nav-dropdown"><a href="schedule.html">Schedule</a></div>
     </div>
     <div class="nav-item"><a href="track-records.html">Track Records</a></div>
+    <div class="nav-item"><a href="asr.html">All Star Race</a></div>
     <div class="nav-item"><a href="applications.html">Applications</a></div>
     <div class="nav-item"><a href="league-rules.html">League Rules</a></div>
   </div>
@@ -153,16 +167,16 @@
 </div>
 
 <div class="page-header">
-  <div class="page-eyebrow" id="page-eyebrow">Loading...</div>
+  <div class="page-eyebrow">F1XL</div>
   <div class="page-title">Results</div>
   <div class="page-meta" id="page-meta">Loading...</div>
 </div>
-
-<div style="background:var(--dark2);border-bottom:1px solid var(--border);padding:10px 24px;display:flex;gap:6px;flex-wrap:wrap;" id="div-selector-bar"></div>
+<div class="season-bar" id="season-bar"><div style="color:var(--text-muted);font-size:13px;">Loading seasons...</div></div>
+<div style="padding:8px 24px;background:var(--dark);border-bottom:1px solid var(--border);" id="back-bar"></div>
+<div class="div-bar" id="div-bar"></div>
 <div class="round-selector" id="round-selector">
   <div style="color:var(--text-faint);font-size:13px;">Loading rounds...</div>
 </div>
-
 <div class="content" id="content">
   <div class="loading-msg">Select a round above</div>
 </div>
@@ -311,40 +325,87 @@ function getMeta(rows){
 let _seasonCfg = null;
 let _currentSeason = null;
 let _currentDiv = 1;
+let _allSeasons = [];
 
 async function init(){
-  try {
-    _seasonCfg = await getCurrentSeasonConfig();
-    _currentSeason = await getCurrentSeason();
-  } catch(e) { console.warn('Config load failed:', e.message); }
+  // Read URL params
+  const params = new URLSearchParams(window.location.search);
+  const paramSeason = params.get('season');
+  const paramDiv = parseInt(params.get('div')) || 1;
 
-  // Build division selector
-  if (_seasonCfg) {
-    const numDivs = parseInt(_seasonCfg['divisions']) || 1;
-    const bar = document.getElementById('div-selector-bar');
-    let btns = '';
-    for (let d=1; d<=numDivs; d++) {
-      if (_seasonCfg[`d${d}_has_results`] === 'yes') {
-        btns += `<button onclick="switchDiv(${d})" id="divbtn${d}" style="padding:5px 14px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;background:${d===1?'rgba(61,204,71,0.15)':'none'};border:1px solid ${d===1?'var(--green)':'var(--border)'};border-radius:4px;color:${d===1?'var(--green)':'var(--text-muted)'};cursor:pointer;">D${d}</button>`;
-      }
-    }
-    bar.innerHTML = btns;
+  try { _allSeasons = await getAllSeasons(); } catch(e) { _allSeasons = []; }
+
+  // Build season selector
+  if(_allSeasons.length){
+    const btns = _allSeasons.map(obj=>
+      `<button class="s-btn" onclick="showSeason(${obj.season})" id="sbtn-${String(obj.season).replace('.','_')}">S${obj.season}</button>`
+    ).join('');
+    const opts = _allSeasons.map(obj=>
+      `<option value="${obj.season}">Season ${obj.season}</option>`
+    ).join('');
+    document.getElementById('season-bar').innerHTML =
+      `<div class="s-btn-wrap">${btns}</div>`+
+      `<div class="s-select-wrap"><select class="s-select" id="s-select" onchange="showSeason(this.value)">${opts}</select></div>`;
   }
 
-  await loadDivision(1);
+  // Determine which season to show — param > current season > most recent
+  let targetSeason = paramSeason;
+  if(!targetSeason){
+    try { targetSeason = await getCurrentSeason(); } catch(e){}
+  }
+  if(!targetSeason && _allSeasons.length) targetSeason = _allSeasons[0].season;
+
+  await showSeason(targetSeason, paramDiv);
+}
+
+async function showSeason(season, div){
+  div = div || 1;
+  _currentSeason = season;
+  _currentDiv = div;
+
+  // Sync selector UI
+  document.querySelectorAll('.s-btn').forEach(b=>b.classList.remove('active'));
+  const btn = document.getElementById('sbtn-'+String(season).replace('.','_'));
+  if(btn) btn.classList.add('active');
+  const sel = document.getElementById('s-select');
+  if(sel) sel.value = String(season);
+
+  document.getElementById('round-selector').innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Loading...</div>';
+  document.getElementById('content').innerHTML = '';
+  document.getElementById('div-bar').innerHTML = '';
+  rounds = [];
+  cache = {};
+
+  try {
+    _seasonCfg = await loadSeasonConfig(season);
+  } catch(e) { _seasonCfg = null; }
+
+  if(!_seasonCfg){
+    document.getElementById('page-meta').textContent = 'Season '+season;
+    document.getElementById('round-selector').innerHTML = '<div style="color:var(--text-faint);font-size:13px;">No results data available for this season.</div>';
+    return;
+  }
+
+  // Build division bar
+  const numDivs = parseInt(_seasonCfg['divisions']) || 1;
+  let divBtns = '';
+  for(let d=1; d<=numDivs; d++){
+    if(_seasonCfg[`d${d}_has_results`] === 'yes'){
+      divBtns += `<button class="div-btn${d===div?' active':''}" id="divbtn${d}" onclick="switchDiv(${d})">Division ${d}</button>`;
+    }
+  }
+  document.getElementById('div-bar').innerHTML = divBtns;
+
+  await loadDivision(div);
 }
 
 async function switchDiv(d) {
   _currentDiv = d;
-  // Update button styles
-  for (let i=1; i<=4; i++) {
-    const btn = document.getElementById('divbtn'+i);
-    if (!btn) continue;
-    const active = i === d;
-    btn.style.background = active ? 'rgba(61,204,71,0.15)' : 'none';
-    btn.style.borderColor = active ? 'var(--green)' : 'var(--border)';
-    btn.style.color = active ? 'var(--green)' : 'var(--text-muted)';
-  }
+  document.querySelectorAll('.div-btn').forEach(b=>b.classList.remove('active'));
+  const btn = document.getElementById('divbtn'+d);
+  if(btn) btn.classList.add('active');
+  rounds = [];
+  cache = {};
   await loadDivision(d);
 }
 
@@ -353,14 +414,21 @@ async function loadDivision(d) {
     SHEET_ID = _seasonCfg[`d${d}_sheet_id`] || SHEET_ID;
     CAL_GID  = _seasonCfg[`d${d}_calendar_gid`] || CAL_GID;
     RACE_GIDS = [];
-    for (let i=1; i<=21; i++) {
+    for (let i=1; i<=25; i++) {
       const gid = _seasonCfg[`d${d}_r${i}_gid`];
       RACE_GIDS.push(gid || null);
     }
   }
-  document.getElementById('page-eyebrow').textContent = `Season ${_currentSeason||''}  · Results`;
+  // Show back-to-past-seasons link
+  const backBar = document.getElementById('back-bar');
+  if(backBar) backBar.innerHTML = '<a href="past-seasons.html?season='+_currentSeason+'" style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);text-decoration:none;">&#8592; Past Seasons</a>';
+  document.getElementById('page-meta').textContent = 'Season '+_currentSeason+' · Division '+d;
   document.getElementById('round-selector').innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Loading...</div>';
   document.getElementById('content').innerHTML = '';
+  if(!CAL_GID){
+    document.getElementById('round-selector').innerHTML = '<div style="color:var(--text-faint);font-size:13px;">No calendar data available.</div>';
+    return;
+  }
   try{
     const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${CAL_GID}`;
     const res=await fetch(url);
@@ -376,7 +444,7 @@ async function loadDivision(d) {
       if(!r0)continue;
       if(r0.toLowerCase().includes('all star'))continue;
       const num=parseInt(r0);
-      if(isNaN(num)||num<1||num>21)continue;
+      if(isNaN(num)||num<1||num>25)continue;
       if(!r3&&!r2)continue;
       const date=pd(r2);
       const done=!!(date&&date<today);
@@ -386,8 +454,9 @@ async function loadDivision(d) {
     const sel=document.getElementById('round-selector');
     sel.innerHTML=rounds.map(r=>`<button class="round-btn${r.isSprint?' sprint':''}" id="rb${r.round}" onclick="selectRound(${r.round})">${r.isSprint?'⚡ ':''}R${r.round}${r.circuit?' · '+r.circuit:''}</button>`).join('');
     const done=rounds.filter(r=>r.done).length;
-    document.getElementById('page-meta').textContent=`${rounds.length} rounds · ${done} completed`;
+    if(rounds.length) document.getElementById('page-meta').textContent=`Season ${_currentSeason} · Division ${d} · ${rounds.length} rounds · ${done} completed`;
     if(lastDone>=0)selectRound(rounds[lastDone].round);
+    else document.getElementById('content').innerHTML='<div class="loading-msg">No completed rounds yet.</div>';
   }catch(e){
     document.getElementById('round-selector').innerHTML=`<div style="color:#ff6b6b;font-size:13px;">Could not load rounds: ${e.message}</div>`;
   }

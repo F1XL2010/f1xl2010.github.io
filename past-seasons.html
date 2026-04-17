@@ -668,6 +668,11 @@ async function showSeason(season){
   const s = parseFloat(season);
 
   // Disclaimer for S12 and older
+  // Update URL so the back button works
+  const url = new URL(window.location);
+  url.searchParams.set('season', season);
+  window.history.replaceState({}, '', url);
+
   let disclaimerHtml = '';
   if(s <= 12){
     disclaimerHtml = '<div class="disclaimer"><div class="disclaimer-title">Please Note</div><div class="disclaimer-text">Information for older seasons may be incomplete. Where a final score table is provided that represents the correct final outcome, but results tables may not reflect post-race penalties. If no final score table is available no individual or constructors winner has been determined.</div></div>';
@@ -680,7 +685,10 @@ async function showSeason(season){
   }
 
   const wrap = document.createElement('div');
-  wrap.innerHTML = disclaimerHtml + '<div class="season-heading">Season '+season+'</div>';
+  const s = parseFloat(season);
+  const hasCal = sc && Object.keys(sc).some(k=>k.endsWith('_has_results') && sc[k]==='yes');
+  const resultsLink = hasCal ? '<a href="results.html?season='+season+'" style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--teal);text-decoration:none;border:1px solid rgba(94,207,207,0.3);padding:4px 10px;border-radius:4px;margin-left:12px;vertical-align:middle;">Results &#8599;</a>' : '';
+  wrap.innerHTML = disclaimerHtml + '<div class="season-heading" style="display:flex;align-items:center;">Season '+season+resultsLink+'</div>';
   el.innerHTML = '';
   el.appendChild(wrap);
 
