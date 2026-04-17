@@ -36,7 +36,7 @@ async function loadConfig() {
   if (_configPromise) return _configPromise;
   _configPromise = (async () => {
     try {
-      const url = `https://docs.google.com/spreadsheets/d/${F1XL_CONFIG_SHEET_ID}/gviz/tq?tqx=out:csv&gid=${F1XL_CONFIG_GID}`;
+      const url = `https://docs.google.com/spreadsheets/d/${F1XL_CONFIG_SHEET_ID}/export?format=csv&gid=${F1XL_CONFIG_GID}`;
       const res = await fetch(url);
       const text = await res.text();
       const config = parseConfigCSV(text);
