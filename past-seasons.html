@@ -231,7 +231,7 @@ async function fetchCSV(sheetId, gid){
   const res = await fetch(url);
   const text = await res.text();
   if(text.includes('<!DOCTYPE')) throw new Error('Sheet not published');
-  const rows = parseCSV(text).filter(r=>r.some(v=>v.trim())&&!r.some(v=>(v||'').trim().startsWith('#')));
+  const rows = parseCSV(text).filter(r=>r.some(v=>v.trim())&&!(r[0]||'').trim().startsWith('#')&&!(r[1]||'').trim().startsWith('#'));
   cache[key] = rows;
   return rows;
 }
