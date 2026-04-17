@@ -938,20 +938,20 @@ function buildS20Drivers(rows, roundNames){
   const ptsCol = headerRow.findIndex(v=>(v||'').trim().toLowerCase()==='points');
   if(ptsCol<0) return '<div class="div-loading">Could not find points column.</div>';
 
-  // Build round labels — calendar roundNames > row 0 circuit > header label
+  // Build round labels — row 0 has circuit names aligned to sprint quali cols
+  // Sprint race cols (blank in row 0) inherit name from preceding sprint quali col
   const roundCols = [];
-  for(let c=4;c<ptsCol-1;c++){ // ptsCol-1 = Pole col
+  let lastCircuit = '';
+  for(let c=4;c<ptsCol-1;c++){
     const label = (headerRow[c]||'').trim();
     if(!label) continue;
     const isSprint = label.toLowerCase().includes('(s)');
-    // Extract round number from label (R3, R3(s), R10 etc)
-    const roundMatch = label.match(/R(\d+)/i);
-    const roundNum = roundMatch ? parseInt(roundMatch[1]) : null;
-    // Priority: calendar > row 0 circuit > header label
-    const calName = roundNum && roundNames[roundNum] ? roundNames[roundNum] : null;
+    const isSprintRace = !isSprint && c>4 && (headerRow[c-1]||'').trim().toLowerCase().includes('(s)');
     const circuit = (circuitRow[c]||'').trim();
-    const displayLabel = calName || circuit || label;
-    roundCols.push({col:c, label: isSprint ? displayLabel+'*' : displayLabel, isSprint});
+    if(circuit) lastCircuit = circuit;
+    // Sprint race col inherits circuit from sprint quali col before it
+    const displayLabel = circuit || (isSprintRace ? lastCircuit : label);
+    roundCols.push({col:c, label: displayLabel, isSprint});
   }
 
   // Trim trailing rounds with no data
