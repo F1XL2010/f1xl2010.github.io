@@ -208,7 +208,21 @@ function parseCSV(text){
 
 const cache = {};
 
+function parseGID(sheetId, gid){
+  // If gid is a full URL, extract the sheet ID and GID from it
+  if(gid && gid.startsWith('http')){
+    const m = gid.match(/\/d\/([a-zA-Z0-9_-]+)/);
+    if(m) sheetId = m[1];
+    const g = gid.match(/[?&#]gid=(\d+)/);
+    if(g) gid = g[1];
+  }
+  return {sheetId, gid};
+}
+
 async function fetchCSV(sheetId, gid){
+  const parsed = parseGID(sheetId, gid);
+  sheetId = parsed.sheetId;
+  gid = parsed.gid;
   const key = sheetId+'|'+gid;
   if(cache[key]) return cache[key];
   const url = 'https://docs.google.com/spreadsheets/d/'+sheetId+'/export?format=csv&gid='+gid;
