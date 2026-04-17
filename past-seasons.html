@@ -951,7 +951,9 @@ function buildS20Drivers(rows, roundNames){
     if(circuit) lastCircuit = circuit;
     // Sprint race col inherits circuit from sprint quali col before it
     const displayLabel = circuit || (isSprintRace ? lastCircuit : label);
-    roundCols.push({col:c, label: displayLabel, isSprint});
+    // Abbreviate to 3 chars to match older season style
+    const shortLabel = displayLabel.length > 3 ? displayLabel.slice(0,3).toUpperCase() : displayLabel.toUpperCase();
+    roundCols.push({col:c, label: shortLabel, isSprint, isSprintRace});
   }
 
   // Trim trailing rounds with no data
@@ -975,8 +977,12 @@ function buildS20Drivers(rows, roundNames){
   let html = '<div class="section-label">Drivers</div><div class="st-wrap"><table class="st"><thead><tr>';
   html += '<th class="th-l sticky" style="width:28px">Pos</th>';
   html += '<th class="th-l sticky2">Driver</th>';
-  roundCols.forEach(rc=>{
-    html += '<th'+(rc.isSprint?' style="color:rgba(130,170,255,0.8)"':'')+'>'+(rc.label||'?')+'</th>';
+  roundCols.forEach((rc,idx)=>{
+    const nextIsSprint = idx+1 < roundCols.length && roundCols[idx+1].isSprint;
+    let style = '';
+    if(rc.isSprint) style = 'color:rgba(130,170,255,0.9);border-left:2px solid rgba(100,150,255,0.4);';
+    else if(rc.isSprintRace) style = 'color:rgba(130,170,255,0.7);border-right:2px solid rgba(100,150,255,0.4);';
+    html += '<th'+(style?' style="'+style+'"':'')+' title="'+rc.label+'">'+(rc.label||'?')+'</th>';
   });
   if(hasPointsData) html += '<th>Pts</th>';
   html += '</tr></thead><tbody>';
@@ -991,13 +997,14 @@ function buildS20Drivers(rows, roundNames){
     html += '<td class="td-l sticky2"><span class="dname">'+driver+'</span>'+(team?'<br><span class="tname">'+team+'</span>':'')+'</td>';
     roundCols.forEach(rc=>{
       const val = (r[rc.col]||'').trim().replace(/^ $/, '');
-      if(!val) html += '<td class="rr-blank">&mdash;</td>';
+      const sprintStyle = rc.isSprint ? 'border-left:2px solid rgba(100,150,255,0.4);' : rc.isSprintRace ? 'border-right:2px solid rgba(100,150,255,0.4);' : '';
+      if(!val) html += '<td class="rr-blank"'+(sprintStyle?' style="'+sprintStyle+'"':'')+'>&#8212;</td>';
       else if(val==='DNF'||val==='DNS'||val==='DSQ'||val==='BAN'){
-        html += '<td><span class="pos-cell pdnf" style="width:34px;font-size:10px;">'+val+'</span></td>';
+        html += '<td'+(sprintStyle?' style="'+sprintStyle+'"':'')+'><span class="pos-cell pdnf" style="width:34px;font-size:10px;">'+val+'</span></td>';
       } else {
         const n=parseInt(val);
         const rc2=n===1?'p1':n===2?'p2':n===3?'p3':n<=10?'pp':isNaN(n)?'':'pout';
-        html += '<td><span class="pos-cell '+rc2+'">'+val+'</span></td>';
+        html += '<td'+(sprintStyle?' style="'+sprintStyle+'"':'')+'><span class="pos-cell '+rc2+'">'+val+'</span></td>';
       }
     });
     if(hasPointsData) html += '<td><span class="pts">'+(pts||'&mdash;')+'</span></td>';
