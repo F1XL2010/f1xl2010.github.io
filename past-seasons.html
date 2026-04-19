@@ -914,6 +914,61 @@ function buildOverallConstTable(rows){
   return html;
 }
 
+function buildWeeklyTotalsTable(rows){
+  if(!rows || !rows.length) return '<div class="div-loading">No data available.</div>';
+
+  // Find header row — contains 'Round' or numeric round numbers
+  let hdrIdx = -1;
+  for(let i=0; i<rows.length; i++){
+    if((rows[i][0]||'').trim().toLowerCase()==='round'){ hdrIdx=i; break; }
+  }
+  if(hdrIdx<0) return '<div class="div-loading">Could not parse weekly totals.</div>';
+
+  const hdr = rows[hdrIdx];
+  // Round columns: all cols after col 0 that have a value
+  const roundCols = [];
+  for(let c=1; c<hdr.length; c++){
+    const v = (hdr[c]||'').trim();
+    if(v) roundCols.push({col:c, label:v});
+  }
+
+  const data = [];
+  for(let i=hdrIdx+1; i<rows.length; i++){
+    const r = rows[i];
+    const team = (r[0]||'').trim();
+    if(!team) continue;
+    const pts = roundCols.map(rc => {
+      const v = (r[rc.col]||'').trim();
+      return v==='' ? null : (parseFloat(v)||0);
+    });
+    const total = pts.reduce((s,v) => s + (v||0), 0);
+    data.push({team, pts, total});
+  }
+
+  if(!data.length) return '<div class="div-loading">No data found.</div>';
+  data.sort((a,b) => b.total - a.total);
+
+  let html = '<div class="st-wrap"><table class="st"><thead><tr>';
+  html += '<th class="th-l sticky2">Team</th>';
+  roundCols.forEach(rc => { html += '<th>R'+rc.label+'</th>'; });
+  html += '<th>Total</th>';
+  html += '</tr></thead><tbody>';
+
+  data.forEach((d, idx) => {
+    const pos = idx+1;
+    html += '<tr'+trClass(pos)+'>';
+    html += '<td class="td-l sticky2"><span class="dname">'+d.team+'</span></td>';
+    d.pts.forEach(v => {
+      html += '<td>'+(v===null ? '&mdash;' : v)+'</td>';
+    });
+    html += '<td><span class="pts">'+d.total+'</span></td>';
+    html += '</tr>';
+  });
+
+  html += '</tbody></table></div>';
+  return html;
+}
+
 function switchOverallTab(id, tab){
   document.getElementById(id+'-overall-content').style.display = tab==='overall'?'':'none';
   document.getElementById(id+'-wtotals-content').style.display = tab==='wtotals'?'':'none';
@@ -957,7 +1012,7 @@ async function toggleOverallAccordion(id, sc){
   ]);
 
   overallContent.innerHTML=buildOverallConstTable(overallRows);
-  if(wtContent) wtContent.innerHTML=buildOverallConstTable(wtRows);
+  if(wtContent) wtContent.innerHTML=buildWeeklyTotalsTable(wtRows);
 }
 
 // ============================================================
