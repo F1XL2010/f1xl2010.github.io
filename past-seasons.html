@@ -864,7 +864,7 @@ function buildOverallConstTable(rows){
   }
   if(ptsCol<0) return '<div class="div-loading">Could not find Points column.</div>';
 
-  // Team name: find 'Team' header col, then look at that col and col+1 for actual text in data rows
+  // Find Team header col
   let teamHeaderCol = -1;
   for(let c=0; c<hdr.length; c++){
     if((hdr[c]||'').trim().toLowerCase()==='team'){ teamHeaderCol=c; break; }
@@ -877,25 +877,17 @@ function buildOverallConstTable(rows){
     const posVal = (r[posCol]||'').trim();
     if(!posVal || isNaN(parseInt(posVal))) continue;
 
-    // Find team name: try teamHeaderCol, teamHeaderCol+1, teamHeaderCol+2
-    // (logo image column exports as blank, name is the next non-blank col after Team header)
+    // Find team name: scan cols after teamHeaderCol for first non-blank non-numeric text
     let team = '';
-    if(teamHeaderCol >= 0){
-      for(let offset=0; offset<=3; offset++){
-        const t = (r[teamHeaderCol+offset]||'').trim();
-        if(t && t !== posVal){ team=t; break; }
-      }
-    }
-    // Fallback: find first non-empty non-numeric cell between posCol and ptsCol
-    if(!team){
-      for(let c=posCol+1; c<ptsCol; c++){
-        const t = (r[c]||'').trim();
-        if(t && isNaN(parseFloat(t))){ team=t; break; }
-      }
+    const scanStart = teamHeaderCol >= 0 ? teamHeaderCol : posCol+1;
+    for(let c=scanStart; c<ptsCol; c++){
+      const t = (r[c]||'').trim();
+      if(t && isNaN(parseFloat(t.replace(/,/g,'')))) { team=t; break; }
     }
     if(!team) continue;
 
-    const pts = parseFloat((r[ptsCol]||'').trim())||0;
+    // Strip commas from points before parsing
+    const pts = parseFloat((r[ptsCol]||'').replace(/,/g,'').trim())||0;
     data.push({pos: parseInt(posVal), team, pts});
   }
 
@@ -908,7 +900,7 @@ function buildOverallConstTable(rows){
   data.forEach(d => {
     html += '<tr'+trClass(d.pos)+'><td><span class="st-pos">'+d.pos+'</span></td>';
     html += '<td class="td-l"><span class="dname">'+d.team+'</span></td>';
-    html += '<td><span class="pts">'+d.pts+'</span></td></tr>';
+    html += '<td><span class="pts">'+d.pts.toLocaleString()+'</span></td></tr>';
   });
   html += '</tbody></table></div>';
   return html;
@@ -948,6 +940,13 @@ function buildWeeklyTotalsTable(rows){
   if(!data.length) return '<div class="div-loading">No data found.</div>';
   data.sort((a,b) => b.total - a.total);
 
+  // Find max value per round column for gold highlight
+  const colMaxes = roundCols.map((rc, ci) => {
+    let max = -Infinity;
+    data.forEach(d => { if(d.pts[ci] !== null && d.pts[ci] > max) max = d.pts[ci]; });
+    return max;
+  });
+
   let html = '<div class="st-wrap"><table class="st"><thead><tr>';
   html += '<th class="th-l sticky2">Team</th>';
   roundCols.forEach(rc => { html += '<th>R'+rc.label+'</th>'; });
@@ -958,8 +957,10 @@ function buildWeeklyTotalsTable(rows){
     const pos = idx+1;
     html += '<tr'+trClass(pos)+'>';
     html += '<td class="td-l sticky2"><span class="dname">'+d.team+'</span></td>';
-    d.pts.forEach(v => {
-      html += '<td>'+(v===null ? '&mdash;' : v)+'</td>';
+    d.pts.forEach((v, ci) => {
+      const isMax = v !== null && v === colMaxes[ci];
+      const style = isMax ? ' style="background:rgba(232,184,75,0.2);color:var(--gold);font-weight:700;"' : '';
+      html += '<td'+style+'>'+(v===null ? '&mdash;' : v)+'</td>';
     });
     html += '<td><span class="pts">'+d.total+'</span></td>';
     html += '</tr>';
