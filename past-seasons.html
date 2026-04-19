@@ -944,25 +944,27 @@ async function renderS20plus(id, season, sc, body){
   let accordionHtml = '';
   if(overallGid && overallGid.trim()!==''){
     const hasWt = wtGid && wtGid.trim()!=='';
-    accordionHtml = `
-    <div class="overall-accordion" id="${id}-overall-accordion">
-      <div class="overall-accordion-header" id="${id}-overall-hdr" onclick="toggleOverallAccordion('${id}', _currentSeasonConfig)">
-        <div style="display:flex;align-items:center;gap:12px;">
-          <span class="overall-accordion-tag">Season ${season}</span>
-          <span class="overall-accordion-title">Overall Constructors</span>
-        </div>
-        <span class="overall-accordion-chevron" id="${id}-overall-chev">&#9660;</span>
-      </div>
-      <div class="overall-accordion-body" id="${id}-overall-body" data-loaded="false">
-        ${hasWt ? `
-        <div class="overall-inner-tabs">
-          <button class="overall-inner-tab active" data-tab="overall" onclick="switchOverallTab('${id}','overall')">Overall</button>
-          <button class="overall-inner-tab" data-tab="wtotals" onclick="switchOverallTab('${id}','wtotals')">Weekly Totals</button>
-        </div>` : ''}
-        <div class="overall-inner-content" id="${id}-overall-content"></div>
-        ${hasWt ? `<div class="overall-inner-content" id="${id}-wtotals-content" style="display:none"></div>` : ''}
-      </div>
-    </div>`;
+    const innerTabs = hasWt
+      ? '<div class="overall-inner-tabs">'
+        + '<button class="overall-inner-tab active" data-tab="overall" onclick="switchOverallTab(\''+id+'\',\'overall\')">Overall</button>'
+        + '<button class="overall-inner-tab" data-tab="wtotals" onclick="switchOverallTab(\''+id+'\',\'wtotals\')">Weekly Totals</button>'
+        + '</div>'
+      : '';
+    const wtContent = hasWt ? '<div class="overall-inner-content" id="'+id+'-wtotals-content" style="display:none"></div>' : '';
+    accordionHtml = '<div class="overall-accordion" id="'+id+'-overall-accordion">'
+      + '<div class="overall-accordion-header" id="'+id+'-overall-hdr" onclick="toggleOverallAccordion(\''+id+'\', _currentSeasonConfig)">'
+      + '<div style="display:flex;align-items:center;gap:12px;">'
+      + '<span class="overall-accordion-tag">Season '+season+'</span>'
+      + '<span class="overall-accordion-title">Overall Constructors</span>'
+      + '</div>'
+      + '<span class="overall-accordion-chevron" id="'+id+'-overall-chev">&#9660;</span>'
+      + '</div>'
+      + '<div class="overall-accordion-body" id="'+id+'-overall-body" data-loaded="false">'
+      + innerTabs
+      + '<div class="overall-inner-content" id="'+id+'-overall-content"></div>'
+      + wtContent
+      + '</div>'
+      + '</div>';
   let tabsHtml = '<div class="div-tabs">';
   let firstTab = true;
   for(let d=1;d<=divisions;d++){
