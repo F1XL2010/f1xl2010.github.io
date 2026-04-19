@@ -53,25 +53,19 @@
   .content{padding:20px 24px 48px;max-width:900px;}
   .loading-msg{text-align:center;padding:48px;color:var(--text-muted);font-size:14px;}
 
-  /* SEARCH */
-  .search-wrap{margin-bottom:16px;}
-  .search-input{width:100%;max-width:320px;background:var(--dark2);border:1px solid var(--border2);border-radius:6px;padding:9px 14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:13px;outline:none;transition:border-color 0.2s;}
-  .search-input:focus{border-color:var(--teal);}
-  .search-input::placeholder{color:var(--text-faint);}
-
   /* RECORDS TABLE */
-  .records-table{width:100%;border-collapse:collapse;}
-  .records-table th{text-align:left;padding:8px 12px;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-faint);border-bottom:1px solid var(--border2);background:var(--dark);}
-  .records-table td{padding:12px 12px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text-muted);vertical-align:middle;}
+  .records-table{width:100%;border-collapse:collapse;background:var(--dark2);border-radius:8px;overflow:hidden;}
+  .records-table th{text-align:left;padding:8px 12px;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--border2);background:var(--dark3);}
+  .records-table td{padding:12px 12px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text);vertical-align:middle;}
   .records-table tr:last-child td{border-bottom:none;}
-  .records-table tr:hover td{background:rgba(255,255,255,0.02);}
+  .records-table tr:hover td{background:rgba(255,255,255,0.03);}
 
   .circuit-name{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;color:var(--text);}
   .lap-time{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;color:var(--green);letter-spacing:0.5px;}
   .driver-name{font-size:13px;color:var(--text);font-weight:500;}
   .team-name{font-size:11px;color:var(--text-muted);margin-top:1px;}
-  .record-season{font-size:11px;color:var(--text-faint);}
-  .record-date{font-size:11px;color:var(--text-faint);}
+  .record-season{font-size:13px;color:var(--text-muted);font-family:'Barlow Condensed',sans-serif;font-weight:600;}
+  .record-date{font-size:11px;color:var(--text-muted);}
 
   /* FLAG col */
   .flag-cell{font-size:20px;width:40px;text-align:center;}
@@ -173,9 +167,6 @@
 </div>
 
 <div class="content">
-  <div class="search-wrap">
-    <input type="text" class="search-input" id="search" placeholder="Search circuit or driver..." oninput="filterRecords(this.value)">
-  </div>
   <div id="content"><div class="loading-msg">Loading track records...</div></div>
 </div>
 
@@ -223,7 +214,6 @@ async function loadDiv(idx, btn) {
   currentDiv = idx;
   document.querySelectorAll('.div-tab').forEach(t => t.classList.remove('active'));
   btn.classList.add('active');
-  document.getElementById('search').value = '';
   document.getElementById('content').innerHTML = '<div class="loading-msg">Loading...</div>';
 
   if (cache[idx]) {
@@ -304,20 +294,6 @@ function renderRecords(records) {
 
   html += '</tbody></table>';
   document.getElementById('content').innerHTML = html;
-}
-
-function filterRecords(query) {
-  if (!query.trim()) {
-    renderRecords(allRecords);
-    return;
-  }
-  const q = query.toLowerCase();
-  const filtered = allRecords.filter(r =>
-    r.circuit.toLowerCase().includes(q) ||
-    r.driver.toLowerCase().includes(q) ||
-    r.team.toLowerCase().includes(q)
-  );
-  renderRecords(filtered);
 }
 
 function parseCSV(text) {
