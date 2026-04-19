@@ -8,25 +8,40 @@ const F1XL_CONFIG_GID = '0';
 let _configCache = null;
 let _configPromise = null;
 
+function splitCSVLine(line) {
+  const parts = [];
+  let cur = '', inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') { inQ = !inQ; }
+    else if (c === ',' && !inQ) { parts.push(cur.trim()); cur = ''; }
+    else cur += c;
+  }
+  parts.push(cur.trim());
+  return parts;
+}
+
 function parseConfigCSV(text) {
   const map = {};
-  const lines = text.split(/\r?\n/);
-  for (const line of lines) {
-    if (!line.trim()) continue;
-    const parts = [];
-    let cur = '', inQ = false;
-    for (let i = 0; i < line.length; i++) {
-      const c = line[i];
-      if (c === '"') { inQ = !inQ; }
-      else if (c === ',' && !inQ) { parts.push(cur.trim()); cur = ''; }
-      else cur += c;
-    }
-    parts.push(cur.trim());
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  if (!lines.length) return map;
+
+  // Read extra column headers from row 0 (cols 2+)
+  const headerParts = splitCSVLine(lines[0]);
+  const extraHeaders = headerParts.slice(2).map(h => h.replace(/^"|"$/g, '').trim().toLowerCase()).filter(h => h);
+
+  for (let li = 1; li < lines.length; li++) {
+    const parts = splitCSVLine(lines[li]);
     const key = (parts[0] || '').replace(/^"|"$/g, '').trim().toLowerCase();
     const val = (parts[1] || '').replace(/^"|"$/g, '').trim();
     if (!key || !val) continue;
     if (key === 'key' || key === 'value' || key === 'past seasons' || key === 'tab gid from this document') continue;
     map[key] = val;
+    // Store extra columns keyed as e.g. s26_gid__overall_gid
+    extraHeaders.forEach((hdr, i) => {
+      const extra = (parts[2 + i] || '').replace(/^"|"$/g, '').trim();
+      if (extra) map[key + '__' + hdr] = extra;
+    });
   }
   return map;
 }
@@ -75,7 +90,15 @@ async function loadSeasonConfig(season) {
     const res = await fetch(url);
     const text = await res.text();
     if (text.includes('<!DOCTYPE')) return null;
-    return parseConfigCSV(text);
+    const sc = parseConfigCSV(text);
+    // Merge any extra main-config columns (e.g. overall_gid, w_totals_gid) into sc
+    for (const k of Object.keys(config)) {
+      if (k.startsWith(key + '__')) {
+        const subKey = k.slice(key.length + 2); // strip "s26_gid__"
+        if (!(subKey in sc)) sc[subKey] = config[k];
+      }
+    }
+    return sc;
   } catch(e) {
     console.warn('Season config load failed for season', season, e.message);
     return null;
