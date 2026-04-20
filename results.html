@@ -492,7 +492,7 @@ async function loadDivision(d) {
   }
   // Show back-to-past-seasons link
   const backBar = document.getElementById('back-bar');
-  if(backBar) backBar.innerHTML = '<a href="past-seasons.html?season='+_currentSeason+'" style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);text-decoration:none;">&#8592; Past Seasons</a>';
+  if(backBar) backBar.innerHTML = '<a href="past-seasons.html?season='+_currentSeason+'" style="font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);text-decoration:none;">&#8592; Past Seasons</a>';
   document.getElementById('page-meta').textContent = 'Season '+_currentSeason+' · Division '+d;
   document.getElementById('round-selector').innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Loading...</div>';
   document.getElementById('content').innerHTML = '';
