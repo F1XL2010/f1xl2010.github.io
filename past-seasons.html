@@ -294,9 +294,35 @@ function switchDiv(id, div, total){
 
 // ============================================================
 // SEASON DISPATCHER
-// Season config loaded from config sheet, then routed to
-// the correct parser based on season number
 // ============================================================
+function buildOverallAccordionHtml(id, season, sc){
+  const overallGid = sc['overall_gid'];
+  const wtGid = sc['w_totals_gid'];
+  if(!overallGid || overallGid.trim()==='') return '';
+  const hasWt = wtGid && wtGid.trim()!=='';
+  const innerTabs = hasWt
+    ? '<div class="overall-inner-tabs">'
+      + '<button class="overall-inner-tab active" data-tab="overall" onclick="switchOverallTab(\''+id+'\',' + "\'" + 'overall' + "\'" + ')">Overall</button>'
+      + '<button class="overall-inner-tab" data-tab="wtotals" onclick="switchOverallTab(\''+id+'\',' + "\'" + 'wtotals' + "\'" + ')">Weekly Totals</button>'
+      + '</div>'
+    : '';
+  const wtContent = hasWt ? '<div class="overall-inner-content" id="'+id+'-wtotals-content" style="display:none"></div>' : '';
+  return '<div class="overall-accordion" id="'+id+'-overall-accordion">'
+    + '<div class="overall-accordion-header" id="'+id+'-overall-hdr" onclick="toggleOverallAccordion(\''+id+'\', _currentSeasonConfig)">'
+    + '<div style="display:flex;align-items:center;gap:12px;">'
+    + '<span class="overall-accordion-tag">Season '+season+'</span>'
+    + '<span class="overall-accordion-title">Overall Constructors</span>'
+    + '</div>'
+    + '<span class="overall-accordion-chevron" id="'+id+'-overall-chev">&#9660;</span>'
+    + '</div>'
+    + '<div class="overall-accordion-body" id="'+id+'-overall-body" data-loaded="false">'
+    + innerTabs
+    + '<div class="overall-inner-content" id="'+id+'-overall-content"></div>'
+    + wtContent
+    + '</div>'
+    + '</div>';
+}
+
 async function loadSeason(id, season, body){
   const sc = await loadSeasonConfig(season);
   if(!sc){ body.innerHTML='<div class="div-loading" style="padding:16px 20px;">No config data for this season.</div>'; return; }
@@ -1035,34 +1061,6 @@ async function toggleOverallAccordion(id, sc){
 async function renderS20plus(id, season, sc, body){
   const divisions = parseInt(sc['divisions'])||1;
 
-  // Overall Constructors accordion (only if overall_gid present in config)
-  const overallGid = sc['overall_gid'];
-  const wtGid = sc['w_totals_gid'];
-  let accordionHtml = '';
-  if(overallGid && overallGid.trim()!==''){
-    const hasWt = wtGid && wtGid.trim()!=='';
-    const innerTabs = hasWt
-      ? '<div class="overall-inner-tabs">'
-        + '<button class="overall-inner-tab active" data-tab="overall" onclick="switchOverallTab(\''+id+'\',\'overall\')">Overall</button>'
-        + '<button class="overall-inner-tab" data-tab="wtotals" onclick="switchOverallTab(\''+id+'\',\'wtotals\')">Weekly Totals</button>'
-        + '</div>'
-      : '';
-    const wtContent = hasWt ? '<div class="overall-inner-content" id="'+id+'-wtotals-content" style="display:none"></div>' : '';
-    accordionHtml = '<div class="overall-accordion" id="'+id+'-overall-accordion">'
-      + '<div class="overall-accordion-header" id="'+id+'-overall-hdr" onclick="toggleOverallAccordion(\''+id+'\', _currentSeasonConfig)">'
-      + '<div style="display:flex;align-items:center;gap:12px;">'
-      + '<span class="overall-accordion-tag">Season '+season+'</span>'
-      + '<span class="overall-accordion-title">Overall Constructors</span>'
-      + '</div>'
-      + '<span class="overall-accordion-chevron" id="'+id+'-overall-chev">&#9660;</span>'
-      + '</div>'
-      + '<div class="overall-accordion-body" id="'+id+'-overall-body" data-loaded="false">'
-      + innerTabs
-      + '<div class="overall-inner-content" id="'+id+'-overall-content"></div>'
-      + wtContent
-      + '</div>'
-      + '</div>';
-  }
   let tabsHtml = '<div class="div-tabs">';
   let firstTab = true;
   for(let d=1;d<=divisions;d++){
@@ -1087,7 +1085,7 @@ async function renderS20plus(id, season, sc, body){
     }
   }
 
-  body.innerHTML = accordionHtml + tabsHtml + contentHtml;
+  body.innerHTML = tabsHtml + contentHtml;
   await loadS20DivContent(id, 1, sc);
 }
 
@@ -1466,11 +1464,19 @@ async function showSeason(season){
   const bodyEl = document.createElement('div');
   wrap.appendChild(bodyEl);
 
-  if(s<=2) await renderS1S2('ps', season, sc, bodyEl);
-  else if(s>=3 && s<=9 || s===11 || s===12 || s===13 || s===14 || s===15 || s===16 || s===17 || s===18 || s===19) await renderS3to5('ps', season, sc, bodyEl);
-  else if(s===10) await renderS10('ps', season, sc, bodyEl);
-  else if(s>=20) await renderS20plus('ps', season, sc, bodyEl);
-  else bodyEl.innerHTML = '<div class="loading-msg" style="padding:24px;">Data for Season '+season+' coming soon.</div>';
+  // Inject overall accordion for any season that has overall_gid
+  const accordionEl = document.createElement('div');
+  accordionEl.innerHTML = buildOverallAccordionHtml('ps', season, sc);
+  if(accordionEl.firstChild) bodyEl.appendChild(accordionEl.firstChild);
+
+  const contentEl = document.createElement('div');
+  bodyEl.appendChild(contentEl);
+
+  if(s<=2) await renderS1S2('ps', season, sc, contentEl);
+  else if(s>=3 && s<=9 || s===11 || s===12 || s===13 || s===14 || s===15 || s===16 || s===17 || s===18 || s===19) await renderS3to5('ps', season, sc, contentEl);
+  else if(s===10) await renderS10('ps', season, sc, contentEl);
+  else if(s>=20) await renderS20plus('ps', season, sc, contentEl);
+  else contentEl.innerHTML = '<div class="loading-msg" style="padding:24px;">Data for Season '+season+' coming soon.</div>';
 
   // Cache the rendered DOM for instant revisits
   seasonCache[season] = wrap.cloneNode(true);
