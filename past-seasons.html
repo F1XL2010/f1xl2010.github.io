@@ -849,7 +849,7 @@ function buildOverallConstTable(rows){
   for(let i=0; i<rows.length; i++){
     const r = rows[i];
     for(let c=0; c<r.length; c++){
-      if((r[c]||'').trim().toLowerCase()==='pos'){ hdrIdx=i; posCol=c; break; }
+      if(/^pos\.?$/i.test((r[c]||'').trim())){ hdrIdx=i; posCol=c; break; }
     }
     if(hdrIdx>=0) break;
   }
@@ -882,6 +882,7 @@ function buildOverallConstTable(rows){
     const r = rows[i];
     const posVal = (r[posCol]||'').trim();
     if(!posVal || isNaN(parseInt(posVal))) continue;
+    if((r[posCol]||'').includes('#REF')) continue;
 
     // Find team name: scan cols after teamHeaderCol for first non-blank non-numeric text
     let team = '';
@@ -906,7 +907,7 @@ function buildOverallConstTable(rows){
   data.forEach(d => {
     html += '<tr'+trClass(d.pos)+'><td><span class="st-pos">'+d.pos+'</span></td>';
     html += '<td class="td-l"><span class="dname">'+(d.principal||'&mdash;')+'</span></td>';
-    html += '<td class="td-l"><span class="tname">'+d.team+'</span></td>';
+    html += '<td class="td-l"><span class="dname">'+d.team+'</span></td>';
     html += '<td><span class="pts">'+d.pts.toLocaleString()+'</span></td></tr>';
   });
   html += '</tbody></table></div>';
