@@ -191,467 +191,274 @@
 
 <script src="config.js"></script>
 <script>
-let SHEET_ID = '1ABi894XALp0Qpoc73XKrwHBJR2vU13Yv2wFOlofxmYw'; // overridden by config
-let CAL_GID  = '1359854005'; // overridden by config
+// ============================================================
+// F1XL Results — S26/S27 format
+// Sheet layout (horizontal sections per row):
+//   Row 0: title, circuit at col 4
+//   Row 2: Weather at col 4, Safety Cars label+value
+//   Row 3: section labels at Pos-column offsets, Red Flags, Round No
+//   Row 4: column headers repeated per section (Pos, Nat, #, Driver, Team...)
+//   Row 5+: data rows
+//
+// Regular week:  [Quali | Race]  (2 Pos offsets)
+// Sprint week:   [Sprint Quali | Sprint Race | Quali | Race]  (4 Pos offsets)
+//
+// Calendar cols: 0=Round, 1=Sprint flag, 2=Date, 4=Circuit, 5=GP Name
+// ============================================================
 
-let RACE_GIDS = []; // populated from config
+let _seasonCfg = null;
+let _currentSeason = null;
+let _currentDiv = 1;
+let _allSeasons = [];
+let _rounds = [];
+let _raceCache = {};
+let _calCache = {};
 
-// New clean vertical layout
-// Quali cols: Pos=0, Nat=1, #=2, Driver=3, Team=4, Time=6, PenPts=9, Pen=10
-// Race cols:  Pos=0, Nat=1, #=2, Driver=3, Team=4, Stops=6, Gap=7, Pts=8, FL=10, PenPts=11, Pen=12
-// Sprint Race cols: same as Race but no FL (FL col will just be empty)
-// Sections found by scanning for label in col 0: 'Qualifying', 'Race', 'Sprint Qualifying', 'Sprint Race'
+// ---- Utilities ----
 
-const today = new Date(); today.setHours(0,0,0,0);
-let rounds=[], cache={};
-
-function csv(text){
+function parseCSV(text){
   const rows=[]; let cells=[],cur='',inQ=false;
   for(let i=0;i<text.length;i++){
     const c=text[i],n=text[i+1];
     if(c==='"'){if(!inQ)inQ=true;else if(n==='"'){cur+='"';i++;}else inQ=false;}
     else if(c===','&&!inQ){cells.push(cur);cur='';}
-    else if((c==='\n'||(c==='\r'&&n==='\n'))&&!inQ){if(c==='\r')i++;cells.push(cur);cur='';if(cells.some(x=>x.trim()))rows.push(cells);cells=[];}
+    else if((c==='
+'||(c===''&&n==='
+'))&&!inQ){if(c==='')i++;cells.push(cur);cur='';if(cells.some(x=>x.trim()))rows.push(cells);cells=[];}
     else cur+=c;
   }
   cells.push(cur);if(cells.some(x=>x.trim()))rows.push(cells);
   return rows;
 }
 
-function pd(s){
+function parseDate(s){
   if(!s||!s.trim())return null;
   const p=s.trim().split('/');
   if(p.length!==3)return null;
   return new Date(+p[2],+p[1]-1,+p[0]);
 }
 
-function fd(d){
+function fmtDate(d){
   if(!d)return'';
   const mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  return`${d.getDate()} ${mo[d.getMonth()]} ${d.getFullYear()}`;
+  return d.getDate()+' '+mo[d.getMonth()]+' '+d.getFullYear();
 }
 
-function g(row,col){return(row&&row[col]!==undefined)?(row[col]||'').trim():'';}
 function isDNF(p){return['dnf','dns','dsq','ret','nc'].includes((p||'').toLowerCase());}
-function posClass(p){if(p==='1')return'p1';if(p==='2')return'p2';if(p==='3')return'p3';return'';}
 
-// S26+ format parser
-// Row 0: title, circuit at col 4
-// Row 2: Weather label at col 4, Safety Cars label/value cols 23-24
-// Row 3: section labels at Pos column offsets, Red Flags, round number
-// Row 4: column headers repeated per section
-// Rows 5+: data
-
-function getMeta(rows){
-  const row0 = rows[0]||[], row2 = rows[2]||[], row3 = rows[3]||[];
-  const circuit = (row0[4]||'').trim();
-
-  // Round number from row 3
-  let round = '';
-  for(let j=0;j<row3.length;j++){
-    if((row3[j]||'').trim().toLowerCase().startsWith('round')){
-      round = (row3[j]||'').trim();
-      break;
-    }
-  }
-
-  // Safety Cars: scan row 2 for 'Safety Cars' label
-  let sc = '0', rf = '0';
-  for(let j=0;j<row2.length;j++){
-    if((row2[j]||'').trim().toLowerCase()==='safety cars'){
-      sc = (row2[j+1]||'').trim()||'0'; break;
-    }
-  }
-  // Red Flags: can appear multiple times in row 3 — use the first non-zero or last
-  let rfVals = [];
-  for(let j=0;j<row3.length;j++){
-    if((row3[j]||'').trim().toLowerCase()==='red flags'){
-      const v = (row3[j+1]||'').trim();
-      if(v && v!=='0') rfVals.push(parseInt(v)||0);
-    }
-  }
-  rf = rfVals.length ? String(Math.max(...rfVals)) : '0';
-
-  // Weather: in row 2 next to 'Weather' label (col 4), value at col 5 or scan nearby
-  // For sprint weeks there are two weather values — find them by their position relative to sections
-  let wQuali='', wSprintQuali='', wSprintRace='', wRace='';
-  // Find all Pos offsets to know section starts
-  const row4 = rows[4]||[];
-  const posOffsets = [];
-  for(let j=0;j<row4.length;j++){
-    if((row4[j]||'').trim().toLowerCase()==='pos') posOffsets.push(j);
-  }
-  // Section labels from row 3 at each Pos offset
-  const sections = posOffsets.map(off => ({
-    offset: off,
-    label: (row3[off]||'').trim().toLowerCase()
-  }));
-  const isSprint = sections.some(s => s.label.includes('sprint'));
-
-  // Weather appears in row 2 near col 4 for first section, and near the race start col for second
-  // Simple approach: scan row 2 for non-empty values that look like weather
-  const weatherWords = ['sun','cloud','rain','wet','overcast','dry'];
-  const weatherCols = [];
-  for(let j=0;j<row2.length;j++){
-    const v=(row2[j]||'').trim().toLowerCase();
-    if(weatherWords.some(w=>v.includes(w))) weatherCols.push({col:j,val:(row2[j]||'').trim()});
-  }
-  // Also check row 3 (sprint week weather can be in row 3)
-  for(let j=0;j<row3.length;j++){
-    const v=(row3[j]||'').trim().toLowerCase();
-    if(weatherWords.some(w=>v.includes(w))) weatherCols.push({col:j,val:(row3[j]||'').trim()});
-  }
-  // Assign weather to nearest section
-  if(!isSprint){
-    if(weatherCols.length>=1) wQuali = weatherCols[0].val;
-    if(weatherCols.length>=2) wRace = weatherCols[1].val;
-    else wRace = wQuali;
-  } else {
-    if(weatherCols.length>=1) wSprintQuali = weatherCols[0].val;
-    if(weatherCols.length>=2) wSprintRace = weatherCols[1].val;
-    else wSprintRace = wSprintQuali;
-    if(weatherCols.length>=3) wQuali = weatherCols[2].val;
-    else wQuali = wSprintQuali;
-    if(weatherCols.length>=4) wRace = weatherCols[3].val;
-    else wRace = wQuali;
-  }
-
-  return{circuit, sc, rf, isSprint, cancelled:false, wQuali, wRace, wSprintQuali, wSprintRace, sections, row4};
+function posClass(p){
+  if(p==='1')return'p1';if(p==='2')return'p2';if(p==='3')return'p3';return'';
 }
 
-function extractSectionByOffset(rows, offset, isRace, isSprint){
-  const dataStart = 5; // data rows start at row 5
-  const results = [];
-  // col offsets relative to section start (Pos=0, Nat=1, #=2, Driver=3, Team=4, blank=5)
-  // Quali:       Time=6, Tyre=7, Tyre2=8, PenPts=9, Pen=10
-  // Race:        Team2=5(dup), Stops=6, Gap=7, Pts=8, blank=9, FL=10, PenPts=11, Pen=12
-  // Sprint Race: Team2=5, Stops=6, Gap=7, Pts=8, PenPts=9, Pen=10 (no FL)
-  for(let i=dataStart; i<rows.length; i++){
-    const row = rows[i]||[];
-    const rawPos = (row[offset]||'').trim();
-    if(!rawPos) continue;
-    const posNum = parseInt(rawPos);
-    if(isNaN(posNum) && !isDNF(rawPos)) continue;
-    const driver = (row[offset+3]||'').trim();
-    if(!driver || driver===' ') continue;
+function cell(row,i){return((row&&row[i])||'').trim();}
+
+async function fetchCSV(sheetId, gid){
+  const url='https://docs.google.com/spreadsheets/d/'+sheetId+'/export?format=csv&gid='+gid;
+  const res=await fetch(url);
+  const text=await res.text();
+  if(text.includes('<!DOCTYPE'))throw new Error('Sheet not published');
+  return parseCSV(text);
+}
+
+// ---- Sheet parser ----
+
+function getPosOffsets(row4){
+  const offsets=[];
+  for(let i=0;i<row4.length;i++){
+    if((row4[i]||'').trim().toLowerCase()==='pos') offsets.push(i);
+  }
+  return offsets;
+}
+
+function parseRaceSheet(rows){
+  const row0=rows[0]||[], row2=rows[2]||[], row3=rows[3]||[], row4=rows[4]||[];
+
+  // Circuit from row 0 col 4
+  const circuit=(row0[4]||'').trim();
+
+  // Safety cars: scan row 2 for 'Safety Cars' label
+  let sc=0;
+  for(let i=0;i<row2.length;i++){
+    if((row2[i]||'').trim().toLowerCase()==='safety cars'){
+      sc=parseInt(row2[i+1]||'')||0; break;
+    }
+  }
+
+  // Red flags: scan row 3 for 'Red Flags', take max
+  let rf=0;
+  for(let i=0;i<row3.length;i++){
+    if((row3[i]||'').trim().toLowerCase()==='red flags'){
+      const v=parseInt(row3[i+1]||'')||0;
+      if(v>rf)rf=v;
+    }
+  }
+
+  // Section Pos offsets
+  const posOffsets=getPosOffsets(row4);
+  const isSprint=posOffsets.length>=4;
+
+  // Weather: scan rows 2-3 for recognisable weather values
+  const weatherWords=['sun','cloud','rain','wet','overcast','dry'];
+  const weatherVals=[];
+  [row2,row3].forEach(row=>{
+    row.forEach(v=>{
+      const vl=(v||'').trim().toLowerCase();
+      if(vl&&weatherWords.some(w=>vl.includes(w))&&!vl.includes('weather')&&!vl.includes('red')&&!vl.includes('safety'))
+        weatherVals.push((v||'').trim());
+    });
+  });
+  const [wSQ='',wSR='',wQ='',wR=''] = weatherVals;
+
+  // Extract sections
+  let sections;
+  if(!isSprint){
+    sections=[
+      {type:'quali',    offset:posOffsets[0]||0,  isRace:false, isSprint:false},
+      {type:'race',     offset:posOffsets[1]||12, isRace:true,  isSprint:false},
+    ];
+  } else {
+    sections=[
+      {type:'sprint-quali', offset:posOffsets[0]||0,  isRace:false, isSprint:false},
+      {type:'sprint-race',  offset:posOffsets[1]||12, isRace:true,  isSprint:true},
+      {type:'quali',        offset:posOffsets[2]||25, isRace:false, isSprint:false},
+      {type:'race',         offset:posOffsets[3]||38, isRace:true,  isSprint:false},
+    ];
+  }
+
+  const data={};
+  sections.forEach(sec=>{
+    data[sec.type]=extractSection(rows, sec.offset, sec.isRace, sec.isSprint);
+  });
+
+  return{circuit, sc, rf, isSprint, data, weather:{wSQ,wSR,wQ,wR}};
+}
+
+function extractSection(rows, offset, isRace, isSprintRace){
+  const results=[];
+  for(let i=5;i<rows.length;i++){
+    const row=rows[i]||[];
+    const rawPos=cell(row,offset);
+    if(!rawPos)continue;
+    if(!isDNF(rawPos)&&isNaN(parseInt(rawPos)))continue;
+    const driver=cell(row,offset+3);
+    if(!driver||driver===' ')continue;
+
     if(isRace){
-      const pts = (row[offset+8]||'').trim();
-      // FL: sprint races don't have it; regular races have it at offset+10
-      const fl = isSprint ? '' : (row[offset+10]||'').trim();
+      // Race cols relative to offset:
+      // 0=Pos, 2=#, 3=Driver, 4=Team, 6=Stops, 7=Gap, 8=Points(with decimal suffix)
+      // Regular race: FL at offset+10
+      // Sprint race: no FL
+      const rawPts=cell(row,offset+8);
+      const pts=rawPts.replace(/\.\d+$/,''); // strip decimal scoring suffix
+      const fl=isSprintRace?'':cell(row,offset+10);
+      const hasFl=fl&&fl.trim()&&fl.toLowerCase()==='y';
       results.push({
         pos:rawPos,
-        num:(row[offset+2]||'').trim(),
+        num:cell(row,offset+2),
         driver,
-        team:(row[offset+4]||'').trim(),
-        stops:(row[offset+6]||'').trim(),
-        gap:(row[offset+7]||'').trim(),
-        pts: pts.replace(/\.\d+$/,''), // strip decimal scoring suffix
-        fl,
-        pen:(row[offset+(isSprint?10:12)]||'').trim()
+        team:cell(row,offset+4),
+        stops:cell(row,offset+6),
+        gap:cell(row,offset+7),
+        pts,
+        fl:hasFl,
+        pen:cell(row,offset+(isSprintRace?10:12))
       });
     } else {
-      const tyre = (row[offset+7]||'').trim();
-      const tyre2 = (row[offset+8]||'').trim();
+      // Quali cols: 0=Pos, 2=#, 3=Driver, 4=Team, 6=Time, 7=Tyre, 8=Tyre2, 10=Pen
+      const tyre=cell(row,offset+7);
+      const tyre2=cell(row,offset+8);
       results.push({
         pos:rawPos,
-        num:(row[offset+2]||'').trim(),
+        num:cell(row,offset+2),
         driver,
-        team:(row[offset+4]||'').trim(),
-        time:(row[offset+6]||'').trim(),
-        tyre: tyre2&&tyre2!==tyre ? tyre+'/'+tyre2 : tyre,
-        pen:(row[offset+10]||'').trim()
+        team:cell(row,offset+4),
+        time:cell(row,offset+6),
+        tyre:tyre2&&tyre2!==tyre?tyre+'/'+tyre2:tyre,
+        pen:cell(row,offset+10)
       });
     }
   }
   return results;
 }
 
-function extractSection(rows, label, isRace){
-  // Legacy wrapper — uses getMeta sections map
-  const meta = getMeta(rows);
-  const sec = meta.sections.find(s => {
-    if(label.toLowerCase()==='qualifying') return s.label==='quali'||s.label==='qualifying';
-    if(label.toLowerCase()==='race') return s.label===''||s.label==='race';
-    if(label.toLowerCase()==='sprint qualifying') return s.label.includes('sprint quali');
-    if(label.toLowerCase()==='sprint race') return s.label===''&&meta.isSprint&&meta.sections.indexOf(s)===1;
-    return false;
+// ---- Rendering ----
+
+function tyreColor(t){
+  if(!t)return'rgba(255,255,255,0.3)';
+  const tl=t.toLowerCase();
+  if(tl.includes('soft'))return'#e8002d';
+  if(tl.includes('medium'))return'#ffd600';
+  if(tl.includes('hard'))return'#ffffff';
+  if(tl.includes('inter'))return'#43b02a';
+  if(tl.includes('wet'))return'#0067ff';
+  return'rgba(255,255,255,0.4)';
+}
+
+function tyreDot(t){
+  if(!t)return'';
+  return t.split('/').map(p=>`<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${tyreColor(p.trim())};margin-left:3px;vertical-align:middle;" title="${p.trim()}"></span>`).join('');
+}
+
+function weatherBadge(w){
+  if(!w)return'';
+  const wl=w.toLowerCase();
+  const icon=wl.includes('rain')||wl.includes('wet')?'🌧':wl.includes('cloud')?'⛅':wl.includes('sun')?'☀️':wl.includes('overcast')?'☁️':'🌤';
+  return`<span style="font-size:11px;color:var(--text-faint);margin-left:8px;">${icon} ${w}</span>`;
+}
+
+function box(title, inner, weather){
+  const wBadge=weather?weatherBadge(weather):'';
+  return`<div class="results-box"><div class="results-box-title">${title}${wBadge}</div>${inner}</div>`;
+}
+
+function qualiTable(data, title, weather){
+  if(!data||!data.length)return box(title,'<div style="padding:12px;font-size:12px;color:var(--text-faint);">No data</div>',weather);
+  let t=`<table class="rt"><thead><tr><th>Pos</th><th>#</th><th>Driver / Team</th><th>Time</th><th>Tyre</th></tr></thead><tbody>`;
+  data.forEach(d=>{
+    const dnf=isDNF(d.pos);
+    t+=`<tr>
+      <td>${dnf?`<span class="pdnf">${d.pos}</span>`:`<span class="p ${posClass(d.pos)}">${d.pos}</span>`}</td>
+      <td><span class="dnum">${d.num}</span></td>
+      <td><span class="dname">${d.driver}</span>${d.pen?`<span class="pen">+${d.pen}</span>`:''}${d.team?`<br><span class="stops">${d.team}</span>`:''}</td>
+      <td><span class="qtime">${d.time||'—'}</span></td>
+      <td>${tyreDot(d.tyre)}</td>
+    </tr>`;
   });
-  if(!sec) return [];
-  // Determine if this is a sprint race (no FL col)
-  const isSR = label.toLowerCase()==='sprint race';
-  return extractSectionByOffset(rows, sec.offset, isRace, isSR);
+  return box(title,t+'</tbody></table>',weather);
 }
 
-let _seasonCfg = null;
-let _currentSeason = null;
-let _currentDiv = 1;
-let _allSeasons = [];
-const _calCache = {}; // calendar cache keyed by season+div
-
-async function getCurrentSeason(){
-  const seasons = await getAllSeasons();
-  return seasons.length ? seasons[0].season : null;
-}
-
-async function init(){
-  // Read URL params
-  const params = new URLSearchParams(window.location.search);
-  const paramSeason = params.get('season');
-  const paramDiv = parseInt(params.get('div')) || 1;
-
-  try { _allSeasons = await getAllSeasons(); } catch(e) { _allSeasons = []; }
-
-  // Build season selector
-  if(_allSeasons.length){
-    const btns = _allSeasons.map(obj=>
-      `<button class="s-btn" onclick="showSeason(${obj.season})" id="sbtn-${String(obj.season).replace('.','_')}">S${obj.season}</button>`
-    ).join('');
-    const opts = _allSeasons.map(obj=>
-      `<option value="${obj.season}">Season ${obj.season}</option>`
-    ).join('');
-    document.getElementById('season-bar').innerHTML =
-      `<div class="s-btn-wrap">${btns}</div>`+
-      `<div class="s-select-wrap"><select class="s-select" id="s-select" onchange="showSeason(this.value)">${opts}</select></div>`;
-  }
-
-  // Determine which season to show — param > current season > most recent
-  let targetSeason = paramSeason;
-  if(!targetSeason){
-    try { targetSeason = await getCurrentSeason(); } catch(e){}
-  }
-  if(!targetSeason && _allSeasons.length) targetSeason = _allSeasons[0].season;
-
-  await showSeason(targetSeason, paramDiv);
-}
-
-async function showSeason(season, div){
-  div = div || 1;
-  _currentSeason = season;
-  _currentDiv = div;
-
-  // Sync selector UI
-  document.querySelectorAll('.s-btn').forEach(b=>b.classList.remove('active'));
-  const btn = document.getElementById('sbtn-'+String(season).replace('.','_'));
-  if(btn) btn.classList.add('active');
-  const sel = document.getElementById('s-select');
-  if(sel) sel.value = String(season);
-
-  document.getElementById('round-selector').innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Loading...</div>';
-  document.getElementById('content').innerHTML = '';
-  document.getElementById('div-bar').innerHTML = '';
-  rounds = [];
-  cache = {};
-
-  try {
-    _seasonCfg = await loadSeasonConfig(season);
-  } catch(e) { _seasonCfg = null; }
-
-  if(!_seasonCfg){
-    document.getElementById('page-meta').textContent = 'Season '+season;
-    document.getElementById('round-selector').innerHTML = '<div style="color:var(--text-faint);font-size:13px;">No results data available for this season.</div>';
-    return;
-  }
-
-  // Build division bar
-  const numDivs = parseInt(_seasonCfg['divisions']) || 1;
-  let divBtns = '';
-  for(let d=1; d<=numDivs; d++){
-    if(_seasonCfg[`d${d}_has_results`] === 'yes'){
-      divBtns += `<button class="div-btn${d===div?' active':''}" id="divbtn${d}" onclick="switchDiv(${d})">Division ${d}</button>`;
-    }
-  }
-  document.getElementById('div-bar').innerHTML = divBtns;
-
-  await loadDivision(div);
-}
-
-async function switchDiv(d) {
-  _currentDiv = d;
-  document.querySelectorAll('.div-btn').forEach(b=>b.classList.remove('active'));
-  const btn = document.getElementById('divbtn'+d);
-  if(btn) btn.classList.add('active');
-  rounds = [];
-  cache = {};
-  await loadDivision(d);
-}
-
-async function loadDivision(d) {
-  if (_seasonCfg) {
-    SHEET_ID = _seasonCfg[`d${d}_sheet_id`] || SHEET_ID;
-    CAL_GID  = _seasonCfg[`d${d}_calendar_gid`] || CAL_GID;
-    RACE_GIDS = [];
-    for (let i=1; i<=25; i++) {
-      const gid = _seasonCfg[`d${d}_r${i}_gid`];
-      RACE_GIDS.push(gid || null);
-    }
-  }
-  // Show back-to-past-seasons link
-  const backBar = document.getElementById('back-bar');
-  if(backBar) backBar.innerHTML = '<a href="past-seasons.html?season='+_currentSeason+'" style="font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);text-decoration:none;">&#8592; Past Seasons</a>';
-  document.getElementById('page-meta').textContent = 'Season '+_currentSeason+' · Division '+d;
-  document.getElementById('round-selector').innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Loading...</div>';
-  document.getElementById('content').innerHTML = '';
-  if(!CAL_GID){
-    document.getElementById('round-selector').innerHTML = '<div style="color:var(--text-faint);font-size:13px;">No calendar data available.</div>';
-    return;
-  }
-  const calKey = _currentSeason+'_'+d;
-  try{
-    let calRows;
-    if(_calCache[calKey]){
-      calRows = _calCache[calKey];
-    } else {
-      const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${CAL_GID}`;
-      const res=await fetch(url);
-      const text=await res.text();
-      if(text.includes('<!DOCTYPE'))throw new Error('Sheet not published to web');
-      calRows = csv(text);
-      _calCache[calKey] = calRows;
-    }
-    const rows = calRows;
-    rounds=[];
-    let lastDone=-1;
-    for(let i=1;i<rows.length;i++){
-      const row=rows[i];
-      const r0=(row[0]||'').trim(),r1=(row[1]||'').trim().toLowerCase();
-      const r2=(row[2]||'').trim(),r3=(row[3]||'').trim();
-      if(!r0)continue;
-      if(r0.toLowerCase().includes('all star'))continue;
-      const num=parseInt(r0);
-      if(isNaN(num)||num<1||num>25)continue;
-      const circuit=(row[4]||'').trim();
-      const gpName=(row[5]||'').trim();
-      const date=pd(r2);
-      const done=!!(date&&date<today);
-      if(done)lastDone=rounds.length;
-      rounds.push({round:num,circuit,gpName,date,isSprint:r1==='sprint'||r1.toLowerCase()==='sprint',gid:RACE_GIDS[num-1],done});
-    }
-    const sel=document.getElementById('round-selector');
-    sel.innerHTML=rounds.map(r=>`<button class="round-btn${r.isSprint?' sprint':''}" id="rb${r.round}" onclick="selectRound(${r.round})">${r.isSprint?'⚡ ':''}R${r.round}${r.circuit?' · '+r.circuit:''}</button>`).join('');
-    const done=rounds.filter(r=>r.done).length;
-    if(rounds.length) document.getElementById('page-meta').textContent=`Season ${_currentSeason} · Division ${d} · ${rounds.length} rounds · ${done} completed`;
-    if(lastDone>=0)selectRound(rounds[lastDone].round);
-    else document.getElementById('content').innerHTML='<div class="loading-msg">No completed rounds yet.</div>';
-  }catch(e){
-    document.getElementById('round-selector').innerHTML=`<div style="color:#ff6b6b;font-size:13px;">Could not load rounds: ${e.message}</div>`;
-  }
-}
-
-async function selectRound(num){
-  const r=rounds.find(x=>x.round===num);
-  if(!r)return;
-  document.querySelectorAll('.round-btn').forEach(b=>b.classList.remove('active'));
-  const btn=document.getElementById(`rb${num}`);
-  if(btn)btn.classList.add('active');
-  if(!r.done){
-    document.getElementById('content').innerHTML='<div class="loading-msg">This race has not yet taken place.</div>';
-    return;
-  }
-  if(cache[num]){render(r,cache[num]);return;}
-  document.getElementById('content').innerHTML='<div class="loading-msg">Loading...</div>';
-  try{
-    const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${r.gid}`;
-    const res=await fetch(url);
-    const text=await res.text();
-    if(text.includes('<!DOCTYPE'))throw new Error('Sheet not published');
-    const rows=csv(text);
-    cache[num]=rows;
-    render(r,rows);
-  }catch(e){
-    document.getElementById('content').innerHTML=`<div class="loading-msg">Could not load: ${e.message}</div>`;
-  }
-}
-
-function render(r,rows){
-  const meta=getMeta(rows);
-  const circuit=meta.circuit||r.circuit;
-  const sc=parseInt(meta.sc)||0;
-  const rf=parseInt(meta.rf)||0;
-  const isSprint = meta.isSprint || r.isSprint;
-  let html='';
-
-  if(meta.cancelled){
-    html+=header(r,circuit,null,0,0,false);
-    html+=`<div style="background:var(--dark2);border:1px solid var(--border);border-radius:8px;padding:24px;text-align:center;color:var(--text-muted);font-size:14px;">This race was cancelled.</div>`;
-    document.getElementById('content').innerHTML=html;
-    return;
-  }
-
-  if(!isSprint){
-    // Regular weekend: 2 sections — Quali (offset 0) and Race (offset 12)
-    const qualiSec = meta.sections[0];
-    const raceSec  = meta.sections[1];
-    const quali = qualiSec ? extractSectionByOffset(rows, qualiSec.offset, false, false) : [];
-    const race  = raceSec  ? extractSectionByOffset(rows, raceSec.offset,  true,  false) : [];
-    const winner = race.find(x=>x.pos==='1');
-    html+=header(r,circuit,winner,sc,rf,false);
-    html+=`<div class="results-grid">${qTable(quali,'Qualifying',meta.wQuali)}${rTable(race,'Race',meta.wRace)}</div>`;
-    // Constructors race points panel
-    const constHtml = buildRaceConstructors(rows);
-    if(constHtml) html+=constHtml;
-  } else {
-    // Sprint weekend: 4 sections — Sprint Quali, Sprint Race, Quali, Race
-    const sq = meta.sections[0] ? extractSectionByOffset(rows, meta.sections[0].offset, false, false) : [];
-    const sr = meta.sections[1] ? extractSectionByOffset(rows, meta.sections[1].offset, true,  true)  : [];
-    const mq = meta.sections[2] ? extractSectionByOffset(rows, meta.sections[2].offset, false, false) : [];
-    const mr = meta.sections[3] ? extractSectionByOffset(rows, meta.sections[3].offset, true,  false) : [];
-    const winner = mr.find(x=>x.pos==='1');
-    html+=header(r,circuit,winner,sc,rf,true);
-    html+=`<div class="section-label">Sprint</div>`;
-    html+=`<div class="results-grid">${qTable(sq,'Sprint Qualifying',meta.wSprintQuali)}${srTable(sr,'Sprint Race',meta.wSprintRace)}</div>`;
-    html+=`<div class="section-label">Grand Prix</div>`;
-    html+=`<div class="results-grid">${qTable(mq,'Qualifying',meta.wQuali)}${rTable(mr,'Race',meta.wRace)}</div>`;
-    const constHtml = buildRaceConstructors(rows);
-    if(constHtml) html+=constHtml;
-  }
-  document.getElementById('content').innerHTML=html;
-}
-
-function buildRaceConstructors(rows){
-  // Constructors race points: last 3 cols of each data row (Team, _, Points)
-  // Find the constructors start column: after the last section's data
-  const meta = getMeta(rows);
-  if(!meta.sections.length) return '';
-  const lastSection = meta.sections[meta.sections.length-1];
-  // Constructor col starts around offset+12 for race, offset+11 for sprint race
-  // Easiest: scan row 5 for team names after last Pos offset
-  const constCol = lastSection.offset + (meta.isSprint ? 13 : 13);
-  const data = [];
-  for(let i=5;i<rows.length;i++){
-    const row = rows[i]||[];
-    const team = (row[constCol]||'').trim();
-    if(!team) continue;
-    // Points: next col, strip decimal scoring suffix
-    const rawPts = (row[constCol+1]||'').trim();
-    const pts = parseFloat(rawPts)||0;
-    if(pts===0 && !team) continue;
-    data.push({team, pts: Math.round(pts*10)/10});
-  }
-  if(!data.length) return '';
-  data.sort((a,b)=>b.pts-a.pts);
-  let html='<div class="section-label" style="margin-top:20px;">Constructor Points This Round</div>';
-  html+='<div class="results-box" style="max-width:340px;">';
-  html+='<table class="rt"><thead><tr><th>Pos</th><th>Constructor</th><th>Pts</th></tr></thead><tbody>';
-  data.forEach((d,idx)=>{
-    const pos=idx+1;
-    html+=`<tr><td><span class="p ${posClass(String(pos))}">${pos}</span></td>`;
-    html+=`<td><span class="dname">${d.team}</span></td>`;
-    html+=`<td><span class="rpts${d.pts===0?' z':''}">${d.pts}</span></td></tr>`;
+function raceTable(data, title, weather){
+  if(!data||!data.length)return box(title,'<div style="padding:12px;font-size:12px;color:var(--text-faint);">No data</div>',weather);
+  let t=`<table class="rt"><thead><tr><th>Pos</th><th>#</th><th>Driver</th><th>Gap</th><th>Pts</th></tr></thead><tbody>`;
+  data.forEach(d=>{
+    const dnf=isDNF(d.pos);
+    const pts=parseInt(d.pts)||0;
+    t+=`<tr>
+      <td>${dnf?`<span class="pdnf">${d.pos}</span>`:`<span class="p ${posClass(d.pos)}">${d.pos}</span>`}</td>
+      <td><span class="dnum">${d.num}</span></td>
+      <td><span class="dname">${d.driver}</span>${d.fl?`<span class="fl" title="Fastest Lap"></span>`:''}${d.pen?`<span class="pen">+${d.pen}</span>`:''}${d.stops?`<br><span class="stops">${d.stops} stop${d.stops==='1'?'':'s'}</span>`:''}</td>
+      <td><span class="rgap">${d.gap||'—'}</span></td>
+      <td><span class="rpts${pts===0?' z':''}">${d.pts||'0'}</span></td>
+    </tr>`;
   });
-  html+='</tbody></table></div>';
-  return html;
+  return box(title,t+'</tbody></table>',weather);
 }
 
-function header(r,circuit,winner,sc,rf,isSprint){
-  const title = r.gpName || (circuit+' Grand Prix');
-  return`<div class="race-header${isSprint?' is-sprint':''}">
+function renderRace(round, parsed){
+  const {circuit,sc,rf,isSprint,data,weather}=parsed;
+  const gpTitle=round.gpName||(circuit?circuit+' Grand Prix':'Round '+round.round);
+  const subtitle=(round.circuit?round.circuit+' · ':'')+fmtDate(round.date);
+
+  const winner=data['race']&&data['race'].find(x=>x.pos==='1');
+
+  let html=`<div class="race-header${isSprint?' is-sprint':''}">
     <div class="race-header-inner">
       <div>
-        <div class="race-title">${title}</div>
-        <div class="race-subtitle">${circuit ? circuit+' · ' : ''}${fd(r.date)}</div>
+        <div class="race-title">${gpTitle}</div>
+        <div class="race-subtitle">${subtitle}</div>
         <div class="race-badges">
-          <div class="badge badge-round">Round ${r.round}</div>
-          ${isSprint?`<div class="badge badge-sprint">Sprint Weekend</div>`:''}
+          <div class="badge badge-round">Round ${round.round}</div>
+          ${isSprint?'<div class="badge badge-sprint">Sprint Weekend</div>':''}
           ${sc>0?`<div class="badge badge-sc">SC ×${sc}</div>`:''}
           ${rf>0?`<div class="badge badge-rf">Red Flag ×${rf}</div>`:''}
         </div>
@@ -663,109 +470,195 @@ function header(r,circuit,winner,sc,rf,isSprint){
       </div>`:''}
     </div>
   </div>`;
+
+  if(isSprint){
+    html+=`<div class="section-label">Sprint</div>`;
+    html+=`<div class="results-grid">${qualiTable(data['sprint-quali'],'Sprint Qualifying',weather.wSQ)}${raceTable(data['sprint-race'],'Sprint Race',weather.wSR)}</div>`;
+    html+=`<div class="section-label">Grand Prix</div>`;
+    html+=`<div class="results-grid">${qualiTable(data['quali'],'Qualifying',weather.wQ)}${raceTable(data['race'],'Race',weather.wR)}</div>`;
+  } else {
+    html+=`<div class="results-grid">${qualiTable(data['quali'],'Qualifying',weather.wQ)}${raceTable(data['race'],'Race',weather.wR)}</div>`;
+  }
+
+  document.getElementById('content').innerHTML=html;
 }
 
-function weatherIcon(w){
-  if(!w) return '';
-  const wl=w.toLowerCase();
-  if(wl.includes('rain')||wl.includes('wet')) return '🌧';
-  if(wl.includes('cloud')) return '⛅';
-  if(wl.includes('sun')||wl==='sun') return '☀️';
-  if(wl.includes('overcast')) return '☁️';
-  return '🌤';
+// ---- Season / division / round selection ----
+
+async function selectRound(num){
+  const round=_rounds.find(r=>r.round===num);
+  if(!round)return;
+  document.querySelectorAll('.round-btn').forEach(b=>b.classList.remove('active'));
+  const btn=document.getElementById('rb'+num);
+  if(btn)btn.classList.add('active');
+
+  document.getElementById('content').innerHTML='<div class="loading-msg">Loading...</div>';
+
+  if(_raceCache[num]){
+    renderRace(round,_raceCache[num]);
+    return;
+  }
+  if(!round.gid){
+    document.getElementById('content').innerHTML='<div class="loading-msg">No data available for this round.</div>';
+    return;
+  }
+  try{
+    const sc=_seasonCfg;
+    const sheetId=sc['d'+_currentDiv+'_sheet_id'];
+    const rows=await fetchCSV(sheetId,round.gid);
+    const parsed=parseRaceSheet(rows);
+    _raceCache[num]=parsed;
+    renderRace(round,parsed);
+  }catch(e){
+    document.getElementById('content').innerHTML=`<div class="loading-msg">Could not load: ${e.message}</div>`;
+  }
 }
 
-function weatherBadge(w){
-  if(!w) return '';
-  return`<span style="font-size:11px;color:var(--text-faint);margin-left:6px;">${weatherIcon(w)} ${w}</span>`;
+async function loadDivision(d){
+  _currentDiv=d;
+  _rounds=[];
+  _raceCache={};
+
+  document.getElementById('round-selector').innerHTML='<div style="color:var(--text-muted);font-size:13px;">Loading...</div>';
+  document.getElementById('content').innerHTML='<div class="loading-msg">Select a round above</div>';
+
+  const sc=_seasonCfg;
+  if(!sc){ document.getElementById('round-selector').innerHTML='<div style="color:var(--text-faint);font-size:13px;">No config available.</div>'; return; }
+
+  const sheetId=sc['d'+d+'_sheet_id'];
+  const calGid=sc['d'+d+'_calendar_gid'];
+  if(!sheetId||!calGid){ document.getElementById('round-selector').innerHTML='<div style="color:var(--text-faint);font-size:13px;">No calendar available.</div>'; return; }
+
+  // Race GIDs for this division
+  const raceGids=[];
+  for(let i=1;i<=25;i++) raceGids.push(sc['d'+d+'_r'+i+'_gid']||null);
+
+  const calKey=_currentSeason+'_'+d;
+  let calRows;
+  try{
+    if(_calCache[calKey]){
+      calRows=_calCache[calKey];
+    } else {
+      calRows=await fetchCSV(sheetId,calGid);
+      _calCache[calKey]=calRows;
+    }
+  }catch(e){
+    document.getElementById('round-selector').innerHTML=`<div style="color:#ff6b6b;font-size:13px;">Could not load calendar: ${e.message}</div>`;
+    return;
+  }
+
+  const today=new Date(); today.setHours(0,0,0,0);
+  for(let i=1;i<calRows.length;i++){
+    const row=calRows[i];
+    const r0=cell(row,0);
+    if(!r0||r0.toLowerCase().includes('all star'))continue;
+    const num=parseInt(r0);
+    if(isNaN(num)||num<1||num>25)continue;
+    const date=parseDate(cell(row,2));
+    const circuit=cell(row,4);
+    const gpName=cell(row,5);
+    const isSprint=cell(row,1).toLowerCase()==='sprint';
+    const gid=raceGids[num-1]||null;
+    const done=!!(date&&date<today);
+    _rounds.push({round:num,circuit,gpName,date,isSprint,gid,done});
+  }
+
+  const sel=document.getElementById('round-selector');
+  if(!_rounds.length){
+    sel.innerHTML='<div style="color:var(--text-faint);font-size:13px;">No rounds found.</div>';
+    return;
+  }
+
+  sel.innerHTML=_rounds.map(r=>{
+    const label=(r.isSprint?'⚡ ':'')+`R${r.round}`+(r.circuit?' · '+r.circuit:'');
+    const cls='round-btn'+(r.isSprint?' sprint':'')+(r.done?'':' future');
+    return`<button class="${cls}" id="rb${r.round}" onclick="selectRound(${r.round})">${label}</button>`;
+  }).join('');
+
+  const done=_rounds.filter(r=>r.done).length;
+  document.getElementById('page-meta').textContent=`Season ${_currentSeason} · Division ${d} · ${_rounds.length} rounds · ${done} completed`;
 }
 
-function tyreColor(t){
-  if(!t) return 'rgba(255,255,255,0.3)';
-  const tl=t.toLowerCase();
-  if(tl.includes('soft')) return '#e8002d';
-  if(tl.includes('medium')) return '#ffd600';
-  if(tl.includes('hard')) return '#ffffff';
-  if(tl.includes('inter')) return '#43b02a';
-  if(tl.includes('wet')) return '#0067ff';
-  return 'rgba(255,255,255,0.4)';
+async function switchDiv(d){
+  document.querySelectorAll('.div-btn').forEach(b=>b.classList.remove('active'));
+  const btn=document.getElementById('divbtn'+d);
+  if(btn)btn.classList.add('active');
+  await loadDivision(d);
 }
 
-function tyreBadge(t){
-  if(!t) return '';
-  const parts = t.split('/');
-  return parts.map(p=>`<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${tyreColor(p.trim())};margin-left:3px;vertical-align:middle;" title="${p.trim()}"></span>`).join('');
+async function showSeason(season,div){
+  div=parseInt(div)||1;
+  _currentSeason=season;
+  _seasonCfg=null;
+  _calCache={};
+
+  document.querySelectorAll('.s-btn').forEach(b=>b.classList.remove('active'));
+  const btn=document.getElementById('sbtn-'+String(season).replace('.','_'));
+  if(btn)btn.classList.add('active');
+  const sel=document.getElementById('s-select');
+  if(sel)sel.value=String(season);
+
+  document.getElementById('div-bar').innerHTML='';
+  document.getElementById('round-selector').innerHTML='<div style="color:var(--text-muted);font-size:13px;">Loading...</div>';
+  document.getElementById('content').innerHTML='';
+
+  // Show back link
+  const bb=document.getElementById('back-bar');
+  if(bb)bb.innerHTML=`<a href="past-seasons.html?season=${season}" style="font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);text-decoration:none;">&#8592; Past Seasons</a>`;
+
+  try{ _seasonCfg=await loadSeasonConfig(season); }catch(e){ _seasonCfg=null; }
+
+  if(!_seasonCfg){
+    document.getElementById('page-meta').textContent='Season '+season;
+    document.getElementById('round-selector').innerHTML='<div style="color:var(--text-faint);font-size:13px;">No data available for this season.</div>';
+    return;
+  }
+
+  // Build division bar — only show divisions with results
+  const numDivs=parseInt(_seasonCfg['divisions'])||1;
+  let divBtns='';
+  let firstDiv=div;
+  let foundActive=false;
+  for(let d=1;d<=numDivs;d++){
+    if(_seasonCfg['d'+d+'_has_results']==='yes'){
+      const active=d===div;
+      if(active)foundActive=true;
+      divBtns+=`<button class="div-btn${active?' active':''}" id="divbtn${d}" onclick="switchDiv(${d})">Division ${d}</button>`;
+      if(!foundActive)firstDiv=d;
+    }
+  }
+  document.getElementById('div-bar').innerHTML=divBtns;
+
+  await loadDivision(foundActive?div:firstDiv);
 }
 
-function qTable(data,title,weather){
-  if(!data||!data.length)return box(title,'<div style="padding:12px;font-size:12px;color:var(--text-faint);">No data</div>');
-  const titleHtml = weather ? title+weatherBadge(weather) : title;
-  let r=`<table class="rt"><thead><tr><th>Pos</th><th>#</th><th>Driver / Team</th><th>Time</th><th>Tyre</th></tr></thead><tbody>`;
-  data.forEach(d=>{
-    const dnf=isDNF(d.pos);
-    r+=`<tr>
-      <td>${dnf?`<span class="pdnf">${d.pos}</span>`:`<span class="p ${posClass(d.pos)}">${d.pos}</span>`}</td>
-      <td><span class="dnum">${d.num}</span></td>
-      <td>
-        <span class="dname">${d.driver}</span>${d.pen?`<span class="pen">+${d.pen}</span>`:''}
-        ${d.team?`<br><span class="stops">${d.team}</span>`:''}
-      </td>
-      <td><span class="qtime">${d.time||'—'}</span></td>
-      <td>${tyreBadge(d.tyre)}</td>
-    </tr>`;
-  });
-  return box(titleHtml, r+`</tbody></table>`);
-}
+async function init(){
+  let seasons=[];
+  try{ seasons=await getAllSeasons(); }catch(e){ seasons=[]; }
 
-function rTable(data,title,weather){
-  if(!data||!data.length)return box(title,'<div style="padding:12px;font-size:12px;color:var(--text-faint);">No data</div>');
-  let r=`<table class="rt"><thead><tr><th>Pos</th><th>#</th><th>Driver</th><th>Gap</th><th>Pts</th></tr></thead><tbody>`;
-  data.forEach(d=>{
-    const dnf=isDNF(d.pos);
-    const pts=parseInt(d.pts)||0;
-    const hasFl=d.fl&&d.fl.trim()&&d.fl.trim()!=='0'&&d.fl.toLowerCase()!=='false'&&d.fl.trim()!=='';
-    r+=`<tr>
-      <td>${dnf?`<span class="pdnf">${d.pos}</span>`:`<span class="p ${posClass(d.pos)}">${d.pos}</span>`}</td>
-      <td><span class="dnum">${d.num}</span></td>
-      <td>
-        <span class="dname">${d.driver}</span>${hasFl?`<span class="fl" title="Fastest Lap"></span>`:''}${d.pen?`<span class="pen">+${d.pen}</span>`:''}
-        ${d.stops?`<br><span class="stops">${d.stops} stop${d.stops==='1'?'':'s'}</span>`:''}
-      </td>
-      <td><span class="rgap">${d.gap||'—'}</span></td>
-      <td><span class="rpts${pts===0?' z':''}">${d.pts||'0'}</span></td>
-    </tr>`;
-  });
-  return box(weather?title+weatherBadge(weather):title, r+`</tbody></table>`);
-}
+  if(!seasons.length){
+    document.getElementById('season-bar').innerHTML='<div style="color:var(--text-faint);font-size:13px;">No seasons found.</div>';
+    return;
+  }
 
-function srTable(data,title,weather){
-  // Sprint race table - no FL column
-  if(!data||!data.length)return box(title,'<div style="padding:12px;font-size:12px;color:var(--text-faint);">No data</div>');
-  let r=`<table class="rt"><thead><tr><th>Pos</th><th>#</th><th>Driver</th><th>Gap</th><th>Pts</th></tr></thead><tbody>`;
-  data.forEach(d=>{
-    const dnf=isDNF(d.pos);
-    const pts=parseInt(d.pts)||0;
-    r+=`<tr>
-      <td>${dnf?`<span class="pdnf">${d.pos}</span>`:`<span class="p ${posClass(d.pos)}">${d.pos}</span>`}</td>
-      <td><span class="dnum">${d.num}</span></td>
-      <td>
-        <span class="dname">${d.driver}</span>${d.pen?`<span class="pen">+${d.pen}</span>`:''}
-        ${d.stops?`<br><span class="stops">${d.stops} stop${d.stops==='1'?'':'s'}</span>`:''}
-      </td>
-      <td><span class="rgap">${d.gap||'—'}</span></td>
-      <td><span class="rpts${pts===0?' z':''}">${d.pts||'0'}</span></td>
-    </tr>`;
-  });
-  return box(weather?title+weatherBadge(weather):title, r+`</tbody></table>`);
-}
+  const btns=seasons.map(obj=>`<button class="s-btn" onclick="showSeason(${obj.season})" id="sbtn-${String(obj.season).replace('.','_')}">S${obj.season}</button>`).join('');
+  const opts=seasons.map(obj=>`<option value="${obj.season}">Season ${obj.season}</option>`).join('');
+  document.getElementById('season-bar').innerHTML=
+    `<div class="s-btn-wrap">${btns}</div>`+
+    `<div class="s-select-wrap"><select class="s-select" id="s-select" onchange="showSeason(this.value)">${opts}</select></div>`;
 
-function box(title,inner){
-  return`<div class="results-box"><div class="results-box-title">${title}</div>${inner}</div>`;
+  // Read URL params
+  const params=new URLSearchParams(window.location.search);
+  const paramSeason=params.get('season');
+  const paramDiv=parseInt(params.get('div'))||1;
+  const target=paramSeason||seasons[0].season;
+
+  await showSeason(target,paramDiv);
 }
 
 function toggleMenu(){
-  document.getElementById('mobile-menu').classList.toggle('open');
   document.getElementById('hamburger').classList.toggle('open');
+  document.getElementById('mobile-menu').classList.toggle('open');
 }
 
 init();
