@@ -217,17 +217,20 @@ let _calCache = {};
 // ---- Utilities ----
 
 function parseCSV(text){
-  const rows=[]; let cells=[],cur='',inQ=false;
-  for(let i=0;i<text.length;i++){
-    const c=text[i],n=text[i+1];
-    if(c==='"'){if(!inQ)inQ=true;else if(n==='"'){cur+='"';i++;}else inQ=false;}
-    else if(c===','&&!inQ){cells.push(cur);cur='';}
-    else if((c==='
-'||(c===''&&n==='
-'))&&!inQ){if(c==='')i++;cells.push(cur);cur='';if(cells.some(x=>x.trim()))rows.push(cells);cells=[];}
-    else cur+=c;
+  const rows=[];
+  const lines=text.split(/\r?\n/);
+  for(const line of lines){
+    if(!line.trim())continue;
+    const cells=[];let cur='',inQ=false;
+    for(let i=0;i<line.length;i++){
+      const c=line[i];
+      if(c==='"'){inQ=!inQ;}
+      else if(c===','&&!inQ){cells.push(cur);cur='';}
+      else cur+=c;
+    }
+    cells.push(cur);
+    rows.push(cells);
   }
-  cells.push(cur);if(cells.some(x=>x.trim()))rows.push(cells);
   return rows;
 }
 
