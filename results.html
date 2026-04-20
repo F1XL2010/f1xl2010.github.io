@@ -386,15 +386,10 @@ let _seasonCfg = null;
 let _currentSeason = null;
 let _currentDiv = 1;
 let _allSeasons = [];
+const _calCache = {}; // calendar cache keyed by season+div
 
 async function getCurrentSeason(){
   const seasons = await getAllSeasons();
-  // Find most recent season that has results data
-  for(const obj of seasons){
-    const sc = await loadSeasonConfig(obj.season);
-    if(sc && Object.keys(sc).some(k=>k.endsWith('_has_results')&&sc[k]==='yes'))
-      return obj.season;
-  }
   return seasons.length ? seasons[0].season : null;
 }
 
@@ -500,12 +495,20 @@ async function loadDivision(d) {
     document.getElementById('round-selector').innerHTML = '<div style="color:var(--text-faint);font-size:13px;">No calendar data available.</div>';
     return;
   }
+  const calKey = _currentSeason+'_'+d;
   try{
-    const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${CAL_GID}`;
-    const res=await fetch(url);
-    const text=await res.text();
-    if(text.includes('<!DOCTYPE'))throw new Error('Sheet not published to web');
-    const rows=csv(text);
+    let calRows;
+    if(_calCache[calKey]){
+      calRows = _calCache[calKey];
+    } else {
+      const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${CAL_GID}`;
+      const res=await fetch(url);
+      const text=await res.text();
+      if(text.includes('<!DOCTYPE'))throw new Error('Sheet not published to web');
+      calRows = csv(text);
+      _calCache[calKey] = calRows;
+    }
+    const rows = calRows;
     rounds=[];
     let lastDone=-1;
     for(let i=1;i<rows.length;i++){
@@ -516,11 +519,12 @@ async function loadDivision(d) {
       if(r0.toLowerCase().includes('all star'))continue;
       const num=parseInt(r0);
       if(isNaN(num)||num<1||num>25)continue;
-      if(!r3&&!r2)continue;
+      const circuit=(row[4]||'').trim();
+      const gpName=(row[5]||'').trim();
       const date=pd(r2);
       const done=!!(date&&date<today);
       if(done)lastDone=rounds.length;
-      rounds.push({round:num,circuit:r3,date,isSprint:r1==='sprint',gid:RACE_GIDS[num-1],done});
+      rounds.push({round:num,circuit,gpName,date,isSprint:r1==='sprint'||r1.toLowerCase()==='sprint',gid:RACE_GIDS[num-1],done});
     }
     const sel=document.getElementById('round-selector');
     sel.innerHTML=rounds.map(r=>`<button class="round-btn${r.isSprint?' sprint':''}" id="rb${r.round}" onclick="selectRound(${r.round})">${r.isSprint?'⚡ ':''}R${r.round}${r.circuit?' · '+r.circuit:''}</button>`).join('');
@@ -639,11 +643,12 @@ function buildRaceConstructors(rows){
 }
 
 function header(r,circuit,winner,sc,rf,isSprint){
+  const title = r.gpName || (circuit+' Grand Prix');
   return`<div class="race-header${isSprint?' is-sprint':''}">
     <div class="race-header-inner">
       <div>
-        <div class="race-title">${circuit} Grand Prix</div>
-        <div class="race-subtitle">${fd(r.date)}</div>
+        <div class="race-title">${title}</div>
+        <div class="race-subtitle">${circuit ? circuit+' · ' : ''}${fd(r.date)}</div>
         <div class="race-badges">
           <div class="badge badge-round">Round ${r.round}</div>
           ${isSprint?`<div class="badge badge-sprint">Sprint Weekend</div>`:''}
