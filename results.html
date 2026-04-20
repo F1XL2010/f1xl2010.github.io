@@ -235,97 +235,168 @@ function g(row,col){return(row&&row[col]!==undefined)?(row[col]||'').trim():'';}
 function isDNF(p){return['dnf','dns','dsq','ret','nc'].includes((p||'').toLowerCase());}
 function posClass(p){if(p==='1')return'p1';if(p==='2')return'p2';if(p==='3')return'p3';return'';}
 
-function findSection(rows, label){
-  // Find the row containing the label in ANY column (gviz can shift columns)
-  const lbl = label.toLowerCase();
-  const aliases = {
-    'qualifying': ['qualifying','quali'],
-    'race': ['race'],
-    'sprint qualifying': ['sprint qualifying','sprint quali'],
-    'sprint race': ['sprint race'],
-  };
-  const matches = aliases[lbl] || [lbl];
-  for(let i=0;i<rows.length;i++){
-    const row=rows[i]||[];
-    // Check first 5 columns for the label
-    for(let j=0;j<5;j++){
-      const v=(row[j]||'').trim().toLowerCase();
-      if(matches.includes(v)){
-        return{headerRow:i+1, dataStart:i+2};
-      }
+// S26+ format parser
+// Row 0: title, circuit at col 4
+// Row 2: Weather label at col 4, Safety Cars label/value cols 23-24
+// Row 3: section labels at Pos column offsets, Red Flags, round number
+// Row 4: column headers repeated per section
+// Rows 5+: data
+
+function getMeta(rows){
+  const row0 = rows[0]||[], row2 = rows[2]||[], row3 = rows[3]||[];
+  const circuit = (row0[4]||'').trim();
+
+  // Round number from row 3
+  let round = '';
+  for(let j=0;j<row3.length;j++){
+    if((row3[j]||'').trim().toLowerCase().startsWith('round')){
+      round = (row3[j]||'').trim();
+      break;
     }
   }
-  return null;
+
+  // Safety Cars: scan row 2 for 'Safety Cars' label
+  let sc = '0', rf = '0';
+  for(let j=0;j<row2.length;j++){
+    if((row2[j]||'').trim().toLowerCase()==='safety cars'){
+      sc = (row2[j+1]||'').trim()||'0'; break;
+    }
+  }
+  // Red Flags: can appear multiple times in row 3 — use the first non-zero or last
+  let rfVals = [];
+  for(let j=0;j<row3.length;j++){
+    if((row3[j]||'').trim().toLowerCase()==='red flags'){
+      const v = (row3[j+1]||'').trim();
+      if(v && v!=='0') rfVals.push(parseInt(v)||0);
+    }
+  }
+  rf = rfVals.length ? String(Math.max(...rfVals)) : '0';
+
+  // Weather: in row 2 next to 'Weather' label (col 4), value at col 5 or scan nearby
+  // For sprint weeks there are two weather values — find them by their position relative to sections
+  let wQuali='', wSprintQuali='', wSprintRace='', wRace='';
+  // Find all Pos offsets to know section starts
+  const row4 = rows[4]||[];
+  const posOffsets = [];
+  for(let j=0;j<row4.length;j++){
+    if((row4[j]||'').trim().toLowerCase()==='pos') posOffsets.push(j);
+  }
+  // Section labels from row 3 at each Pos offset
+  const sections = posOffsets.map(off => ({
+    offset: off,
+    label: (row3[off]||'').trim().toLowerCase()
+  }));
+  const isSprint = sections.some(s => s.label.includes('sprint'));
+
+  // Weather appears in row 2 near col 4 for first section, and near the race start col for second
+  // Simple approach: scan row 2 for non-empty values that look like weather
+  const weatherWords = ['sun','cloud','rain','wet','overcast','dry'];
+  const weatherCols = [];
+  for(let j=0;j<row2.length;j++){
+    const v=(row2[j]||'').trim().toLowerCase();
+    if(weatherWords.some(w=>v.includes(w))) weatherCols.push({col:j,val:(row2[j]||'').trim()});
+  }
+  // Also check row 3 (sprint week weather can be in row 3)
+  for(let j=0;j<row3.length;j++){
+    const v=(row3[j]||'').trim().toLowerCase();
+    if(weatherWords.some(w=>v.includes(w))) weatherCols.push({col:j,val:(row3[j]||'').trim()});
+  }
+  // Assign weather to nearest section
+  if(!isSprint){
+    if(weatherCols.length>=1) wQuali = weatherCols[0].val;
+    if(weatherCols.length>=2) wRace = weatherCols[1].val;
+    else wRace = wQuali;
+  } else {
+    if(weatherCols.length>=1) wSprintQuali = weatherCols[0].val;
+    if(weatherCols.length>=2) wSprintRace = weatherCols[1].val;
+    else wSprintRace = wSprintQuali;
+    if(weatherCols.length>=3) wQuali = weatherCols[2].val;
+    else wQuali = wSprintQuali;
+    if(weatherCols.length>=4) wRace = weatherCols[3].val;
+    else wRace = wQuali;
+  }
+
+  return{circuit, sc, rf, isSprint, cancelled:false, wQuali, wRace, wSprintQuali, wSprintRace, sections, row4};
 }
 
-function extractSection(rows, label, isRace){
-  const sec = findSection(rows, label);
-  if(!sec) return [];
-  const headerRow = rows[sec.headerRow]||[];
-  let colOffset = 0;
-  for(let j=0;j<5;j++){
-    if((headerRow[j]||'').trim().toLowerCase()==='pos'){colOffset=j;break;}
-  }
+function extractSectionByOffset(rows, offset, isRace, isSprint){
+  const dataStart = 5; // data rows start at row 5
   const results = [];
-  for(let i=sec.dataStart; i<rows.length; i++){
-    const row = rows[i];
-    const rawPos = (row[colOffset]||'').trim();
+  // col offsets relative to section start (Pos=0, Nat=1, #=2, Driver=3, Team=4, blank=5)
+  // Quali:       Time=6, Tyre=7, Tyre2=8, PenPts=9, Pen=10
+  // Race:        Team2=5(dup), Stops=6, Gap=7, Pts=8, blank=9, FL=10, PenPts=11, Pen=12
+  // Sprint Race: Team2=5, Stops=6, Gap=7, Pts=8, PenPts=9, Pen=10 (no FL)
+  for(let i=dataStart; i<rows.length; i++){
+    const row = rows[i]||[];
+    const rawPos = (row[offset]||'').trim();
     if(!rawPos) continue;
     const posNum = parseInt(rawPos);
-    if(isNaN(posNum) && !isDNF(rawPos)) break;
-    const driver = (row[colOffset+3]||'').trim();
-    if(!driver) continue;
+    if(isNaN(posNum) && !isDNF(rawPos)) continue;
+    const driver = (row[offset+3]||'').trim();
+    if(!driver || driver===' ') continue;
     if(isRace){
+      const pts = (row[offset+8]||'').trim();
+      // FL: sprint races don't have it; regular races have it at offset+10
+      const fl = isSprint ? '' : (row[offset+10]||'').trim();
       results.push({
-        pos:rawPos, num:g(row,colOffset+2), driver,
-        team:g(row,colOffset+4),
-        stops:g(row,colOffset+6), gap:g(row,colOffset+7),
-        pts:g(row,colOffset+8), fl:g(row,colOffset+10),
-        pen:g(row,colOffset+12)
+        pos:rawPos,
+        num:(row[offset+2]||'').trim(),
+        driver,
+        team:(row[offset+4]||'').trim(),
+        stops:(row[offset+6]||'').trim(),
+        gap:(row[offset+7]||'').trim(),
+        pts: pts.replace(/\.\d+$/,''), // strip decimal scoring suffix
+        fl,
+        pen:(row[offset+(isSprint?10:12)]||'').trim()
       });
     } else {
-      // Quali: team=col4, time=col6, tyre=col7, tyre2=col8, pen=col10
-      const tyre = g(row,colOffset+7);
-      const tyre2 = g(row,colOffset+8);
+      const tyre = (row[offset+7]||'').trim();
+      const tyre2 = (row[offset+8]||'').trim();
       results.push({
-        pos:rawPos, num:g(row,colOffset+2), driver,
-        team:g(row,colOffset+4),
-        time:g(row,colOffset+6),
-        tyre: tyre2 && tyre2!==tyre ? tyre+'/'+tyre2 : tyre,
-        pen:g(row,colOffset+10)
+        pos:rawPos,
+        num:(row[offset+2]||'').trim(),
+        driver,
+        team:(row[offset+4]||'').trim(),
+        time:(row[offset+6]||'').trim(),
+        tyre: tyre2&&tyre2!==tyre ? tyre+'/'+tyre2 : tyre,
+        pen:(row[offset+10]||'').trim()
       });
     }
   }
   return results;
 }
 
-function getMeta(rows){
-  let circuit='', sc='0', rf='0', isSprint=false, cancelled=false;
-  let wQuali='', wRace='', wSprintQuali='', wSprintRace='';
-  for(let i=0;i<6;i++){
-    const row=rows[i]||[];
-    for(let j=0;j<row.length;j++){
-      const v=(row[j]||'').trim().toLowerCase();
-      const next=(row[j+1]||'').trim();
-      if(v==='circuit') circuit=next;
-      if(v==='safety cars'||v==='safety car') sc=next||'0';
-      if(v==='red flag'||v==='red flags') rf=next||'0';
-      if(v==='sprint') isSprint=next.toLowerCase()==='yes'||next.toLowerCase()==='y';
-      if(v==='cancelled') cancelled=next.toLowerCase()==='y'||next.toLowerCase()==='yes';
-      if(v==='quali weather') wQuali=next;
-      if(v==='race weather') wRace=next;
-      // Sprint weather labels have value 2 cols over (col after label is blank)
-      if(v==='sprint quali weather') wSprintQuali=next||(row[j+2]||'').trim();
-      if(v==='sprint race weather') wSprintRace=next||(row[j+2]||'').trim();
-    }
-  }
-  return{circuit, sc, rf, isSprint, cancelled, wQuali, wRace, wSprintQuali, wSprintRace};
+function extractSection(rows, label, isRace){
+  // Legacy wrapper — uses getMeta sections map
+  const meta = getMeta(rows);
+  const sec = meta.sections.find(s => {
+    if(label.toLowerCase()==='qualifying') return s.label==='quali'||s.label==='qualifying';
+    if(label.toLowerCase()==='race') return s.label===''||s.label==='race';
+    if(label.toLowerCase()==='sprint qualifying') return s.label.includes('sprint quali');
+    if(label.toLowerCase()==='sprint race') return s.label===''&&meta.isSprint&&meta.sections.indexOf(s)===1;
+    return false;
+  });
+  if(!sec) return [];
+  // Determine if this is a sprint race (no FL col)
+  const isSR = label.toLowerCase()==='sprint race';
+  return extractSectionByOffset(rows, sec.offset, isRace, isSR);
 }
 
 let _seasonCfg = null;
 let _currentSeason = null;
 let _currentDiv = 1;
 let _allSeasons = [];
+
+async function getCurrentSeason(){
+  const seasons = await getAllSeasons();
+  // Find most recent season that has results data
+  for(const obj of seasons){
+    const sc = await loadSeasonConfig(obj.season);
+    if(sc && Object.keys(sc).some(k=>k.endsWith('_has_results')&&sc[k]==='yes'))
+      return obj.season;
+  }
+  return seasons.length ? seasons[0].season : null;
+}
 
 async function init(){
   // Read URL params
@@ -495,7 +566,6 @@ function render(r,rows){
   const isSprint = meta.isSprint || r.isSprint;
   let html='';
 
-  // Cancelled race
   if(meta.cancelled){
     html+=header(r,circuit,null,0,0,false);
     html+=`<div style="background:var(--dark2);border:1px solid var(--border);border-radius:8px;padding:24px;text-align:center;color:var(--text-muted);font-size:14px;">This race was cancelled.</div>`;
@@ -504,24 +574,68 @@ function render(r,rows){
   }
 
   if(!isSprint){
-    const quali=extractSection(rows,'Qualifying',false);
-    const race=extractSection(rows,'Race',true);
-    const winner=race.find(x=>x.pos==='1');
+    // Regular weekend: 2 sections — Quali (offset 0) and Race (offset 12)
+    const qualiSec = meta.sections[0];
+    const raceSec  = meta.sections[1];
+    const quali = qualiSec ? extractSectionByOffset(rows, qualiSec.offset, false, false) : [];
+    const race  = raceSec  ? extractSectionByOffset(rows, raceSec.offset,  true,  false) : [];
+    const winner = race.find(x=>x.pos==='1');
     html+=header(r,circuit,winner,sc,rf,false);
     html+=`<div class="results-grid">${qTable(quali,'Qualifying',meta.wQuali)}${rTable(race,'Race',meta.wRace)}</div>`;
+    // Constructors race points panel
+    const constHtml = buildRaceConstructors(rows);
+    if(constHtml) html+=constHtml;
   } else {
-    const sq=extractSection(rows,'Sprint Qualifying',false);
-    const sr=extractSection(rows,'Sprint Race',true); // Sprint race — is a race, FL col just won't have data
-    const mq=extractSection(rows,'Qualifying',false);
-    const mr=extractSection(rows,'Race',true);
-    const winner=mr.find(x=>x.pos==='1');
+    // Sprint weekend: 4 sections — Sprint Quali, Sprint Race, Quali, Race
+    const sq = meta.sections[0] ? extractSectionByOffset(rows, meta.sections[0].offset, false, false) : [];
+    const sr = meta.sections[1] ? extractSectionByOffset(rows, meta.sections[1].offset, true,  true)  : [];
+    const mq = meta.sections[2] ? extractSectionByOffset(rows, meta.sections[2].offset, false, false) : [];
+    const mr = meta.sections[3] ? extractSectionByOffset(rows, meta.sections[3].offset, true,  false) : [];
+    const winner = mr.find(x=>x.pos==='1');
     html+=header(r,circuit,winner,sc,rf,true);
     html+=`<div class="section-label">Sprint</div>`;
     html+=`<div class="results-grid">${qTable(sq,'Sprint Qualifying',meta.wSprintQuali)}${srTable(sr,'Sprint Race',meta.wSprintRace)}</div>`;
     html+=`<div class="section-label">Grand Prix</div>`;
     html+=`<div class="results-grid">${qTable(mq,'Qualifying',meta.wQuali)}${rTable(mr,'Race',meta.wRace)}</div>`;
+    const constHtml = buildRaceConstructors(rows);
+    if(constHtml) html+=constHtml;
   }
   document.getElementById('content').innerHTML=html;
+}
+
+function buildRaceConstructors(rows){
+  // Constructors race points: last 3 cols of each data row (Team, _, Points)
+  // Find the constructors start column: after the last section's data
+  const meta = getMeta(rows);
+  if(!meta.sections.length) return '';
+  const lastSection = meta.sections[meta.sections.length-1];
+  // Constructor col starts around offset+12 for race, offset+11 for sprint race
+  // Easiest: scan row 5 for team names after last Pos offset
+  const constCol = lastSection.offset + (meta.isSprint ? 13 : 13);
+  const data = [];
+  for(let i=5;i<rows.length;i++){
+    const row = rows[i]||[];
+    const team = (row[constCol]||'').trim();
+    if(!team) continue;
+    // Points: next col, strip decimal scoring suffix
+    const rawPts = (row[constCol+1]||'').trim();
+    const pts = parseFloat(rawPts)||0;
+    if(pts===0 && !team) continue;
+    data.push({team, pts: Math.round(pts*10)/10});
+  }
+  if(!data.length) return '';
+  data.sort((a,b)=>b.pts-a.pts);
+  let html='<div class="section-label" style="margin-top:20px;">Constructor Points This Round</div>';
+  html+='<div class="results-box" style="max-width:340px;">';
+  html+='<table class="rt"><thead><tr><th>Pos</th><th>Constructor</th><th>Pts</th></tr></thead><tbody>';
+  data.forEach((d,idx)=>{
+    const pos=idx+1;
+    html+=`<tr><td><span class="p ${posClass(String(pos))}">${pos}</span></td>`;
+    html+=`<td><span class="dname">${d.team}</span></td>`;
+    html+=`<td><span class="rpts${d.pts===0?' z':''}">${d.pts}</span></td></tr>`;
+  });
+  html+='</tbody></table></div>';
+  return html;
 }
 
 function header(r,circuit,winner,sc,rf,isSprint){
