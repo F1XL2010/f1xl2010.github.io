@@ -870,6 +870,12 @@ function buildOverallConstTable(rows){
     if((hdr[c]||'').trim().toLowerCase()==='team'){ teamHeaderCol=c; break; }
   }
 
+  // Find Team Principal (name) column by label
+  let nameCol = -1;
+  for(let c=0; c<hdr.length; c++){
+    if((hdr[c]||'').trim().toLowerCase()==='name'){ nameCol=c; break; }
+  }
+
   // Parse data rows
   const data = [];
   for(let i=hdrIdx+1; i<rows.length; i++){
@@ -886,20 +892,21 @@ function buildOverallConstTable(rows){
     }
     if(!team) continue;
 
-    // Strip commas from points before parsing
     const pts = parseFloat((r[ptsCol]||'').replace(/,/g,'').trim())||0;
-    data.push({pos: parseInt(posVal), team, pts});
+    const principal = nameCol>=0 ? (r[nameCol]||'').trim() : '';
+    data.push({pos: parseInt(posVal), team, pts, principal});
   }
 
   if(!data.length) return '<div class="div-loading">No data found.</div>';
   data.sort((a,b) => a.pos - b.pos);
 
   let html = '<div class="st-wrap"><table class="st"><thead><tr>';
-  html += '<th style="width:30px">Pos</th><th class="th-l">Team</th><th>Points</th>';
+  html += '<th style="width:30px">Pos</th><th class="th-l">Team Principal</th><th class="th-l">Team</th><th>Points</th>';
   html += '</tr></thead><tbody>';
   data.forEach(d => {
     html += '<tr'+trClass(d.pos)+'><td><span class="st-pos">'+d.pos+'</span></td>';
-    html += '<td class="td-l"><span class="dname">'+d.team+'</span></td>';
+    html += '<td class="td-l"><span class="dname">'+(d.principal||'&mdash;')+'</span></td>';
+    html += '<td class="td-l"><span class="tname">'+d.team+'</span></td>';
     html += '<td><span class="pts">'+d.pts.toLocaleString()+'</span></td></tr>';
   });
   html += '</tbody></table></div>';
