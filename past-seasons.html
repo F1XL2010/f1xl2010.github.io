@@ -1453,6 +1453,9 @@ function buildS28Constructors(id, d, constRows, teamStatsRows){
             const lbl=c.label.toLowerCase();
             if(lbl==='wins'||lbl==='sprint wins'){
               teamHtml += '<td><span style="'+(val&&val!=='0'?'color:var(--gold);font-weight:700;':'')+'">'+( val||'0')+'</span></td>';
+            } else if(lbl==='total points'||lbl==='sprint points'){
+              const n=parseFloat(val);
+              teamHtml += '<td>'+(isNaN(n)?val||'&mdash;':Math.floor(n))+'</td>';
             } else {
               const n=parseFloat(val);
               teamHtml += '<td>'+(isNaN(n)?val||'&mdash;':parseFloat(n.toFixed(2)))+'</td>';
