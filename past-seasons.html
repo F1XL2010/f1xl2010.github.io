@@ -60,20 +60,6 @@
   .div-tab{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:6px 14px;border-radius:4px 4px 0 0;border:none;background:rgba(255,255,255,0.05);color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:color 0.2s;}
   .div-tab:hover{color:var(--text);}
   .div-tab.active{color:var(--green);border-bottom-color:var(--green);background:rgba(61,204,71,0.06);}
-  .overall-accordion{margin:16px 24px 0;border:1px solid var(--border2);border-radius:8px;overflow:hidden;}
-  .overall-accordion-header{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;background:var(--dark2);cursor:pointer;user-select:none;transition:background 0.2s;}
-  .overall-accordion-header:hover{background:var(--dark3);}
-  .overall-accordion-title{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;}
-  .overall-accordion-tag{font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--teal);font-weight:600;}
-  .overall-accordion-chevron{font-size:13px;color:var(--text-faint);transition:transform 0.25s;}
-  .overall-accordion-chevron.open{transform:rotate(180deg);}
-  .overall-accordion-body{display:none;background:var(--dark2);}
-  .overall-accordion-body.open{display:block;}
-  .overall-inner-tabs{display:flex;gap:4px;padding:12px 16px 0;border-bottom:1px solid var(--border);}
-  .overall-inner-tab{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:6px 14px;border-radius:4px 4px 0 0;border:none;background:rgba(255,255,255,0.05);color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:color 0.2s;margin-bottom:-1px;}
-  .overall-inner-tab:hover{color:var(--text);}
-  .overall-inner-tab.active{color:var(--teal);border-bottom-color:var(--teal);background:rgba(94,207,207,0.06);}
-  .overall-inner-content{padding:12px 16px 16px;}
   .div-content{padding:16px 24px 4px;}
   .div-content.hidden{display:none;}
   .div-loading{font-size:13px;color:var(--text-faint);padding:12px 0;}
@@ -294,35 +280,9 @@ function switchDiv(id, div, total){
 
 // ============================================================
 // SEASON DISPATCHER
+// Season config loaded from config sheet, then routed to
+// the correct parser based on season number
 // ============================================================
-function buildOverallAccordionHtml(id, season, sc){
-  const overallGid = sc['overall_gid'];
-  const wtGid = sc['w_totals_gid'];
-  if(!overallGid || overallGid.trim()==='') return '';
-  const hasWt = wtGid && wtGid.trim()!=='';
-  const innerTabs = hasWt
-    ? '<div class="overall-inner-tabs">'
-      + '<button class="overall-inner-tab active" data-tab="overall" onclick="switchOverallTab(\''+id+'\',' + "\'" + 'overall' + "\'" + ')">Overall</button>'
-      + '<button class="overall-inner-tab" data-tab="wtotals" onclick="switchOverallTab(\''+id+'\',' + "\'" + 'wtotals' + "\'" + ')">Weekly Totals</button>'
-      + '</div>'
-    : '';
-  const wtContent = hasWt ? '<div class="overall-inner-content" id="'+id+'-wtotals-content" style="display:none"></div>' : '';
-  return '<div class="overall-accordion" id="'+id+'-overall-accordion">'
-    + '<div class="overall-accordion-header" id="'+id+'-overall-hdr" onclick="toggleOverallAccordion(\''+id+'\', _currentSeasonConfig)">'
-    + '<div style="display:flex;align-items:center;gap:12px;">'
-    + '<span class="overall-accordion-tag">Season '+season+'</span>'
-    + '<span class="overall-accordion-title">Overall Constructors</span>'
-    + '</div>'
-    + '<span class="overall-accordion-chevron" id="'+id+'-overall-chev">&#9660;</span>'
-    + '</div>'
-    + '<div class="overall-accordion-body" id="'+id+'-overall-body" data-loaded="false">'
-    + innerTabs
-    + '<div class="overall-inner-content" id="'+id+'-overall-content"></div>'
-    + wtContent
-    + '</div>'
-    + '</div>';
-}
-
 async function loadSeason(id, season, body){
   const sc = await loadSeasonConfig(season);
   if(!sc){ body.innerHTML='<div class="div-loading" style="padding:16px 20px;">No config data for this season.</div>'; return; }
@@ -330,6 +290,7 @@ async function loadSeason(id, season, body){
   if(s<=2) await renderS1S2(id, season, sc, body);
   else if(s>=3 && s<=9 || s===11 || s===12 || s===13 || s===14 || s===15 || s===16 || s===17 || s===18 || s===19) await renderS3to5(id, season, sc, body);
   else if(s===10) await renderS10(id, season, sc, body);
+  else if(s===28) await renderS28(id, season, sc, body);
   else if(s>=20) await renderS20plus(id, season, sc, body);
   else body.innerHTML = '<div class="div-loading" style="padding:16px 20px;">Parser for Season '+season+' not yet built.</div>';
 }
@@ -865,192 +826,6 @@ function buildDriverStats(rows){
 
 
 // ============================================================
-// OVERALL CONSTRUCTORS ACCORDION
-// ============================================================
-function buildOverallConstTable(rows){
-  if(!rows || !rows.length) return '<div class="div-loading">No data available.</div>';
-
-  // Find header row — look for a row containing 'Pos' anywhere
-  let hdrIdx = -1, posCol = -1;
-  for(let i=0; i<rows.length; i++){
-    const r = rows[i];
-    for(let c=0; c<r.length; c++){
-      if(/^pos\.?$/i.test((r[c]||'').trim())){ hdrIdx=i; posCol=c; break; }
-    }
-    if(hdrIdx>=0) break;
-  }
-  if(hdrIdx<0) return '<div class="div-loading">Could not find header row.</div>';
-
-  const hdr = rows[hdrIdx];
-
-  // Find Points column by label
-  let ptsCol = -1;
-  for(let c=0; c<hdr.length; c++){
-    if((hdr[c]||'').trim().toLowerCase()==='points'){ ptsCol=c; break; }
-  }
-  if(ptsCol<0) return '<div class="div-loading">Could not find Points column.</div>';
-
-  // Find Team header col
-  let teamHeaderCol = -1;
-  for(let c=0; c<hdr.length; c++){
-    if((hdr[c]||'').trim().toLowerCase()==='team'){ teamHeaderCol=c; break; }
-  }
-
-  // Find Team Principal (name) column by label
-  let nameCol = -1;
-  for(let c=0; c<hdr.length; c++){
-    if((hdr[c]||'').trim().toLowerCase()==='name'){ nameCol=c; break; }
-  }
-
-  // Parse data rows
-  const data = [];
-  for(let i=hdrIdx+1; i<rows.length; i++){
-    const r = rows[i];
-    const posVal = (r[posCol]||'').trim();
-    if(!posVal || isNaN(parseInt(posVal))) continue;
-    if((r[posCol]||'').includes('#REF')) continue;
-
-    // Find team name: scan cols after teamHeaderCol for first non-blank non-numeric text
-    let team = '';
-    const scanStart = teamHeaderCol >= 0 ? teamHeaderCol : posCol+1;
-    for(let c=scanStart; c<ptsCol; c++){
-      const t = (r[c]||'').trim();
-      if(t && isNaN(parseFloat(t.replace(/,/g,'')))) { team=t; break; }
-    }
-    if(!team) continue;
-
-    const pts = parseFloat((r[ptsCol]||'').replace(/,/g,'').trim())||0;
-    const principal = nameCol>=0 ? (r[nameCol]||'').trim() : '';
-    data.push({pos: parseInt(posVal), team, pts, principal});
-  }
-
-  if(!data.length) return '<div class="div-loading">No data found.</div>';
-  data.sort((a,b) => a.pos - b.pos);
-
-  let html = '<div class="st-wrap"><table class="st"><thead><tr>';
-  html += '<th style="width:30px">Pos</th><th class="th-l">Team Principal</th><th class="th-l">Team</th><th>Points</th>';
-  html += '</tr></thead><tbody>';
-  data.forEach(d => {
-    html += '<tr'+trClass(d.pos)+'><td><span class="st-pos">'+d.pos+'</span></td>';
-    html += '<td class="td-l"><span class="dname">'+(d.principal||'&mdash;')+'</span></td>';
-    html += '<td class="td-l"><span class="dname">'+d.team+'</span></td>';
-    html += '<td><span class="pts">'+d.pts.toLocaleString()+'</span></td></tr>';
-  });
-  html += '</tbody></table></div>';
-  return html;
-}
-
-function buildWeeklyTotalsTable(rows){
-  if(!rows || !rows.length) return '<div class="div-loading">No data available.</div>';
-
-  // Find header row — contains 'Round' or numeric round numbers
-  let hdrIdx = -1;
-  for(let i=0; i<rows.length; i++){
-    if((rows[i][0]||'').trim().toLowerCase()==='round'){ hdrIdx=i; break; }
-  }
-  if(hdrIdx<0) return '<div class="div-loading">Could not parse weekly totals.</div>';
-
-  const hdr = rows[hdrIdx];
-  // Round columns: all cols after col 0 that have a value
-  const roundCols = [];
-  for(let c=1; c<hdr.length; c++){
-    const v = (hdr[c]||'').trim();
-    if(v) roundCols.push({col:c, label:v});
-  }
-
-  const data = [];
-  for(let i=hdrIdx+1; i<rows.length; i++){
-    const r = rows[i];
-    const team = (r[0]||'').trim();
-    if(!team) continue;
-    const pts = roundCols.map(rc => {
-      const v = (r[rc.col]||'').trim();
-      return v==='' ? null : (parseFloat(v)||0);
-    });
-    const total = pts.reduce((s,v) => s + (v||0), 0);
-    data.push({team, pts, total});
-  }
-
-  if(!data.length) return '<div class="div-loading">No data found.</div>';
-  data.sort((a,b) => b.total - a.total);
-
-  // Find max value per round column for gold highlight
-  const colMaxes = roundCols.map((rc, ci) => {
-    let max = -Infinity;
-    data.forEach(d => { if(d.pts[ci] !== null && d.pts[ci] > max) max = d.pts[ci]; });
-    return max;
-  });
-
-  let html = '<div class="st-wrap"><table class="st"><thead><tr>';
-  html += '<th class="th-l sticky2">Team</th>';
-  roundCols.forEach(rc => { html += '<th>R'+rc.label+'</th>'; });
-  html += '<th>Total</th>';
-  html += '</tr></thead><tbody>';
-
-  data.forEach((d, idx) => {
-    const pos = idx+1;
-    html += '<tr'+trClass(pos)+'>';
-    html += '<td class="td-l sticky2"><span class="dname">'+d.team+'</span></td>';
-    d.pts.forEach((v, ci) => {
-      const isMax = v !== null && v === colMaxes[ci];
-      const style = isMax ? ' style="background:rgba(232,184,75,0.2);color:var(--gold);font-weight:700;"' : '';
-      html += '<td'+style+'>'+(v===null ? '&mdash;' : v)+'</td>';
-    });
-    html += '<td><span class="pts">'+d.total+'</span></td>';
-    html += '</tr>';
-  });
-
-  html += '</tbody></table></div>';
-  return html;
-}
-
-function switchOverallTab(id, tab){
-  document.getElementById(id+'-overall-content').style.display = tab==='overall'?'':'none';
-  document.getElementById(id+'-wtotals-content').style.display = tab==='wtotals'?'':'none';
-  document.querySelectorAll('#'+id+'-overall-accordion .overall-inner-tab').forEach(b=>{
-    b.classList.toggle('active', b.dataset.tab===tab);
-  });
-}
-
-async function toggleOverallAccordion(id, sc){
-  const body=document.getElementById(id+'-overall-body');
-  const hdr=document.getElementById(id+'-overall-hdr');
-  const chev=document.getElementById(id+'-overall-chev');
-  const isOpen=body.classList.contains('open');
-  if(isOpen){
-    body.classList.remove('open');
-    chev.classList.remove('open');
-    return;
-  }
-  body.classList.add('open');
-  chev.classList.add('open');
-  if(body.dataset.loaded==='true') return;
-  body.dataset.loaded='true';
-
-  const overallUrl=sc['overall_gid'];
-  const wtGid=sc['w_totals_gid'];
-
-  // Extract sheet ID from the full URL for w_totals fetch
-  const parsed=parseGID(null, overallUrl);
-  const overallSheetId=parsed.sheetId;
-  const overallGid=parsed.gid;
-
-  const overallContent=document.getElementById(id+'-overall-content');
-  const wtContent=document.getElementById(id+'-wtotals-content');
-
-  overallContent.innerHTML='<div class="div-loading">Loading...</div>';
-  if(wtContent) wtContent.innerHTML='<div class="div-loading">Loading...</div>';
-
-  const [overallRows, wtRows] = await Promise.all([
-    fetchCSV(overallSheetId, overallGid).catch(()=>null),
-    (wtGid&&wtGid!=='') ? fetchCSV(overallSheetId, wtGid).catch(()=>null) : Promise.resolve(null)
-  ]);
-
-  overallContent.innerHTML=buildOverallConstTable(overallRows);
-  if(wtContent) wtContent.innerHTML=buildWeeklyTotalsTable(wtRows);
-}
-
-// ============================================================
 // S20+ PARSER
 // New format: col0=Pos, col1=Nat(#REF), col2=Driver, col3=Team
 // Circuit names in row 0, round labels in row 4 with (s) for sprints
@@ -1061,6 +836,7 @@ async function toggleOverallAccordion(id, sc){
 async function renderS20plus(id, season, sc, body){
   const divisions = parseInt(sc['divisions'])||1;
 
+  // Build tabs
   let tabsHtml = '<div class="div-tabs">';
   let firstTab = true;
   for(let d=1;d<=divisions;d++){
@@ -1412,6 +1188,345 @@ function buildS20DriverStats(rows){
 }
 
 // ============================================================
+// S28 RENDERER
+// New sheet architecture: Driver Results NoSort, Driver Stats Calc Sheet,
+// Constructors Results NoSort, Constructors Standings NoSort, Team Stats Calc Sheet
+// R tabs: Quali rows 9-32, Race rows 37-60, Constructors rows 66+
+// Sprint R tabs: Sprint Quali 9-32, Sprint Race 37-60, Quali 66-89, Race 94-117
+// ============================================================
+
+async function renderS28(id, season, sc, body){
+  const divisions = parseInt(sc['divisions'])||1;
+
+  let tabsHtml = '<div class="div-tabs">';
+  for(let d=1;d<=divisions;d++){
+    const active = d===1 ? ' active' : '';
+    tabsHtml += '<button class="div-tab'+active+'" id="'+id+'-dtab-'+d+'" onclick="switchDivTab(\''+id+'\',\''+d+'\')">Division '+d+'</button>';
+    tabsHtml += '<button class="div-tab" id="'+id+'-dtab-'+d+'s" onclick="switchDivTab(\''+id+'\',\''+d+'s\')">D'+d+' Stats</button>';
+  }
+  tabsHtml += '</div>';
+
+  let contentHtml = '';
+  for(let d=1;d<=divisions;d++){
+    const hidden = d===1 ? '' : ' hidden';
+    contentHtml += '<div class="div-content'+hidden+'" id="'+id+'-dcontent-'+d+'" data-loaded="false" data-div="'+d+'"><div class="div-loading">Loading...</div></div>';
+    contentHtml += '<div class="div-content hidden" id="'+id+'-dcontent-'+d+'s" data-loaded="false"></div>';
+  }
+
+  body.innerHTML = tabsHtml + contentHtml;
+  await loadS28DivContent(id, 1, sc);
+}
+
+async function loadS28DivContent(id, d, sc){
+  const divEl = document.getElementById(id+'-dcontent-'+d);
+  if(!divEl || divEl.dataset.loaded === 'true') return;
+  divEl.dataset.loaded = 'true';
+
+  const sid   = sc['d'+d+'_sheet_id'];
+  const dgid  = sc['d'+d+'_driver_results_gid'];
+  const cgid  = sc['d'+d+'_constructors_gid'];
+  const sgid  = sc['d'+d+'_driver_stats_gid'];
+  const tgid  = sc['d'+d+'_team_stats_gid'];
+  const otgid = sc['overall_totals_gid'] || null;
+
+  const [driverRows, constRows, statsRows, teamStatsRows, overallTotalsRows] = await Promise.all([
+    (sid && dgid!==undefined && dgid!=='') ? fetchCSV(sid, dgid).catch(()=>null) : Promise.resolve(null),
+    (cgid!==undefined && cgid!=='') ? fetchCSV(sid, cgid).catch(()=>null) : Promise.resolve(null),
+    (sgid!==undefined && sgid!=='') ? fetchCSV(sid, sgid).catch(()=>null) : Promise.resolve(null),
+    (tgid!==undefined && tgid!=='') ? fetchCSV(sid, tgid).catch(()=>null) : Promise.resolve(null),
+    otgid ? fetchCSV(sid, otgid).catch(()=>null) : Promise.resolve(null),
+  ]);
+
+  let divHtml = '';
+
+  // Overall totals accordion — placeholder until tab is built
+  if(overallTotalsRows) divHtml += buildS28OverallTotals(id, d, overallTotalsRows);
+
+  if(driverRows) divHtml += buildS28Drivers(driverRows);
+  else divHtml += '<div class="div-loading">No driver data available.</div>';
+
+  if(constRows || teamStatsRows){
+    divHtml += buildS28Constructors(id, d, constRows, teamStatsRows);
+  }
+
+  divEl.innerHTML = divHtml;
+
+  if(statsRows){
+    const statsEl = document.getElementById(id+'-dcontent-'+d+'s');
+    if(statsEl){
+      statsEl.innerHTML = buildS28DriverStats(statsRows);
+      statsEl.dataset.loaded = 'true';
+    }
+  }
+}
+
+function buildS28Drivers(rows){
+  // Row 0: circuit names (cols 4+)
+  // Row 1: headers — Pos, Nat, Driver, Team, R1..R21, Pole, FL, Points, Gap
+  // Rows 2+: data
+  if(!rows.length) return '<div class="div-loading">No driver data.</div>';
+
+  const circuitRow = rows[0];
+  const headerRow  = rows[1];
+  if(!headerRow) return '<div class="div-loading">Could not parse driver data.</div>';
+
+  const ptsCol = headerRow.findIndex(v=>(v||'').trim().toLowerCase()==='points');
+  if(ptsCol<0) return '<div class="div-loading">Could not find points column.</div>';
+
+  // Build round columns
+  const roundCols = [];
+  for(let c=4; c<ptsCol-1; c++){
+    const label = (headerRow[c]||'').trim();
+    if(!label) continue;
+    const isSprint = label.toLowerCase().includes('(s)');
+    const circuit  = (circuitRow[c]||'').trim();
+    const short    = circuit.length > 3 ? circuit.slice(0,3).toUpperCase() : (circuit || label).toUpperCase();
+    roundCols.push({col:c, label:short, isSprint, isSprintRace: false});
+    // Sprint weekend: next col is the sprint race (R3 follows R3(s))
+    if(isSprint){
+      const nextLabel = (headerRow[c+1]||'').trim();
+      if(nextLabel && !nextLabel.toLowerCase().includes('(s)')){
+        const nextCircuit = (circuitRow[c+1]||'').trim() || circuit;
+        const nextShort   = nextCircuit.length > 3 ? nextCircuit.slice(0,3).toUpperCase() : nextCircuit.toUpperCase();
+        roundCols.push({col:c+1, label:nextShort, isSprint:false, isSprintRace:true});
+        c++; // skip next iteration
+      }
+    }
+  }
+
+  // Trim trailing empty rounds
+  while(roundCols.length){
+    const col = roundCols[roundCols.length-1].col;
+    const hasData = rows.slice(2).some(r=>(r[col]||'').trim() && (r[col]||'').trim() !== ' ');
+    if(hasData) break;
+    roundCols.pop();
+  }
+
+  const dataRows = rows.slice(2).filter(r=>{
+    const pos = (r[0]||'').trim();
+    return pos && !isNaN(parseInt(pos)) && (r[2]||'').trim();
+  });
+  if(!dataRows.length) return '<div class="div-loading">No driver data found.</div>';
+
+  const hasPoints = dataRows.some(r=>parseFloat((r[ptsCol]||'').trim())>0);
+
+  let html = '<div class="section-label">Drivers</div><div class="st-wrap"><table class="st"><thead><tr>';
+  html += '<th class="th-l sticky" style="width:28px">Pos</th>';
+  html += '<th class="th-l sticky2">Driver</th>';
+  roundCols.forEach(rc=>{
+    let style = '';
+    if(rc.isSprint)      style = 'color:rgba(130,170,255,0.9);border-left:2px solid rgba(100,150,255,0.4);';
+    else if(rc.isSprintRace) style = 'color:rgba(130,170,255,0.7);border-right:2px solid rgba(100,150,255,0.4);';
+    const suffix = rc.isSprint ? ' (S)' : rc.isSprintRace ? ' (R)' : '';
+    html += '<th'+(style?' style="'+style+'"':'')+' title="'+rc.label+'">'+rc.label+suffix+'</th>';
+  });
+  if(hasPoints) html += '<th>Pts</th>';
+  html += '</tr></thead><tbody>';
+
+  dataRows.forEach(r=>{
+    const pos    = parseInt((r[0]||'').trim());
+    const driver = (r[2]||'').trim();
+    const team   = (r[3]||'').trim();
+    const pts    = (r[ptsCol]||'').trim();
+    html += '<tr'+trClass(pos)+'>';
+    html += '<td class="sticky"><span class="st-pos">'+pos+'</span></td>';
+    html += '<td class="td-l sticky2"><span class="dname">'+driver+'</span>'+(team?'<br><span class="tname">'+team+'</span>':'')+'</td>';
+    roundCols.forEach(rc=>{
+      const val = (r[rc.col]||'').trim().replace(/^ $/, '');
+      const sprintStyle = rc.isSprint ? 'border-left:2px solid rgba(100,150,255,0.4);' : rc.isSprintRace ? 'border-right:2px solid rgba(100,150,255,0.4);' : '';
+      if(!val){
+        html += '<td class="rr-blank"'+(sprintStyle?' style="'+sprintStyle+'"':'')+'>&#8212;</td>';
+      } else if(val==='DNF'||val==='DNS'||val==='DSQ'){
+        html += '<td'+(sprintStyle?' style="'+sprintStyle+'"':'')+'><span class="pos-cell pdnf" style="width:34px;font-size:10px;">'+val+'</span></td>';
+      } else {
+        const n=parseInt(val);
+        const cl=n===1?'p1':n===2?'p2':n===3?'p3':n<=10?'pp':'pout';
+        html += '<td'+(sprintStyle?' style="'+sprintStyle+'"':'')+'><span class="pos-cell '+cl+'">'+val+'</span></td>';
+      }
+    });
+    if(hasPoints) html += '<td><span class="pts">'+(pts||'&mdash;')+'</span></td>';
+    html += '</tr>';
+  });
+
+  html += '</tbody></table></div>';
+  return html;
+}
+
+function buildS28Constructors(id, d, constRows, teamStatsRows){
+  const tabId = id+'-ctab-'+d;
+  let html = '<div class="section-label">Constructors</div>';
+
+  if(teamStatsRows){
+    html += '<div class="div-tabs" style="padding:0;margin-bottom:-1px;">';
+    html += '<button class="div-tab active" id="'+tabId+'-c" onclick="switchSubTab(\''+tabId+'\',\'c\')">Constructors</button>';
+    html += '<button class="div-tab" id="'+tabId+'-t" onclick="switchSubTab(\''+tabId+'\',\'t\')">Team Stats</button>';
+    html += '</div>';
+  }
+
+  // Constructors standings — header at row 1 (row 0 is title)
+  let constHtml = '';
+  if(constRows){
+    let hdrIdx = constRows.findIndex(r=>(r[0]||'').trim().toLowerCase()==='pos');
+    if(hdrIdx>=0){
+      const hdr = constRows[hdrIdx];
+      const teamCol = hdr.findIndex(v=>(v||'').trim().toLowerCase()==='team');
+      const ptsCol  = hdr.findIndex(v=>(v||'').trim().toLowerCase()==='points');
+      if(teamCol>=0 && ptsCol>=0){
+        const data = constRows.slice(hdrIdx+1)
+          .filter(r=>(r[teamCol]||'').trim() && !(r[teamCol]||'').trim().startsWith('#'))
+          .map(r=>({team:(r[teamCol]||'').trim(), pts:parseFloat((r[ptsCol]||'').trim())||0}))
+          .filter(r=>r.team)
+          .sort((a,b)=>b.pts-a.pts);
+        if(data.length){
+          constHtml = '<div class="st-wrap"><table class="st"><thead><tr>';
+          constHtml += '<th style="width:30px">Pos</th><th class="th-l">Team</th><th>Points</th>';
+          constHtml += '</tr></thead><tbody>';
+          data.forEach((d2,i)=>{
+            const pos=i+1;
+            constHtml += '<tr'+trClass(pos)+'><td><span class="st-pos">'+pos+'</span></td>';
+            constHtml += '<td class="td-l"><span class="dname">'+d2.team+'</span></td>';
+            constHtml += '<td><span class="pts">'+d2.pts+'</span></td></tr>';
+          });
+          constHtml += '</tbody></table></div>';
+        }
+      }
+    }
+  }
+
+  // Team stats — header at row 0
+  let teamHtml = '';
+  if(teamStatsRows){
+    const hdrIdx = teamStatsRows.findIndex(r=>r.some(v=>(v||'').trim().toLowerCase()==='wins'));
+    if(hdrIdx>=0){
+      const hdr = teamStatsRows[hdrIdx];
+      const labelMap = {
+        'wins':'Wins','podiums':'Pods','poles':'Poles','fastest laps':'FL',
+        'avg points per race':'Avg Pts','avg finish t1':'T1 Fin','avg finish t2':'T2 Fin',
+        'sprint wins':'Sp Wins','sprint points':'Sp Pts',
+        'avg sprint finish t1':'T1 Sp','avg sprint finish t2':'T2 Sp',
+        'total points':'Points'
+      };
+      const cols = hdr.map((v,i)=>({label:(v||'').trim(),col:i})).filter(c=>c.label&&c.col>0);
+      const dataRows = teamStatsRows.slice(hdrIdx+1).filter(r=>(r[0]||'').trim()&&!(r[0]||'').trim().startsWith('#'));
+      if(dataRows.length){
+        teamHtml = '<div class="st-wrap"><table class="st"><thead><tr>';
+        teamHtml += '<th class="th-l">Team</th>';
+        cols.forEach(c=>{ teamHtml += '<th title="'+c.label+'">'+(labelMap[c.label.toLowerCase()]||c.label)+'</th>'; });
+        teamHtml += '</tr></thead><tbody>';
+        dataRows.forEach(r=>{
+          const team=(r[0]||'').trim();
+          teamHtml += '<tr><td class="td-l"><span class="dname">'+team+'</span></td>';
+          cols.forEach(c=>{
+            const val=(r[c.col]||'').trim();
+            const lbl=c.label.toLowerCase();
+            if(lbl==='wins'||lbl==='sprint wins'){
+              teamHtml += '<td><span style="'+(val&&val!=='0'?'color:var(--gold);font-weight:700;':'')+'">'+( val||'0')+'</span></td>';
+            } else {
+              const n=parseFloat(val);
+              teamHtml += '<td>'+(isNaN(n)?val||'&mdash;':parseFloat(n.toFixed(2)))+'</td>';
+            }
+          });
+          teamHtml += '</tr>';
+        });
+        teamHtml += '</tbody></table></div>';
+      }
+    }
+  }
+
+  if(teamStatsRows){
+    html += '<div id="'+tabId+'-c-content">'+constHtml+'</div>';
+    html += '<div id="'+tabId+'-t-content" style="display:none">'+teamHtml+'</div>';
+  } else {
+    html += constHtml;
+  }
+  return html;
+}
+
+function buildS28DriverStats(rows){
+  // Row 0: "DRIVER STATS" title
+  // Row 1: headers — Driver, Team, Tier, Wins, Podiums...
+  // Rows 2-23: data
+  // Rows 27+: raw calc workings (ignore)
+  if(!rows.length) return '<div class="div-loading">No stats data.</div>';
+
+  // Find header row — has 'Driver' in col 0 and 'Wins' somewhere
+  let hdrIdx = rows.findIndex(r=>(r[0]||'').trim().toLowerCase()==='driver' && r.some(v=>(v||'').trim().toLowerCase()==='wins'));
+  if(hdrIdx<0) return '<div class="div-loading">Could not parse stats.</div>';
+
+  const hdr = rows[hdrIdx];
+  const labelMap = {
+    'wins':'Wins','podiums':'Pods','poles':'Poles','fastest laps':'FL',
+    'total points':'Pts','points per race':'Pts/Race',
+    'avg finish pos':'Avg Fin','avg grid pos':'Avg Grid','avg pos gained':'Pos Gain',
+    'sprint wins':'Sp W','avg sprint finish':'Sp Fin','avg sprint grid':'Sp Grid',
+    'avg sprint pos gained':'Sp Gain',
+    'races started':'Started','races finished':'Finished','dnf':'DNF','dns':'DNS','reliability %':'Rel%'
+  };
+
+  const cols = hdr.map((v,i)=>({label:(v||'').trim(),col:i})).filter(c=>c.label && c.col>0 && c.label!=='Team' && c.label!=='Tier');
+  const teamCol  = hdr.findIndex(v=>(v||'').trim().toLowerCase()==='team');
+  const tierCol  = hdr.findIndex(v=>(v||'').trim().toLowerCase()==='tier');
+
+  // Data rows: from hdrIdx+1 until blank or calc section
+  const dataRows = rows.slice(hdrIdx+1).filter(r=>{
+    const name = (r[0]||'').trim();
+    return name && name !== 'CALCULATIONS' && !name.startsWith('#');
+  });
+
+  if(!dataRows.length) return '<div class="div-loading">No driver stats found.</div>';
+
+  let html = '<div class="section-label">Driver Statistics</div>';
+  html += '<div class="st-wrap"><table class="st"><thead><tr>';
+  html += '<th class="th-l sticky">Driver</th>';
+  if(teamCol>=0) html += '<th class="th-l">Team</th>';
+  cols.forEach(c=>{
+    const short = labelMap[c.label.toLowerCase()]||c.label;
+    html += '<th title="'+c.label+'">'+short+'</th>';
+  });
+  html += '</tr></thead><tbody>';
+
+  dataRows.forEach(r=>{
+    const name = (r[0]||'').trim();
+    const team = teamCol>=0 ? (r[teamCol]||'').trim() : '';
+    const tier = tierCol>=0 ? (r[tierCol]||'').trim() : '';
+    html += '<tr>';
+    html += '<td class="td-l sticky"><span class="dname">'+name+'</span>'+(tier?'<br><span class="tname">'+tier+'</span>':'')+'</td>';
+    if(teamCol>=0) html += '<td class="td-l"><span class="tname">'+team+'</span></td>';
+    cols.forEach(c=>{
+      const val = (r[c.col]||'').trim();
+      const lbl = c.label.toLowerCase();
+      if(lbl==='reliability %'){
+        const pct=parseFloat(val)||0;
+        const clr=pct>=0.9?'var(--green)':pct>=0.7?'var(--gold)':'var(--red)';
+        const disp=isNaN(pct)?val:Math.round(pct*100)+'%';
+        html += '<td><span style="color:'+clr+';font-weight:600;">'+disp+'</span>';
+        html += '<span class="rel-bar-wrap"><span class="rel-bar-fill" style="width:'+Math.max(0,Math.min(100,pct*100))+'%;background:'+clr+';"></span></span></td>';
+      } else if(lbl.includes('gained')){
+        const n=parseFloat(val);
+        const clr=isNaN(n)?'':n>0?'color:var(--green)':n<0?'color:var(--red)':'';
+        html += '<td><span style="'+clr+'">'+(val||'&mdash;')+'</span></td>';
+      } else if(lbl==='wins'){
+        html += '<td><span style="'+(val&&val!=='0'?'color:var(--gold);font-weight:700;':'')+'">'+( val||'0')+'</span></td>';
+      } else {
+        const n=parseFloat(val);
+        html += '<td>'+(val===''||val===undefined?'&mdash;':isNaN(n)?val:parseFloat(n.toFixed(2)))+'</td>';
+      }
+    });
+    html += '</tr>';
+  });
+
+  html += '</tbody></table></div>';
+  return html;
+}
+
+function buildS28OverallTotals(id, d, rows){
+  // Placeholder — will be replaced when overall_totals tab is built
+  // Will parse overall standings + weekly totals from same tab
+  // following same accordion pattern as past seasons overall_gid
+  return '';
+}
+
+// ============================================================
 // INIT
 // ============================================================
 
@@ -1464,19 +1579,12 @@ async function showSeason(season){
   const bodyEl = document.createElement('div');
   wrap.appendChild(bodyEl);
 
-  // Inject overall accordion for any season that has overall_gid
-  const accordionEl = document.createElement('div');
-  accordionEl.innerHTML = buildOverallAccordionHtml('ps', season, sc);
-  if(accordionEl.firstChild) bodyEl.appendChild(accordionEl.firstChild);
-
-  const contentEl = document.createElement('div');
-  bodyEl.appendChild(contentEl);
-
-  if(s<=2) await renderS1S2('ps', season, sc, contentEl);
-  else if(s>=3 && s<=9 || s===11 || s===12 || s===13 || s===14 || s===15 || s===16 || s===17 || s===18 || s===19) await renderS3to5('ps', season, sc, contentEl);
-  else if(s===10) await renderS10('ps', season, sc, contentEl);
-  else if(s>=20) await renderS20plus('ps', season, sc, contentEl);
-  else contentEl.innerHTML = '<div class="loading-msg" style="padding:24px;">Data for Season '+season+' coming soon.</div>';
+  if(s<=2) await renderS1S2('ps', season, sc, bodyEl);
+  else if(s>=3 && s<=9 || s===11 || s===12 || s===13 || s===14 || s===15 || s===16 || s===17 || s===18 || s===19) await renderS3to5('ps', season, sc, bodyEl);
+  else if(s===10) await renderS10('ps', season, sc, bodyEl);
+  else if(s===28) await renderS28('ps', season, sc, bodyEl);
+  else if(s>=20) await renderS20plus('ps', season, sc, bodyEl);
+  else bodyEl.innerHTML = '<div class="loading-msg" style="padding:24px;">Data for Season '+season+' coming soon.</div>';
 
   // Cache the rendered DOM for instant revisits
   seasonCache[season] = wrap.cloneNode(true);

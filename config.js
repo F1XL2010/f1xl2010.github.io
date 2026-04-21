@@ -35,7 +35,7 @@ function parseConfigCSV(text) {
     const key = (parts[0] || '').replace(/^"|"$/g, '').trim().toLowerCase();
     const val = (parts[1] || '').replace(/^"|"$/g, '').trim();
     if (!key || !val) continue;
-    if (key === 'key' || key === 'value' || key === 'past seasons' || key === 'tab gid from this document') continue;
+    if (key === 'key' || key === 'value' || key === 'past seasons' || key === 'new seasons' || key === 'tab gid from this document') continue;
     map[key] = val;
     // Store extra columns keyed as e.g. s26_gid__overall_gid
     extraHeaders.forEach((hdr, i) => {
