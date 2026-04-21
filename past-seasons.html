@@ -1261,9 +1261,10 @@ async function loadS28DivContent(id, d, sc){
 }
 
 function buildS28Drivers(rows){
-  // Row 0: circuit names (cols 4+)
-  // Row 1: headers — Pos, Nat, Driver, Team, R1..R21, Pole, FL, Points, Gap
-  // Rows 2+: data
+  // Row 0: circuit names (cols 4+) — sprint rounds only have one col labelled R3(s),
+  //        the circuit name sits on that col; sprint race result also in that same col
+  // Row 1: headers — Pos, Nat, Driver, Team, R1..R21(s)..R21, Pole, FL, Points, Gap
+  // Rows 2-30: data (hard stop at row 30 to allow future expansion, ignores calc rows)
   if(!rows.length) return '<div class="div-loading">No driver data.</div>';
 
   const circuitRow = rows[0];
@@ -1271,69 +1272,72 @@ function buildS28Drivers(rows){
   if(!headerRow) return '<div class="div-loading">Could not parse driver data.</div>';
 
   const ptsCol = headerRow.findIndex(v=>(v||'').trim().toLowerCase()==='points');
+  const flCol  = headerRow.findIndex(v=>(v||'').trim().toLowerCase()==='fl');
   if(ptsCol<0) return '<div class="div-loading">Could not find points column.</div>';
 
-  // Build round columns
+  // Build round columns — sprint rounds have one col labelled R3(s), no separate race col
   const roundCols = [];
-  for(let c=4; c<ptsCol-1; c++){
+  let lastCircuit = '';
+  for(let c=4; c<ptsCol-2; c++){
     const label = (headerRow[c]||'').trim();
     if(!label) continue;
     const isSprint = label.toLowerCase().includes('(s)');
     const circuit  = (circuitRow[c]||'').trim();
-    const short    = circuit.length > 3 ? circuit.slice(0,3).toUpperCase() : (circuit || label).toUpperCase();
-    roundCols.push({col:c, label:short, isSprint, isSprintRace: false});
-    // Sprint weekend: next col is the sprint race (R3 follows R3(s))
-    if(isSprint){
-      const nextLabel = (headerRow[c+1]||'').trim();
-      if(nextLabel && !nextLabel.toLowerCase().includes('(s)')){
-        const nextCircuit = (circuitRow[c+1]||'').trim() || circuit;
-        const nextShort   = nextCircuit.length > 3 ? nextCircuit.slice(0,3).toUpperCase() : nextCircuit.toUpperCase();
-        roundCols.push({col:c+1, label:nextShort, isSprint:false, isSprintRace:true});
-        c++; // skip next iteration
-      }
-    }
+    if(circuit) lastCircuit = circuit;
+    const displayCircuit = circuit || lastCircuit;
+    const short = displayCircuit.length > 3 ? displayCircuit.slice(0,3).toUpperCase() : (displayCircuit || label).toUpperCase();
+    roundCols.push({col:c, label:short, isSprint, isSprintRace:false});
   }
 
   // Trim trailing empty rounds
   while(roundCols.length){
     const col = roundCols[roundCols.length-1].col;
-    const hasData = rows.slice(2).some(r=>(r[col]||'').trim() && (r[col]||'').trim() !== ' ');
+    const hasData = rows.slice(2,31).some(r=>(r[col]||'').trim() && (r[col]||'').trim() !== ' ');
     if(hasData) break;
     roundCols.pop();
   }
 
-  const dataRows = rows.slice(2).filter(r=>{
-    const pos = (r[0]||'').trim();
-    return pos && !isNaN(parseInt(pos)) && (r[2]||'').trim();
+  // Hard stop at row 30 (index), filter to valid driver rows only
+  const dataRows = rows.slice(2, 31).filter(r=>{
+    const name = (r[2]||'').trim();
+    return name && name !== 'CALCULATIONS';
   });
   if(!dataRows.length) return '<div class="div-loading">No driver data found.</div>';
 
-  const hasPoints = dataRows.some(r=>parseFloat((r[ptsCol]||'').trim())>0);
+  // Sort by points descending
+  const sorted = [...dataRows].sort((a,b)=>{
+    const pa = parseFloat((a[ptsCol]||'0').trim())||0;
+    const pb = parseFloat((b[ptsCol]||'0').trim())||0;
+    return pb - pa;
+  });
+
+  const hasPoints = sorted.some(r=>parseFloat((r[ptsCol]||'').trim())>0);
+  const hasFL     = flCol>=0;
 
   let html = '<div class="section-label">Drivers</div><div class="st-wrap"><table class="st"><thead><tr>';
   html += '<th class="th-l sticky" style="width:28px">Pos</th>';
   html += '<th class="th-l sticky2">Driver</th>';
   roundCols.forEach(rc=>{
-    let style = '';
-    if(rc.isSprint)      style = 'color:rgba(130,170,255,0.9);border-left:2px solid rgba(100,150,255,0.4);';
-    else if(rc.isSprintRace) style = 'color:rgba(130,170,255,0.7);border-right:2px solid rgba(100,150,255,0.4);';
-    const suffix = rc.isSprint ? ' (S)' : rc.isSprintRace ? ' (R)' : '';
-    html += '<th'+(style?' style="'+style+'"':'')+' title="'+rc.label+'">'+rc.label+suffix+'</th>';
+    const style = rc.isSprint ? 'color:rgba(130,170,255,0.9);' : '';
+    const suffix = rc.isSprint ? '(S)' : '';
+    html += '<th'+(style?' style="'+style+'"':'')+' title="'+rc.label+'">'+rc.label+(suffix?' <span style="font-size:9px;opacity:0.7;">'+suffix+'</span>':'')+'</th>';
   });
+  if(hasFL) html += '<th title="Fastest Lap">FL</th>';
   if(hasPoints) html += '<th>Pts</th>';
   html += '</tr></thead><tbody>';
 
-  dataRows.forEach(r=>{
-    const pos    = parseInt((r[0]||'').trim());
+  sorted.forEach((r,idx)=>{
+    const pos    = idx+1;
     const driver = (r[2]||'').trim();
     const team   = (r[3]||'').trim();
-    const pts    = (r[ptsCol]||'').trim();
+    const pts    = hasPoints ? (r[ptsCol]||'').trim() : '';
+    const fl     = hasFL ? (r[flCol]||'').trim() : '';
     html += '<tr'+trClass(pos)+'>';
     html += '<td class="sticky"><span class="st-pos">'+pos+'</span></td>';
     html += '<td class="td-l sticky2"><span class="dname">'+driver+'</span>'+(team?'<br><span class="tname">'+team+'</span>':'')+'</td>';
     roundCols.forEach(rc=>{
       const val = (r[rc.col]||'').trim().replace(/^ $/, '');
-      const sprintStyle = rc.isSprint ? 'border-left:2px solid rgba(100,150,255,0.4);' : rc.isSprintRace ? 'border-right:2px solid rgba(100,150,255,0.4);' : '';
+      const sprintStyle = rc.isSprint ? 'border-left:2px solid rgba(100,150,255,0.3);border-right:2px solid rgba(100,150,255,0.3);' : '';
       if(!val){
         html += '<td class="rr-blank"'+(sprintStyle?' style="'+sprintStyle+'"':'')+'>&#8212;</td>';
       } else if(val==='DNF'||val==='DNS'||val==='DSQ'){
@@ -1344,6 +1348,7 @@ function buildS28Drivers(rows){
         html += '<td'+(sprintStyle?' style="'+sprintStyle+'"':'')+'><span class="pos-cell '+cl+'">'+val+'</span></td>';
       }
     });
+    if(hasFL) html += '<td>'+(fl&&fl!=='0'?'<span style="color:var(--gold);font-weight:600;">'+fl+'</span>':'&mdash;')+'</td>';
     if(hasPoints) html += '<td><span class="pts">'+(pts||'&mdash;')+'</span></td>';
     html += '</tr>';
   });
@@ -1363,32 +1368,43 @@ function buildS28Constructors(id, d, constRows, teamStatsRows){
     html += '</div>';
   }
 
-  // Constructors standings — header at row 1 (row 0 is title)
+  // Constructors standings — from Constructors Standings NoSort
+  // Row 0: title, Row 1: Pos/Team/Points/Gap headers, Rows 2+: data
   let constHtml = '';
   if(constRows){
-    let hdrIdx = constRows.findIndex(r=>(r[0]||'').trim().toLowerCase()==='pos');
-    if(hdrIdx>=0){
-      const hdr = constRows[hdrIdx];
-      const teamCol = hdr.findIndex(v=>(v||'').trim().toLowerCase()==='team');
-      const ptsCol  = hdr.findIndex(v=>(v||'').trim().toLowerCase()==='points');
-      if(teamCol>=0 && ptsCol>=0){
-        const data = constRows.slice(hdrIdx+1)
-          .filter(r=>(r[teamCol]||'').trim() && !(r[teamCol]||'').trim().startsWith('#'))
-          .map(r=>({team:(r[teamCol]||'').trim(), pts:parseFloat((r[ptsCol]||'').trim())||0}))
-          .filter(r=>r.team)
-          .sort((a,b)=>b.pts-a.pts);
-        if(data.length){
-          constHtml = '<div class="st-wrap"><table class="st"><thead><tr>';
-          constHtml += '<th style="width:30px">Pos</th><th class="th-l">Team</th><th>Points</th>';
-          constHtml += '</tr></thead><tbody>';
-          data.forEach((d2,i)=>{
-            const pos=i+1;
-            constHtml += '<tr'+trClass(pos)+'><td><span class="st-pos">'+pos+'</span></td>';
-            constHtml += '<td class="td-l"><span class="dname">'+d2.team+'</span></td>';
-            constHtml += '<td><span class="pts">'+d2.pts+'</span></td></tr>';
-          });
-          constHtml += '</tbody></table></div>';
-        }
+    let hdrIdx = constRows.findIndex(r=>(r[0]||'').trim().toLowerCase()==='pos'||(r[1]||'').trim().toLowerCase()==='team');
+    if(hdrIdx<0) hdrIdx=1; // fallback to row 1
+    const hdr = constRows[hdrIdx];
+    // Team could be col 1 (Constructors Standings NoSort) or col 2 (Constructors Results NoSort)
+    // Prefer Standings NoSort structure: col1=Team, col2=Points
+    const teamCol = hdr.findIndex(v=>(v||'').trim().toLowerCase()==='team');
+    const ptsCol  = hdr.findIndex(v=>(v||'').trim().toLowerCase()==='points');
+    const gapCol  = hdr.findIndex(v=>(v||'').trim().toLowerCase()==='gap');
+    if(teamCol>=0 && ptsCol>=0){
+      const data = constRows.slice(hdrIdx+1)
+        .filter(r=>(r[teamCol]||'').trim() && !(r[teamCol]||'').trim().startsWith('#'))
+        .map(r=>({
+          team:(r[teamCol]||'').trim(),
+          pts:parseFloat((r[ptsCol]||'').trim())||0,
+          gap:gapCol>=0?(r[gapCol]||'').trim():''
+        }))
+        .filter(r=>r.team)
+        .sort((a,b)=>b.pts-a.pts);
+      if(data.length){
+        const hasPoints = data.some(d=>d.pts>0);
+        constHtml = '<div class="st-wrap"><table class="st"><thead><tr>';
+        constHtml += '<th style="width:30px">Pos</th><th class="th-l">Team</th><th>Points</th>';
+        if(hasPoints && gapCol>=0) constHtml += '<th>Gap</th>';
+        constHtml += '</tr></thead><tbody>';
+        data.forEach((d2,i)=>{
+          const pos=i+1;
+          constHtml += '<tr'+trClass(pos)+'><td><span class="st-pos">'+pos+'</span></td>';
+          constHtml += '<td class="td-l"><span class="dname">'+d2.team+'</span></td>';
+          constHtml += '<td><span class="pts">'+d2.pts+'</span></td>';
+          if(hasPoints && gapCol>=0) constHtml += '<td>'+(d2.gap&&d2.gap!=='0'?d2.gap:'&mdash;')+'</td>';
+          constHtml += '</tr>';
+        });
+        constHtml += '</tbody></table></div>';
       }
     }
   }
@@ -1467,10 +1483,12 @@ function buildS28DriverStats(rows){
   const teamCol  = hdr.findIndex(v=>(v||'').trim().toLowerCase()==='team');
   const tierCol  = hdr.findIndex(v=>(v||'').trim().toLowerCase()==='tier');
 
-  // Data rows: from hdrIdx+1 until blank or calc section
-  const dataRows = rows.slice(hdrIdx+1).filter(r=>{
+  // Data rows: rows 2-24 only (hard stop before calc section at row 26)
+  // hdrIdx is typically 1 (0-indexed), so data starts at index 2, hard stop at index 24
+  const dataStop = Math.min(hdrIdx + 31, 24); // max 30 driver rows from header
+  const dataRows = rows.slice(hdrIdx+1, dataStop).filter(r=>{
     const name = (r[0]||'').trim();
-    return name && name !== 'CALCULATIONS' && !name.startsWith('#');
+    return name && name !== 'CALCULATIONS' && !name.startsWith('#') && name !== 'Driver';
   });
 
   if(!dataRows.length) return '<div class="div-loading">No driver stats found.</div>';
