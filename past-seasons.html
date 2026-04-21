@@ -1261,50 +1261,61 @@ async function loadS28DivContent(id, d, sc){
 }
 
 function buildS28Drivers(rows){
-  // Row 0: circuit names (cols 4+) — sprint rounds only have one col labelled R3(s),
-  //        the circuit name sits on that col; sprint race result also in that same col
-  // Row 1: headers — Pos, Nat, Driver, Team, R1..R21(s)..R21, Pole, FL, Points, Gap
-  // Rows 2-30: data (hard stop at row 30 to allow future expansion, ignores calc rows)
+  // Sheet structure:
+  // Row 0: circuit names (col 4 = Italy, col 5 = Belgium etc., gaps for sprint race cols)
+  // Rows 1-2: blank
+  // Row 3: headers — Pos, Nat, Driver, Team, R1, R2, R3(s), R3(R)... Pole, F/L, Points, (blank), Gap
+  // Rows 4+: data (hard stop at row 34 to allow expansion)
   if(!rows.length) return '<div class="div-loading">No driver data.</div>';
 
+  // Find header row dynamically — look for row with 'Pos' in col 0
+  let headerIdx = -1;
+  for(let i=0;i<rows.length;i++){
+    if((rows[i][0]||'').trim().toLowerCase()==='pos'){ headerIdx=i; break; }
+  }
+  if(headerIdx<0) return '<div class="div-loading">Could not parse driver data.</div>';
+
   const circuitRow = rows[0];
-  const headerRow  = rows[1];
-  if(!headerRow) return '<div class="div-loading">Could not parse driver data.</div>';
+  const headerRow  = rows[headerIdx];
+  const dataStart  = headerIdx + 1;
 
   const ptsCol = headerRow.findIndex(v=>(v||'').trim().toLowerCase()==='points');
-  const flCol  = headerRow.findIndex(v=>(v||'').trim().toLowerCase()==='fl');
+  const flCol  = headerRow.findIndex(v=>(v||'').trim().replace('/','').toLowerCase()==='fl');
   if(ptsCol<0) return '<div class="div-loading">Could not find points column.</div>';
 
-  // Build round columns — sprint rounds have one col labelled R3(s), no separate race col
+  // Build round columns
+  // S28 has both R3(s) = sprint quali AND R3(R) = sprint race as separate cols
   const roundCols = [];
   let lastCircuit = '';
-  for(let c=4; c<ptsCol-2; c++){
+  for(let c=4; c<ptsCol-1; c++){
     const label = (headerRow[c]||'').trim();
     if(!label) continue;
-    const isSprint = label.toLowerCase().includes('(s)');
-    const circuit  = (circuitRow[c]||'').trim();
+    const lbl = label.toLowerCase();
+    const isSprint    = lbl.includes('(s)');
+    const isSprintRace = lbl.includes('(r)');
+    const circuit = (circuitRow[c]||'').trim();
     if(circuit) lastCircuit = circuit;
     const displayCircuit = circuit || lastCircuit;
-    const short = displayCircuit.length > 3 ? displayCircuit.slice(0,3).toUpperCase() : (displayCircuit || label).toUpperCase();
-    roundCols.push({col:c, label:short, isSprint, isSprintRace:false});
+    const short = displayCircuit.length > 3 ? displayCircuit.slice(0,3).toUpperCase() : (displayCircuit || label.replace(/\(.*\)/,'')).toUpperCase();
+    roundCols.push({col:c, label:short, isSprint, isSprintRace});
   }
 
   // Trim trailing empty rounds
   while(roundCols.length){
     const col = roundCols[roundCols.length-1].col;
-    const hasData = rows.slice(2,31).some(r=>(r[col]||'').trim() && (r[col]||'').trim() !== ' ');
+    const hasData = rows.slice(dataStart, dataStart+30).some(r=>(r[col]||'').trim() && (r[col]||'').trim() !== ' ');
     if(hasData) break;
     roundCols.pop();
   }
 
-  // Hard stop at row 30 (index), filter to valid driver rows only
-  const dataRows = rows.slice(2, 31).filter(r=>{
+  // Data rows — hard stop 30 rows from header
+  const dataRows = rows.slice(dataStart, dataStart+30).filter(r=>{
     const name = (r[2]||'').trim();
-    return name && name !== 'CALCULATIONS';
+    return name && name !== 'CALCULATIONS' && name !== 'Driver';
   });
   if(!dataRows.length) return '<div class="div-loading">No driver data found.</div>';
 
-  // Sort by points descending
+  // Sort by points descending — use parseFloat to handle decimal tiebreakers
   const sorted = [...dataRows].sort((a,b)=>{
     const pa = parseFloat((a[ptsCol]||'0').trim())||0;
     const pb = parseFloat((b[ptsCol]||'0').trim())||0;
@@ -1318,9 +1329,11 @@ function buildS28Drivers(rows){
   html += '<th class="th-l sticky" style="width:28px">Pos</th>';
   html += '<th class="th-l sticky2">Driver</th>';
   roundCols.forEach(rc=>{
-    const style = rc.isSprint ? 'color:rgba(130,170,255,0.9);' : '';
-    const suffix = rc.isSprint ? '(S)' : '';
-    html += '<th'+(style?' style="'+style+'"':'')+' title="'+rc.label+'">'+rc.label+(suffix?' <span style="font-size:9px;opacity:0.7;">'+suffix+'</span>':'')+'</th>';
+    let style = '';
+    if(rc.isSprint)     style = 'color:rgba(130,170,255,0.9);border-left:2px solid rgba(100,150,255,0.4);';
+    if(rc.isSprintRace) style = 'color:rgba(130,170,255,0.7);border-right:2px solid rgba(100,150,255,0.4);';
+    const suffix = rc.isSprint ? '<span style="font-size:9px;opacity:0.7;"> S</span>' : rc.isSprintRace ? '<span style="font-size:9px;opacity:0.7;"> R</span>' : '';
+    html += '<th'+(style?' style="'+style+'"':'')+' title="'+rc.label+'">'+rc.label+suffix+'</th>';
   });
   if(hasFL) html += '<th title="Fastest Lap">FL</th>';
   if(hasPoints) html += '<th>Pts</th>';
@@ -1330,14 +1343,17 @@ function buildS28Drivers(rows){
     const pos    = idx+1;
     const driver = (r[2]||'').trim();
     const team   = (r[3]||'').trim();
-    const pts    = hasPoints ? (r[ptsCol]||'').trim() : '';
+    const ptsRaw  = parseFloat((r[ptsCol]||'0').trim())||0;
+    const pts    = hasPoints ? Math.floor(ptsRaw) : '';
     const fl     = hasFL ? (r[flCol]||'').trim() : '';
     html += '<tr'+trClass(pos)+'>';
     html += '<td class="sticky"><span class="st-pos">'+pos+'</span></td>';
     html += '<td class="td-l sticky2"><span class="dname">'+driver+'</span>'+(team?'<br><span class="tname">'+team+'</span>':'')+'</td>';
     roundCols.forEach(rc=>{
       const val = (r[rc.col]||'').trim().replace(/^ $/, '');
-      const sprintStyle = rc.isSprint ? 'border-left:2px solid rgba(100,150,255,0.3);border-right:2px solid rgba(100,150,255,0.3);' : '';
+      let sprintStyle = '';
+      if(rc.isSprint)     sprintStyle = 'border-left:2px solid rgba(100,150,255,0.4);';
+      if(rc.isSprintRace) sprintStyle = 'border-right:2px solid rgba(100,150,255,0.4);';
       if(!val){
         html += '<td class="rr-blank"'+(sprintStyle?' style="'+sprintStyle+'"':'')+'>&#8212;</td>';
       } else if(val==='DNF'||val==='DNS'||val==='DSQ'){
@@ -1400,8 +1416,8 @@ function buildS28Constructors(id, d, constRows, teamStatsRows){
           const pos=i+1;
           constHtml += '<tr'+trClass(pos)+'><td><span class="st-pos">'+pos+'</span></td>';
           constHtml += '<td class="td-l"><span class="dname">'+d2.team+'</span></td>';
-          constHtml += '<td><span class="pts">'+d2.pts+'</span></td>';
-          if(hasPoints && gapCol>=0) constHtml += '<td>'+(d2.gap&&d2.gap!=='0'?d2.gap:'&mdash;')+'</td>';
+          constHtml += '<td><span class="pts">'+Math.floor(d2.pts)+'</span></td>';
+          if(hasPoints && gapCol>=0) constHtml += '<td>'+(d2.gap&&parseFloat(d2.gap)>0?Math.floor(parseFloat(d2.gap)):'&mdash;')+'</td>';
           constHtml += '</tr>';
         });
         constHtml += '</tbody></table></div>';
@@ -1483,10 +1499,8 @@ function buildS28DriverStats(rows){
   const teamCol  = hdr.findIndex(v=>(v||'').trim().toLowerCase()==='team');
   const tierCol  = hdr.findIndex(v=>(v||'').trim().toLowerCase()==='tier');
 
-  // Data rows: rows 2-24 only (hard stop before calc section at row 26)
-  // hdrIdx is typically 1 (0-indexed), so data starts at index 2, hard stop at index 24
-  const dataStop = Math.min(hdrIdx + 31, 24); // max 30 driver rows from header
-  const dataRows = rows.slice(hdrIdx+1, dataStop).filter(r=>{
+  // Data rows: from header+1 until blank or CALCULATIONS section, max 30 rows
+  const dataRows = rows.slice(hdrIdx+1, hdrIdx+31).filter(r=>{
     const name = (r[0]||'').trim();
     return name && name !== 'CALCULATIONS' && !name.startsWith('#') && name !== 'Driver';
   });
