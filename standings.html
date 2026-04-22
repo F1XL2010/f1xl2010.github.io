@@ -149,31 +149,24 @@
 
   /* STATS */
   .stats-grid{padding:16px 24px;display:grid;grid-template-columns:1fr;gap:10px;}
-  .cs-section{margin-bottom:28px;}
-  .cs-title{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-faint);margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--border);}
-  .cs-sub{font-size:10px;font-weight:400;letter-spacing:0.5px;color:rgba(255,255,255,0.3);margin-left:8px;text-transform:none;}
-  .cs-rank-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
-  .cs-rank-pos{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;width:20px;text-align:center;flex-shrink:0;}
-  .cs-rank-info{flex:1;display:flex;flex-direction:column;gap:2px;}
-  .cs-rank-name{font-size:13px;color:var(--text);font-weight:500;}
-  .cs-rank-sub{font-size:11px;color:rgba(255,255,255,0.4);}
-  .cs-rank-pts{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--green);}
-  .cs-h2h{margin-bottom:14px;}
-  .cs-h2h-team{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:12px;font-weight:600;color:var(--text-muted);}
-  .cs-h2h-row{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
-  .cs-h2h-name{font-size:12px;color:var(--text);width:120px;flex-shrink:0;}
-  .cs-h2h-left{text-align:right;}
-  .cs-h2h-right{text-align:left;}
-  .cs-h2h-bar{flex:1;height:8px;border-radius:4px;overflow:hidden;display:flex;background:rgba(255,255,255,0.05);}
-  .cs-h2h-fill{height:100%;}
-  .cs-h2h-a{background:var(--green);}
-  .cs-h2h-b{background:rgba(255,255,255,0.15);}
-  .cs-h2h-vals{display:flex;justify-content:center;gap:12px;font-size:12px;font-family:'Barlow Condensed',sans-serif;}
-  .cs-form-grid{display:flex;flex-direction:column;gap:2px;}
-  .cs-form-row{display:flex;align-items:center;gap:4px;}
-  .cs-form-driver{display:flex;align-items:center;gap:6px;width:140px;flex-shrink:0;font-size:12px;color:var(--text);}
-  .cs-form-cell{width:38px;text-align:center;}
-  .cs-form-hdr-cell{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:rgba(255,255,255,0.4);text-align:center;}
+  .cs-card{flex-shrink:0;background:var(--dark2);border:1px solid var(--border2);border-radius:8px;padding:14px 16px;min-width:200px;max-width:240px;display:flex;flex-direction:column;gap:10px;}
+  .cs-card-title{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--teal);margin-bottom:2px;}
+  .cs-card-sub{font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:6px;}
+  .cs-row{display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+  .cs-row:last-child{border-bottom:none;}
+  .cs-row-pos{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;width:16px;text-align:center;flex-shrink:0;color:rgba(255,255,255,0.4);}
+  .cs-row-pos.gold{color:var(--gold);}
+  .cs-row-name{flex:1;font-size:12px;color:var(--text);}
+  .cs-row-sub{font-size:10px;color:rgba(255,255,255,0.35);}
+  .cs-row-val{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:var(--green);}
+  .cs-dots{display:flex;gap:3px;align-items:center;}
+  .cs-dot{width:22px;height:22px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;}
+  .cs-h2h-item{display:flex;flex-direction:column;gap:4px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+  .cs-h2h-item:last-child{border-bottom:none;}
+  .cs-h2h-team-label{font-size:10px;color:rgba(255,255,255,0.4);display:flex;align-items:center;gap:6px;}
+  .cs-h2h-bar{height:6px;border-radius:3px;overflow:hidden;display:flex;background:rgba(255,255,255,0.07);margin:3px 0;}
+  .cs-h2h-a{background:var(--green);} .cs-h2h-b{background:rgba(255,255,255,0.2);}
+  .cs-h2h-names{display:flex;justify-content:space-between;font-size:11px;}
   @media(min-width:600px){.stats-grid{grid-template-columns:repeat(2,1fr);}}
   .stat-card{background:var(--dark2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;}
   .stat-card-header{display:flex;align-items:center;gap:8px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border);}
@@ -298,6 +291,13 @@
   <div id="oc-panel-weekly" style="display:none;"><div class="loading-msg" style="padding:16px 24px;">Loading weekly points...</div></div>
 
 </div>
+<div id="cool-stats-strip" style="display:none;background:var(--dark3);border-bottom:1px solid var(--border);padding:16px 24px;">
+  <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--teal);margin-bottom:12px;">Cool Stats</div>
+  <div id="cool-stats-cards" style="display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;">
+    <div class="loading-msg">Loading...</div>
+  </div>
+</div>
+
 <div id="selector-view">
   <div class="div-selector" id="div-selector">
     <div class="loading-msg" style="grid-column:1/-1">Loading...</div>
@@ -316,7 +316,7 @@
     <button class="inner-tab" onclick="showTab('constructors',this)">Constructors</button>
     <button class="inner-tab" onclick="showTab('stats',this)">Driver Stats</button>
     <button class="inner-tab" onclick="showTab('teamstats',this)">Team Stats</button>
-    <button class="inner-tab" onclick="showTab('coolstats',this)">Cool Stats</button>
+
   </div>
 
   <div class="tab-panel active" id="tab-drivers">
@@ -344,11 +344,7 @@
       <div class="loading-msg">Loading team stats...</div>
     </div>
   </div>
-  <div class="tab-panel" id="tab-coolstats">
-    <div id="coolstats-content" style="padding:16px 24px;">
-      <div class="loading-msg">Loading...</div>
-    </div>
-  </div>
+
 </div>
 
 <footer>
@@ -473,7 +469,7 @@ function showSelector() {
 function showTab(name, btn) {
   document.querySelectorAll('.inner-tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-  if (name === 'coolstats' && !window._coolStatsLoaded) { loadCoolStats(); window._coolStatsLoaded = true; }
+
   btn.classList.add('active');
   document.getElementById('tab-' + name).classList.add('active');
 }
@@ -1303,251 +1299,221 @@ async function loadOCChart() {
 }
 
 async function loadCoolStats() {
-  const el = document.getElementById('coolstats-content');
+  const strip = document.getElementById('cool-stats-strip');
+  const cards = document.getElementById('cool-stats-cards');
+  strip.style.display = '';
+  cards.innerHTML = '<div class="loading-msg">Loading...</div>';
+
   try {
-    // Fetch driver results and stats for current division
+    // Fetch driver results + stats for D1 (used for form/h2h/consistent/gained)
+    const d1 = divisions.find(d=>d.sheetId) || divisions[0];
+    if (!d1) { cards.innerHTML = '<div class="loading-msg">No division data.</div>'; return; }
+
     const [drTable, statsTable] = await Promise.all([
-      fetchSheet(currentDiv.sheetId, currentDiv.gids.drivers),
-      fetchSheet(currentDiv.sheetId, currentDiv.gids.driverStats)
+      fetchSheet(d1.sheetId, d1.gids.drivers),
+      fetchSheet(d1.sheetId, d1.gids.driverStats)
     ]);
 
-    // ── Parse Driver Results ──────────────────────────────────────────────────
+    // ── Parse Driver Results header ───────────────────────────────────────────
     const drRows = drTable.rows;
     let hIdx = -1;
-    for (let i=0; i<drRows.length; i++) {
-      if (cs(drRows[i],0)==='Pos') { hIdx=i; break; }
-    }
+    for (let i=0; i<drRows.length; i++) { if (cs(drRows[i],0)==='Pos') { hIdx=i; break; } }
     const drHdr = drRows[hIdx];
-    const ptsCol = drHdr.c.findIndex(c=>(c.v||'').toString().trim().toLowerCase()==='points');
+    const ptsColIdx = drHdr.c.findIndex(c=>(c.v||'').toString().trim().toLowerCase()==='points');
 
-    // Build race cols list (non-sprint only for form/consistency, all for positions gained)
+    // Race cols (main races only, no sprint quali)
     const raceCols = [];
     for (let c=4; c<drHdr.c.length; c++) {
       const h = cs(drHdr,c);
       if (!h) continue;
-      if (['pole','f/l','points','gap'].includes(h.toLowerCase())) break;
-      if (ptsCol>0 && c>=ptsCol) break;
-      raceCols.push({col:c, label:h, sprint:h.toLowerCase().includes('(s)'), sprintRace:h.toLowerCase().includes('(r)')});
+      if (ptsColIdx>0 && c>=ptsColIdx) break;
+      const isSQ = h.toLowerCase().includes('(s)') && !h.toLowerCase().includes('(r)');
+      if (!isSQ) raceCols.push({col:c, label:h});
     }
-    // Only main race cols for form/consistency (exclude sprint quali)
-    const mainRaceCols = raceCols.filter(r => !r.sprint || r.sprintRace);
 
-    // Collect driver data
+    // Collect drivers
     const drivers = [];
     for (let i=hIdx+1; i<drRows.length; i++) {
       const row = drRows[i];
       const name = cs(row,2).trim();
       const team = cs(row,3).trim();
       if (!name) continue;
-      const pts = Math.floor(parseFloat(cs(row,ptsCol))||0);
-      const results = raceCols.map(r => {
-        const v = cs(row,r.col).trim();
-        return {col:r.col, label:r.label, val:v, sprint:r.sprint, sprintRace:r.sprintRace};
-      });
-      const mainResults = mainRaceCols.map(r => {
-        const v = cs(row,r.col).trim();
-        return {label:r.label, val:v, n: parseInt(v)||null};
-      }).filter(r => r.val && r.val !== ' ' && !['DNF','DNS','DSQ'].includes(r.val.toUpperCase()) && r.n !== null);
-      drivers.push({name, team, pts, results, mainResults});
+      drivers.push({name, team, row: i});
     }
 
     // ── Parse Driver Stats ────────────────────────────────────────────────────
     const stRows = statsTable.rows;
-    let sHdr = -1;
-    for (let i=0; i<stRows.length; i++) {
-      if (cs(stRows[i],0).toLowerCase()==='driver') { sHdr=i; break; }
-    }
-    const statsHdr = stRows[sHdr];
-    const sCol = (name) => statsHdr.c.findIndex(c=>(c.v||'').toString().trim().toLowerCase().includes(name));
-    const colTier    = sCol('tier');
-    const colAvgFin  = sCol('avg finish');
-    const colAvgGrid = sCol('avg grid');
-    const colGained  = sCol('gained');
-    const colTotPts  = sCol('total points');
+    let sHdrIdx = -1;
+    for (let i=0; i<stRows.length; i++) { if (cs(stRows[i],0).toLowerCase()==='driver') { sHdrIdx=i; break; } }
+    const sHdr = stRows[sHdrIdx];
+    const findCol = name => sHdr.c.findIndex(c=>(c.v||'').toString().trim().toLowerCase().includes(name));
+    const colTier=findCol('tier'), colAvgFin=findCol('avg finish'), colAvgGrid=findCol('avg grid');
+    const colGained=findCol('gained'), colTotPts=findCol('total points'), colTeam=1;
 
     const statsMap = {};
-    for (let i=sHdr+1; i<stRows.length; i++) {
+    for (let i=sHdrIdx+1; i<stRows.length; i++) {
       const row = stRows[i];
       const name = cs(row,0).trim();
       if (!name) continue;
       statsMap[name] = {
-        tier:    cs(row,colTier),
-        avgFin:  parseFloat(cs(row,colAvgFin))||null,
+        tier: cs(row,colTier), team: cs(row,colTeam).trim(),
+        avgFin: parseFloat(cs(row,colAvgFin))||null,
         avgGrid: parseFloat(cs(row,colAvgGrid))||null,
-        gained:  parseFloat(cs(row,colGained))||null,
-        totPts:  parseFloat(cs(row,colTotPts))||0,
-        team:    cs(row,1).trim()
+        gained: parseFloat(cs(row,colGained))||null,
+        totPts: Math.floor(parseFloat(cs(row,colTotPts))||0)
       };
     }
 
-    // ── 1. FORM GUIDE — last 5 rounds finishing position ─────────────────────
-    const last5 = mainRaceCols.slice(-5);
-    const formDrivers = [...drivers].filter(d => d.mainResults.length > 0);
-    // Sort by avg of last 5 (lower = better)
-    formDrivers.sort((a,b) => {
-      const avg = d => {
-        const vals = mainRaceCols.slice(-5).map(r => {
-          const v = cs(drRows[hIdx + drivers.indexOf(d) + 1], r.col).trim();
-          return parseInt(v)||null;
-        }).filter(v => v !== null);
-        return vals.length ? vals.reduce((s,v)=>s+v,0)/vals.length : 999;
-      };
-      return avg(a)-avg(b);
-    });
+    let cardsHtml = '';
 
-    let formHtml = '<div class="cs-section"><div class="cs-title">Form Guide <span class="cs-sub">Last 5 rounds · finishing position</span></div>';
-    formHtml += '<div class="cs-form-grid">';
-    formHtml += '<div class="cs-form-row cs-form-hdr"><div class="cs-form-driver"></div>';
-    last5.forEach(r => { formHtml += `<div class="cs-form-cell cs-form-hdr-cell">${r.label.replace(/\(r\)/i,'').replace(/\(s\)/i,'').trim()}</div>`; });
-    formHtml += '</div>';
-
-    drivers.forEach(d => {
-      const color = teamColors[d.team] || '#555';
-      formHtml += `<div class="cs-form-row"><div class="cs-form-driver"><div style="width:3px;height:14px;background:${color};border-radius:1px;flex-shrink:0;"></div><span>${d.name}</span></div>`;
-      last5.forEach(r => {
-        const v = cs(drRows[hIdx + drivers.indexOf(d) + 1], r.col).trim();
-        const n = parseInt(v);
-        const cls = !v || v===' ' ? 'rout' : ['DNF','DNS','DSQ'].includes(v.toUpperCase()) ? 'rdnf' : n===1?'r1':n===2?'r2':n===3?'r3':n<=6?'r46':n<=10?'r710':'';
-        formHtml += `<div class="cs-form-cell"><div class="st-ri ${cls}" style="margin:auto;">${v&&v!==' '?v:'—'}</div></div>`;
+    // ── CARD 1: FORM GUIDE ────────────────────────────────────────────────────
+    const last5 = raceCols.slice(-5);
+    if (last5.length) {
+      cardsHtml += '<div class="cs-card"><div><div class="cs-card-title">Form Guide</div><div class="cs-card-sub">Last ${last5.length} rounds · finishing pos</div></div>';
+      drivers.forEach(d => {
+        const color = teamColors[d.team] || '#555';
+        const dots = last5.map(r => {
+          const v = cs(drRows[d.row], r.col).trim();
+          const n = parseInt(v);
+          const bg = !v||v===' '?'rgba(255,255,255,0.05)':['DNF','DNS','DSQ'].includes(v.toUpperCase())?'#3a1010':n===1?'var(--p1-bg)':n===2?'var(--p2-bg)':n===3?'var(--p3-bg)':n<=6?'var(--p46-bg)':n<=10?'var(--p710-bg)':'rgba(255,255,255,0.08)';
+          const tc = !v||v===' '?'rgba(255,255,255,0.2)':['DNF','DNS','DSQ'].includes(v.toUpperCase())?'#ff6b6b':n<=3?'#000':'#fff';
+          const disp = !v||v===' '?'·':['DNF','DNS','DSQ'].includes(v.toUpperCase())?'X':v;
+          return \`<div class="cs-dot" style="background:\${bg};color:\${tc};">\${disp}</div>\`;
+        }).join('');
+        cardsHtml += \`<div class="cs-row">
+          <div style="width:3px;height:14px;background:\${color};border-radius:1px;flex-shrink:0;"></div>
+          <span class="cs-row-name">\${d.name}</span>
+          <div class="cs-dots">\${dots}</div>
+        </div>\`;
       });
-      formHtml += '</div>';
-    });
-    formHtml += '</div></div>';
+      cardsHtml += '</div>';
+    }
 
-    // ── 2. HEAD TO HEAD — avg grid position per team ──────────────────────────
+    // ── CARD 2: HEAD TO HEAD ──────────────────────────────────────────────────
     const teams = {};
-    Object.entries(statsMap).forEach(([name, s]) => {
+    Object.entries(statsMap).forEach(([name,s]) => {
       if (!teams[s.team]) teams[s.team] = [];
       teams[s.team].push({name, ...s});
     });
-
-    let h2hHtml = '<div class="cs-section"><div class="cs-title">Head to Head <span class="cs-sub">Avg qualifying position per team</span></div>';
-    Object.entries(teams).forEach(([team, members]) => {
-      if (members.length < 2) return;
-      const [a, b] = members.sort((x,y) => (x.avgGrid||99)-(y.avgGrid||99));
-      const color = teamColors[team] || '#555';
-      const aGrid = a.avgGrid ? a.avgGrid.toFixed(1) : '—';
-      const bGrid = b.avgGrid ? b.avgGrid.toFixed(1) : '—';
-      const aWidth = a.avgGrid && b.avgGrid ? Math.round((b.avgGrid/(a.avgGrid+b.avgGrid))*100) : 50;
-      h2hHtml += `<div class="cs-h2h">
-        <div class="cs-h2h-team"><div style="width:4px;height:16px;background:${color};border-radius:1px;"></div><span>${team}</span></div>
-        <div class="cs-h2h-row">
-          <span class="cs-h2h-name cs-h2h-left">${a.name}</span>
-          <div class="cs-h2h-bar">
-            <div class="cs-h2h-fill cs-h2h-a" style="width:${aWidth}%;"></div>
-            <div class="cs-h2h-fill cs-h2h-b" style="width:${100-aWidth}%;"></div>
+    const h2hTeams = Object.entries(teams).filter(([,m])=>m.length>=2);
+    if (h2hTeams.length) {
+      cardsHtml += '<div class="cs-card"><div><div class="cs-card-title">Head to Head</div><div class="cs-card-sub">Avg qualifying position</div></div>';
+      h2hTeams.forEach(([team, members]) => {
+        const [a,b] = members.sort((x,y)=>(x.avgGrid||99)-(y.avgGrid||99));
+        const color = teamColors[team] || '#555';
+        const aG = a.avgGrid||0, bG = b.avgGrid||0;
+        const total = aG+bG;
+        const aW = total>0 ? Math.round((bG/total)*100) : 50;
+        cardsHtml += \`<div class="cs-h2h-item">
+          <div class="cs-h2h-team-label"><div style="width:3px;height:12px;background:\${color};border-radius:1px;"></div>\${team}</div>
+          <div class="cs-h2h-bar"><div class="cs-h2h-a" style="width:\${aW}%;"></div><div class="cs-h2h-b" style="width:\${100-aW}%;"></div></div>
+          <div class="cs-h2h-names">
+            <span style="color:var(--green);">\${a.name} (\${aG?aG.toFixed(1):'—'})</span>
+            <span style="color:rgba(255,255,255,0.4);">\${b.name} (\${bG?bG.toFixed(1):'—'})</span>
           </div>
-          <span class="cs-h2h-name cs-h2h-right">${b.name}</span>
-        </div>
-        <div class="cs-h2h-vals">
-          <span style="color:var(--green);">${aGrid}</span>
-          <span style="color:rgba(255,255,255,0.3);font-size:10px;">avg grid</span>
-          <span style="color:rgba(255,255,255,0.5);">${bGrid}</span>
-        </div>
-      </div>`;
-    });
-    h2hHtml += '</div>';
+        </div>\`;
+      });
+      cardsHtml += '</div>';
+    }
 
-    // ── 3. TOP 5 TIER 2 — cross-division ──────────────────────────────────────
-    // Fetch all divisions stats tabs
+    // ── CARD 3: TOP 5 TIER 2 ─────────────────────────────────────────────────
     const allStatsPromises = divisions.map(async div => {
       if (!div.sheetId) return [];
       try {
         const t = await fetchSheet(div.sheetId, div.gids.driverStats);
         const rows = t.rows;
-        let hi = -1;
-        for (let i=0; i<rows.length; i++) { if (cs(rows[i],0).toLowerCase()==='driver') { hi=i; break; } }
+        let hi=-1;
+        for (let i=0;i<rows.length;i++) { if(cs(rows[i],0).toLowerCase()==='driver'){hi=i;break;} }
         if (hi<0) return [];
         const hdr = rows[hi];
         const tc = hdr.c.findIndex(c=>(c.v||'').toString().trim().toLowerCase().includes('tier'));
         const pc = hdr.c.findIndex(c=>(c.v||'').toString().trim().toLowerCase().includes('total points'));
         const teac = hdr.c.findIndex(c=>(c.v||'').toString().trim().toLowerCase()==='team');
-        const results = [];
-        for (let i=hi+1; i<rows.length; i++) {
-          const row = rows[i];
-          const name = cs(row,0).trim();
+        const out = [];
+        for (let i=hi+1;i<rows.length;i++) {
+          const row=rows[i], name=cs(row,0).trim();
           if (!name) continue;
-          const tier = cs(row,tc).trim();
-          if (!tier.toLowerCase().includes('2')) continue;
-          const pts = Math.floor(parseFloat(cs(row,pc))||0);
-          const team = cs(row,teac).trim();
-          results.push({name, team, pts, div: div.name});
+          if (!cs(row,tc).toLowerCase().includes('2')) continue;
+          out.push({name, team:cs(row,teac).trim(), pts:Math.floor(parseFloat(cs(row,pc))||0), div:div.name});
         }
-        return results;
-      } catch(e) { return []; }
+        return out;
+      } catch(e){return [];}
     });
-    const allTier2 = (await Promise.all(allStatsPromises)).flat();
-    allTier2.sort((a,b) => b.pts-a.pts);
-    const top5t2 = allTier2.slice(0,5);
+    const allT2 = (await Promise.all(allStatsPromises)).flat().sort((a,b)=>b.pts-a.pts).slice(0,5);
+    if (allT2.length) {
+      cardsHtml += '<div class="cs-card"><div><div class="cs-card-title">Top Tier 2</div><div class="cs-card-sub">By points across all divisions</div></div>';
+      allT2.forEach((d,i) => {
+        const color = teamColors[d.team]||'#555';
+        const pc = i===0?'gold':'';
+        cardsHtml += \`<div class="cs-row">
+          <span class="cs-row-pos \${pc}">\${i+1}</span>
+          <div style="width:3px;height:14px;background:\${color};border-radius:1px;flex-shrink:0;"></div>
+          <div style="flex:1;"><div class="cs-row-name">\${d.name}</div><div class="cs-row-sub">\${d.team} · \${d.div}</div></div>
+          <span class="cs-row-val">\${d.pts}</span>
+        </div>\`;
+      });
+      cardsHtml += '</div>';
+    }
 
-    let t2Html = '<div class="cs-section"><div class="cs-title">Top Tier 2 Drivers <span class="cs-sub">By total points across all divisions</span></div>';
-    top5t2.forEach((d,i) => {
-      const color = teamColors[d.team] || '#555';
-      const pc2 = i===0?'var(--gold)':i===1?'#C0C0C0':i===2?'#cd7f32':'var(--text-faint)';
-      t2Html += `<div class="cs-rank-row">
-        <span class="cs-rank-pos" style="color:${pc2};">${i+1}</span>
-        <div style="width:3px;height:16px;background:${color};border-radius:1px;flex-shrink:0;"></div>
-        <div class="cs-rank-info"><span class="cs-rank-name">${d.name}</span><span class="cs-rank-sub">${d.team} · ${d.div}</span></div>
-        <span class="cs-rank-pts">${d.pts}</span>
-      </div>`;
-    });
-    t2Html += '</div>';
-
-    // ── 4. MOST CONSISTENT ────────────────────────────────────────────────────
+    // ── CARD 4: MOST CONSISTENT ───────────────────────────────────────────────
     const consistent = drivers.map(d => {
-      const vals = d.mainResults.map(r=>r.n);
-      if (vals.length < 3) return null;
+      const vals = raceCols.map(r => {
+        const v = cs(drRows[d.row],r.col).trim();
+        const n = parseInt(v);
+        return (v && !['DNF','DNS','DSQ'].includes(v.toUpperCase()) && !isNaN(n)) ? n : null;
+      }).filter(v=>v!==null);
+      if (vals.length<3) return null;
       const avg = vals.reduce((s,v)=>s+v,0)/vals.length;
       const sd = Math.sqrt(vals.map(v=>(v-avg)**2).reduce((s,v)=>s+v,0)/vals.length);
-      return {name:d.name, team:d.team, avg:avg.toFixed(2), sd:sd.toFixed(2), races:vals.length};
-    }).filter(Boolean).sort((a,b)=>parseFloat(a.sd)-parseFloat(b.sd));
+      return {name:d.name, team:d.team, avg:avg.toFixed(1), sd:sd.toFixed(2)};
+    }).filter(Boolean).sort((a,b)=>parseFloat(a.sd)-parseFloat(b.sd)).slice(0,5);
 
-    let conHtml = '<div class="cs-section"><div class="cs-title">Most Consistent <span class="cs-sub">Lowest std deviation of finishing positions</span></div>';
-    consistent.slice(0,5).forEach((d,i) => {
-      const color = teamColors[d.team] || '#555';
-      const pc2 = i===0?'var(--gold)':i===1?'#C0C0C0':i===2?'#cd7f32':'var(--text-faint)';
-      const maxSD = parseFloat(consistent[consistent.length-1]?.sd)||1;
-      const barW = Math.round((1 - parseFloat(d.sd)/maxSD)*100);
-      conHtml += `<div class="cs-rank-row">
-        <span class="cs-rank-pos" style="color:${pc2};">${i+1}</span>
-        <div style="width:3px;height:16px;background:${color};border-radius:1px;flex-shrink:0;"></div>
-        <div class="cs-rank-info">
-          <span class="cs-rank-name">${d.name}</span>
-          <span class="cs-rank-sub">${d.team} · avg P${d.avg} · σ ${d.sd}</span>
-        </div>
-        <span class="cs-rank-pts" style="color:var(--teal);">${d.sd}</span>
-      </div>`;
-    });
-    conHtml += '</div>';
+    if (consistent.length) {
+      cardsHtml += '<div class="cs-card"><div><div class="cs-card-title">Most Consistent</div><div class="cs-card-sub">Lowest std deviation of finishes</div></div>';
+      consistent.forEach((d,i) => {
+        const color = teamColors[d.team]||'#555';
+        const pc = i===0?'gold':'';
+        cardsHtml += \`<div class="cs-row">
+          <span class="cs-row-pos \${pc}">\${i+1}</span>
+          <div style="width:3px;height:14px;background:\${color};border-radius:1px;flex-shrink:0;"></div>
+          <div style="flex:1;"><div class="cs-row-name">\${d.name}</div><div class="cs-row-sub">Avg P\${d.avg} · σ \${d.sd}</div></div>
+          <span class="cs-row-val" style="color:var(--teal);">\${d.sd}</span>
+        </div>\`;
+      });
+      cardsHtml += '</div>';
+    }
 
-    // ── 5. MOST POSITIONS GAINED ──────────────────────────────────────────────
+    // ── CARD 5: POSITIONS GAINED ──────────────────────────────────────────────
     const gained = Object.entries(statsMap)
-      .filter(([,s]) => s.gained !== null)
-      .map(([name,s]) => ({name, team:s.team, gained:s.gained}))
-      .sort((a,b) => b.gained-a.gained);
+      .filter(([,s])=>s.gained!==null)
+      .map(([name,s])=>({name, team:s.team, gained:s.gained}))
+      .sort((a,b)=>b.gained-a.gained).slice(0,5);
 
-    let gainHtml = '<div class="cs-section"><div class="cs-title">Positions Gained <span class="cs-sub">Average positions gained per race (grid vs finish)</span></div>';
-    gained.slice(0,5).forEach((d,i) => {
-      const color = teamColors[d.team] || '#555';
-      const pc2 = i===0?'var(--gold)':i===1?'#C0C0C0':i===2?'#cd7f32':'var(--text-faint)';
-      const gainStr = d.gained>0?`+${d.gained.toFixed(1)}`:d.gained.toFixed(1);
-      const gainColor = d.gained>0?'var(--green)':d.gained<0?'#ff6b6b':'var(--text-faint)';
-      gainHtml += `<div class="cs-rank-row">
-        <span class="cs-rank-pos" style="color:${pc2};">${i+1}</span>
-        <div style="width:3px;height:16px;background:${color};border-radius:1px;flex-shrink:0;"></div>
-        <div class="cs-rank-info"><span class="cs-rank-name">${d.name}</span><span class="cs-rank-sub">${d.team}</span></div>
-        <span class="cs-rank-pts" style="color:${gainColor};">${gainStr}</span>
-      </div>`;
-    });
-    gainHtml += '</div>';
+    if (gained.length) {
+      cardsHtml += '<div class="cs-card"><div><div class="cs-card-title">Positions Gained</div><div class="cs-card-sub">Avg positions gained per race</div></div>';
+      gained.forEach((d,i) => {
+        const color = teamColors[d.team]||'#555';
+        const pc = i===0?'gold':'';
+        const gainStr = d.gained>0?\`+\${d.gained.toFixed(1)}\`:d.gained.toFixed(1);
+        const gainColor = d.gained>0?'var(--green)':d.gained<0?'#ff6b6b':'var(--text-faint)';
+        cardsHtml += \`<div class="cs-row">
+          <span class="cs-row-pos \${pc}">\${i+1}</span>
+          <div style="width:3px;height:14px;background:\${color};border-radius:1px;flex-shrink:0;"></div>
+          <div style="flex:1;"><div class="cs-row-name">\${d.name}</div><div class="cs-row-sub">\${d.team}</div></div>
+          <span class="cs-row-val" style="color:\${gainColor};">\${gainStr}</span>
+        </div>\`;
+      });
+      cardsHtml += '</div>';
+    }
 
-    el.innerHTML = formHtml + h2hHtml + t2Html + conHtml + gainHtml;
+    cards.innerHTML = cardsHtml || '<div class="loading-msg">No stats available yet.</div>';
 
   } catch(e) {
-    el.innerHTML = `<div class="loading-msg">Could not load cool stats: ${e.message}</div>`;
+    cards.innerHTML = \`<div class="loading-msg">Could not load stats: \${e.message}</div>\`;
     console.error('Cool stats error:', e);
   }
 }
+
 
 async function initStandings() {
   try {
@@ -1623,6 +1589,7 @@ async function initStandings() {
 
     buildSelector();
     loadOverallConstructors();
+    loadCoolStats();
   } catch(e) {
     console.error('Init failed:', e);
     document.getElementById('div-selector').innerHTML = '<div class="loading-msg">Could not load standings.</div>';
