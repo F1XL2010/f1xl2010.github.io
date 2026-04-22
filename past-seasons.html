@@ -972,8 +972,11 @@ async function toggleOverallAccordion(id, sc){
     (overallSheetId&&wtGid&&wtGid!=='') ? fetchCSV(overallSheetId, wtGid).catch(()=>null) : Promise.resolve(null)
   ]);
 
+  console.log('overallRows:', overallRows ? overallRows.length : null);
+  console.log('wtRows:', wtRows ? wtRows.length : null);
   overallContent.innerHTML=buildOverallConstTable(overallRows);
   if(wtContent) wtContent.innerHTML=buildWeeklyTotalsTable(wtRows);
+  console.log('overallContent:', overallContent.innerHTML.slice(0,100));
 }
 
 // ============================================================
