@@ -1228,10 +1228,17 @@ async function loadS28DivContent(id, d, sc){
   const sgid  = sc['d'+d+'_driver_stats_gid'];
   const tgid  = sc['d'+d+'_team_stats_gid'];
 
-  // Overall sheet is separate — uses its own sheet ID and two GIDs
-  const osid  = sc['overall_sheet_id'] || null;
-  const osgid = sc['overall_standings_gid'] || null;
-  const wtgid = sc['weekly_totals_gid'] || null;
+  // Overall sheet is a separate Google Sheet — URL stored in overall_gid, weekly GID in w_totals_gid
+  // Extract sheet ID from full URL e.g. https://docs.google.com/spreadsheets/d/SHEET_ID/edit?gid=GID
+  const overallUrl = sc['overall_gid'] || null;
+  let osid = null, osgid = null;
+  if(overallUrl){
+    const mId = overallUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
+    const mGid = overallUrl.match(/gid=(\d+)/);
+    if(mId) osid = mId[1];
+    if(mGid) osgid = mGid[1];
+  }
+  const wtgid = sc['w_totals_gid'] || null;
 
   const [driverRows, constRows, statsRows, teamStatsRows, overallRows, weeklyRows] = await Promise.all([
     (sid && dgid!==undefined && dgid!=='') ? fetchCSV(sid, dgid).catch(()=>null) : Promise.resolve(null),
