@@ -929,44 +929,71 @@ async function loadOverallConstructors() {
       }
     } catch(e) { /* teams fetch optional */ }
 
-    // Fetch constructors from all available divisions in parallel
-    const results = await Promise.all(
-      divisions.filter(d => d.sheetId).map(async (div) => {
-        try {
-          const table = await fetchSheet(div.sheetId, div.gids.constructors);
-          return {div: div.name, rows: table.rows};
-        } catch(e) { return null; }
-      })
-    );
-
-    // Aggregate points per team
+    // Use Overall sheet's Overall Standings tab for aggregated constructor points
+    const overallUrl = seasonConfig['overall_gid'];
     const teamPoints = {};
-    for (const result of results) {
-      if (!result) continue;
-      const rows = result.rows;
-      // Find header row - Pos col, team name is col+2, points is col+3
-      let hIdx = -1;
-      let posCol = 1, teamCol = 3, ptsCol = 4;
-      for (let i=0; i<rows.length; i++) {
-        for (let c=0; c<5; c++) {
-          if (cs(rows[i],c).trim()==='Pos') {
-            hIdx=i; posCol=c; teamCol=c+2; ptsCol=c+3; break;
+
+    if (overallUrl) {
+      try {
+        const mId = overallUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
+        const mGid = overallUrl.match(/gid=(\d+)/);
+        const osid = mId ? mId[1] : null;
+        const ogid = mGid ? mGid[1] : null;
+        if (osid && ogid) {
+          const table = await fetchSheet(osid, ogid);
+          const rows = table.rows;
+          // Find header row with 'Team'
+          let hIdx = -1;
+          for (let i=0; i<rows.length; i++) {
+            if (rows[i].c.some(c => (c.v||'').toString().trim().toLowerCase() === 'team')) { hIdx=i; break; }
+          }
+          if (hIdx >= 0) {
+            const hRow = rows[hIdx];
+            const teamCol = hRow.c.findIndex(c => (c.v||'').toString().trim().toLowerCase() === 'team');
+            const ptsCol = hRow.c.findIndex(c => (c.v||'').toString().trim().toLowerCase() === 'points');
+            if (teamCol >= 0 && ptsCol >= 0) {
+              for (let i=hIdx+1; i<rows.length; i++) {
+                const team = cs(rows[i], teamCol).trim();
+                const ptsRaw = cs(rows[i], ptsCol).trim();
+                if (!team || !ptsRaw) continue;
+                const pts = Math.floor(parseFloat(ptsRaw)) || 0;
+                teamPoints[team] = (teamPoints[team]||0) + pts;
+              }
+            }
           }
         }
-        if (hIdx>=0) break;
-      }
-      if (hIdx < 0) continue;
-      // Data rows
-      for (let i=hIdx+1; i<rows.length; i++) {
-        const row = rows[i];
-        const pos = cs(row,posCol).trim();
-        if (!pos || isNaN(parseInt(pos))) continue;
-        const team = cs(row,teamCol).trim();
-        const ptsRaw = cs(row,ptsCol).trim();
-        if (!team || !ptsRaw) continue;
-        const pts = Math.floor(parseFloat(ptsRaw)) || 0;
-        if (!teamPoints[team]) teamPoints[team] = 0;
-        teamPoints[team] += pts;
+      } catch(e) { /* fall through to division fetch */ }
+    }
+
+    // Fallback: fetch from individual division constructors tabs
+    if (!Object.keys(teamPoints).length) {
+      const results = await Promise.all(
+        divisions.filter(d => d.sheetId).map(async (div) => {
+          try {
+            const table = await fetchSheet(div.sheetId, div.gids.constructors);
+            return {div: div.name, rows: table.rows};
+          } catch(e) { return null; }
+        })
+      );
+      for (const result of results) {
+        if (!result) continue;
+        const rows = result.rows;
+        let hIdx = -1;
+        for (let i=0; i<rows.length; i++) {
+          if (rows[i].c.some(c => (c.v||'').toString().trim().toLowerCase() === 'team')) { hIdx=i; break; }
+        }
+        if (hIdx < 0) continue;
+        const hRow = rows[hIdx];
+        const teamCol = hRow.c.findIndex(c => (c.v||'').toString().trim().toLowerCase() === 'team');
+        const ptsCol = hRow.c.findIndex(c => (c.v||'').toString().trim().toLowerCase() === 'points');
+        if (teamCol < 0 || ptsCol < 0) continue;
+        for (let i=hIdx+1; i<rows.length; i++) {
+          const team = cs(rows[i], teamCol).trim();
+          const ptsRaw = cs(rows[i], ptsCol).trim();
+          if (!team || !ptsRaw) continue;
+          const pts = Math.floor(parseFloat(ptsRaw)) || 0;
+          teamPoints[team] = (teamPoints[team]||0) + pts;
+        }
       }
     }
 
@@ -1036,58 +1063,61 @@ function switchOCTab(tab) {
   if (tab === 'chart' && !window._ocChartLoaded) { loadOCChart(); window._ocChartLoaded = true; }
 }
 
-async function fetchRaceConstructors(sheetId, gid) {
-  // Fetch constructor points from a race tab
-  // Returns {teamName: points} object
-  const table = await fetchSheet(sheetId, gid);
-  const rows = table.rows;
-  // Detect sprint: row 3 contains 'Sprint'
-  let isSprint = false;
-  for (let c=0; c<(rows[3]||{c:[]}).c.length; c++) {
-    if (cs(rows[3],c).toLowerCase().includes('sprint')) { isSprint=true; break; }
-  }
-  // Non-sprint: team=col26, pts=col27. Sprint: team=col52, pts=col53
-  const teamCol = isSprint ? 52 : 26;
-  const ptsCol  = isSprint ? 53 : 27;
-  const result = {};
-  for (let i=5; i<=14; i++) {
-    if (!rows[i]) continue;
-    const team = cs(rows[i], teamCol).trim();
-    const ptsRaw = cs(rows[i], ptsCol).trim();
-    if (!team || !ptsRaw) continue;
-    const pts = Math.floor(parseFloat(ptsRaw)) || 0;
-    if (team) result[team] = (result[team]||0) + pts;
-  }
-  return result;
-}
-
 async function loadOCWeekly() {
   const el = document.getElementById('oc-panel-weekly');
   el.innerHTML = '<div class="loading-msg" style="padding:16px 24px;">Loading weekly points...</div>';
   try {
-    const currentSeason = await getCurrentSeason();
-    // Fetch round GIDs for all divisions
-    const roundData = []; // Array of {round, combined:{team:pts}}
-    const numRounds = divisions[0]?.numRounds || 16;
+    // Use the Overall sheet's Weekly Totals tab (same source as past seasons accordion)
+    const overallUrl = seasonConfig['overall_gid'];
+    const wtGid = seasonConfig['w_totals_gid'];
 
-    for (let r=1; r<=numRounds; r++) {
-      const combined = {};
-      for (const div of divisions) {
-        if (!div.sheetId) continue;
-        const gid = seasonConfig[`${div.id.toLowerCase()}_r${r}_gid`];
-        if (!gid) continue;
-        try {
-          const pts = await fetchRaceConstructors(div.sheetId, gid);
-          Object.entries(pts).forEach(([team,p]) => { combined[team]=(combined[team]||0)+p; });
-        } catch(e) {}
-      }
-      if (Object.keys(combined).length) roundData.push({round:r, pts:combined});
+    if (!overallUrl || !wtGid) {
+      el.innerHTML = '<div class="loading-msg" style="padding:16px 24px;">No weekly totals data configured.</div>';
+      return;
     }
+
+    // Extract sheet ID from full URL
+    const mId = overallUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
+    const osid = mId ? mId[1] : null;
+    if (!osid) { el.innerHTML = '<div class="loading-msg" style="padding:16px 24px;">Invalid overall sheet URL.</div>'; return; }
+
+    const table = await fetchSheet(osid, wtGid);
+    const rows = table.rows;
+
+    // Find header row with 'Round' in col 0
+    let hIdx = -1;
+    for (let i=0; i<rows.length; i++) {
+      if (cs(rows[i],0).toLowerCase() === 'round') { hIdx=i; break; }
+    }
+    if (hIdx < 0) { el.innerHTML = '<div class="loading-msg" style="padding:16px 24px;">Could not parse weekly data.</div>'; return; }
+
+    // Round numbers from header cols 1+
+    const roundNums = [];
+    for (let c=1; c<rows[hIdx].c.length; c++) {
+      const v = cs(rows[hIdx],c);
+      if (v) roundNums.push({col:c, num:parseInt(v)});
+    }
+
+    // Team data rows
+    const teamRows = rows.slice(hIdx+1).filter(r => cs(r,0).trim());
+
+    // Build roundData array matching original format
+    const roundData = roundNums.map(rn => {
+      const combined = {};
+      teamRows.forEach(r => {
+        const team = cs(r,0).trim();
+        const pts = Math.floor(parseFloat(cs(r,rn.col))||0);
+        if (team && pts > 0) combined[team] = pts;
+      });
+      return {round: rn.num, pts: combined};
+    }).filter(rd => Object.keys(rd.pts).length > 0);
 
     if (!roundData.length) { el.innerHTML='<div class="loading-msg" style="padding:16px 24px;">No data available</div>'; return; }
 
-    // Get all teams
-    const allTeams = [...new Set(roundData.flatMap(r=>Object.keys(r.pts)))].sort();
+    // Get all teams sorted by total points
+    const teamTotals = {};
+    roundData.forEach(rd => Object.entries(rd.pts).forEach(([t,p]) => { teamTotals[t]=(teamTotals[t]||0)+p; }));
+    const allTeams = Object.keys(teamTotals).sort((a,b) => teamTotals[b]-teamTotals[a]);
     const rounds = roundData.map(r=>r.round);
 
     // Find max points per round for gold highlight
@@ -1134,22 +1164,36 @@ async function loadOCChart() {
   const el = document.getElementById('oc-panel-chart');
   el.innerHTML = '<div class="loading-msg" style="padding:16px 24px;">Building chart...</div>';
   try {
-    const numRounds = divisions[0]?.numRounds || 16;
-    const roundData = [];
+    // Use the Overall sheet's Weekly Totals tab
+    const overallUrl = seasonConfig['overall_gid'];
+    const wtGid = seasonConfig['w_totals_gid'];
+    if (!overallUrl || !wtGid) { el.innerHTML='<div class="loading-msg" style="padding:16px 24px;">No weekly totals data configured.</div>'; return; }
+    const mId = overallUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
+    const osid = mId ? mId[1] : null;
+    if (!osid) { el.innerHTML='<div class="loading-msg" style="padding:16px 24px;">Invalid overall sheet URL.</div>'; return; }
 
-    for (let r=1; r<=numRounds; r++) {
-      const combined = {};
-      for (const div of divisions) {
-        if (!div.sheetId) continue;
-        const gid = seasonConfig[`${div.id.toLowerCase()}_r${r}_gid`];
-        if (!gid) continue;
-        try {
-          const pts = await fetchRaceConstructors(div.sheetId, gid);
-          Object.entries(pts).forEach(([team,p]) => { combined[team]=(combined[team]||0)+p; });
-        } catch(e) {}
-      }
-      if (Object.keys(combined).length) roundData.push({round:r, pts:combined});
+    const table = await fetchSheet(osid, wtGid);
+    const rows = table.rows;
+    let hIdx = -1;
+    for (let i=0; i<rows.length; i++) {
+      if (cs(rows[i],0).toLowerCase() === 'round') { hIdx=i; break; }
     }
+    if (hIdx < 0) { el.innerHTML='<div class="loading-msg" style="padding:16px 24px;">Could not parse weekly data.</div>'; return; }
+    const roundNums = [];
+    for (let c=1; c<rows[hIdx].c.length; c++) {
+      const v = cs(rows[hIdx],c);
+      if (v) roundNums.push({col:c, num:parseInt(v)});
+    }
+    const teamRows = rows.slice(hIdx+1).filter(r => cs(r,0).trim());
+    const roundData = roundNums.map(rn => {
+      const combined = {};
+      teamRows.forEach(r => {
+        const team = cs(r,0).trim();
+        const pts = Math.floor(parseFloat(cs(r,rn.col))||0);
+        if (team && pts > 0) combined[team] = pts;
+      });
+      return {round: rn.num, pts: combined};
+    }).filter(rd => Object.keys(rd.pts).length > 0);
 
     if (!roundData.length) { el.innerHTML='<div class="loading-msg" style="padding:16px 24px;">No data available</div>'; return; }
 
