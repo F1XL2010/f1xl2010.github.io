@@ -875,15 +875,27 @@ async function loadS20DivContent(id, d, sc){
   const cgid = sc['d'+d+'_constructors_gid'];
   const sgid = sc['d'+d+'_driver_stats_gid'];
   const tgid = sc['d'+d+'_team_stats_gid'];
-
   const calgid = sc['d'+d+'_calendar_gid'];
 
-  const [driverRows, constRows, statsRows, teamStatsRows, calRows] = await Promise.all([
+  // Overall sheet — extract sheet ID and GIDs from config
+  const overallUrl = sc['overall_gid'] || null;
+  let osid = null, osgid = null;
+  if(overallUrl){
+    const mId = overallUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
+    const mGid = overallUrl.match(/gid=(\d+)/);
+    if(mId) osid = mId[1];
+    if(mGid) osgid = mGid[1];
+  }
+  const wtgid = sc['w_totals_gid'] || null;
+
+  const [driverRows, constRows, statsRows, teamStatsRows, calRows, overallRows, weeklyRows] = await Promise.all([
     (sid && dgid!==undefined && dgid!=='') ? fetchCSV(sid, dgid).catch(()=>null) : Promise.resolve(null),
     (cgid!==undefined && cgid!=='') ? fetchCSV(sid, cgid).catch(()=>null) : Promise.resolve(null),
     (sgid!==undefined && sgid!=='') ? fetchCSV(sid, sgid).catch(()=>null) : Promise.resolve(null),
     (tgid!==undefined && tgid!=='') ? fetchCSV(sid, tgid).catch(()=>null) : Promise.resolve(null),
-    (calgid!==undefined && calgid!=='') ? fetchCSV(sid, calgid).catch(()=>null) : Promise.resolve(null)
+    (calgid!==undefined && calgid!=='') ? fetchCSV(sid, calgid).catch(()=>null) : Promise.resolve(null),
+    (osid && osgid) ? fetchCSV(osid, osgid).catch(()=>null) : Promise.resolve(null),
+    (osid && wtgid) ? fetchCSV(osid, wtgid).catch(()=>null) : Promise.resolve(null),
   ]);
 
   // Build round->country map from calendar
@@ -897,6 +909,9 @@ async function loadS20DivContent(id, d, sc){
   }
 
   let divHtml = '';
+
+  if(overallRows || weeklyRows) divHtml += buildS28OverallTotals(id, d, overallRows, weeklyRows);
+
   if(driverRows) divHtml += buildS20Drivers(driverRows, roundNames);
   else divHtml += '<div class="div-loading">No driver data available.</div>';
 
