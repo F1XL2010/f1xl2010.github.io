@@ -1364,7 +1364,7 @@ async function loadCoolStats() {
     const last5 = raceCols.slice(-5);
     if (last5.length) {
       cardsHtml += '<div class="cs-card"><div><div class="cs-card-title">Form Guide</div><div class="cs-card-sub">Last 5 rounds · finishing pos</div></div>';
-      drivers.forEach(d => {
+      drivers.slice(0,6).forEach(d => {
         const color = teamColors[d.team] || '#555';
         const dots = last5.map(r => {
           const v = cs(drRows[d.row], r.col).trim();
@@ -1383,32 +1383,7 @@ async function loadCoolStats() {
       cardsHtml += '</div>';
     }
 
-    // ── CARD 2: HEAD TO HEAD ──────────────────────────────────────────────────
-    const teams = {};
-    Object.entries(statsMap).forEach(([name,s]) => {
-      if (!teams[s.team]) teams[s.team] = [];
-      teams[s.team].push({name, ...s});
-    });
-    const h2hTeams = Object.entries(teams).filter(([,m])=>m.length>=2);
-    if (h2hTeams.length) {
-      cardsHtml += '<div class="cs-card"><div><div class="cs-card-title">Head to Head</div><div class="cs-card-sub">Avg qualifying position</div></div>';
-      h2hTeams.forEach(([team, members]) => {
-        const [a,b] = members.sort((x,y)=>(x.avgGrid||99)-(y.avgGrid||99));
-        const color = teamColors[team] || '#555';
-        const aG = a.avgGrid||0, bG = b.avgGrid||0;
-        const total = aG+bG;
-        const aW = total>0 ? Math.round((bG/total)*100) : 50;
-        cardsHtml += `<div class="cs-h2h-item">
-          <div class="cs-h2h-team-label"><div style="width:3px;height:12px;background:${color};border-radius:1px;"></div>${team}</div>
-          <div class="cs-h2h-bar"><div class="cs-h2h-a" style="width:${aW}%;"></div><div class="cs-h2h-b" style="width:${100-aW}%;"></div></div>
-          <div class="cs-h2h-names">
-            <span style="color:var(--green);">${a.name} (${aG?aG.toFixed(1):'—'})</span>
-            <span style="color:rgba(255,255,255,0.4);">${b.name} (${bG?bG.toFixed(1):'—'})</span>
-          </div>
-        </div>`;
-      });
-      cardsHtml += '</div>';
-    }
+    // H2H removed
 
     // ── CARD 3: TOP 5 TIER 2 ─────────────────────────────────────────────────
     const allStatsPromises = divisions.map(async div => {
@@ -1478,18 +1453,25 @@ async function loadCoolStats() {
     }
 
     // ── CARD 5: POSITIONS GAINED ──────────────────────────────────────────────
+    // For total positions gained, need races started col
+    const colStarted = findCol('races started');
     const gained = Object.entries(statsMap)
       .filter(([,s])=>s.gained!==null)
-      .map(([name,s])=>({name, team:s.team, gained:s.gained}))
-      .sort((a,b)=>b.gained-a.gained).slice(0,5);
+      .map(([name,s]) => {
+        const row = stRows.slice(sHdrIdx+1).find(r=>cs(r,0).trim()===name);
+        const started = row ? (parseFloat(cs(row,colStarted))||0) : 0;
+        const total = Math.round(s.gained * started);
+        return {name, team:s.team, total};
+      })
+      .sort((a,b)=>b.total-a.total).slice(0,5);
 
     if (gained.length) {
-      cardsHtml += '<div class="cs-card"><div><div class="cs-card-title">Positions Gained</div><div class="cs-card-sub">Avg positions gained per race</div></div>';
+      cardsHtml += '<div class="cs-card"><div><div class="cs-card-title">Positions Gained</div><div class="cs-card-sub">Total positions gained this season</div></div>';
       gained.forEach((d,i) => {
         const color = teamColors[d.team]||'#555';
         const pc = i===0?'gold':'';
-        const gainStr = d.gained>0?`+${d.gained.toFixed(1)}`:d.gained.toFixed(1);
-        const gainColor = d.gained>0?'var(--green)':d.gained<0?'#ff6b6b':'var(--text-faint)';
+        const gainStr = d.total>0?`+${d.total}`:String(d.total);
+        const gainColor = d.total>0?'var(--green)':d.total<0?'#ff6b6b':'var(--text-faint)';
         cardsHtml += `<div class="cs-row">
           <span class="cs-row-pos ${pc}">${i+1}</span>
           <div style="width:3px;height:14px;background:${color};border-radius:1px;flex-shrink:0;"></div>
