@@ -114,7 +114,7 @@
   .st-race{width:38px;min-width:38px;text-align:center;}
   .st-race-header{height:100px;display:flex;flex-direction:column;justify-content:space-between;align-items:center;padding:5px 2px;box-sizing:border-box;}
   .st-race-round{font-size:9px;font-weight:700;color:#fff;}
-  .st-race-name{writing-mode:vertical-rl;transform:rotate(180deg);font-size:9px;color:rgba(255,255,255,0.8);line-height:1;flex:1;display:flex;align-items:center;justify-content:center;}
+  .st-race-name{font-size:9px;color:rgba(255,255,255,0.8);line-height:1;display:block;text-align:center;margin-top:2px;}
   .st-sprint-first{border-left:2px solid rgba(100,160,255,0.5)!important;}
   .st-sprint-last{border-right:2px solid rgba(100,160,255,0.5)!important;}
   .st-result{width:38px;min-width:38px;height:40px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:600;vertical-align:middle;}
@@ -254,7 +254,7 @@
 </div>
 
 <div class="page-header">
-  <div class="page-eyebrow">Season 27</div>
+  <div class="page-eyebrow" id="page-season-eyebrow">Current Season</div>
   <div class="page-title">Standings</div>
   <div class="page-meta">Select a division to view full standings, constructors and driver stats</div>
 </div>
@@ -266,12 +266,12 @@
     <div style="display:flex;gap:0;border-bottom:1px solid rgba(255,255,255,0.1);margin-bottom:0;">
       <button id="oc-tab-standings" onclick="switchOCTab('standings')" style="padding:8px 16px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;background:none;border:none;border-bottom:2px solid var(--green);color:#fff;cursor:pointer;">Standings</button>
       <button id="oc-tab-weekly" onclick="switchOCTab('weekly')" style="padding:8px 16px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;background:none;border:none;border-bottom:2px solid transparent;color:rgba(255,255,255,0.5);cursor:pointer;">Weekly Points</button>
-      <button id="oc-tab-chart" onclick="switchOCTab('chart')" style="padding:8px 16px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;background:none;border:none;border-bottom:2px solid transparent;color:rgba(255,255,255,0.5);cursor:pointer;">Position Chart</button>
+
     </div>
   </div>
   <div id="oc-panel-standings"><div id="overall-constructors-table"><div class="loading-msg" style="padding:16px 0 16px 24px;">Loading...</div></div></div>
   <div id="oc-panel-weekly" style="display:none;"><div class="loading-msg" style="padding:16px 24px;">Loading weekly points...</div></div>
-  <div id="oc-panel-chart" style="display:none;"><div class="loading-msg" style="padding:16px 24px;">Loading position chart...</div></div>
+
 </div>
 <div id="selector-view">
   <div class="div-selector" id="div-selector">
@@ -294,15 +294,7 @@
   </div>
 
   <div class="tab-panel active" id="tab-drivers">
-    <div class="legend">
-      <div class="legend-item"><div class="legend-dot" style="background:var(--p1-bg);color:var(--p1-text);">1</div>Win</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--p2-bg);color:var(--p2-text);">2</div>P2</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--p3-bg);color:var(--p3-text);">3</div>P3</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--p46-bg);color:var(--p46-text);">5</div>P4–6</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--p710-bg);color:var(--p710-text);">8</div>P7–10</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--dnf-bg);color:var(--dnf-text);font-size:8px;">DNF</div>DNF</div>
-      <div class="legend-item"><div class="legend-dot" style="background:rgba(100,160,255,0.1);border:1px solid rgba(100,160,255,0.3);color:rgba(100,160,255,0.8);font-size:9px;">S</div>Sprint</div>
-    </div>
+
     <div class="scroll-hint">← Scroll to see all races →</div>
     <div class="table-wrap">
       <table class="standings-table"><thead><tr id="drivers-header"></tr></thead><tbody id="drivers-body"></tbody></table>
@@ -553,12 +545,12 @@ async function loadDrivers() {
       if (rNum <= (currentDiv.numRounds || 21)) races.push({col:c, label:h, short:short.trim(), sprint:sprint, sprintRace:sprintRace});
     }
 
-    // Identify sprint pairs - a sprint col is followed by its main race col
+    // Identify sprint pairs - R(s) col followed by R(R) col
     // Mark sprint pairs for border grouping
     const sprintPairs = new Set();
     for (let i=0; i<races.length; i++) {
-      if (races[i].sprint && i+1<races.length && !races[i+1].sprint) {
-        sprintPairs.add(i);   // sprint qual
+      if (races[i].sprint && i+1<races.length && races[i+1].sprintRace) {
+        sprintPairs.add(i);   // sprint quali
         sprintPairs.add(i+1); // sprint race
       }
     }
@@ -582,10 +574,11 @@ async function loadDrivers() {
       const isFirst = sprintPairs.has(idx) && r.sprint;
       const isLast = sprintPairs.has(idx) && !r.sprint;
       const sc = isFirst ? 'st-sprint-first' : isLast ? 'st-sprint-last' : '';
-      const roundNum = r.label.replace(/\(s\)/i,'').trim();
+      const roundNum = r.label.replace(/\(s\)/i,'').replace(/\(r\)/i,'').trim();
+      const sprintSuffix = r.sprint && !r.sprintRace ? '<span style="font-size:8px;color:rgba(130,170,255,0.8);"> S</span>' : '';
       hHtml += `<th class="st-race ${sc}"><div class="st-race-header">
-        <span class="st-race-round">${roundNum}</span>
-        <span class="st-race-name">${r.short||r.label}</span>
+        <span class="st-race-round">${roundNum}${sprintSuffix}</span>
+        <span class="st-race-name">${(r.short||r.label).slice(0,3).toUpperCase()}</span>
       </div></th>`;
     });
     if (poleCol>=0) hHtml += `<th class="st-end"><span class="st-end-header">Pole</span></th>`;
@@ -668,28 +661,26 @@ async function loadConstructors() {
     const conTable = await fetchSheet(currentDiv.sheetId, currentDiv.gids.constructors);
     const rows = conTable.rows;
 
-    // Find header row - Pos in col 1, Team logo col 2, Team name col 3, Points col 4
-    let hIdx = -1, posCol=1, teamCol=3, ptsCol=4;
+    // Find header row dynamically
+    let hIdx = -1;
     for (let i=0; i<rows.length; i++) {
-      for (let c=0; c<5; c++) {
-        if (cs(rows[i],c).trim()==='Pos') {
-          hIdx=i; posCol=c; teamCol=c+2; ptsCol=c+3; break;
-        }
-      }
-      if (hIdx>=0) break;
+      if (rows[i].c.some(c => (c.v||'').toString().trim().toLowerCase() === 'team')) { hIdx=i; break; }
     }
     if (hIdx<0) throw new Error('Header not found');
+    const hRow = rows[hIdx];
+    const posCol = hRow.c.findIndex(c => (c.v||'').toString().trim().toLowerCase() === 'pos');
+    const teamCol = hRow.c.findIndex(c => (c.v||'').toString().trim().toLowerCase() === 'team');
+    const ptsCol = hRow.c.findIndex(c => (c.v||'').toString().trim().toLowerCase() === 'points');
+    if (teamCol<0 || ptsCol<0) throw new Error('Columns not found');
 
     const teams = [];
     for (let i=hIdx+1; i<rows.length; i++) {
       const row = rows[i];
-      const pos = cs(row,posCol).trim();
-      if (!pos || isNaN(parseInt(pos))) continue;
       const team = cs(row,teamCol).trim();
       const ptsRaw = cs(row,ptsCol).trim();
-      if (!team) continue;
+      if (!team || !ptsRaw) continue;
       const pts = Math.floor(parseFloat(ptsRaw)) || 0;
-      teams.push({pos:parseInt(pos), team, pts});
+      teams.push({pos: posCol>=0 ? parseInt(cs(row,posCol)) : 0, team, pts});
     }
 
     // Sort by points descending and calculate gaps
@@ -1060,7 +1051,6 @@ function switchOCTab(tab) {
     panel.style.display = active ? '' : 'none';
   });
   if (tab === 'weekly' && !window._ocWeeklyLoaded) { loadOCWeekly(); window._ocWeeklyLoaded = true; }
-  if (tab === 'chart' && !window._ocChartLoaded) { loadOCChart(); window._ocChartLoaded = true; }
 }
 
 async function loadOCWeekly() {
@@ -1337,6 +1327,10 @@ async function initStandings() {
         divisions[i].leaderPts = '—';
       }
     }));
+
+    // Update season heading
+    const eyebrow = document.getElementById('page-season-eyebrow');
+    if (eyebrow && currentSeason) eyebrow.textContent = 'Season ' + currentSeason;
 
     buildSelector();
     loadOverallConstructors();
