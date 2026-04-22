@@ -105,6 +105,23 @@ async function loadSeasonConfig(season) {
   }
 }
 
+// Returns the current (newest) season number from the 'new seasons' section
+async function getCurrentSeason() {
+  const config = await loadConfig();
+  // Find the highest season number that has a 'new seasons' entry
+  // These are stored the same as past seasons — just find the highest s{N}_gid
+  // that appears in the config (getAllSeasons returns them sorted newest first)
+  const seasons = await getAllSeasons();
+  return seasons.length ? seasons[0].season : null;
+}
+
+// Load config for the current (newest) season
+async function getCurrentSeasonConfig() {
+  const season = await getCurrentSeason();
+  if (!season) return null;
+  return await loadSeasonConfig(season);
+}
+
 // Get race GIDs array for a season/division (returns array of gid|null per round)
 function getRaceGIDs(seasonConfig, division) {
   const d = 'd' + division;
