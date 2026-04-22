@@ -1378,13 +1378,13 @@ async function loadCoolStats() {
           const bg = !v||v===' '?'rgba(255,255,255,0.05)':['DNF','DNS','DSQ'].includes(v.toUpperCase())?'#3a1010':n===1?'var(--p1-bg)':n===2?'var(--p2-bg)':n===3?'var(--p3-bg)':n<=6?'var(--p46-bg)':n<=10?'var(--p710-bg)':'rgba(255,255,255,0.08)';
           const tc = !v||v===' '?'rgba(255,255,255,0.2)':['DNF','DNS','DSQ'].includes(v.toUpperCase())?'#ff6b6b':n<=3?'#000':'#fff';
           const disp = !v||v===' '?'·':['DNF','DNS','DSQ'].includes(v.toUpperCase())?'X':v;
-          return \`<div class="cs-dot" style="background:\${bg};color:\${tc};">\${disp}</div>\`;
+          return `<div class="cs-dot" style="background:\${bg};color:\${tc};">\${disp}</div>`;
         }).join('');
-        cardsHtml += \`<div class="cs-row">
+        cardsHtml += `<div class="cs-row">
           <div style="width:3px;height:14px;background:\${color};border-radius:1px;flex-shrink:0;"></div>
           <span class="cs-row-name">\${d.name}</span>
           <div class="cs-dots">\${dots}</div>
-        </div>\`;
+        </div>`;
       });
       cardsHtml += '</div>';
     }
@@ -1404,14 +1404,14 @@ async function loadCoolStats() {
         const aG = a.avgGrid||0, bG = b.avgGrid||0;
         const total = aG+bG;
         const aW = total>0 ? Math.round((bG/total)*100) : 50;
-        cardsHtml += \`<div class="cs-h2h-item">
+        cardsHtml += `<div class="cs-h2h-item">
           <div class="cs-h2h-team-label"><div style="width:3px;height:12px;background:\${color};border-radius:1px;"></div>\${team}</div>
           <div class="cs-h2h-bar"><div class="cs-h2h-a" style="width:\${aW}%;"></div><div class="cs-h2h-b" style="width:\${100-aW}%;"></div></div>
           <div class="cs-h2h-names">
             <span style="color:var(--green);">\${a.name} (\${aG?aG.toFixed(1):'—'})</span>
             <span style="color:rgba(255,255,255,0.4);">\${b.name} (\${bG?bG.toFixed(1):'—'})</span>
           </div>
-        </div>\`;
+        </div>`;
       });
       cardsHtml += '</div>';
     }
@@ -1445,12 +1445,12 @@ async function loadCoolStats() {
       allT2.forEach((d,i) => {
         const color = teamColors[d.team]||'#555';
         const pc = i===0?'gold':'';
-        cardsHtml += \`<div class="cs-row">
+        cardsHtml += `<div class="cs-row">
           <span class="cs-row-pos \${pc}">\${i+1}</span>
           <div style="width:3px;height:14px;background:\${color};border-radius:1px;flex-shrink:0;"></div>
           <div style="flex:1;"><div class="cs-row-name">\${d.name}</div><div class="cs-row-sub">\${d.team} · \${d.div}</div></div>
           <span class="cs-row-val">\${d.pts}</span>
-        </div>\`;
+        </div>`;
       });
       cardsHtml += '</div>';
     }
@@ -1473,12 +1473,12 @@ async function loadCoolStats() {
       consistent.forEach((d,i) => {
         const color = teamColors[d.team]||'#555';
         const pc = i===0?'gold':'';
-        cardsHtml += \`<div class="cs-row">
+        cardsHtml += `<div class="cs-row">
           <span class="cs-row-pos \${pc}">\${i+1}</span>
           <div style="width:3px;height:14px;background:\${color};border-radius:1px;flex-shrink:0;"></div>
           <div style="flex:1;"><div class="cs-row-name">\${d.name}</div><div class="cs-row-sub">Avg P\${d.avg} · σ \${d.sd}</div></div>
           <span class="cs-row-val" style="color:var(--teal);">\${d.sd}</span>
-        </div>\`;
+        </div>`;
       });
       cardsHtml += '</div>';
     }
@@ -1494,14 +1494,14 @@ async function loadCoolStats() {
       gained.forEach((d,i) => {
         const color = teamColors[d.team]||'#555';
         const pc = i===0?'gold':'';
-        const gainStr = d.gained>0?\`+\${d.gained.toFixed(1)}\`:d.gained.toFixed(1);
+        const gainStr = d.gained>0?`+\${d.gained.toFixed(1)}`:d.gained.toFixed(1);
         const gainColor = d.gained>0?'var(--green)':d.gained<0?'#ff6b6b':'var(--text-faint)';
-        cardsHtml += \`<div class="cs-row">
+        cardsHtml += `<div class="cs-row">
           <span class="cs-row-pos \${pc}">\${i+1}</span>
           <div style="width:3px;height:14px;background:\${color};border-radius:1px;flex-shrink:0;"></div>
           <div style="flex:1;"><div class="cs-row-name">\${d.name}</div><div class="cs-row-sub">\${d.team}</div></div>
           <span class="cs-row-val" style="color:\${gainColor};">\${gainStr}</span>
-        </div>\`;
+        </div>`;
       });
       cardsHtml += '</div>';
     }
@@ -1509,7 +1509,7 @@ async function loadCoolStats() {
     cards.innerHTML = cardsHtml || '<div class="loading-msg">No stats available yet.</div>';
 
   } catch(e) {
-    cards.innerHTML = \`<div class="loading-msg">Could not load stats: \${e.message}</div>\`;
+    cards.innerHTML = `<div class="loading-msg">Could not load stats: \${e.message}</div>`;
     console.error('Cool stats error:', e);
   }
 }
