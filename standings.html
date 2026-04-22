@@ -115,8 +115,8 @@
   .st-race-header{height:100px;display:flex;flex-direction:column;justify-content:space-between;align-items:center;padding:5px 2px;box-sizing:border-box;}
   .st-race-round{font-size:9px;font-weight:700;color:#fff;}
   .st-race-name{font-size:9px;color:rgba(255,255,255,0.8);line-height:1;display:block;text-align:center;margin-top:2px;}
-  .st-sprint-first{border-left:2px solid rgba(100,160,255,0.5)!important;}
-  .st-sprint-last{border-right:2px solid rgba(100,160,255,0.5)!important;}
+  .st-sprint-first{border-left:2px solid rgba(100,160,255,0.5)!important;border-top:2px solid rgba(100,160,255,0.5)!important;}
+  .st-sprint-last{border-right:2px solid rgba(100,160,255,0.5)!important;border-top:2px solid rgba(100,160,255,0.5)!important;}
   .st-result{width:38px;min-width:38px;height:40px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:600;vertical-align:middle;}
   .st-ri{width:38px;height:40px;display:flex;align-items:center;justify-content:center;}
   .st-ri.r1{background:#FFD700;color:#5a3e00;}
@@ -571,18 +571,19 @@ async function loadDrivers() {
       <th class="st-driver"><span class="st-driver-header">Driver</span></th>`;
 
     races.forEach((r, idx) => {
-      const isFirst = sprintPairs.has(idx) && r.sprint;
-      const isLast = sprintPairs.has(idx) && !r.sprint;
+      const isFirst = sprintPairs.has(idx) && r.sprint && !r.sprintRace;
+      const isLast  = sprintPairs.has(idx) && r.sprintRace;
       const sc = isFirst ? 'st-sprint-first' : isLast ? 'st-sprint-last' : '';
       if (r.sprintRace) {
-        // Sprint race col — show S/R labels, no round number repeated
+        // Sprint race col — show Rx(R), track abbr blank (shown in quali col)
+        const roundNum = r.label.replace(/\(r\)/i,'').trim();
         hHtml += `<th class="st-race ${sc}"><div class="st-race-header">
-          <span class="st-race-round" style="color:rgba(130,170,255,0.8);">R</span>
+          <span class="st-race-round" style="color:rgba(130,170,255,0.9);">${roundNum}<span style="font-size:8px;">(R)</span></span>
           <span class="st-race-name">&nbsp;</span>
         </div></th>`;
       } else {
-        const roundNum = r.label.replace(/\(s\)/i,'').replace(/\(r\)/i,'').trim();
-        const sprintSuffix = r.sprint ? '<span style="font-size:8px;color:rgba(130,170,255,0.8);"> S</span>' : '';
+        const roundNum = r.label.replace(/\(s\)/i,'').trim();
+        const sprintSuffix = r.sprint ? `<span style="font-size:8px;color:rgba(130,170,255,0.9);">(S)</span>` : '';
         hHtml += `<th class="st-race ${sc}"><div class="st-race-header">
           <span class="st-race-round">${roundNum}${sprintSuffix}</span>
           <span class="st-race-name">${(r.short||r.label).slice(0,3).toUpperCase()}</span>
@@ -635,8 +636,8 @@ async function loadDrivers() {
         const v = cs(row, r.col);
         const val = v && v.trim() ? v.trim() : '';
         const rc = rClass(val);
-        const isFirst = sprintPairs.has(idx) && r.sprint;
-        const isLast = sprintPairs.has(idx) && !r.sprint;
+        const isFirst = sprintPairs.has(idx) && r.sprint && !r.sprintRace;
+        const isLast  = sprintPairs.has(idx) && r.sprintRace;
         const sc = isFirst ? 'st-sprint-first' : isLast ? 'st-sprint-last' : '';
         rHtml += `<td class="st-result ${sc}"><div class="st-ri ${rc}">${val}</div></td>`;
       });
