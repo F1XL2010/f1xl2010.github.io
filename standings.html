@@ -578,7 +578,7 @@ async function loadDrivers() {
         // Sprint race col — show Rx(R), track abbr blank (shown in quali col)
         const roundNum = r.label.replace(/\(r\)/i,'').trim();
         hHtml += `<th class="st-race ${sc}"><div class="st-race-header">
-          <span class="st-race-round" style="color:rgba(130,170,255,0.9);">${roundNum}<span style="font-size:8px;">(R)</span></span>
+          <span class="st-race-round">${roundNum}<span style="font-size:8px;">(R)</span></span>
           <span class="st-race-name">&nbsp;</span>
         </div></th>`;
       } else {
@@ -1051,9 +1051,10 @@ async function loadOverallConstructors() {
 
 
 function switchOCTab(tab) {
-  ['standings','weekly','chart'].forEach(t => {
+  ['standings','weekly'].forEach(t => {
     const btn = document.getElementById('oc-tab-'+t);
     const panel = document.getElementById('oc-panel-'+t);
+    if (!btn || !panel) return;
     const active = t === tab;
     btn.style.borderBottomColor = active ? 'var(--green)' : 'transparent';
     btn.style.color = active ? '#fff' : 'rgba(255,255,255,0.5)';
