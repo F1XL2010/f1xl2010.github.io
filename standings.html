@@ -574,12 +574,20 @@ async function loadDrivers() {
       const isFirst = sprintPairs.has(idx) && r.sprint;
       const isLast = sprintPairs.has(idx) && !r.sprint;
       const sc = isFirst ? 'st-sprint-first' : isLast ? 'st-sprint-last' : '';
-      const roundNum = r.label.replace(/\(s\)/i,'').replace(/\(r\)/i,'').trim();
-      const sprintSuffix = r.sprint && !r.sprintRace ? '<span style="font-size:8px;color:rgba(130,170,255,0.8);"> S</span>' : '';
-      hHtml += `<th class="st-race ${sc}"><div class="st-race-header">
-        <span class="st-race-round">${roundNum}${sprintSuffix}</span>
-        <span class="st-race-name">${(r.short||r.label).slice(0,3).toUpperCase()}</span>
-      </div></th>`;
+      if (r.sprintRace) {
+        // Sprint race col — show S/R labels, no round number repeated
+        hHtml += `<th class="st-race ${sc}"><div class="st-race-header">
+          <span class="st-race-round" style="color:rgba(130,170,255,0.8);">R</span>
+          <span class="st-race-name">&nbsp;</span>
+        </div></th>`;
+      } else {
+        const roundNum = r.label.replace(/\(s\)/i,'').replace(/\(r\)/i,'').trim();
+        const sprintSuffix = r.sprint ? '<span style="font-size:8px;color:rgba(130,170,255,0.8);"> S</span>' : '';
+        hHtml += `<th class="st-race ${sc}"><div class="st-race-header">
+          <span class="st-race-round">${roundNum}${sprintSuffix}</span>
+          <span class="st-race-name">${(r.short||r.label).slice(0,3).toUpperCase()}</span>
+        </div></th>`;
+      }
     });
     if (poleCol>=0) hHtml += `<th class="st-end"><span class="st-end-header">Pole</span></th>`;
     if (flCol>=0)   hHtml += `<th class="st-end"><span class="st-end-header">F/L</span></th>`;
