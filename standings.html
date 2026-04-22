@@ -531,7 +531,7 @@ async function loadDrivers() {
     }
     if (!nameRow) nameRow = rows[Math.max(0,hIdx-4)];
 
-    // Map race columns
+    // Map race columns — stop once we've passed the Gap column
     const races = [];
     let poleCol=-1, flCol=-1, ptsCol=-1, gapCol=-1;
     for (let c=4; c<hRow.c.length; c++) {
@@ -541,14 +541,16 @@ async function loadDrivers() {
       if (h==='F/L'){flCol=c;continue;}
       if (h==='Points'){ptsCol=c;continue;}
       if (h==='Gap'){gapCol=c;continue;}
-      const sprint = h.toLowerCase().includes('(s)');
+      // Stop processing once we've found Points — anything after is hidden calc cols
+      if (ptsCol>=0) break;
+      const sprint = h.toLowerCase().includes('(s)') || h.toLowerCase().includes('(r)');
+      const sprintRace = h.toLowerCase().includes('(r)');
       const circuitName = nameRow ? cs(nameRow,c) : '';
-      const short = circuitName || h.replace(/\(s\)/i,'').trim();
+      const short = circuitName || h.replace(/\(s\)/i,'').replace(/\(r\)/i,'').trim();
       // Only include race columns up to the number of rounds in this season
-      // Extract round number from label e.g. R3(s)->3, R3->3
       const rMatch = h.match(/R(\d+)/i);
       const rNum = rMatch ? parseInt(rMatch[1]) : 999;
-      if (rNum <= (currentDiv.numRounds || 21)) races.push({col:c, label:h, short:short.trim(), sprint:sprint});
+      if (rNum <= (currentDiv.numRounds || 21)) races.push({col:c, label:h, short:short.trim(), sprint:sprint, sprintRace:sprintRace});
     }
 
     // Identify sprint pairs - a sprint col is followed by its main race col
