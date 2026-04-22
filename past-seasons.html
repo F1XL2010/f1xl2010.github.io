@@ -875,27 +875,15 @@ async function loadS20DivContent(id, d, sc){
   const cgid = sc['d'+d+'_constructors_gid'];
   const sgid = sc['d'+d+'_driver_stats_gid'];
   const tgid = sc['d'+d+'_team_stats_gid'];
+
   const calgid = sc['d'+d+'_calendar_gid'];
 
-  // Overall sheet — extract sheet ID and GIDs from config
-  const overallUrl = sc['overall_gid'] || null;
-  let osid = null, osgid = null;
-  if(overallUrl){
-    const mId = overallUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
-    const mGid = overallUrl.match(/gid=(\d+)/);
-    if(mId) osid = mId[1];
-    if(mGid) osgid = mGid[1];
-  }
-  const wtgid = sc['w_totals_gid'] || null;
-
-  const [driverRows, constRows, statsRows, teamStatsRows, calRows, overallRows, weeklyRows] = await Promise.all([
+  const [driverRows, constRows, statsRows, teamStatsRows, calRows] = await Promise.all([
     (sid && dgid!==undefined && dgid!=='') ? fetchCSV(sid, dgid).catch(()=>null) : Promise.resolve(null),
     (cgid!==undefined && cgid!=='') ? fetchCSV(sid, cgid).catch(()=>null) : Promise.resolve(null),
     (sgid!==undefined && sgid!=='') ? fetchCSV(sid, sgid).catch(()=>null) : Promise.resolve(null),
     (tgid!==undefined && tgid!=='') ? fetchCSV(sid, tgid).catch(()=>null) : Promise.resolve(null),
-    (calgid!==undefined && calgid!=='') ? fetchCSV(sid, calgid).catch(()=>null) : Promise.resolve(null),
-    (osid && osgid) ? fetchCSV(osid, osgid).catch(()=>null) : Promise.resolve(null),
-    (osid && wtgid) ? fetchCSV(osid, wtgid).catch(()=>null) : Promise.resolve(null),
+    (calgid!==undefined && calgid!=='') ? fetchCSV(sid, calgid).catch(()=>null) : Promise.resolve(null)
   ]);
 
   // Build round->country map from calendar
@@ -909,9 +897,6 @@ async function loadS20DivContent(id, d, sc){
   }
 
   let divHtml = '';
-
-  if(overallRows || weeklyRows) divHtml += buildS28OverallTotals(id, d, overallRows, weeklyRows);
-
   if(driverRows) divHtml += buildS20Drivers(driverRows, roundNames);
   else divHtml += '<div class="div-loading">No driver data available.</div>';
 
@@ -1242,31 +1227,20 @@ async function loadS28DivContent(id, d, sc){
   const cgid  = sc['d'+d+'_constructors_gid'];
   const sgid  = sc['d'+d+'_driver_stats_gid'];
   const tgid  = sc['d'+d+'_team_stats_gid'];
+  const otgid = sc['overall_totals_gid'] || null;
 
-  // Overall sheet is a separate Google Sheet — URL stored in overall_gid, weekly GID in w_totals_gid
-  // Extract sheet ID from full URL e.g. https://docs.google.com/spreadsheets/d/SHEET_ID/edit?gid=GID
-  const overallUrl = sc['overall_gid'] || null;
-  let osid = null, osgid = null;
-  if(overallUrl){
-    const mId = overallUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
-    const mGid = overallUrl.match(/gid=(\d+)/);
-    if(mId) osid = mId[1];
-    if(mGid) osgid = mGid[1];
-  }
-  const wtgid = sc['w_totals_gid'] || null;
-
-  const [driverRows, constRows, statsRows, teamStatsRows, overallRows, weeklyRows] = await Promise.all([
+  const [driverRows, constRows, statsRows, teamStatsRows, overallTotalsRows] = await Promise.all([
     (sid && dgid!==undefined && dgid!=='') ? fetchCSV(sid, dgid).catch(()=>null) : Promise.resolve(null),
     (cgid!==undefined && cgid!=='') ? fetchCSV(sid, cgid).catch(()=>null) : Promise.resolve(null),
     (sgid!==undefined && sgid!=='') ? fetchCSV(sid, sgid).catch(()=>null) : Promise.resolve(null),
     (tgid!==undefined && tgid!=='') ? fetchCSV(sid, tgid).catch(()=>null) : Promise.resolve(null),
-    (osid && osgid) ? fetchCSV(osid, osgid).catch(()=>null) : Promise.resolve(null),
-    (osid && wtgid) ? fetchCSV(osid, wtgid).catch(()=>null) : Promise.resolve(null),
+    otgid ? fetchCSV(sid, otgid).catch(()=>null) : Promise.resolve(null),
   ]);
 
   let divHtml = '';
 
-  if(overallRows || weeklyRows) divHtml += buildS28OverallTotals(id, d, overallRows, weeklyRows);
+  // Overall totals accordion — placeholder until tab is built
+  if(overallTotalsRows) divHtml += buildS28OverallTotals(id, d, overallTotalsRows);
 
   if(driverRows) divHtml += buildS28Drivers(driverRows);
   else divHtml += '<div class="div-loading">No driver data available.</div>';
@@ -1580,113 +1554,11 @@ function buildS28DriverStats(rows){
   return html;
 }
 
-function buildS28OverallTotals(id, d, overallRows, weeklyRows){
-  let html = '';
-
-  // ── Overall Standings ──────────────────────────────────────────────────────
-  // Sheet structure: row 0 blank, row 1 headers (Pos/Team/Points/Gap), rows 2-12 data
-  if(overallRows && overallRows.length){
-    // Find header row
-    let hdrIdx = -1;
-    for(let i=0;i<overallRows.length;i++){
-      if(overallRows[i].some(v=>(v||'').trim().toLowerCase()==='team')){ hdrIdx=i; break; }
-    }
-    if(hdrIdx>=0){
-      const hdr = overallRows[hdrIdx];
-      const posCol  = hdr.findIndex(v=>(v||'').trim().toLowerCase()==='pos');
-      const teamCol = hdr.findIndex(v=>(v||'').trim().toLowerCase()==='team');
-      const ptsCol  = hdr.findIndex(v=>(v||'').trim().toLowerCase()==='points');
-      const gapCol  = hdr.findIndex(v=>(v||'').trim().toLowerCase()==='gap');
-
-      const data = overallRows.slice(hdrIdx+1).filter(r=>(r[teamCol]||'').trim());
-      if(data.length){
-        // Sort by points descending
-        data.sort((a,b)=>(parseFloat(b[ptsCol])||0)-(parseFloat(a[ptsCol])||0));
-
-        html += '<div class="section-label">Overall Standings</div>';
-        html += '<div class="st-wrap"><table class="st"><thead><tr>';
-        html += '<th style="width:30px">Pos</th><th class="th-l">Team</th><th>Points</th>';
-        if(gapCol>=0) html += '<th>Gap</th>';
-        html += '</tr></thead><tbody>';
-
-        data.forEach((r,i)=>{
-          const pos  = i+1;
-          const team = (r[teamCol]||'').trim();
-          const pts  = Math.floor(parseFloat((r[ptsCol]||'0').trim())||0);
-          const gap  = gapCol>=0 ? Math.floor(parseFloat((r[gapCol]||'0').trim())||0) : null;
-          html += '<tr'+trClass(pos)+'>';
-          html += '<td><span class="st-pos">'+pos+'</span></td>';
-          html += '<td class="td-l"><span class="dname">'+team+'</span></td>';
-          html += '<td><span class="pts">'+pts+'</span></td>';
-          if(gapCol>=0) html += '<td>'+(gap&&gap!==0?gap:'&mdash;')+'</td>';
-          html += '</tr>';
-        });
-        html += '</tbody></table></div>';
-      }
-    }
-  }
-
-  // ── Weekly Totals ──────────────────────────────────────────────────────────
-  // Sheet structure: row 0 = "Weekly Totals" label, row 1 = Round/1/2/.../21,
-  // rows 2-12 = one per team with per-round points
-  if(weeklyRows && weeklyRows.length){
-    // Find header row — has 'Round' in col 0
-    let hdrIdx = -1;
-    for(let i=0;i<weeklyRows.length;i++){
-      if((weeklyRows[i][0]||'').trim().toLowerCase()==='round'){ hdrIdx=i; break; }
-    }
-    if(hdrIdx>=0){
-      const hdr = weeklyRows[hdrIdx];
-      // Round numbers are in cols 1 onwards
-      const roundCols = [];
-      for(let c=1;c<hdr.length;c++){
-        const v = (hdr[c]||'').trim();
-        if(v) roundCols.push({col:c, label:'R'+v});
-      }
-
-      // Trim trailing rounds with no data
-      const dataRows = weeklyRows.slice(hdrIdx+1).filter(r=>(r[0]||'').trim());
-      while(roundCols.length){
-        const col = roundCols[roundCols.length-1].col;
-        const hasData = dataRows.some(r=>(r[col]||'').trim() && (r[col]||'').trim()!=='0');
-        if(hasData) break;
-        roundCols.pop();
-      }
-
-      if(dataRows.length && roundCols.length){
-        // Sort by total points descending
-        dataRows.sort((a,b)=>{
-          const ta = roundCols.reduce((s,rc)=>s+(parseFloat(a[rc.col])||0),0);
-          const tb = roundCols.reduce((s,rc)=>s+(parseFloat(b[rc.col])||0),0);
-          return tb-ta;
-        });
-
-        html += '<div class="section-label">Weekly Totals</div>';
-        html += '<div class="st-wrap"><table class="st"><thead><tr>';
-        html += '<th class="th-l sticky">Team</th>';
-        roundCols.forEach(rc=>{ html += '<th>'+rc.label+'</th>'; });
-        html += '<th>Total</th>';
-        html += '</tr></thead><tbody>';
-
-        dataRows.forEach(r=>{
-          const team = (r[0]||'').trim();
-          const total = roundCols.reduce((s,rc)=>s+(parseFloat(r[rc.col])||0),0);
-          html += '<tr>';
-          html += '<td class="td-l sticky"><span class="dname">'+team+'</span></td>';
-          roundCols.forEach(rc=>{
-            const v = (r[rc.col]||'').trim();
-            const n = parseInt(v)||0;
-            html += '<td>'+(n>0?n:'&mdash;')+'</td>';
-          });
-          html += '<td><span class="pts">'+Math.floor(total)+'</span></td>';
-          html += '</tr>';
-        });
-        html += '</tbody></table></div>';
-      }
-    }
-  }
-
-  return html;
+function buildS28OverallTotals(id, d, rows){
+  // Placeholder — will be replaced when overall_totals tab is built
+  // Will parse overall standings + weekly totals from same tab
+  // following same accordion pattern as past seasons overall_gid
+  return '';
 }
 
 // ============================================================
