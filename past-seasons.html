@@ -60,6 +60,20 @@
   .div-tab{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:6px 14px;border-radius:4px 4px 0 0;border:none;background:rgba(255,255,255,0.05);color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:color 0.2s;}
   .div-tab:hover{color:var(--text);}
   .div-tab.active{color:var(--green);border-bottom-color:var(--green);background:rgba(61,204,71,0.06);}
+  .overall-accordion{margin:16px 24px 0;border:1px solid var(--border2);border-radius:8px;overflow:hidden;}
+  .overall-accordion-header{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;background:var(--dark2);cursor:pointer;user-select:none;transition:background 0.2s;}
+  .overall-accordion-header:hover{background:var(--dark3);}
+  .overall-accordion-title{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;}
+  .overall-accordion-tag{font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--teal);font-weight:600;}
+  .overall-accordion-chevron{font-size:13px;color:var(--text-faint);transition:transform 0.25s;}
+  .overall-accordion-chevron.open{transform:rotate(180deg);}
+  .overall-accordion-body{display:none;background:var(--dark2);}
+  .overall-accordion-body.open{display:block;}
+  .overall-inner-tabs{display:flex;gap:4px;padding:12px 16px 0;border-bottom:1px solid var(--border);}
+  .overall-inner-tab{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:6px 14px;border-radius:4px 4px 0 0;border:none;background:rgba(255,255,255,0.05);color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:color 0.2s;margin-bottom:-1px;}
+  .overall-inner-tab:hover{color:var(--text);}
+  .overall-inner-tab.active{color:var(--teal);border-bottom-color:var(--teal);background:rgba(94,207,207,0.06);}
+  .overall-inner-content{padding:12px 16px 16px;}
   .div-content{padding:16px 24px 4px;}
   .div-content.hidden{display:none;}
   .div-loading{font-size:13px;color:var(--text-faint);padding:12px 0;}
@@ -826,6 +840,143 @@ function buildDriverStats(rows){
 
 
 // ============================================================
+// OVERALL CONSTRUCTORS ACCORDION
+// ============================================================
+function buildOverallConstTable(rows){
+  if(!rows) return '<div class="div-loading">No data available.</div>';
+  let start=-1, teamCol=-1, ptsCol=-1;
+  for(let i=0;i<rows.length;i++){
+    const r=rows[i];
+    const posIdx=r.findIndex(v=>(v||'').trim().toLowerCase()==='pos');
+    if(posIdx>=0){
+      teamCol=r.findIndex(v=>(v||'').trim().toLowerCase()==='team');
+      if(teamCol<0) teamCol=posIdx+1;
+      ptsCol=r.findIndex(v=>(v||'').trim().toLowerCase()==='points');
+      start=i+1; break;
+    }
+  }
+  if(start<0||teamCol<0||ptsCol<0) return '<div class="div-loading">Could not parse data.</div>';
+  const data=[];
+  for(let i=start;i<rows.length;i++){
+    const r=rows[i];
+    let t=(r[teamCol]||'').trim();
+    if(!t) t=(r[teamCol+1]||'').trim();
+    if(!t||t.startsWith('#')) continue;
+    const pts=parseFloat((r[ptsCol]||'').trim())||0;
+    data.push({team:t,pts});
+  }
+  data.sort((a,b)=>b.pts-a.pts);
+  if(!data.length) return '<div class="div-loading">No data found.</div>';
+  let html='<div class="st-wrap"><table class="st"><thead><tr>';
+  html+='<th style="width:30px">Pos</th><th class="th-l">Team</th><th>Points</th>';
+  html+='</tr></thead><tbody>';
+  data.forEach((d,idx)=>{
+    const pos=idx+1;
+    html+='<tr'+trClass(pos)+'><td><span class="st-pos">'+pos+'</span></td>';
+    html+='<td class="td-l"><span class="dname">'+d.team+'</span></td>';
+    html+='<td><span class="pts">'+Math.floor(d.pts)+'</span></td></tr>';
+  });
+  html+='</tbody></table></div>';
+  return html;
+}
+
+function buildWeeklyTotalsTable(rows){
+  if(!rows) return '<div class="div-loading">No data available.</div>';
+  // Find header row with 'Round' in col 0
+  let hdrIdx=-1;
+  for(let i=0;i<rows.length;i++){
+    if((rows[i][0]||'').trim().toLowerCase()==='round'){ hdrIdx=i; break; }
+  }
+  if(hdrIdx<0) return '<div class="div-loading">Could not parse weekly totals.</div>';
+  const hdr=rows[hdrIdx];
+  const roundCols=[];
+  for(let c=1;c<hdr.length;c++){
+    const v=(hdr[c]||'').trim();
+    if(v) roundCols.push({col:c,label:'R'+v});
+  }
+  const dataRows=rows.slice(hdrIdx+1).filter(r=>(r[0]||'').trim());
+  // Trim trailing rounds with no data
+  while(roundCols.length){
+    const col=roundCols[roundCols.length-1].col;
+    const hasData=dataRows.some(r=>(r[col]||'').trim()&&(r[col]||'').trim()!=='0');
+    if(hasData) break;
+    roundCols.pop();
+  }
+  if(!dataRows.length||!roundCols.length) return '<div class="div-loading">No weekly totals data.</div>';
+  // Sort by total descending
+  dataRows.sort((a,b)=>{
+    const ta=roundCols.reduce((s,rc)=>s+(parseFloat(a[rc.col])||0),0);
+    const tb=roundCols.reduce((s,rc)=>s+(parseFloat(b[rc.col])||0),0);
+    return tb-ta;
+  });
+  let html='<div class="st-wrap"><table class="st"><thead><tr>';
+  html+='<th class="th-l sticky">Team</th>';
+  roundCols.forEach(rc=>{ html+='<th>'+rc.label+'</th>'; });
+  html+='<th>Total</th>';
+  html+='</tr></thead><tbody>';
+  dataRows.forEach(r=>{
+    const team=(r[0]||'').trim();
+    const total=roundCols.reduce((s,rc)=>s+(parseFloat(r[rc.col])||0),0);
+    html+='<tr><td class="td-l sticky"><span class="dname">'+team+'</span></td>';
+    roundCols.forEach(rc=>{
+      const n=Math.floor(parseFloat((r[rc.col]||'').trim())||0);
+      html+='<td>'+(n>0?n:'&mdash;')+'</td>';
+    });
+    html+='<td><span class="pts">'+Math.floor(total)+'</span></td>';
+    html+='</tr>';
+  });
+  html+='</tbody></table></div>';
+  return html;
+}
+
+function switchOverallTab(id, tab){
+  document.getElementById(id+'-overall-content').style.display = tab==='overall'?'':'none';
+  const wtEl=document.getElementById(id+'-wtotals-content');
+  if(wtEl) wtEl.style.display = tab==='wtotals'?'':'none';
+  document.querySelectorAll('#'+id+'-overall-accordion .overall-inner-tab').forEach(b=>{
+    b.classList.toggle('active', b.dataset.tab===tab);
+  });
+}
+
+async function toggleOverallAccordion(id, sc){
+  const body=document.getElementById(id+'-overall-body');
+  const chev=document.getElementById(id+'-overall-chev');
+  const isOpen=body.classList.contains('open');
+  if(isOpen){
+    body.classList.remove('open');
+    chev.classList.remove('open');
+    return;
+  }
+  body.classList.add('open');
+  chev.classList.add('open');
+  if(body.dataset.loaded==='true') return;
+  body.dataset.loaded='true';
+
+  const overallUrl=sc['overall_gid'];
+  const wtGid=sc['w_totals_gid'];
+
+  // Extract sheet ID and GID from the full URL
+  const mId=overallUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  const mGid=overallUrl.match(/gid=(\d+)/);
+  const overallSheetId=mId?mId[1]:null;
+  const overallGid=mGid?mGid[1]:null;
+
+  const overallContent=document.getElementById(id+'-overall-content');
+  const wtContent=document.getElementById(id+'-wtotals-content');
+
+  overallContent.innerHTML='<div class="div-loading">Loading...</div>';
+  if(wtContent) wtContent.innerHTML='<div class="div-loading">Loading...</div>';
+
+  const [overallRows, wtRows] = await Promise.all([
+    (overallSheetId&&overallGid) ? fetchCSV(overallSheetId, overallGid).catch(()=>null) : Promise.resolve(null),
+    (overallSheetId&&wtGid&&wtGid!=='') ? fetchCSV(overallSheetId, wtGid).catch(()=>null) : Promise.resolve(null)
+  ]);
+
+  overallContent.innerHTML=buildOverallConstTable(overallRows);
+  if(wtContent) wtContent.innerHTML=buildWeeklyTotalsTable(wtRows);
+}
+
+// ============================================================
 // S20+ PARSER
 // New format: col0=Pos, col1=Nat(#REF), col2=Driver, col3=Team
 // Circuit names in row 0, round labels in row 4 with (s) for sprints
@@ -835,6 +986,33 @@ function buildDriverStats(rows){
 // ============================================================
 async function renderS20plus(id, season, sc, body){
   const divisions = parseInt(sc['divisions'])||1;
+
+  // Overall Constructors accordion
+  const overallGid = sc['overall_gid'];
+  const wtGid = sc['w_totals_gid'];
+  if(overallGid && overallGid.trim()!==''){
+    const hasWt = wtGid && wtGid.trim()!=='';
+    const accordionHtml = `
+    <div class="overall-accordion" id="${id}-overall-accordion">
+      <div class="overall-accordion-header" onclick="toggleOverallAccordion('${id}', _currentSeasonConfig)">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span class="overall-accordion-tag">Season ${season}</span>
+          <span class="overall-accordion-title">Overall Constructors</span>
+        </div>
+        <span class="overall-accordion-chevron" id="${id}-overall-chev">&#9660;</span>
+      </div>
+      <div class="overall-accordion-body" id="${id}-overall-body" data-loaded="false">
+        ${hasWt ? `
+        <div class="overall-inner-tabs">
+          <button class="overall-inner-tab active" data-tab="overall" onclick="switchOverallTab('${id}','overall')">Overall</button>
+          <button class="overall-inner-tab" data-tab="wtotals" onclick="switchOverallTab('${id}','wtotals')">Weekly Totals</button>
+        </div>` : ''}
+        <div class="overall-inner-content" id="${id}-overall-content"></div>
+        ${hasWt ? `<div class="overall-inner-content" id="${id}-wtotals-content" style="display:none"></div>` : ''}
+      </div>
+    </div>`;
+    body.insertAdjacentHTML('beforeend', accordionHtml);
+  }
 
   // Build tabs
   let tabsHtml = '<div class="div-tabs">';
