@@ -1039,7 +1039,7 @@ async function renderS20plus(id, season, sc, body){
     }
   }
 
-  body.innerHTML = tabsHtml + contentHtml;
+  body.insertAdjacentHTML('beforeend', tabsHtml + contentHtml);
   await loadS20DivContent(id, 1, sc);
 }
 
