@@ -296,28 +296,33 @@ function parseS28DataTab(rows, divNum) {
     else if (tier.toLowerCase().includes('2')) teams[team].tier2 = driver;
   }
 
-  // Parse reserve drivers from col 15 (rows dataStart+)
-  // Header row has "Driver " in col 15 — skip it
-  let resColStart = -1;
-  for (let i = 0; i < Math.min(3, rows.length); i++) {
-    if ((rows[i][15] || '').trim().toLowerCase().includes('driver')) { resColStart = i + 1; break; }
-  }
-  if (resColStart >= 0) {
-    for (let i = resColStart; i < rows.length; i++) {
-      const v = (rows[i][15] || '').trim();
-      if (v && !v.toLowerCase().includes('driver') && !v.toLowerCase().includes('reserve')) reserves.push(v);
+  // Parse reserve drivers from col 15 — header in row 1, data rows 2+
+  for (let i = 2; i < rows.length; i++) {
+    const v = (rows[i][15] || '').trim();
+    if (v && !['driver','reserve','retired','platform','controller type','tier'].includes(v.toLowerCase())) {
+      reserves.push(v);
     }
   }
 
-  // Parse retired drivers from col 19
-  let retColStart = -1;
-  for (let i = 0; i < Math.min(3, rows.length); i++) {
-    if ((rows[i][19] || '').trim().toLowerCase().includes('driver')) { retColStart = i + 1; break; }
+  // Parse retired drivers from col 19 — header in row 1, data rows 2+
+  for (let i = 2; i < rows.length; i++) {
+    const v = (rows[i][19] || '').trim();
+    if (v && !['driver','reserve','retired'].includes(v.toLowerCase())) {
+      retired.push(v);
+    }
   }
-  if (retColStart >= 0) {
-    for (let i = retColStart; i < rows.length; i++) {
-      const v = (rows[i][19] || '').trim();
-      if (v && !v.toLowerCase().includes('driver') && !v.toLowerCase().includes('retired')) retired.push(v);
+
+  // Parse reserve teams from constructors section (col 21) — "Reserve" entry
+  const resteams = [];
+  let consStart = -1;
+  for (let i = 0; i < rows.length; i++) {
+    if ((rows[i][21] || '').trim().toLowerCase() === 'short name') { consStart = i + 1; break; }
+  }
+  if (consStart >= 0) {
+    for (let i = consStart; i < rows.length; i++) {
+      const name = (rows[i][21] || '').trim();
+      if (!name) continue;
+      if (name.toLowerCase() === 'reserve') resteams.push('Reserve');
     }
   }
 
@@ -337,7 +342,7 @@ function parseS28DataTab(rows, divNum) {
     }
   }
 
-  return { teams: Object.values(teams), reserves: reserves.filter(Boolean), retired: retired.filter(Boolean) };
+  return { teams: Object.values(teams), resteams, reserves: reserves.filter(Boolean), retired: retired.filter(Boolean) };
 }
 
 function renderS28Card(t) {
@@ -380,6 +385,7 @@ function renderS28Season(divDataArr, seasonNum) {
   });
 
   const allTeams = Object.values(teamMap).sort((a, b) => a.name.localeCompare(b.name));
+  const allResteams = [...new Set(divDataArr.flatMap(d => d.resteams || []))].filter(Boolean);
   const allReserves = [...new Set(divDataArr.flatMap(d => d.reserves))].filter(Boolean);
   const allRetired = [...new Set(divDataArr.flatMap(d => d.retired))].filter(Boolean);
 
@@ -411,11 +417,18 @@ function renderS28Season(divDataArr, seasonNum) {
 
   html += '</div>';
 
-  if (allReserves.length) {
+  if (allResteams.length || allReserves.length) {
     html += '<div class="section-divider"></div><div class="section-label">Reserves</div>';
-    html += '<div style="padding:0 24px 20px;display:flex;flex-wrap:wrap;gap:6px;">';
-    allReserves.forEach(d => { html += `<div class="retired-pill" style="color:var(--text-muted);">${d}</div>`; });
-    html += '</div>';
+    if (allResteams.length) {
+      html += '<div style="padding:0 24px 8px;display:flex;gap:8px;flex-wrap:wrap;">';
+      allResteams.forEach(t => { html += `<div style="background:var(--dark);border:1px solid var(--border);border-left:3px solid ${getColor(t)};border-radius:4px;padding:5px 12px;font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);">${t}</div>`; });
+      html += '</div>';
+    }
+    if (allReserves.length) {
+      html += '<div style="padding:0 24px 20px;display:flex;flex-wrap:wrap;gap:6px;">';
+      allReserves.forEach(d => { html += `<div class="retired-pill" style="color:var(--text-muted);">${d}</div>`; });
+      html += '</div>';
+    }
   }
   if (allRetired.length) {
     html += '<div class="section-divider"></div><div class="section-label">Retired</div><div class="retired-list">';
