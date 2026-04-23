@@ -454,7 +454,8 @@ async function loadASR() {
       const hasAnyData = champ || constr || track;
       const clickable  = hasData && sheetId && resultsGid;
 
-      html += `<div class="asr-card${clickable?' has-data':''}" id="asr-card-${idx}"${clickable?` onclick="openDetail('${season}','${sheetId}','${tableGid}','${consGid}','${resultsGid}','${track}')"`:''}">
+      const onclickAttr = clickable ? ` onclick="openDetail('${season}','${sheetId}','${tableGid}','${consGid}','${resultsGid}','${track}')"` : '';
+      html += `<div class="asr-card${clickable?' has-data':''}" id="asr-card-${idx}"${onclickAttr}>
         <div class="asr-card-header">
           <span class="asr-card-season">S${season}</span>
           ${track?`<span class="asr-card-track">${track}</span>`:'<span class="asr-card-track" style="color:var(--text-faint)">TBC</span>'}
