@@ -293,18 +293,17 @@ function parseS28DataTab(rows, divNum) {
     else if (tier.toLowerCase().includes('2')) teams[team].tier2 = driver;
   }
 
-  // Parse Team Principals — find "Team Principal" label in col I (8)
+  // Parse Team Principals — find "Team Principal" label in col J (9)
   let tpStart = -1;
   for (let i = 0; i < rows.length; i++) {
-    if ((rows[i][8] || '').trim().toLowerCase() === 'team principal') { tpStart = i + 2; break; }
+    if ((rows[i][9] || '').trim().toLowerCase() === 'team principal') { tpStart = i + 2; break; }
   }
   if (tpStart >= 0) {
     for (let i = tpStart; i < rows.length; i++) {
-      const name = (rows[i][8] || '').trim();
-      const team = (rows[i][9] || '').trim();
+      const name = (rows[i][9] || '').trim();
+      const team = (rows[i][10] || '').trim();
       if (!name || !team) continue;
       if (['reserve','name','team','driver'].includes(name.toLowerCase())) continue;
-      // Match to team (case-insensitive)
       const match = Object.keys(teams).find(t => t.toLowerCase() === team.toLowerCase());
       if (match) teams[match].tp = name;
     }
