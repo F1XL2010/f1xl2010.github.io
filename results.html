@@ -279,20 +279,20 @@ function extractSection(rows, label, isRace){
       results.push({
         pos:rawPos, num:g(row,colOffset+2), driver,
         team:g(row,colOffset+4),
-        stops:g(row,colOffset+6), gap:g(row,colOffset+7),
-        pts:g(row,colOffset+8), fl:g(row,colOffset+10),
-        pen:g(row,colOffset+12)
+        stops:g(row,colOffset+5), gap:g(row,colOffset+6),
+        pts:String(Math.floor(parseFloat(g(row,colOffset+7))||0)||''), fl:g(row,colOffset+9),
+        pen:g(row,colOffset+11)
       });
     } else {
       // Quali: team=col4, time=col6, tyre=col7, tyre2=col8, pen=col10
-      const tyre = g(row,colOffset+7);
-      const tyre2 = g(row,colOffset+8);
+      const tyre = g(row,colOffset+6);
+      const tyre2 = g(row,colOffset+6);
       results.push({
         pos:rawPos, num:g(row,colOffset+2), driver,
         team:g(row,colOffset+4),
-        time:g(row,colOffset+6),
+        time:g(row,colOffset+5),
         tyre: tyre2 && tyre2!==tyre ? tyre+'/'+tyre2 : tyre,
-        pen:g(row,colOffset+10)
+        pen:g(row,colOffset+8)
       });
     }
   }
