@@ -122,6 +122,12 @@ async function getCurrentSeasonConfig() {
   return await loadSeasonConfig(season);
 }
 
+// Get a global config value (ticket outcomes, track records, drivers licence etc.)
+async function getConfigValue(key) {
+  const config = await loadConfig();
+  return config[key.toLowerCase()] || null;
+}
+
 // Get race GIDs array for a season/division (returns array of gid|null per round)
 function getRaceGIDs(seasonConfig, division) {
   const d = 'd' + division;
