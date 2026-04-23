@@ -336,7 +336,16 @@ function parseS28DataTab(rows, divNum) {
       const name = (rows[i][9] || '').trim();
       const team = (rows[i][10] || '').trim();
       if (!name || !team) continue;
-      if (['reserve','name','team','driver'].includes(name.toLowerCase())) continue;
+      if (['name','team','driver'].includes(name.toLowerCase())) continue;
+      // If TP is marked "reserve", add team to resteams and remove from full cards
+      if (name.toLowerCase() === 'reserve') {
+        const match = Object.keys(teams).find(t => t.toLowerCase() === team.toLowerCase());
+        if (match) {
+          resteams.push(teams[match].name);
+          delete teams[match];
+        }
+        continue;
+      }
       const match = Object.keys(teams).find(t => t.toLowerCase() === team.toLowerCase());
       if (match) teams[match].tp = name;
     }
