@@ -352,11 +352,15 @@ async function loadASRTeams() {
     });
 
     let html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;">';
+    // Normalise team name lookup (case-insensitive)
+    const teamDriversLower = {};
+    Object.keys(teamDrivers).forEach(k => { teamDriversLower[k.toLowerCase()] = teamDrivers[k]; });
+
     consData.forEach((row,i) => {
       const team = g(row,3); const pts = Math.floor(parseFloat(g(row,4))||0);
       const pos = i+1; const color = getColor(team);
       const pc = posClass(String(pos));
-      const drivers = teamDrivers[team] || [];
+      const drivers = teamDriversLower[team.toLowerCase()] || [];
       html += `<div style="background:var(--dark2);border:1px solid var(--border);border-radius:8px;overflow:hidden;">
         <div style="padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;">
           <span class="res-pos ${pc}" style="font-size:18px;">${pos}</span>
