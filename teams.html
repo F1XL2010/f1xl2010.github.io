@@ -303,7 +303,7 @@ function parseS28DataTab(rows, divNum) {
       const name = (rows[i][8] || '').trim();
       const team = (rows[i][9] || '').trim();
       if (!name || !team) continue;
-      if (name.toLowerCase() === 'reserve') continue;
+      if (['reserve','name','team','driver'].includes(name.toLowerCase())) continue;
       // Match to team (case-insensitive)
       const match = Object.keys(teams).find(t => t.toLowerCase() === team.toLowerCase());
       if (match) teams[match].tp = name;
