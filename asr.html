@@ -252,13 +252,11 @@ function parseCSV(text) {
     const c=text[i];
     if(c==='"'){inQ=!inQ;}
     else if(c===','&&!inQ){cells.push(cur.trim());cur='';}
-    else if((c==='
-'||c==='')&&!inQ){
+    else if((c==='\n'||c==='\r')&&!inQ){
       cells.push(cur.trim());
       if(cells.some(v=>v)){rows.push(cells);}
       cells=[];cur='';
-      if(c===''&&text[i+1]==='
-')i++;
+      if(c==='\r'&&text[i+1]==='\n')i++;
     } else cur+=c;
   }
   cells.push(cur.trim());
