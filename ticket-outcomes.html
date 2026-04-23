@@ -405,9 +405,8 @@ function renderTickets() {
     byRace[race].push(row);
   });
 
-  // Reverse so most recent race appears first, and tickets within each race newest first
+  // Reverse so most recent race appears first; tickets within each race stay in order (lowest number first)
   raceOrder.reverse();
-  Object.keys(byRace).forEach(race => byRace[race].reverse());
 
   let html = '';
   raceOrder.forEach((race, rIdx) => {
