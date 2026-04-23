@@ -422,7 +422,7 @@ async function init(){
     const allNums = [...new Set([...newSeasons, ...pastNums])].sort((a,b)=>parseFloat(b)-parseFloat(a));
 
     if(!allNums.length){document.getElementById('teams-content').innerHTML='<div class="loading-msg">No data found.</div>';return;}
-    document.getElementById('season-bar').innerHTML=allNums.map(s=>'<button class="s-btn" onclick="showSeason(''+s+'')" id="sbtn-'+s.replace('.','_')+'">S'+s+'</button>').join('');
+    document.getElementById('season-bar').innerHTML=allNums.map(s=>`<button class="s-btn" onclick="showSeason('${s}')" id="sbtn-${s.replace('.','_')}">S${s}</button>`).join('');
     showSeason(allNums[0]);
     document.getElementById('page-meta').textContent=allNums.length+' seasons';
   }catch(e){
