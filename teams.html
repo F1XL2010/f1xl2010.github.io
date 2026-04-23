@@ -266,34 +266,62 @@ function renderSeason(data,num){
 let allData={};
 // ── S28+ DATA TAB PARSER ─────────────────────────────────────────────────────
 function parseS28DataTab(rows, divNum) {
-  // Cols A-G (0-6): Driver, Nationality, Abbreviation, Team, Tier, Platform, Controller
-  // Team Principal section: "Team Principal" label in col I (8), name=col I, team=col J from next rows
+  // Col layout (0-based):
+  // A(0)=Driver, B(1)=Nationality, C(2)=Abbreviation, D(3)=Team, E(4)=Tier
+  // Row 0 = "DRIVERS" header label, Row 1 = column headers, Rows 2+ = data
+  // Reserve drivers: col 15 (header in row 1 = "Driver ")
+  // Retired drivers: col 19 (header in row 1 = "Driver")
+  // Team Principal: label "Team Principal" in col 9, data in col 9 (name) + col 10 (team)
+
   const teams = {};
   const reserves = [];
   const retired = [];
 
-  // Parse drivers from cols A-G
-  for (let i = 1; i < rows.length; i++) {
-    const row = rows[i];
-    const driver = (row[0] || '').trim();
-    const team = (row[3] || '').trim();
-    const tier = (row[4] || '').trim();
-    if (!driver || !team) continue;
-    if (team.toLowerCase() === 'reserve') {
-      if (driver && !driver.startsWith('#')) reserves.push(driver);
-      continue;
-    }
-    if (team.toLowerCase() === 'retired') {
-      if (driver && !driver.startsWith('#')) retired.push(driver);
-      continue;
-    }
-    if (driver.startsWith('#')) continue;
+  // Find data start — row after the "Driver/Nationality/..." header row
+  let dataStart = -1;
+  for (let i = 0; i < rows.length; i++) {
+    if ((rows[i][0] || '').trim().toLowerCase() === 'driver') { dataStart = i + 1; break; }
+  }
+  if (dataStart < 0) dataStart = 2;
+
+  // Parse active drivers from cols A-E (stop at first blank driver name)
+  for (let i = dataStart; i < rows.length; i++) {
+    const driver = (rows[i][0] || '').trim();
+    const team = (rows[i][3] || '').trim();
+    const tier = (rows[i][4] || '').trim();
+    if (!driver || driver.startsWith('#')) continue;
+    if (!team || team.toLowerCase() === 'reserve' || team.toLowerCase() === 'retired') continue;
     if (!teams[team]) teams[team] = { name: team, tp: '', tier1: '', tier2: '', div: divNum };
     if (tier.toLowerCase().includes('1')) teams[team].tier1 = driver;
     else if (tier.toLowerCase().includes('2')) teams[team].tier2 = driver;
   }
 
-  // Parse Team Principals — find "Team Principal" label in col J (9)
+  // Parse reserve drivers from col 15 (rows dataStart+)
+  // Header row has "Driver " in col 15 — skip it
+  let resColStart = -1;
+  for (let i = 0; i < Math.min(3, rows.length); i++) {
+    if ((rows[i][15] || '').trim().toLowerCase().includes('driver')) { resColStart = i + 1; break; }
+  }
+  if (resColStart >= 0) {
+    for (let i = resColStart; i < rows.length; i++) {
+      const v = (rows[i][15] || '').trim();
+      if (v && !v.toLowerCase().includes('driver') && !v.toLowerCase().includes('reserve')) reserves.push(v);
+    }
+  }
+
+  // Parse retired drivers from col 19
+  let retColStart = -1;
+  for (let i = 0; i < Math.min(3, rows.length); i++) {
+    if ((rows[i][19] || '').trim().toLowerCase().includes('driver')) { retColStart = i + 1; break; }
+  }
+  if (retColStart >= 0) {
+    for (let i = retColStart; i < rows.length; i++) {
+      const v = (rows[i][19] || '').trim();
+      if (v && !v.toLowerCase().includes('driver') && !v.toLowerCase().includes('retired')) retired.push(v);
+    }
+  }
+
+  // Parse Team Principals — find "Team Principal" label in col 9
   let tpStart = -1;
   for (let i = 0; i < rows.length; i++) {
     if ((rows[i][9] || '').trim().toLowerCase() === 'team principal') { tpStart = i + 2; break; }
@@ -309,7 +337,7 @@ function parseS28DataTab(rows, divNum) {
     }
   }
 
-  return { teams: Object.values(teams), reserves, retired };
+  return { teams: Object.values(teams), reserves: reserves.filter(Boolean), retired: retired.filter(Boolean) };
 }
 
 function renderS28Card(t) {
