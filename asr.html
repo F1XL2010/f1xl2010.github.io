@@ -95,6 +95,11 @@
   .res-time{font-size:11px;color:var(--text-muted);}
   .res-tyre{font-size:10px;background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:2px;color:var(--text-muted);}
 
+  /* ASR TABS */
+  .asr-tab{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:12px 20px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);cursor:pointer;transition:color 0.2s;margin-bottom:-1px;}
+  .asr-tab:hover{color:var(--text);}
+  .asr-tab.active{color:var(--text);border-bottom-color:var(--green);}
+
   /* LOADING */
   .loading-msg{text-align:center;padding:32px;color:var(--text-muted);font-size:13px;}
 
@@ -188,18 +193,28 @@
   The F1XL All Star Race brings together the top performers from every division at the end of each season. Teams are specially selected and differ from the main season, with a unique points system: 20 points for the winner down to 1 point for 20th. Tracks are chosen at random.
 </div>
 
-<div id="results-panel" class="results-panel">
-  <div class="results-panel-header">
-    <div class="results-panel-title" id="results-panel-title">Results</div>
-    <button class="results-panel-close" onclick="closeResults()">✕ Close</button>
+<div id="asr-detail" style="display:none;">
+  <div style="background:var(--dark2);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;">
+    <div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--teal);margin-bottom:3px;">All Star Race</div>
+      <div class="results-panel-title" id="asr-detail-title">S26 · Las Vegas</div>
+    </div>
+    <button class="results-panel-close" onclick="closeDetail()">← Back to all seasons</button>
   </div>
-  <div class="results-panel-body" id="results-panel-body">
-    <div class="loading-msg">Loading results...</div>
+  <div style="background:var(--dark2);border-bottom:1px solid var(--border);display:flex;gap:0;padding:0 24px;">
+    <button class="asr-tab active" id="asr-tab-results" onclick="switchASRTab('results')">Results</button>
+    <button class="asr-tab" id="asr-tab-constructors" onclick="switchASRTab('constructors')">Constructors</button>
+    <button class="asr-tab" id="asr-tab-qualifying" onclick="switchASRTab('qualifying')">Qualifying</button>
   </div>
+  <div id="asr-panel-results" class="asr-panel" style="padding:20px 24px;"><div class="loading-msg">Loading...</div></div>
+  <div id="asr-panel-constructors" class="asr-panel" style="display:none;padding:20px 24px;"><div class="loading-msg">Loading...</div></div>
+  <div id="asr-panel-qualifying" class="asr-panel" style="display:none;padding:20px 24px;"><div class="loading-msg">Loading...</div></div>
 </div>
 
-<div class="season-grid" id="season-grid">
-  <div class="loading-msg" style="grid-column:1/-1">Loading...</div>
+<div id="season-grid-wrap">
+  <div class="season-grid" id="season-grid">
+    <div class="loading-msg" style="grid-column:1/-1">Loading...</div>
+  </div>
 </div>
 
 <footer>
@@ -215,33 +230,204 @@
 
 const ASR_CONFIG_SHEET_ID = '1ThIh7aKlGOuv83v9IJVSGpuspZLl0c9ajE0GJBpuCtk';
 const ASR_CONFIG_GID = '925717407';
-
 const ASR_POINTS = [20,15,12,10,8,6,5,4,3,2,1,0,0,0,0,0,0,0,0,0];
 
 const teamColors = {
-  'Alpine':'#0090FF','Aston Martin':'#006F62','Ferrari':'#DC0000',
-  'Haas':'#B6BABD','Mclaren':'#FF8700','McLaren':'#FF8700','MCLAREN':'#FF8700',
-  'Mercedes':'#00D2BE','MERCEDES':'#00D2BE','RB':'#1434CB','Red Bull':'#0600EF',
-  'RED BULL':'#0600EF','Sauber':'#900000','Williams':'#005AFF',
-  'Alpha Tauri':'#1434CB','ALPHA TAURI':'#1434CB','Lotus':'#FFB800',
-  'Manor':'#FF0000','Aston Martin':'#006F62','ASTON MARTIN':'#006F62',
-  'Reserve':'#555'
+  'alpine':'#0090FF','aston martin':'#006F62','ferrari':'#DC0000','haas':'#B6BABD',
+  'mclaren':'#FF8700','mercedes':'#00D2BE','rb':'#1434CB','red bull':'#0600EF',
+  'sauber':'#900000','williams':'#005AFF','alpha tauri':'#1434CB','alfa romeo':'#900000',
+  'force india':'#FF80C7','toro rosso':'#1434CB','renault':'#FFD700','lotus':'#FFB800',
+  'manor':'#FF0000'
 };
 
 function getColor(team) {
-  return teamColors[team] || teamColors[Object.keys(teamColors).find(k=>k.toLowerCase()===team?.toLowerCase())||''] || '#555';
+  return teamColors[(team||'').toLowerCase()] || teamColors[Object.keys(teamColors).find(k=>k.toLowerCase()===(team||'').toLowerCase())||''] || '#555';
+}
+function posClass(p) { const n=parseInt(p); return n===1?'p1':n===2?'p2':n===3?'p3':''; }
+function toggleMenu() { document.getElementById('hamburger').classList.toggle('open'); document.getElementById('mobile-menu').classList.toggle('open'); }
+
+function parseCSV(text) {
+  const rows=[]; let cells=[],cur='',inQ=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(c==='"'){inQ=!inQ;}
+    else if(c===','&&!inQ){cells.push(cur.trim());cur='';}
+    else if((c==='
+'||c==='')&&!inQ){
+      cells.push(cur.trim());
+      if(cells.some(v=>v)){rows.push(cells);}
+      cells=[];cur='';
+      if(c===''&&text[i+1]==='
+')i++;
+    } else cur+=c;
+  }
+  cells.push(cur.trim());
+  if(cells.some(v=>v))rows.push(cells);
+  return rows;
 }
 
-function posClass(p) {
-  const n = parseInt(p);
-  return n===1?'p1':n===2?'p2':n===3?'p3':'';
+function g(row,col){return((row&&row[col])||'').trim();}
+
+// ── DETAIL VIEW ───────────────────────────────────────────────────────────────
+let _currentASR = null;
+let _asrLoaded = {};
+
+function switchASRTab(tab) {
+  ['results','constructors','qualifying'].forEach(t => {
+    document.getElementById('asr-tab-'+t).classList.toggle('active', t===tab);
+    document.getElementById('asr-panel-'+t).style.display = t===tab ? '' : 'none';
+  });
+  if (!_asrLoaded[tab] && _currentASR) {
+    _asrLoaded[tab] = true;
+    if (tab==='results') loadASRResults();
+    if (tab==='constructors') loadASRConstructors();
+    if (tab==='qualifying') loadASRQualifying();
+  }
 }
 
-function toggleMenu() {
-  document.getElementById('hamburger').classList.toggle('open');
-  document.getElementById('mobile-menu').classList.toggle('open');
+async function openDetail(season, sheetId, tableGid, constructorsGid, resultsGid, track) {
+  _currentASR = {season, sheetId, tableGid, constructorsGid, resultsGid, track};
+  _asrLoaded = {};
+
+  document.getElementById('asr-detail-title').textContent = `S${season} · ${track}`;
+  document.getElementById('season-grid-wrap').style.display = 'none';
+  document.getElementById('asr-detail').style.display = '';
+
+  // Reset tabs
+  ['results','constructors','qualifying'].forEach(t => {
+    document.getElementById('asr-tab-'+t).classList.toggle('active', t==='results');
+    document.getElementById('asr-panel-'+t).style.display = t==='results' ? '' : 'none';
+    document.getElementById('asr-panel-'+t).innerHTML = '<div class="loading-msg">Loading...</div>';
+  });
+
+  _asrLoaded['results'] = true;
+  await loadASRResults();
+  window.scrollTo({top:0, behavior:'smooth'});
 }
 
+function closeDetail() {
+  document.getElementById('asr-detail').style.display = 'none';
+  document.getElementById('season-grid-wrap').style.display = '';
+  _currentASR = null;
+}
+
+async function fetchTab(sheetId, gid) {
+  const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const text = await res.text();
+  if (text.includes('<!DOCTYPE')) throw new Error('Sheet not published');
+  return parseCSV(text);
+}
+
+async function loadASRResults() {
+  const el = document.getElementById('asr-panel-results');
+  try {
+    const rows = await fetchTab(_currentASR.sheetId, _currentASR.resultsGid);
+    // Find header row — has "Pos" in col 1
+    let hIdx = -1;
+    for (let i=0;i<rows.length;i++) { if(g(rows[i],1).toLowerCase()==='pos'){hIdx=i;break;} }
+    if (hIdx<0) { el.innerHTML='<div class="loading-msg">Could not parse results.</div>'; return; }
+
+    const data = rows.slice(hIdx+1).filter(r => g(r,3));
+    let html = '<div class="res-section-label">Race Results</div>';
+    html += '<table class="res-table"><thead><tr><th>Pos</th><th>Driver</th><th>Team</th><th style="text-align:right">Pts</th><th>Stops</th><th>Gap</th></tr></thead><tbody>';
+    data.forEach(row => {
+      const pos = g(row,1); const driver = g(row,3); const team = g(row,5);
+      const pts = Math.floor(parseFloat(g(row,6))||0);
+      const stops = g(row,7); const gap = g(row,8);
+      const color = getColor(team);
+      html += `<tr>
+        <td><span class="res-pos ${posClass(pos)}">${pos||'—'}</span></td>
+        <td><span class="res-driver">${driver}</span></td>
+        <td><div style="display:flex;align-items:center;gap:6px;"><div style="width:3px;height:14px;background:${color};border-radius:1px;flex-shrink:0;"></div><span class="res-team">${team}</span></div></td>
+        <td class="res-pts">${pts||'—'}</td>
+        <td class="res-time">${stops||'—'}</td>
+        <td class="res-time">${gap||'—'}</td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = `<div class="loading-msg">Could not load results: ${e.message}</div>`;
+  }
+}
+
+async function loadASRConstructors() {
+  const el = document.getElementById('asr-panel-constructors');
+  try {
+    const rows = await fetchTab(_currentASR.sheetId, _currentASR.constructorsGid);
+    // Header at row 1 (0-indexed), data from row 2. Cols: 1=Pos, 3=Team, 4=Points, 5=Gap
+    let hIdx = -1;
+    for (let i=0;i<rows.length;i++) { if(g(rows[i],1).toLowerCase()==='pos'){hIdx=i;break;} }
+    if (hIdx<0) { el.innerHTML='<div class="loading-msg">Could not parse constructors.</div>'; return; }
+
+    const data = rows.slice(hIdx+1).filter(r => g(r,3));
+    let html = '<div class="res-section-label">Constructors</div>';
+    html += '<table class="res-table"><thead><tr><th>Pos</th><th>Team</th><th style="text-align:right">Pts</th><th>Gap</th></tr></thead><tbody>';
+    data.sort((a,b) => (parseFloat(g(b,4))||0)-(parseFloat(g(a,4))||0));
+    data.forEach((row,i) => {
+      const pos = i+1; const team = g(row,3);
+      const pts = Math.floor(parseFloat(g(row,4))||0);
+      const gap = g(row,5);
+      const color = getColor(team);
+      const pc = posClass(String(pos));
+      html += `<tr>
+        <td><span class="res-pos ${pc}">${pos}</span></td>
+        <td><div style="display:flex;align-items:center;gap:6px;"><div style="width:3px;height:14px;background:${color};border-radius:1px;flex-shrink:0;"></div><span class="res-driver">${team}</span></div></td>
+        <td class="res-pts">${pts||'—'}</td>
+        <td class="res-time">${gap||'—'}</td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = `<div class="loading-msg">Could not load constructors: ${e.message}</div>`;
+  }
+}
+
+async function loadASRQualifying() {
+  const el = document.getElementById('asr-panel-qualifying');
+  try {
+    const rows = await fetchTab(_currentASR.sheetId, _currentASR.tableGid);
+    // Input Sheet: header row has "Pos","Nat","#","Driver" at row 4 (0-indexed)
+    // Two qualifying groups side by side
+    // Group 1: cols 0-6, Group 2: cols 8-14
+    let hIdx = -1;
+    for (let i=0;i<rows.length;i++) {
+      if(g(rows[i],0).toLowerCase()==='pos'&&g(rows[i],3).toLowerCase().includes('driver')){hIdx=i;break;}
+    }
+    if (hIdx<0) { el.innerHTML='<div class="loading-msg">Could not parse qualifying.</div>'; return; }
+
+    const data = rows.slice(hIdx+1).filter(r => g(r,3)||g(r,11));
+
+    // Build two groups
+    const g1 = data.filter(r=>g(r,3)).map(r=>({pos:g(r,0),driver:g(r,3),team:g(r,4),time:g(r,6)}));
+    const g2 = data.filter(r=>g(r,11)).map(r=>({pos:g(r,8),driver:g(r,11),team:g(r,12),time:g(r,13)}));
+
+    function qTable(title, rows) {
+      if (!rows.length) return '';
+      let html = `<div class="res-section-label">${title}</div>`;
+      html += '<table class="res-table"><thead><tr><th>Pos</th><th>Driver</th><th>Team</th><th>Time</th></tr></thead><tbody>';
+      rows.forEach(r => {
+        const color = getColor(r.team);
+        html += `<tr>
+          <td><span class="res-pos ${posClass(r.pos)}">${r.pos||'—'}</span></td>
+          <td><span class="res-driver">${r.driver}</span></td>
+          <td><div style="display:flex;align-items:center;gap:6px;"><div style="width:3px;height:14px;background:${color};border-radius:1px;flex-shrink:0;"></div><span class="res-team">${r.team}</span></div></td>
+          <td class="res-time">${r.time||'—'}</td>
+        </tr>`;
+      });
+      return html + '</tbody></table>';
+    }
+
+    el.innerHTML = qTable('Qualifying Group 1', g1) + qTable('Qualifying Group 2', g2);
+  } catch(e) {
+    el.innerHTML = `<div class="loading-msg">Could not load qualifying: ${e.message}</div>`;
+  }
+}
+
+// ── SEASON GRID ───────────────────────────────────────────────────────────────
 async function loadASR() {
   const grid = document.getElementById('season-grid');
   try {
@@ -250,26 +436,27 @@ async function loadASR() {
     const rows = parseCSV(text);
     if (!rows.length) { grid.innerHTML = '<div class="loading-msg">No data available</div>'; return; }
 
-    // Skip header row
     const seasons = rows.slice(1).filter(r => r[0] && r[0].trim());
 
     let html = '';
     seasons.forEach((row, idx) => {
-      const season  = (row[0]||'').trim();
-      const sheetId = (row[1]||'').trim();
-      const raceGid = (row[2]||'').trim();
-      const hasData = (row[3]||'').trim().toLowerCase() === 'yes';
-      const track   = (row[4]||'').trim();
-      const champ   = (row[5]||'').trim();
-      const champTeam = (row[6]||'').trim();
-      const constr  = (row[7]||'').trim();
-      const driver1 = (row[8]||'').trim();
-      const driver2 = (row[9]||'').trim();
+      const season     = g(row,0);
+      const sheetId    = g(row,1);
+      const tableGid   = g(row,2);
+      const consGid    = g(row,3);
+      const resultsGid = g(row,4);
+      const hasData    = g(row,5).toLowerCase() === 'yes';
+      const track      = g(row,6);
+      const champ      = g(row,7);
+      const champTeam  = g(row,8);
+      const constr     = g(row,9);
+      const driver1    = g(row,10);
+      const driver2    = g(row,11);
 
       const hasAnyData = champ || constr || track;
-      const cardId = `asr-card-${idx}`;
+      const clickable  = hasData && sheetId && resultsGid;
 
-      html += `<div class="asr-card${hasData?' has-data':''}" id="${cardId}"${hasData?` onclick="openResults('${season}','${sheetId}','${raceGid}','${track}')"`:''}">
+      html += `<div class="asr-card${clickable?' has-data':''}" id="asr-card-${idx}"${clickable?` onclick="openDetail('${season}','${sheetId}','${tableGid}','${consGid}','${resultsGid}','${track}')"`:''}">
         <div class="asr-card-header">
           <span class="asr-card-season">S${season}</span>
           ${track?`<span class="asr-card-track">${track}</span>`:'<span class="asr-card-track" style="color:var(--text-faint)">TBC</span>'}
@@ -281,11 +468,9 @@ async function loadASR() {
         html += `<div class="asr-card-lbl">Champion</div>
           <div class="asr-card-winner">${champ}</div>
           <div class="asr-card-team" style="display:flex;align-items:center;gap:6px;">
-            <div style="width:3px;height:12px;background:${color};border-radius:1px;flex-shrink:0;"></div>
-            ${champTeam}
+            <div style="width:3px;height:12px;background:${color};border-radius:1px;flex-shrink:0;"></div>${champTeam}
           </div>`;
       }
-
       if (constr) {
         html += `<div class="asr-card-lbl" style="margin-top:${champ?'10px':'0'}">Constructors</div>
           <div class="asr-card-con">
@@ -296,15 +481,8 @@ async function loadASR() {
             </div>
           </div>`;
       }
-
-      if (!hasAnyData) {
-        html += `<div class="asr-card-no-data">No data recorded</div>`;
-      }
-
-      if (hasData) {
-        html += `<div class="asr-card-results-link">View full results →</div>`;
-      }
-
+      if (!hasAnyData) html += `<div class="asr-card-no-data">No data recorded</div>`;
+      if (clickable) html += `<div class="asr-card-results-link">View full results →</div>`;
       html += `</div></div>`;
     });
 
@@ -313,189 +491,6 @@ async function loadASR() {
     grid.innerHTML = `<div class="loading-msg">Could not load data: ${e.message}</div>`;
     console.error(e);
   }
-}
-
-async function openResults(season, sheetId, raceGid, track) {
-  const panel = document.getElementById('results-panel');
-  const body = document.getElementById('results-panel-body');
-  const title = document.getElementById('results-panel-title');
-
-  title.textContent = `S${season} All Star Race · ${track}`;
-  body.innerHTML = '<div class="loading-msg">Loading results...</div>';
-  panel.classList.add('open');
-  panel.scrollIntoView({behavior:'smooth', block:'start'});
-
-  try {
-    const res = await fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${raceGid}`);
-    const text = await res.text();
-    const rows = parseCSV(text);
-
-    // Use same section parser as results page
-    const quali = extractSection(rows, 'qualifying');
-    const race  = extractSection(rows, 'race', true);
-    const meta  = getMeta(rows);
-
-    let html = '';
-
-    if (meta.cancelled) {
-      html = '<div style="padding:20px;color:#ff6b6b;font-family:\'Barlow Condensed\',sans-serif;font-size:16px;letter-spacing:1px;text-transform:uppercase;">Race Cancelled</div>';
-    } else {
-      // Race winner highlight
-      if (race.length) {
-        const winner = race[0];
-        const color = getColor(winner.team);
-        html += `<div style="background:rgba(232,184,75,0.08);border:1px solid rgba(232,184,75,0.2);border-radius:8px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:14px;">
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--gold);">Race Winner</div>
-          <div style="width:4px;height:24px;background:${color};border-radius:2px;"></div>
-          <div>
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--gold);">${winner.driver}</div>
-            <div style="font-size:11px;color:var(--text-muted);">${winner.team}</div>
-          </div>
-        </div>`;
-      }
-
-      // Race table
-      if (race.length) {
-        html += `<div class="res-section-label">Race Result</div>
-        <div style="overflow-x:auto;"><table class="res-table">
-          <thead><tr>
-            <th>Pos</th><th>Driver</th><th>Team</th>
-            <th style="text-align:right;">Pts</th>
-            <th>Gap</th><th>Stops</th>
-          </tr></thead><tbody>`;
-        race.forEach((r, i) => {
-          const pts = ASR_POINTS[i] || 0;
-          const pc = posClass(r.pos);
-          const color = getColor(r.team);
-          html += `<tr>
-            <td><span class="res-pos ${pc}">${r.pos}</span></td>
-            <td><div style="display:flex;align-items:center;gap:6px;">
-              <div style="width:3px;height:16px;background:${color};border-radius:1px;flex-shrink:0;"></div>
-              <span class="res-driver">${r.driver}</span>
-            </div></td>
-            <td class="res-team">${r.team}</td>
-            <td class="res-pts">${pts||''}</td>
-            <td class="res-time">${r.gap||''}</td>
-            <td class="res-time">${r.stops||''}</td>
-          </tr>`;
-        });
-        html += '</tbody></table></div>';
-      }
-
-      // Quali table
-      if (quali.length) {
-        html += `<div class="res-section-label">Qualifying</div>
-        <div style="overflow-x:auto;"><table class="res-table">
-          <thead><tr>
-            <th>Pos</th><th>Driver</th><th>Team</th>
-            <th>Time</th><th>Tyre</th>
-          </tr></thead><tbody>`;
-        quali.forEach(r => {
-          const pc = posClass(r.pos);
-          const color = getColor(r.team);
-          html += `<tr>
-            <td><span class="res-pos ${pc}">${r.pos}</span></td>
-            <td><div style="display:flex;align-items:center;gap:6px;">
-              <div style="width:3px;height:16px;background:${color};border-radius:1px;flex-shrink:0;"></div>
-              <span class="res-driver">${r.driver}</span>
-            </div></td>
-            <td class="res-team">${r.team}</td>
-            <td class="res-time">${r.time||''}</td>
-            <td>${r.tyre?`<span class="res-tyre">${r.tyre}</span>`:''}</td>
-          </tr>`;
-        });
-        html += '</tbody></table></div>';
-      }
-
-      if (!race.length && !quali.length) {
-        html = '<div class="loading-msg">No detailed results available for this season</div>';
-      }
-    }
-
-    body.innerHTML = html;
-  } catch(e) {
-    body.innerHTML = `<div class="loading-msg">Could not load results: ${e.message}</div>`;
-    console.error(e);
-  }
-}
-
-function closeResults() {
-  document.getElementById('results-panel').classList.remove('open');
-}
-
-function getMeta(rows) {
-  let circuit='', isSprint=false, cancelled=false, wQuali='', wRace='';
-  for (let i=0; i<6; i++) {
-    const row = rows[i]||[];
-    for (let j=0; j<row.length; j++) {
-      const v = (row[j]||'').trim().toLowerCase();
-      const next = (row[j+1]||'').trim();
-      if (v==='circuit') circuit=next;
-      if (v==='cancelled') cancelled=next.toLowerCase()==='y'||next.toLowerCase()==='yes';
-      if (v==='sprint') isSprint=next.toLowerCase()==='yes';
-      if (v==='quali weather') wQuali=next;
-      if (v==='race weather') wRace=next;
-    }
-  }
-  return {circuit, isSprint, cancelled, wQuali, wRace};
-}
-
-function findSection(rows, label) {
-  const aliases = {
-    'qualifying':['qualifying','quali'],
-    'race':['race'],
-  };
-  const matches = aliases[label.toLowerCase()]||[label.toLowerCase()];
-  for (let i=0; i<rows.length; i++) {
-    const row = rows[i]||[];
-    for (let j=0; j<5; j++) {
-      const v = (row[j]||'').trim().toLowerCase();
-      if (matches.includes(v)) return {headerRow:i+1, dataStart:i+2};
-    }
-  }
-  return null;
-}
-
-function extractSection(rows, label, isRace) {
-  const sec = findSection(rows, label);
-  if (!sec) return [];
-  const headerRow = rows[sec.headerRow]||[];
-  let colOffset = 0;
-  for (let j=0; j<5; j++) {
-    if ((headerRow[j]||'').trim().toLowerCase()==='pos') { colOffset=j; break; }
-  }
-  const results = [];
-  for (let i=sec.dataStart; i<rows.length; i++) {
-    const row = rows[i];
-    const rawPos = (row[colOffset]||'').trim();
-    if (!rawPos) continue;
-    const posNum = parseInt(rawPos);
-    if (isNaN(posNum) && !['dnf','dsq','dns'].includes(rawPos.toLowerCase())) break;
-    const driver = (row[colOffset+3]||'').trim();
-    if (!driver) continue;
-    if (isRace) {
-      results.push({pos:rawPos, driver, team:(row[colOffset+4]||'').trim(), stops:(row[colOffset+6]||'').trim(), gap:(row[colOffset+7]||'').trim(), pts:(row[colOffset+8]||'').trim()});
-    } else {
-      results.push({pos:rawPos, driver, team:(row[colOffset+4]||'').trim(), time:(row[colOffset+6]||'').trim(), tyre:(row[colOffset+7]||'').trim()});
-    }
-  }
-  return results;
-}
-
-function parseCSV(text) {
-  const lines = text.split(/\r?\n/).filter(l=>l.trim());
-  return lines.map(line => {
-    const cells=[], cur={v:''};
-    let inQ=false;
-    for (let i=0; i<line.length; i++) {
-      const c=line[i];
-      if (c==='"') { inQ=!inQ; }
-      else if (c===',' && !inQ) { cells.push(cur.v.trim()); cur.v=''; }
-      else cur.v+=c;
-    }
-    cells.push(cur.v.trim());
-    return cells;
-  });
 }
 
 loadASR();
