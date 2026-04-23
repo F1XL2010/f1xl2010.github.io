@@ -202,11 +202,13 @@
     <button class="results-panel-close" onclick="closeDetail()">← Back to all seasons</button>
   </div>
   <div style="background:var(--dark2);border-bottom:1px solid var(--border);display:flex;gap:0;padding:0 24px;">
-    <button class="asr-tab active" id="asr-tab-results" onclick="switchASRTab('results')">Results</button>
+    <button class="asr-tab active" id="asr-tab-teams" onclick="switchASRTab('teams')">Teams</button>
+    <button class="asr-tab" id="asr-tab-results" onclick="switchASRTab('results')">Results</button>
     <button class="asr-tab" id="asr-tab-constructors" onclick="switchASRTab('constructors')">Constructors</button>
     <button class="asr-tab" id="asr-tab-qualifying" onclick="switchASRTab('qualifying')">Qualifying</button>
   </div>
-  <div id="asr-panel-results" class="asr-panel" style="padding:20px 24px;"><div class="loading-msg">Loading...</div></div>
+  <div id="asr-panel-teams" class="asr-panel" style="padding:20px 24px;"><div class="loading-msg">Loading...</div></div>
+  <div id="asr-panel-results" class="asr-panel" style="display:none;padding:20px 24px;"><div class="loading-msg">Loading...</div></div>
   <div id="asr-panel-constructors" class="asr-panel" style="display:none;padding:20px 24px;"><div class="loading-msg">Loading...</div></div>
   <div id="asr-panel-qualifying" class="asr-panel" style="display:none;padding:20px 24px;"><div class="loading-msg">Loading...</div></div>
 </div>
@@ -271,12 +273,13 @@ let _currentASR = null;
 let _asrLoaded = {};
 
 function switchASRTab(tab) {
-  ['results','constructors','qualifying'].forEach(t => {
+  ['teams','results','constructors','qualifying'].forEach(t => {
     document.getElementById('asr-tab-'+t).classList.toggle('active', t===tab);
     document.getElementById('asr-panel-'+t).style.display = t===tab ? '' : 'none';
   });
   if (!_asrLoaded[tab] && _currentASR) {
     _asrLoaded[tab] = true;
+    if (tab==='teams') loadASRTeams();
     if (tab==='results') loadASRResults();
     if (tab==='constructors') loadASRConstructors();
     if (tab==='qualifying') loadASRQualifying();
@@ -292,14 +295,14 @@ async function openDetail(season, sheetId, tableGid, constructorsGid, resultsGid
   document.getElementById('asr-detail').style.display = '';
 
   // Reset tabs
-  ['results','constructors','qualifying'].forEach(t => {
-    document.getElementById('asr-tab-'+t).classList.toggle('active', t==='results');
-    document.getElementById('asr-panel-'+t).style.display = t==='results' ? '' : 'none';
+  ['teams','results','constructors','qualifying'].forEach(t => {
+    document.getElementById('asr-tab-'+t).classList.toggle('active', t==='teams');
+    document.getElementById('asr-panel-'+t).style.display = t==='teams' ? '' : 'none';
     document.getElementById('asr-panel-'+t).innerHTML = '<div class="loading-msg">Loading...</div>';
   });
 
-  _asrLoaded['results'] = true;
-  await loadASRResults();
+  _asrLoaded['teams'] = true;
+  await loadASRTeams();
   window.scrollTo({top:0, behavior:'smooth'});
 }
 
@@ -318,25 +321,88 @@ async function fetchTab(sheetId, gid) {
   return parseCSV(text);
 }
 
+async function loadASRTeams() {
+  // Build teams from asr_table_gid (race results tab) + asr_constructors_gid
+  const el = document.getElementById('asr-panel-teams');
+  try {
+    const [raceRows, consRows] = await Promise.all([
+      fetchTab(_currentASR.sheetId, _currentASR.tableGid),
+      fetchTab(_currentASR.sheetId, _currentASR.constructorsGid)
+    ]);
+
+    // Race results: header at row 6, Pos=col1, Driver=col3, Team=col4 or col5
+    let hIdx = -1;
+    for (let i=0;i<raceRows.length;i++) { if(g(raceRows[i],1).toLowerCase()==='pos'){hIdx=i;break;} }
+    const raceData = hIdx>=0 ? raceRows.slice(hIdx+1).filter(r=>g(r,3)) : [];
+
+    // Constructors: header at row 1, Team=col3, Points=col4
+    let cIdx = -1;
+    for (let i=0;i<consRows.length;i++) { if(g(consRows[i],1).toLowerCase()==='pos'){cIdx=i;break;} }
+    const consData = cIdx>=0 ? consRows.slice(cIdx+1).filter(r=>g(r,3)) : [];
+    consData.sort((a,b) => (parseFloat(g(b,4))||0)-(parseFloat(g(a,4))||0));
+
+    // Build team→drivers map from race results
+    const teamDrivers = {};
+    raceData.forEach(r => {
+      const team = g(r,4)||g(r,5); const driver = g(r,3);
+      if (team && driver) {
+        if (!teamDrivers[team]) teamDrivers[team] = [];
+        teamDrivers[team].push({driver, pos:g(r,1), pts:Math.floor(parseFloat(g(r,6))||0)});
+      }
+    });
+
+    let html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;">';
+    consData.forEach((row,i) => {
+      const team = g(row,3); const pts = Math.floor(parseFloat(g(row,4))||0);
+      const pos = i+1; const color = getColor(team);
+      const pc = posClass(String(pos));
+      const drivers = teamDrivers[team] || [];
+      html += `<div style="background:var(--dark2);border:1px solid var(--border);border-radius:8px;overflow:hidden;">
+        <div style="padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;">
+          <span class="res-pos ${pc}" style="font-size:18px;">${pos}</span>
+          <div style="width:4px;height:20px;background:${color};border-radius:2px;flex-shrink:0;"></div>
+          <div style="flex:1;">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;">${team}</div>
+          </div>
+          <span style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--green);">${pts}</span>
+        </div>
+        <div style="padding:10px 14px;">
+          ${drivers.map(d=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.04);">
+            <span style="font-size:12px;">${d.driver}</span>
+            <span style="font-family:'Barlow Condensed',sans-serif;font-size:11px;color:var(--text-faint);">P${d.pos} · ${d.pts}pts</span>
+          </div>`).join('')}
+        </div>
+      </div>`;
+    });
+    html += '</div>';
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = `<div class="loading-msg">Could not load teams: ${e.message}</div>`;
+    console.error(e);
+  }
+}
+
 async function loadASRResults() {
+  // asr_table_gid = race results tab
+  // Structure: header at row 6 (col1=Pos, col3=Driver, col4=Team or col5, col6=Points, col7=Stops, col8=Gap)
   const el = document.getElementById('asr-panel-results');
   try {
-    const rows = await fetchTab(_currentASR.sheetId, _currentASR.resultsGid);
-    // Find header row — has "Pos" in col 1
+    const rows = await fetchTab(_currentASR.sheetId, _currentASR.tableGid);
     let hIdx = -1;
     for (let i=0;i<rows.length;i++) { if(g(rows[i],1).toLowerCase()==='pos'){hIdx=i;break;} }
     if (hIdx<0) { el.innerHTML='<div class="loading-msg">Could not parse results.</div>'; return; }
 
     const data = rows.slice(hIdx+1).filter(r => g(r,3));
-    let html = '<div class="res-section-label">Race Results</div>';
-    html += '<table class="res-table"><thead><tr><th>Pos</th><th>Driver</th><th>Team</th><th style="text-align:right">Pts</th><th>Stops</th><th>Gap</th></tr></thead><tbody>';
+    let html = '<table class="res-table"><thead><tr><th>Pos</th><th>Driver</th><th>Team</th><th style="text-align:right">Pts</th><th>Stops</th><th>Gap</th></tr></thead><tbody>';
     data.forEach(row => {
-      const pos = g(row,1); const driver = g(row,3); const team = g(row,5);
+      const pos = g(row,1); const driver = g(row,3);
+      const team = g(row,4)||g(row,5);
       const pts = Math.floor(parseFloat(g(row,6))||0);
       const stops = g(row,7); const gap = g(row,8);
       const color = getColor(team);
+      const pc = posClass(pos);
       html += `<tr>
-        <td><span class="res-pos ${posClass(pos)}">${pos||'—'}</span></td>
+        <td><span class="res-pos ${pc}">${pos||'—'}</span></td>
         <td><span class="res-driver">${driver}</span></td>
         <td><div style="display:flex;align-items:center;gap:6px;"><div style="width:3px;height:14px;background:${color};border-radius:1px;flex-shrink:0;"></div><span class="res-team">${team}</span></div></td>
         <td class="res-pts">${pts||'—'}</td>
@@ -348,27 +414,27 @@ async function loadASRResults() {
     el.innerHTML = html;
   } catch(e) {
     el.innerHTML = `<div class="loading-msg">Could not load results: ${e.message}</div>`;
+    console.error(e);
   }
 }
 
 async function loadASRConstructors() {
+  // asr_constructors_gid = Teams Table tab
+  // Structure: header at row 1 (col1=Pos, col3=Team, col4=Points, col5=Gap)
   const el = document.getElementById('asr-panel-constructors');
   try {
     const rows = await fetchTab(_currentASR.sheetId, _currentASR.constructorsGid);
-    // Header at row 1 (0-indexed), data from row 2. Cols: 1=Pos, 3=Team, 4=Points, 5=Gap
     let hIdx = -1;
     for (let i=0;i<rows.length;i++) { if(g(rows[i],1).toLowerCase()==='pos'){hIdx=i;break;} }
     if (hIdx<0) { el.innerHTML='<div class="loading-msg">Could not parse constructors.</div>'; return; }
 
-    const data = rows.slice(hIdx+1).filter(r => g(r,3));
-    let html = '<div class="res-section-label">Constructors</div>';
-    html += '<table class="res-table"><thead><tr><th>Pos</th><th>Team</th><th style="text-align:right">Pts</th><th>Gap</th></tr></thead><tbody>';
-    data.sort((a,b) => (parseFloat(g(b,4))||0)-(parseFloat(g(a,4))||0));
+    const data = rows.slice(hIdx+1).filter(r=>g(r,3));
+    data.sort((a,b)=>(parseFloat(g(b,4))||0)-(parseFloat(g(a,4))||0));
+    let html = '<table class="res-table"><thead><tr><th>Pos</th><th>Team</th><th style="text-align:right">Pts</th><th>Gap</th></tr></thead><tbody>';
     data.forEach((row,i) => {
       const pos = i+1; const team = g(row,3);
       const pts = Math.floor(parseFloat(g(row,4))||0);
-      const gap = g(row,5);
-      const color = getColor(team);
+      const gap = g(row,5); const color = getColor(team);
       const pc = posClass(String(pos));
       html += `<tr>
         <td><span class="res-pos ${pc}">${pos}</span></td>
@@ -381,33 +447,33 @@ async function loadASRConstructors() {
     el.innerHTML = html;
   } catch(e) {
     el.innerHTML = `<div class="loading-msg">Could not load constructors: ${e.message}</div>`;
+    console.error(e);
   }
 }
 
 async function loadASRQualifying() {
+  // asr_results_gid = Input Sheet / Qualifying tab
+  // Two groups side by side: Group1 cols 0-6, Group2 cols 8-13
+  // Row 3: "Quali" header, Row 4: column headers, Row 5+: data
   const el = document.getElementById('asr-panel-qualifying');
   try {
-    const rows = await fetchTab(_currentASR.sheetId, _currentASR.tableGid);
-    // Input Sheet: header row has "Pos","Nat","#","Driver" at row 4 (0-indexed)
-    // Two qualifying groups side by side
-    // Group 1: cols 0-6, Group 2: cols 8-14
+    const rows = await fetchTab(_currentASR.sheetId, _currentASR.resultsGid);
+    // Find header row with Pos in col 0
     let hIdx = -1;
     for (let i=0;i<rows.length;i++) {
-      if(g(rows[i],0).toLowerCase()==='pos'&&g(rows[i],3).toLowerCase().includes('driver')){hIdx=i;break;}
+      if(g(rows[i],0).toLowerCase()==='pos'){ hIdx=i; break; }
     }
     if (hIdx<0) { el.innerHTML='<div class="loading-msg">Could not parse qualifying.</div>'; return; }
 
-    const data = rows.slice(hIdx+1).filter(r => g(r,3)||g(r,11));
-
-    // Build two groups
+    const data = rows.slice(hIdx+1).filter(r=>g(r,3)||g(r,11));
     const g1 = data.filter(r=>g(r,3)).map(r=>({pos:g(r,0),driver:g(r,3),team:g(r,4),time:g(r,6)}));
-    const g2 = data.filter(r=>g(r,11)).map(r=>({pos:g(r,8),driver:g(r,11),team:g(r,12),time:g(r,13)}));
+    const g2 = data.filter(r=>g(r,11)).map(r=>({pos:g(r,8),driver:g(r,11),team:g(r,12),time:g(r,14)||g(r,13)}));
 
-    function qTable(title, rows) {
-      if (!rows.length) return '';
+    function qTable(title, qrows) {
+      if (!qrows.length) return '';
       let html = `<div class="res-section-label">${title}</div>`;
       html += '<table class="res-table"><thead><tr><th>Pos</th><th>Driver</th><th>Team</th><th>Time</th></tr></thead><tbody>';
-      rows.forEach(r => {
+      qrows.forEach(r => {
         const color = getColor(r.team);
         html += `<tr>
           <td><span class="res-pos ${posClass(r.pos)}">${r.pos||'—'}</span></td>
@@ -422,8 +488,10 @@ async function loadASRQualifying() {
     el.innerHTML = qTable('Qualifying Group 1', g1) + qTable('Qualifying Group 2', g2);
   } catch(e) {
     el.innerHTML = `<div class="loading-msg">Could not load qualifying: ${e.message}</div>`;
+    console.error(e);
   }
 }
+
 
 // ── SEASON GRID ───────────────────────────────────────────────────────────────
 async function loadASR() {
