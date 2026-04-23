@@ -379,7 +379,6 @@ function showDiv(idx, btn){
   currentDiv = idx;
   document.querySelectorAll('.div-tab').forEach(t=>t.classList.remove('active'));
   if(btn) btn.classList.add('active');
-  document.getElementById('search').value = '';
   renderTable(allDivisions[idx].drivers);
 }
 
