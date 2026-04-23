@@ -600,7 +600,7 @@ function qTable(data,title,weather){
 
 function rTable(data,title,weather){
   if(!data||!data.length)return box(title,'<div style="padding:12px;font-size:12px;color:var(--text-faint);">No data</div>');
-  let r=`<table class="rt"><thead><tr><th>Pos</th><th>#</th><th>Driver</th><th>Gap</th><th>Pts</th></tr></thead><tbody>`;
+  let r=`<table class="rt"><thead><tr><th>Pos</th><th>#</th><th>Driver</th><th>Team</th><th>Gap</th><th>Pts</th></tr></thead><tbody>`;
   data.forEach(d=>{
     const dnf=isDNF(d.pos);
     const pts=parseInt(d.pts)||0;
@@ -608,10 +608,8 @@ function rTable(data,title,weather){
     r+=`<tr>
       <td>${dnf?`<span class="pdnf">${d.pos}</span>`:`<span class="p ${posClass(d.pos)}">${d.pos}</span>`}</td>
       <td><span class="dnum">${d.num}</span></td>
-      <td>
-        <span class="dname">${d.driver}</span>${hasFl?`<span class="fl" title="Fastest Lap"></span>`:''}${d.pen?`<span class="pen">+${d.pen}</span>`:''}
-        ${d.stops?`<br><span class="stops">${d.stops} stop${d.stops==='1'?'':'s'}</span>`:''}
-      </td>
+      <td><span class="dname">${d.driver}</span>${hasFl?`<span class="fl" title="Fastest Lap"></span>`:''}${d.pen?`<span class="pen">+${d.pen}</span>`:''}</td>
+      <td><span class="stops">${d.team||'—'}</span></td>
       <td><span class="rgap">${d.gap||'—'}</span></td>
       <td><span class="rpts${pts===0?' z':''}">${d.pts||'0'}</span></td>
     </tr>`;
@@ -622,17 +620,15 @@ function rTable(data,title,weather){
 function srTable(data,title,weather){
   // Sprint race table - no FL column
   if(!data||!data.length)return box(title,'<div style="padding:12px;font-size:12px;color:var(--text-faint);">No data</div>');
-  let r=`<table class="rt"><thead><tr><th>Pos</th><th>#</th><th>Driver</th><th>Gap</th><th>Pts</th></tr></thead><tbody>`;
+  let r=`<table class="rt"><thead><tr><th>Pos</th><th>#</th><th>Driver</th><th>Team</th><th>Gap</th><th>Pts</th></tr></thead><tbody>`;
   data.forEach(d=>{
     const dnf=isDNF(d.pos);
     const pts=parseInt(d.pts)||0;
     r+=`<tr>
       <td>${dnf?`<span class="pdnf">${d.pos}</span>`:`<span class="p ${posClass(d.pos)}">${d.pos}</span>`}</td>
       <td><span class="dnum">${d.num}</span></td>
-      <td>
-        <span class="dname">${d.driver}</span>${d.pen?`<span class="pen">+${d.pen}</span>`:''}
-        ${d.stops?`<br><span class="stops">${d.stops} stop${d.stops==='1'?'':'s'}</span>`:''}
-      </td>
+      <td><span class="dname">${d.driver}</span>${d.pen?`<span class="pen">+${d.pen}</span>`:''}</td>
+      <td><span class="stops">${d.team||'—'}</span></td>
       <td><span class="rgap">${d.gap||'—'}</span></td>
       <td><span class="rpts${pts===0?' z':''}">${d.pts||'0'}</span></td>
     </tr>`;
