@@ -14,7 +14,7 @@
     --green:#4aaa6a;--amber:#E8B84B;--red-soft:#ff6b6b;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{background:#111816;background-image:linear-gradient(rgba(255,255,255,0.025) 0px,rgba(255,255,255,0.025) 4px,rgba(0,0,0,0.06) 4px,rgba(0,0,0,0.06) 8px),linear-gradient(90deg,rgba(0,0,0,0.06) 0px,rgba(0,0,0,0.06) 4px,rgba(255,255,255,0.025) 4px,rgba(255,255,255,0.025) 8px);background-size:8px 8px;color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;}
+  body{background:#111816;color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;}
 
   /* NAV */
   nav{background:rgba(9,9,9,0.97);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;}
@@ -55,6 +55,8 @@
   .filter-btn{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:6px 14px;border-radius:4px;border:1px solid var(--border2);background:none;color:var(--text-muted);cursor:pointer;transition:all 0.2s;}
   .filter-btn:hover{color:var(--text);border-color:rgba(255,255,255,0.35);}
   .filter-btn.active{background:var(--green);border-color:var(--green);color:#000;}
+  .filter-btn{position:relative;}
+  .filter-new-dot{position:absolute;top:-4px;right:-4px;width:8px;height:8px;border-radius:50%;background:#ff6b6b;border:1px solid #111816;}
 
   /* CONTENT */
   .content{padding:20px 24px;max-width:900px;}
@@ -204,11 +206,7 @@
 </div>
 
 <div class="filters" id="filters" style="display:none;">
-  <button class="filter-btn active" onclick="filterDiv('all', this)">All Divisions</button>
-  <button class="filter-btn" onclick="filterDiv('1', this)">Division 1</button>
-  <button class="filter-btn" onclick="filterDiv('2', this)">Division 2</button>
-  <button class="filter-btn" onclick="filterDiv('3', this)">Division 3</button>
-  <button class="filter-btn" onclick="filterDiv('4', this)">Division 4</button>
+  <button class="filter-btn active" id="filter-all" onclick="filterDiv('all', this)">All Divisions</button>
 </div>
 
 <div class="content" id="content">
@@ -285,6 +283,30 @@ async function loadTickets() {
     }
 
     document.getElementById('filters').style.display = 'flex';
+
+    // Build division buttons dynamically
+    const divisions = [...new Set(allTickets.map(r => (r[COLS.division]||'').trim()).filter(Boolean))].sort();
+    const filtersEl = document.getElementById('filters');
+    // Remove any existing division buttons (keep All Divisions)
+    filtersEl.querySelectorAll('.filter-btn:not(#filter-all)').forEach(b => b.remove());
+
+    // Load last-seen ticket counts from localStorage
+    const lastSeen = JSON.parse(localStorage.getItem('f1xl_tickets_seen') || '{}');
+
+    divisions.forEach(div => {
+      const divTickets = allTickets.filter(r => (r[COLS.division]||'').trim() === div);
+      const maxTicket = Math.max(...divTickets.map(r => parseInt(r[COLS.ticketNum])||0));
+      const lastSeenMax = lastSeen[div] || 0;
+      const hasNew = maxTicket > lastSeenMax;
+
+      const btn = document.createElement('button');
+      btn.className = 'filter-btn';
+      btn.id = 'filter-div-' + div;
+      btn.onclick = function(){ filterDiv(div, this); };
+      btn.innerHTML = `Division ${div}${hasNew ? '<span class="filter-new-dot"></span>' : ''}`;
+      filtersEl.appendChild(btn);
+    });
+
     updateMeta();
     renderTickets();
 
@@ -383,8 +405,9 @@ function renderTickets() {
     byRace[race].push(row);
   });
 
-  // Reverse so most recent race appears first
+  // Reverse so most recent race appears first, and tickets within each race newest first
   raceOrder.reverse();
+  Object.keys(byRace).forEach(race => byRace[race].reverse());
 
   let html = '';
   raceOrder.forEach((race, rIdx) => {
@@ -559,6 +582,17 @@ function toggleTicket(id) {
 }
 
 function filterDiv(div, btn) {
+  // Mark this division's tickets as seen
+  if (div !== 'all') {
+    const divTickets = allTickets.filter(r => (r[COLS.division]||'').trim() === div);
+    const maxTicket = Math.max(...divTickets.map(r => parseInt(r[COLS.ticketNum])||0));
+    const lastSeen = JSON.parse(localStorage.getItem('f1xl_tickets_seen') || '{}');
+    lastSeen[div] = maxTicket;
+    localStorage.setItem('f1xl_tickets_seen', JSON.stringify(lastSeen));
+    // Remove dot from button
+    const dotEl = btn.querySelector('.filter-new-dot');
+    if (dotEl) dotEl.remove();
+  }
   currentFilter = div;
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
