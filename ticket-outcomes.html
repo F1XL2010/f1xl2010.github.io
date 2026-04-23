@@ -223,9 +223,11 @@
   <div class="footer-text">f1xl.co.uk</div>
 </footer>
 
+<script src="config.js"></script>
 <script>
-const SHEET_ID = '1018L2jzNseasQVfNNoZCh_fDUbMIQ93EP2ahJvNc6F0';
-const GID = '1683645163';
+// Sheet ID and GID loaded from config at runtime
+let SHEET_ID = '1018L2jzNseasQVfNNoZCh_fDUbMIQ93EP2ahJvNc6F0';
+let GID = '1683645163';
 
 // Column indices (0-based) based on what we see in the sheet:
 // A=Race, B=Ticket#, C=Division, D=Submitter, E=SubmitterTeam,
@@ -252,6 +254,14 @@ let currentFilter = 'all';
 
 async function loadTickets() {
   try {
+    // Load sheet ID and GID from config if available
+    const [cfgSheet, cfgGid] = await Promise.all([
+      getConfigValue('ticket_outcomes_sheet'),
+      getConfigValue('ticket_outcomes_gid')
+    ]);
+    if (cfgSheet) SHEET_ID = cfgSheet;
+    if (cfgGid) GID = cfgGid;
+
     const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${GID}`;
     const res = await fetch(url);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -269,9 +279,7 @@ async function loadTickets() {
       const race = (row[COLS.race] || '').trim();
       const ticketNum = (row[COLS.ticketNum] || '').trim();
       const driver = (row[COLS.submitter] || '').trim();
-      // Validate: race must look like "S27 Something" and ticket# must be numeric
       if (!race || !driver) continue;
-      if (!race.match(/^S\d+\s+\w/)) continue;
       if (ticketNum && isNaN(parseInt(ticketNum))) continue;
       allTickets.push(row);
     }
