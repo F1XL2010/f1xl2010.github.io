@@ -9,7 +9,7 @@
 <style>
   :root{--green:#3DCC47;--teal:#5ECFCF;--red:#E10600;--black:#111816;--dark:#161d1b;--dark2:#1a2320;--dark3:#1e2a27;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);--text:#ffffff;--text-muted:rgba(255,255,255,0.60);--text-faint:rgba(255,255,255,0.30);--gold:#E8B84B;}
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{background:#111816;background-image:linear-gradient(rgba(255,255,255,0.025) 0px,rgba(255,255,255,0.025) 4px,rgba(0,0,0,0.06) 4px,rgba(0,0,0,0.06) 8px),linear-gradient(90deg,rgba(0,0,0,0.06) 0px,rgba(0,0,0,0.06) 4px,rgba(255,255,255,0.025) 4px,rgba(255,255,255,0.025) 8px);background-size:8px 8px;color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;}
+  body{background:#111816;color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;}
   nav{background:rgba(17,24,22,0.97);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;}
   .nav-left{display:flex;align-items:center;gap:14px;flex-shrink:0;}
   .nav-logo{background:var(--green);color:#000;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;padding:5px 11px;border-radius:3px;text-decoration:none;}
@@ -65,10 +65,10 @@
   .licence-table tr:hover td{background:rgba(255,255,255,0.02);}
   .driver-name{font-size:14px;color:var(--text);font-weight:500;}
   .pts-value{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;}
-  .pts-zero{color:var(--text-faint);}
-  .pts-low{color:var(--gold);}
-  .pts-mid{color:rgba(255,160,50,0.9);}
-  .pts-high{color:#ff6b6b;}
+  .pts-zero{color:var(--text);}
+  .pts-low{color:var(--green);}
+  .pts-mid{color:var(--gold);}
+  .pts-high{color:var(--red);font-weight:700;}
   .pts-ban{color:var(--red);font-weight:700;}
   .secs-value{font-size:12px;color:var(--text-faint);}
   .secs-pos{color:rgba(255,150,50,0.8);}
@@ -206,9 +206,7 @@
 <div class="div-tabs" id="div-tabs"></div>
 
 <div class="content" style="padding-top:20px;">
-  <div class="search-wrap">
-    <input type="text" class="search-input" id="search" placeholder="Search driver..." oninput="filterTable(this.value)">
-  </div>
+
   <div id="content"><div class="loading-msg">Loading...</div></div>
 </div>
 
@@ -249,10 +247,9 @@ function parseCSV(text){
 function g(row, col){ return (row&&row[col]!==undefined)?(row[col]||'').trim():''; }
 
 function ptsClass(pts){
-  if(pts>=9) return 'pts-ban';
-  if(pts>=6) return 'pts-high';
-  if(pts>=3) return 'pts-mid';
-  if(pts>0)  return 'pts-low';
+  if(pts>=15) return 'pts-high';
+  if(pts>=9)  return 'pts-mid';
+  if(pts>0)   return 'pts-low';
   return 'pts-zero';
 }
 
@@ -364,7 +361,7 @@ function renderUpcomingBans(bans){
   if(!bans.length){ el.style.display='none'; return; }
 
   let html = `<table class="licence-table">
-    <thead><tr><th>Div</th><th>Driver</th><th>Ban</th><th>Race Incurred</th><th>Reason</th></tr></thead><tbody>`;
+    <thead><tr><th style="color:rgba(255,255,255,0.8);">Div</th><th style="color:rgba(255,255,255,0.8);">Driver</th><th style="color:rgba(255,255,255,0.8);">Ban</th><th style="color:rgba(255,255,255,0.8);">Race Incurred</th><th style="color:rgba(255,255,255,0.8);">Reason</th></tr></thead><tbody>`;
   bans.forEach(b=>{
     html+=`<tr>
       <td><span class="pts-value" style="font-size:13px;">D${b.div}</span></td>
