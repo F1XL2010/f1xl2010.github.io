@@ -264,27 +264,210 @@ function renderSeason(data,num){
 
 
 let allData={};
+// ── S28+ DATA TAB PARSER ─────────────────────────────────────────────────────
+function parseS28DataTab(rows, divNum) {
+  // Cols A-G (0-6): Driver, Nationality, Abbreviation, Team, Tier, Platform, Controller
+  // Team Principal section: "Team Principal" label in col I (8), name=col I, team=col J from next rows
+  const teams = {};
+  const reserves = [];
+  const retired = [];
+
+  // Parse drivers from cols A-G
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i];
+    const driver = (row[0] || '').trim();
+    const team = (row[3] || '').trim();
+    const tier = (row[4] || '').trim();
+    if (!driver || !team) continue;
+    if (team.toLowerCase() === 'reserve') {
+      if (driver && !driver.startsWith('#')) reserves.push(driver);
+      continue;
+    }
+    if (team.toLowerCase() === 'retired') {
+      if (driver && !driver.startsWith('#')) retired.push(driver);
+      continue;
+    }
+    if (driver.startsWith('#')) continue;
+    if (!teams[team]) teams[team] = { name: team, tp: '', tier1: '', tier2: '', div: divNum };
+    if (tier.toLowerCase().includes('1')) teams[team].tier1 = driver;
+    else if (tier.toLowerCase().includes('2')) teams[team].tier2 = driver;
+  }
+
+  // Parse Team Principals — find "Team Principal" label in col I (8)
+  let tpStart = -1;
+  for (let i = 0; i < rows.length; i++) {
+    if ((rows[i][8] || '').trim().toLowerCase() === 'team principal') { tpStart = i + 2; break; }
+  }
+  if (tpStart >= 0) {
+    for (let i = tpStart; i < rows.length; i++) {
+      const name = (rows[i][8] || '').trim();
+      const team = (rows[i][9] || '').trim();
+      if (!name || !team) continue;
+      if (name.toLowerCase() === 'reserve') continue;
+      // Match to team (case-insensitive)
+      const match = Object.keys(teams).find(t => t.toLowerCase() === team.toLowerCase());
+      if (match) teams[match].tp = name;
+    }
+  }
+
+  return { teams: Object.values(teams), reserves, retired };
+}
+
+function renderS28Card(t) {
+  const color = getColor(t.name);
+  return `<div class="team-card">
+    <div class="tc-header">
+      <div class="tc-bar" style="background:${color}"></div>
+      <div>
+        <div class="tc-name">${t.name}</div>
+        <div class="tc-owner-row">
+          <span class="tc-owner-lbl">Team Principal</span>
+          <span class="tc-owner">${t.tp || '&mdash;'}</span>
+        </div>
+      </div>
+    </div>
+    <div class="tc-body">
+      <div class="tc-div">
+        <div class="tc-div-row"><span class="tc-div-lbl">Division ${t.div}</span></div>
+        <div class="tc-drivers">
+          <span style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">T1</span>
+          ${t.tier1 || '&mdash;'}<br>
+          <span style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">T2</span>
+          ${t.tier2 || '&mdash;'}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderS28Season(divDataArr, seasonNum) {
+  // Merge teams across divisions — same team may appear in multiple divisions
+  const teamMap = {};
+  divDataArr.forEach(divData => {
+    divData.teams.forEach(t => {
+      const key = t.name.toLowerCase();
+      if (!teamMap[key]) teamMap[key] = {...t, divs: []};
+      teamMap[key].divs.push({ div: t.div, tier1: t.tier1, tier2: t.tier2 });
+      if (t.tp && !teamMap[key].tp) teamMap[key].tp = t.tp;
+    });
+  });
+
+  const allTeams = Object.values(teamMap).sort((a, b) => a.name.localeCompare(b.name));
+  const allReserves = [...new Set(divDataArr.flatMap(d => d.reserves))].filter(Boolean);
+  const allRetired = [...new Set(divDataArr.flatMap(d => d.retired))].filter(Boolean);
+
+  let html = `<div class="section-label">Season ${seasonNum} &middot; Teams</div><div class="teams-grid">`;
+
+  allTeams.forEach(t => {
+    const color = getColor(t.name);
+    let divsHtml = '';
+    t.divs.forEach(d => {
+      divsHtml += `<div class="tc-div">
+        <div class="tc-div-row"><span class="tc-div-lbl">Division ${d.div}</span></div>
+        <div class="tc-drivers">
+          <span style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">T1</span> ${d.tier1 || '&mdash;'}<br>
+          <span style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">T2</span> ${d.tier2 || '&mdash;'}
+        </div>
+      </div>`;
+    });
+    html += `<div class="team-card">
+      <div class="tc-header">
+        <div class="tc-bar" style="background:${color}"></div>
+        <div>
+          <div class="tc-name">${t.name}</div>
+          <div class="tc-owner-row"><span class="tc-owner-lbl">Team Principal</span><span class="tc-owner">${t.tp || '&mdash;'}</span></div>
+        </div>
+      </div>
+      <div class="tc-body">${divsHtml}</div>
+    </div>`;
+  });
+
+  html += '</div>';
+
+  if (allReserves.length) {
+    html += '<div class="section-divider"></div><div class="section-label">Reserves</div>';
+    html += '<div style="padding:0 24px 20px;display:flex;flex-wrap:wrap;gap:6px;">';
+    allReserves.forEach(d => { html += `<div class="retired-pill" style="color:var(--text-muted);">${d}</div>`; });
+    html += '</div>';
+  }
+  if (allRetired.length) {
+    html += '<div class="section-divider"></div><div class="section-label">Retired</div><div class="retired-list">';
+    allRetired.forEach(d => { html += `<div class="retired-pill">${d}</div>`; });
+    html += '</div>';
+  }
+  return html;
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+let s28Cache = null;
+
 async function init(){
   try{
+    // Load all seasons from master sheet (past seasons)
     const r=await fetch('https://docs.google.com/spreadsheets/d/'+TEAMS_SHEET_ID+'/export?format=csv&gid='+TEAMS_SHEET_GID);
     if(!r.ok)throw new Error('HTTP '+r.status);
     const text=await r.text();
     if(text.includes('<!DOCTYPE'))throw new Error('Sheet not published');
     allData=parseSheet(parseCSV(text));
-    const nums=Object.keys(allData).filter(s=>allData[s].teams.length).sort((a,b)=>parseFloat(b)-parseFloat(a));
-    if(!nums.length){document.getElementById('teams-content').innerHTML='<div class="loading-msg">No data found.</div>';return;}
-    document.getElementById('season-bar').innerHTML=nums.map(s=>'<button class="s-btn" onclick="showSeason(\'' +s+ '\')" id="sbtn-'+s.replace('.','_')+'">S'+s+'</button>').join('');
-    showSeason(nums[0]);
-    document.getElementById('page-meta').textContent=nums.length+' seasons';
+
+    // Check for S28+ seasons via config
+    const sc = await getCurrentSeasonConfig();
+    let newSeasons = [];
+    if (sc) {
+      const currentSeason = await getCurrentSeason();
+      newSeasons.push(String(currentSeason));
+    }
+
+    const pastNums = Object.keys(allData).filter(s=>allData[s].teams.length).sort((a,b)=>parseFloat(b)-parseFloat(a));
+    const allNums = [...new Set([...newSeasons, ...pastNums])].sort((a,b)=>parseFloat(b)-parseFloat(a));
+
+    if(!allNums.length){document.getElementById('teams-content').innerHTML='<div class="loading-msg">No data found.</div>';return;}
+    document.getElementById('season-bar').innerHTML=allNums.map(s=>'<button class="s-btn" onclick="showSeason(''+s+'')" id="sbtn-'+s.replace('.','_')+'">S'+s+'</button>').join('');
+    showSeason(allNums[0]);
+    document.getElementById('page-meta').textContent=allNums.length+' seasons';
   }catch(e){
     document.getElementById('teams-content').innerHTML='<div class="loading-msg">Could not load: '+e.message+'</div>';
     console.error(e);
   }
 }
-function showSeason(s){
+
+async function showSeason(s){
   document.querySelectorAll('.s-btn').forEach(b=>b.classList.remove('active'));
   const btn=document.getElementById('sbtn-'+s.replace('.','_'));
   if(btn)btn.classList.add('active');
+
+  // Check if this is a new-format season (has team_info gids in season config)
+  const sc = await loadSeasonConfig(parseFloat(s));
+  const hasNewFormat = sc && (sc['d1_team_info_gid'] || sc['d2_team_info_gid']);
+
+  if (hasNewFormat) {
+    document.getElementById('teams-content').innerHTML='<div class="loading-msg">Loading...</div>';
+    try {
+      // Fetch all divisions' team info tabs in parallel
+      const numDivs = parseInt(sc['divisions']) || 1;
+      const fetches = [];
+      for (let d = 1; d <= numDivs; d++) {
+        const gid = sc[`d${d}_team_info_gid`];
+        const sid = sc[`d${d}_sheet_id`];
+        if (gid && sid) {
+          fetches.push(
+            fetch(`https://docs.google.com/spreadsheets/d/${sid}/export?format=csv&gid=${gid}`)
+              .then(r => r.text())
+              .then(text => ({ div: d, rows: parseCSV(text) }))
+              .catch(() => null)
+          );
+        }
+      }
+      const results = (await Promise.all(fetches)).filter(Boolean);
+      const divDataArr = results.map(r => parseS28DataTab(r.rows, r.div));
+      document.getElementById('teams-content').innerHTML = renderS28Season(divDataArr, s);
+    } catch(e) {
+      document.getElementById('teams-content').innerHTML=`<div class="loading-msg">Could not load: ${e.message}</div>`;
+    }
+    return;
+  }
+
+  // Past seasons — use master sheet data
   document.getElementById('teams-content').innerHTML=allData[s]?renderSeason(allData[s],s):'<div class="loading-msg">No data.</div>';
 }
 init();
