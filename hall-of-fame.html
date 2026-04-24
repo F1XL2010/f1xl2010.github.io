@@ -459,8 +459,8 @@ function selectSeason(seasonNum, card){
 function renderDivisionRecords(){
   const wrap = document.getElementById('div-records-wrap');
 
-  function seasonTable(title, seasons, cols){
-    if(!seasons||!seasons.length) return '';
+  function seasonTable(seasons, cols){
+    if(!seasons||!seasons.length) return '<div class="loading-msg">No data.</div>';
     const headers = cols.map(c=>`<th>${c.label}</th>`).join('');
     const rows = seasons.map((s,i)=>{
       const cells = cols.map(c=>{
@@ -472,53 +472,62 @@ function renderDivisionRecords(){
       }).join('');
       return `<tr><td>${i+1}</td>${cells}</tr>`;
     }).join('');
-    return `<div class="lr-card" style="grid-column:1/-1;">
-      <div class="lr-card-title">${title}</div>
-      <table class="acc-table">
-        <thead><tr><th>#</th>${headers}</tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>`;
+    return `<table class="acc-table">
+      <thead><tr><th>#</th>${headers}</tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
   }
 
-  let html = '';
+  const tabKeys = [];
+  const tabPanels = {};
 
   // Overall
   if(overallData.length){
-    html += `<div class="lr-div-section">
-      <div class="lr-div-title">Overall</div>
-      <div class="lr-grid">
-        ${seasonTable('Season by Season', overallData, [
-          {key:'season',label:'Season'},
-          {key:'owner',label:'Team Owner'},
-          {key:'ownerTeam',label:'Team',muted:true},
-          {key:'ownerPts',label:'Points'},
-          {key:'ru',label:'Runner Up'},
-          {key:'ruTeam',label:'Team',muted:true},
-        ])}
-      </div>
-    </div>`;
+    tabKeys.push({key:'overall', label:'Overall'});
+    tabPanels['overall'] = seasonTable(overallData, [
+      {key:'season',label:'Season'},
+      {key:'owner',label:'Team Owner'},
+      {key:'ownerTeam',label:'Team',muted:true},
+      {key:'ownerPts',label:'Points'},
+      {key:'ru',label:'Runner Up'},
+      {key:'ruTeam',label:'Team',muted:true},
+    ]);
   }
 
   // Divisions
   Object.entries(allDivData).forEach(([div, seasons]) => {
-    html += `<div class="lr-div-section">
-      <div class="lr-div-title">${div}</div>
-      <div class="lr-grid">
-        ${seasonTable('Season by Season', seasons, [
-          {key:'season',label:'Season'},
-          {key:'champ',label:'Champion'},
-          {key:'champTeam',label:'Team',muted:true},
-          {key:'champPts',label:'Points'},
-          {key:'ru',label:'Runner Up'},
-          {key:'constructor',label:'Constructor',muted:true},
-          {key:'consdrivers',label:'Drivers',muted:true},
-        ])}
-      </div>
-    </div>`;
+    const key = div.toLowerCase().replace(' ','');
+    tabKeys.push({key, label:div});
+    tabPanels[key] = seasonTable(seasons, [
+      {key:'season',label:'Season'},
+      {key:'champ',label:'Champion'},
+      {key:'champTeam',label:'Team',muted:true},
+      {key:'champPts',label:'Points'},
+      {key:'ru',label:'Runner Up'},
+      {key:'constructor',label:'Constructor',muted:true},
+      {key:'consdrivers',label:'Drivers',muted:true},
+    ]);
   });
 
-  wrap.innerHTML = html || '<div class="loading-msg">No data.</div>';
+  if(!tabKeys.length){ wrap.innerHTML='<div class="loading-msg">No data.</div>'; return; }
+
+  const tabs = tabKeys.map((t,i)=>
+    `<button class="acc-tab${i===0?' active':''}" onclick="switchDivTab('${t.key}',this)">${t.label}</button>`
+  ).join('');
+  const panels = tabKeys.map((t,i)=>
+    `<div class="acc-panel${i===0?' active':''}" id="div-panel-${t.key}">${tabPanels[t.key]}</div>`
+  ).join('');
+
+  wrap.innerHTML = `<div class="acc-tabs">${tabs}</div>${panels}`;
+}
+
+function switchDivTab(key, btn){
+  const wrap = document.getElementById('div-records-wrap');
+  wrap.querySelectorAll('.acc-tab').forEach(t=>t.classList.remove('active'));
+  wrap.querySelectorAll('.acc-panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  const panel = document.getElementById('div-panel-'+key);
+  if(panel) panel.classList.add('active');
 }
 
 // ── SECTION NAV ──────────────────────────────────────────────────────────────
@@ -620,37 +629,55 @@ function renderLeagueRecords(divDataRaw, overallDataRaw){
     </div>`;
   }
 
-  let html = '';
+  // Build tab list
+  const tabKeys = [];
+  const tabPanels = {};
 
-  // Overall section
+  // Overall
   if(overallDataRaw){
     const rec = parseOverallLeagueRecords(overallDataRaw);
     if(rec){
-      html += `<div class="lr-div-section">
-        <div class="lr-div-title">Overall</div>
-        <div class="lr-grid">
-          ${lrTable('Team Owner Champions', rec.champions)}
-          ${lrTable('Team Owner Runners Up', rec.runners)}
-        </div>
+      tabKeys.push({key:'overall', label:'Overall'});
+      tabPanels['overall'] = `<div class="lr-grid">
+        ${lrTable('Team Owner Champions', rec.champions)}
+        ${lrTable('Team Owner Runners Up', rec.runners)}
       </div>`;
     }
   }
 
-  // Per division
+  // Divisions
   Object.entries(divDataRaw).forEach(([div, rows]) => {
     const rec = parseLeagueRecords(rows);
     if(!rec) return;
-    html += `<div class="lr-div-section">
-      <div class="lr-div-title">${div}</div>
-      <div class="lr-grid">
-        ${lrTable('Driver Champions', rec.champDrivers)}
-        ${lrTable('Driver Runners Up', rec.ruDrivers)}
-        ${lrTable('Constructor Teams', rec.consTeams)}
-      </div>
+    const key = div.toLowerCase().replace(' ','');
+    tabKeys.push({key, label:div});
+    tabPanels[key] = `<div class="lr-grid">
+      ${lrTable('Driver Champions', rec.champDrivers)}
+      ${lrTable('Driver Runners Up', rec.ruDrivers)}
+      ${lrTable('Constructor Teams', rec.consTeams)}
     </div>`;
   });
 
-  wrap.innerHTML = html || '<div class="loading-msg">No league records found.</div>';
+  if(!tabKeys.length){ wrap.innerHTML='<div class="loading-msg">No league records found.</div>'; return; }
+
+  const tabs = tabKeys.map((t,i)=>
+    `<button class="acc-tab${i===0?' active':''}" onclick="switchLRTab('${t.key}',this)">${t.label}</button>`
+  ).join('');
+
+  const panels = tabKeys.map((t,i)=>
+    `<div class="acc-panel${i===0?' active':''}" id="lr-panel-${t.key}">${tabPanels[t.key]}</div>`
+  ).join('');
+
+  wrap.innerHTML = `<div class="acc-tabs">${tabs}</div>${panels}`;
+}
+
+function switchLRTab(key, btn){
+  const wrap = document.getElementById('lr-wrap');
+  wrap.querySelectorAll('.acc-tab').forEach(t=>t.classList.remove('active'));
+  wrap.querySelectorAll('.acc-panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  const panel = document.getElementById('lr-panel-'+key);
+  if(panel) panel.classList.add('active');
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
