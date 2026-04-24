@@ -10,9 +10,10 @@
   :root{--green:#3DCC47;--teal:#5ECFCF;--red:#E10600;--black:#111816;--dark:#161d1b;--dark2:#1a2320;--dark3:#1e2a27;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);--text:#ffffff;--text-muted:rgba(255,255,255,0.60);--text-faint:rgba(255,255,255,0.30);--gold:#E8B84B;}
   *{box-sizing:border-box;margin:0;padding:0;}
   body{background:#111816;background-image:linear-gradient(rgba(255,255,255,0.025) 0px,rgba(255,255,255,0.025) 4px,rgba(0,0,0,0.06) 4px,rgba(0,0,0,0.06) 8px),linear-gradient(90deg,rgba(0,0,0,0.06) 0px,rgba(0,0,0,0.06) 4px,rgba(255,255,255,0.025) 4px,rgba(255,255,255,0.025) 8px);background-size:8px 8px;color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;}
-  nav{background:rgba(9,9,9,0.97);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;}
-  .nav-left{display:flex;align-items:center;gap:14px;flex-shrink:0;}
-  .nav-logo{background:var(--green);color:#000;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;padding:5px 11px;border-radius:3px;text-decoration:none;}
+    nav{background:rgba(17,24,22,0.97);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;backdrop-filter:blur(8px);}
+  .nav-left{display:flex;align-items:center;flex-shrink:0;}
+  .nav-logo{display:flex;align-items:center;height:40px;text-decoration:none;}
+  .nav-logo img{height:34px;width:auto;display:block;}
   .nav-links{display:flex;align-items:stretch;height:56px;}
   .nav-item{position:relative;display:flex;align-items:stretch;}
   .nav-item>a,.nav-item>button{color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:500;letter-spacing:0.5px;padding:0 13px;display:flex;align-items:center;gap:4px;border-bottom:2px solid transparent;border-top:none;border-left:none;border-right:none;background:none;cursor:pointer;font-family:'Barlow',sans-serif;text-transform:uppercase;transition:color 0.2s;white-space:nowrap;}
@@ -20,7 +21,7 @@
   .nav-item>a.active,.nav-item>button.active{color:var(--text);border-bottom-color:var(--green);}
   .nav-chevron{font-size:8px;opacity:0.5;transition:transform 0.2s;}
   .nav-item:hover .nav-chevron{transform:rotate(180deg);}
-  .nav-dropdown{display:none;position:absolute;top:100%;left:0;background:#141414;border:1px solid var(--border2);border-top:2px solid var(--green);border-radius:0 0 6px 6px;min-width:180px;padding:6px 0;z-index:300;}
+  .nav-dropdown{display:none;position:absolute;top:100%;left:0;background:#141a18;border:1px solid var(--border2);border-top:2px solid var(--green);border-radius:0 0 6px 6px;min-width:180px;padding:6px 0;z-index:300;}
   .nav-item:hover .nav-dropdown{display:block;}
   .nav-dropdown a{display:block;padding:9px 16px;color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;transition:color 0.15s,background 0.15s;white-space:nowrap;}
   .nav-dropdown a:hover{color:var(--text);background:rgba(255,255,255,0.05);}
@@ -29,13 +30,12 @@
   .nav-hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
   .nav-hamburger.open span:nth-child(2){opacity:0;}
   .nav-hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
-  .mobile-menu{display:none;position:fixed;top:56px;left:0;right:0;bottom:0;background:#0d0d0d;z-index:150;overflow-y:auto;padding:16px 0 32px;}
+  .mobile-menu{display:none;position:fixed;top:56px;left:0;right:0;background:#141a18;border-bottom:1px solid var(--border2);z-index:199;padding:12px 0;max-height:calc(100vh - 56px);overflow-y:auto;}
   .mobile-menu.open{display:block;}
-  .mobile-section-header{padding:10px 24px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--green);}
-  .mobile-section a{display:block;padding:11px 32px;color:var(--text-muted);text-decoration:none;font-size:15px;border-bottom:1px solid var(--border);}
-  .mobile-divider{height:1px;background:var(--border);margin:12px 24px;}
-  @media(max-width:860px){.nav-links{display:none;}.nav-hamburger{display:flex;}}
-  @media(min-width:861px){.mobile-menu{display:none !important;}}
+  .mob-section{font-size:10px;letter-spacing:2px;color:var(--text-faint);padding:12px 24px 4px;text-transform:uppercase;}
+  .mobile-menu a{display:block;padding:10px 24px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;}
+  .mobile-menu a:hover{color:var(--text);}
+  @media(max-width:900px){.nav-links{display:none;}.nav-hamburger{display:flex;}}
   .page-header{background:var(--dark);border-bottom:1px solid var(--border);padding:24px;}
   .page-eyebrow{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:2.5px;color:var(--teal);text-transform:uppercase;font-weight:600;margin-bottom:4px;}
   .page-title{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:700;text-transform:uppercase;line-height:1;}
@@ -79,63 +79,66 @@
 </head>
 <body>
 <nav>
-  <div class="nav-left"><a href="index.html" class="nav-logo">F1XL</a></div>
+  <div class="nav-left">
+    <a href="index.html" class="nav-logo">
+      <img src="TRANSPARENT.png" alt="F1XL">
+    </a>
+  </div>
   <div class="nav-links">
     <div class="nav-item"><a href="index.html">Home</a></div>
     <div class="nav-item">
-      <button>Standings <span class="nav-chevron">&#9660;</span></button>
+      <button>Standings <span class="nav-chevron">▼</span></button>
       <div class="nav-dropdown">
         <a href="standings.html">Current Season</a>
         <a href="results.html">Results</a>
         <a href="past-seasons.html">Past Seasons</a>
-        <a href="winners-records.html">Winners &amp; Records</a>
+        <a href="asr.html">All Star Race</a>
       </div>
     </div>
     <div class="nav-item"><a href="teams.html" class="active">Teams</a></div>
     <div class="nav-item">
-      <button>Race Tickets <span class="nav-chevron">&#9660;</span></button>
+      <button>Race Tickets <span class="nav-chevron">▼</span></button>
       <div class="nav-dropdown">
         <a href="submit-ticket.html">Submit Ticket</a>
         <a href="ticket-outcomes.html">Ticket Outcomes</a>
         <a href="drivers-licence.html">Drivers Licence</a>
       </div>
     </div>
+    <div class="nav-item"><a href="schedule.html">Schedule</a></div>
     <div class="nav-item">
-      <button>Schedule <span class="nav-chevron">&#9660;</span></button>
-      <div class="nav-dropdown"><a href="schedule.html">Schedule</a></div>
+      <button>History <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown">
+        <a href="hall-of-fame.html">Hall of Fame</a>
+        <a href="hall-of-records.html">Hall of Records</a>
+        <a href="track-records.html">Track Records</a>
+      </div>
     </div>
-    <div class="nav-item"><a href="track-records.html">Track Records</a></div>
-    <div class="nav-item"><a href="asr.html">All Star Race</a></div>
     <div class="nav-item"><a href="applications.html">Applications</a></div>
     <div class="nav-item"><a href="league-rules.html">League Rules</a></div>
+    <a href="music.html" style="display:none"></a>
+    <a href="merch.html" style="display:none"></a>
   </div>
   <button class="nav-hamburger" id="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></button>
 </nav>
 <div class="mobile-menu" id="mobile-menu">
-  <div class="mobile-section">
-    <div class="mobile-section-header">Standings</div>
-    <a href="standings.html">Current Season</a>
-    <a href="results.html">Results</a>
-    <a href="past-seasons.html">Past Seasons</a>
-    <a href="winners-records.html">Winners &amp; Records</a>
-  </div>
-  <div class="mobile-divider"></div>
-  <div class="mobile-section"><a href="teams.html">Teams</a></div>
-  <div class="mobile-divider"></div>
-  <div class="mobile-section">
-    <div class="mobile-section-header">Race Tickets</div>
-    <a href="submit-ticket.html">Submit Ticket</a>
-    <a href="ticket-outcomes.html">Ticket Outcomes</a>
-    <a href="drivers-licence.html">Drivers Licence</a>
-  </div>
-  <div class="mobile-divider"></div>
-  <div class="mobile-section">
-    <a href="schedule.html">Schedule</a>
-    <a href="track-records.html">Track Records</a>
-    <a href="asr.html">All Star Race</a>
-    <a href="applications.html">Applications</a>
-    <a href="league-rules.html">League Rules</a>
-  </div>
+  <a href="index.html">Home</a>
+  <div class="mob-section">Standings</div>
+  <a href="standings.html">Current Season</a>
+  <a href="results.html">Results</a>
+  <a href="past-seasons.html">Past Seasons</a>
+  <a href="asr.html">All Star Race</a>
+  <a href="teams.html">Teams</a>
+  <div class="mob-section">Race Tickets</div>
+  <a href="submit-ticket.html">Submit Ticket</a>
+  <a href="ticket-outcomes.html">Ticket Outcomes</a>
+  <a href="drivers-licence.html">Drivers Licence</a>
+  <a href="schedule.html">Schedule</a>
+  <div class="mob-section">History</div>
+  <a href="hall-of-fame.html">Hall of Fame</a>
+  <a href="hall-of-records.html">Hall of Records</a>
+  <a href="track-records.html">Track Records</a>
+  <a href="applications.html">Applications</a>
+  <a href="league-rules.html">League Rules</a>
 </div>
 <div class="page-header">
   <div class="page-eyebrow">F1XL &middot; Est. 2010</div>
@@ -160,7 +163,10 @@ const teamColors={'alpine':'#0090FF','aston martin':'#006F62','ferrari':'#DC0000
 function getColor(n){return teamColors[(n||'').toLowerCase()]||'#555';}
 function clean(s){return (s||'').replace(new RegExp(CROWN,'g'),'').trim();}
 function hasCrown(s){return (s||'').includes(CROWN);}
-function toggleMenu(){document.getElementById('hamburger').classList.toggle('open');document.getElementById('mobile-menu').classList.toggle('open');}
+function toggleMenu(){
+  document.getElementById('hamburger').classList.toggle('open');
+  document.getElementById('mobile-menu').classList.toggle('open');
+}
 function parseCSV(text){return text.split(/\r?\n/).map(line=>{const cells=[];let cur='',inQ=false;for(let i=0;i<line.length;i++){const c=line[i];if(c=='"'){inQ=!inQ;}else if(c==','&&!inQ){cells.push(cur.trim());cur='';}else cur+=c;}cells.push(cur.trim());return cells;});}
 function parseSheet(rows){
   const seasons={};let sKey=null,resCol=-1,retCol=-1;

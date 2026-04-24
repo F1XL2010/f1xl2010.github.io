@@ -15,18 +15,18 @@
   *{box-sizing:border-box;margin:0;padding:0;}
   body{background:#111816;background-image:linear-gradient(rgba(255,255,255,0.025) 0px,rgba(255,255,255,0.025) 4px,rgba(0,0,0,0.06) 4px,rgba(0,0,0,0.06) 8px),linear-gradient(90deg,rgba(0,0,0,0.06) 0px,rgba(0,0,0,0.06) 4px,rgba(255,255,255,0.025) 4px,rgba(255,255,255,0.025) 8px);background-size:8px 8px;color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;}
 
-  /* NAV */
-  nav{background:rgba(9,9,9,0.97);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;}
-  .nav-left{display:flex;align-items:center;gap:14px;flex-shrink:0;}
-  .nav-logo{background:var(--green);color:#000;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;padding:5px 11px;border-radius:3px;text-decoration:none;}
+    nav{background:rgba(17,24,22,0.97);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;backdrop-filter:blur(8px);}
+  .nav-left{display:flex;align-items:center;flex-shrink:0;}
+  .nav-logo{display:flex;align-items:center;height:40px;text-decoration:none;}
+  .nav-logo img{height:34px;width:auto;display:block;}
   .nav-links{display:flex;align-items:stretch;height:56px;}
   .nav-item{position:relative;display:flex;align-items:stretch;}
   .nav-item>a,.nav-item>button{color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:500;letter-spacing:0.5px;padding:0 13px;display:flex;align-items:center;gap:4px;border-bottom:2px solid transparent;border-top:none;border-left:none;border-right:none;background:none;cursor:pointer;font-family:'Barlow',sans-serif;text-transform:uppercase;transition:color 0.2s;white-space:nowrap;}
   .nav-item>a:hover,.nav-item>button:hover{color:var(--text);}
-  .nav-item>a.active{color:var(--text);border-bottom-color:var(--green);}
+  .nav-item>a.active,.nav-item>button.active{color:var(--text);border-bottom-color:var(--green);}
   .nav-chevron{font-size:8px;opacity:0.5;transition:transform 0.2s;}
   .nav-item:hover .nav-chevron{transform:rotate(180deg);}
-  .nav-dropdown{display:none;position:absolute;top:100%;left:0;background:#141414;border:1px solid var(--border2);border-top:2px solid var(--green);border-radius:0 0 6px 6px;min-width:180px;padding:6px 0;z-index:300;}
+  .nav-dropdown{display:none;position:absolute;top:100%;left:0;background:#141a18;border:1px solid var(--border2);border-top:2px solid var(--green);border-radius:0 0 6px 6px;min-width:180px;padding:6px 0;z-index:300;}
   .nav-item:hover .nav-dropdown{display:block;}
   .nav-dropdown a{display:block;padding:9px 16px;color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;transition:color 0.15s,background 0.15s;white-space:nowrap;}
   .nav-dropdown a:hover{color:var(--text);background:rgba(255,255,255,0.05);}
@@ -35,15 +35,12 @@
   .nav-hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
   .nav-hamburger.open span:nth-child(2){opacity:0;}
   .nav-hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
-  .mobile-menu{display:none;position:fixed;top:56px;left:0;right:0;bottom:0;background:#0d0d0d;z-index:150;overflow-y:auto;padding:16px 0 32px;}
+  .mobile-menu{display:none;position:fixed;top:56px;left:0;right:0;background:#141a18;border-bottom:1px solid var(--border2);z-index:199;padding:12px 0;max-height:calc(100vh - 56px);overflow-y:auto;}
   .mobile-menu.open{display:block;}
-  .mobile-section-header{padding:10px 24px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--green);}
-  .mobile-section a{display:block;padding:11px 32px;color:var(--text-muted);text-decoration:none;font-size:15px;border-bottom:1px solid var(--border);}
-  .mobile-divider{height:1px;background:var(--border);margin:12px 24px;}
-  @media(max-width:860px){.nav-links{display:none;}.nav-title{display:none;}.nav-hamburger{display:flex;}}
-  @media(min-width:861px){.mobile-menu{display:none !important;}}
-
-  /* PAGE HEADER */
+  .mob-section{font-size:10px;letter-spacing:2px;color:var(--text-faint);padding:12px 24px 4px;text-transform:uppercase;}
+  .mobile-menu a{display:block;padding:10px 24px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;}
+  .mobile-menu a:hover{color:var(--text);}
+  @media(max-width:900px){.nav-links{display:none;}.nav-hamburger{display:flex;}}/* PAGE HEADER */
   .page-header{background:var(--dark);border-bottom:1px solid var(--border);padding:24px;}
   .page-eyebrow{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:2.5px;color:var(--teal);text-transform:uppercase;font-weight:600;margin-bottom:4px;}
   .page-title{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:700;text-transform:uppercase;line-height:1;}
@@ -72,8 +69,16 @@
   .chapter-title{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;flex:1;}
   .chapter-chevron{font-size:13px;color:var(--text-faint);transition:transform 0.25s;flex-shrink:0;}
   .chapter-chevron.open{transform:rotate(180deg);}
-  .chapter-body{display:none;border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;padding:4px 0 8px;background:var(--dark2);}
+  .chapter-body{display:none;border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;padding:4px 0 8px;}
   .chapter-body.open{display:block;}
+  .rule-section{border-top:1px solid var(--border);padding:16px 20px;}
+  .rule-section-title{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--teal);margin-bottom:10px;}
+  .section-body{padding:0 0 4px;}
+  .rule-item{display:flex;gap:12px;margin-bottom:8px;align-items:baseline;}
+  .rule-label{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:var(--teal);text-transform:uppercase;min-width:16px;flex-shrink:0;}
+  .rule-text{font-size:13px;color:var(--text-muted);line-height:1.6;}
+  .rule-para{font-size:13px;color:var(--text-muted);line-height:1.6;margin-bottom:8px;}
+  .rule-label-only{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:var(--teal);text-transform:uppercase;margin-bottom:4px;}
 
   /* RULE */
   .rule{padding:12px 18px;border-bottom:1px solid var(--border);}
@@ -117,7 +122,9 @@
 
 <nav>
   <div class="nav-left">
-    <a href="index.html" class="nav-logo">F1XL</a>
+    <a href="index.html" class="nav-logo">
+      <img src="TRANSPARENT.png" alt="F1XL">
+    </a>
   </div>
   <div class="nav-links">
     <div class="nav-item"><a href="index.html">Home</a></div>
@@ -127,12 +134,10 @@
         <a href="standings.html">Current Season</a>
         <a href="results.html">Results</a>
         <a href="past-seasons.html">Past Seasons</a>
-        <a href="winners-records.html">Winners &amp; Records</a>
+        <a href="asr.html">All Star Race</a>
       </div>
     </div>
-    <div class="nav-item">
-      <a href="teams.html">Teams</a>
-    </div>
+    <div class="nav-item"><a href="teams.html">Teams</a></div>
     <div class="nav-item">
       <button>Race Tickets <span class="nav-chevron">▼</span></button>
       <div class="nav-dropdown">
@@ -141,53 +146,41 @@
         <a href="drivers-licence.html">Drivers Licence</a>
       </div>
     </div>
+    <div class="nav-item"><a href="schedule.html">Schedule</a></div>
     <div class="nav-item">
-      <button>Schedule <span class="nav-chevron">▼</span></button>
+      <button>History <span class="nav-chevron">▼</span></button>
       <div class="nav-dropdown">
-        <a href="schedule.html">S27 Schedule</a>
-        <a href="track-guide.html">Track Guide</a>
+        <a href="hall-of-fame.html">Hall of Fame</a>
+        <a href="hall-of-records.html">Hall of Records</a>
+        <a href="track-records.html">Track Records</a>
       </div>
     </div>
-    <div class="nav-item"><a href="track-records.html">Track Records</a></div>
     <div class="nav-item"><a href="applications.html">Applications</a></div>
     <div class="nav-item"><a href="league-rules.html" class="active">League Rules</a></div>
+    <a href="music.html" style="display:none"></a>
+    <a href="merch.html" style="display:none"></a>
   </div>
-  <button class="nav-hamburger" id="hamburger" onclick="toggleMenu()">
-    <span></span><span></span><span></span>
-  </button>
+  <button class="nav-hamburger" id="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></button>
 </nav>
-
 <div class="mobile-menu" id="mobile-menu">
-  <div class="mobile-section">
-    <div class="mobile-section-header">Standings</div>
-    <a href="standings.html">Current Season</a>
-    <a href="results.html">Results</a>
-    <a href="past-seasons.html">Past Seasons</a>
-    <a href="winners-records.html">Winners &amp; Records</a>
-  </div>
-  <div class="mobile-divider"></div>
-  <div class="mobile-section">
-    <a href="teams.html">Teams</a>
-  </div>
-  <div class="mobile-divider"></div>
-  <div class="mobile-section">
-    <div class="mobile-section-header">Race Tickets</div>
-    <a href="submit-ticket.html">Submit Ticket</a>
-    <a href="ticket-outcomes.html">Ticket Outcomes</a>
-    <a href="drivers-licence.html">Drivers Licence</a>
-  </div>
-  <div class="mobile-divider"></div>
-  <div class="mobile-section">
-    <div class="mobile-section-header">Schedule</div>
-    <a href="schedule.html">S27 Schedule</a>
-    <a href="track-guide.html">Track Guide</a>
-  </div>
-  <div class="mobile-divider"></div>
-  <div class="mobile-section">
-    <a href="track-records.html">Track Records</a>
-    <a href="applications.html">Applications</a>
-    <a href="league-rules.html">League Rules</a>
-  </div>
+  <a href="index.html">Home</a>
+  <div class="mob-section">Standings</div>
+  <a href="standings.html">Current Season</a>
+  <a href="results.html">Results</a>
+  <a href="past-seasons.html">Past Seasons</a>
+  <a href="asr.html">All Star Race</a>
+  <a href="teams.html">Teams</a>
+  <div class="mob-section">Race Tickets</div>
+  <a href="submit-ticket.html">Submit Ticket</a>
+  <a href="ticket-outcomes.html">Ticket Outcomes</a>
+  <a href="drivers-licence.html">Drivers Licence</a>
+  <a href="schedule.html">Schedule</a>
+  <div class="mob-section">History</div>
+  <a href="hall-of-fame.html">Hall of Fame</a>
+  <a href="hall-of-records.html">Hall of Records</a>
+  <a href="track-records.html">Track Records</a>
+  <a href="applications.html">Applications</a>
+  <a href="league-rules.html">League Rules</a>
 </div>
 
 <div class="page-header">
@@ -203,516 +196,13 @@
   Please take the time to read all the rules and familiarise yourself with them before racing. Not being aware of them is not a suitable defence for any on or off track incidents.</div>
 </div>
 
-<div class="quick-nav">
-  <button class="quick-nav-btn" onclick="openChapter('general')">General Information</button>
-  <button class="quick-nav-btn" onclick="openChapter('structure')">League Structure</button>
-  <button class="quick-nav-btn" onclick="openChapter('teams')">Teams &amp; Drivers</button>
-  <button class="quick-nav-btn" onclick="openChapter('ontrack')">On Track</button>
-  <button class="quick-nav-btn" onclick="openChapter('stewarding')">Stewarding &amp; Tickets</button>
+<div class="quick-nav" id="quick-nav">
+  <div class="loading-msg" style="font-size:13px;">Loading...</div>
 </div>
 
-<div class="content">
-
-  <!-- GENERAL INFORMATION -->
-  <div class="chapter" id="chapter-general">
-    <div class="chapter-header" onclick="toggleChapter('general')">
-      <div class="chapter-tag">Section 1–6</div>
-      <div class="chapter-title">General Information</div>
-      <div class="chapter-chevron" id="chev-general">▼</div>
-    </div>
-    <div class="chapter-body" id="body-general">
-
-      <div class="rule">
-        <div class="rule-header"><div class="rule-num">1</div><div class="rule-title">Joining the League</div></div>
-        <div class="rule-item"><div class="rule-item-label">a</div><div class="rule-item-text">We are a cross platform league, though predominantly Xbox based. Drivers looking to join the league must sign up to the Discord and complete a time trial so that we may assess and place them in a division according to their results.</div></div>
-        <div class="rule-item"><div class="rule-item-label">b</div><div class="rule-item-text">We try to run two complete seasons per game cycle (approximately 12 months). For the first season after release, all drivers are required to complete a time trial (see section 16). The second season does not require a time trial unless you have either not raced in the previous season or completed 3 races or less during said season. League placement for those who have not needed to do a time trial will be based on the previous season's performance.</div></div>
-        <div class="rule-item"><div class="rule-item-label">c</div><div class="rule-item-text">Key dates will be communicated prior to each season and placed on Discord.</div></div>
-        <div class="rule-item"><div class="rule-item-label">d</div><div class="rule-item-text">Once the divisions have been announced and drivers placed, signups will re-open and we accept applications again for that season. However, any drivers signing at this point will not be guaranteed to be able to race every week as drivers already signed up will be given priority. This can change if drivers drop out.</div></div>
-      </div>
-
-      <div class="rule">
-        <div class="rule-header"><div class="rule-num">2</div><div class="rule-title">Acknowledgements</div></div>
-        <div class="rule-plain">By signing up to this league, drivers are expected to:</div>
-        <div class="rule-item"><div class="rule-item-label">a</div><div class="rule-item-text">Commit to the entirety of the season, unless otherwise stated at application.</div></div>
-        <div class="rule-item"><div class="rule-item-label">b</div><div class="rule-item-text">Understand and comply with the rules as set out on this page.</div></div>
-        <div class="rule-item"><div class="rule-item-label">c</div><div class="rule-item-text">Remain on the F1XL Discord server during the entirety of the season. Leaving the Discord will be considered as leaving the league.</div></div>
-        <div class="rule-highlight">Leaving the league mid-season, without an adequate reason, will result in a mark against you which could result in restricted participation in future seasons or even refused entry.</div>
-      </div>
-
-      <div class="rule">
-        <div class="rule-header"><div class="rule-num">3</div><div class="rule-title">Dead Heat</div></div>
-        <div class="rule-plain">If two or more teams/drivers finish the season with the same number of points, the higher place in the Championship shall be awarded to:</div>
-        <div class="rule-item"><div class="rule-item-label">a</div><div class="rule-item-text">The holder of the greatest number of first places.</div></div>
-        <div class="rule-item"><div class="rule-item-label">b</div><div class="rule-item-text">If the number of first places is the same, the holder of the greatest number of second places.</div></div>
-        <div class="rule-item"><div class="rule-item-label">c</div><div class="rule-item-text">If the number of first and second places is the same, the holder of the greatest number of third places and so on until a winner emerges.</div></div>
-      </div>
-
-      <div class="rule">
-        <div class="rule-header"><div class="rule-num">4</div><div class="rule-title">Gamertag / PSN / EA ID Change</div></div>
-        <div class="rule-plain">Drivers are allowed to change their name on their specific platform as well as on Discord. However, platform name changes must be advised to F1XL Management and reflected accordingly on your Discord profile.</div>
-      </div>
-
-      <div class="rule">
-        <div class="rule-header"><div class="rule-num">5</div><div class="rule-title">Recording and Streaming</div></div>
-        <div class="rule-item"><div class="rule-item-label">a</div><div class="rule-item-text">Drivers are not required to record their full race.</div></div>
-        <div class="rule-item"><div class="rule-item-label">b</div><div class="rule-item-text">Drivers submitting footage for tickets or appeals must not delete footage until the appeals process has been completed at the earliest.</div></div>
-        <div class="rule-item"><div class="rule-item-label">c</div><div class="rule-item-text">Drivers are allowed to stream their races but should only do so if their internet allows them to. If an incident was to be caused by a driver's lag, this driver will be deemed responsible and thus might be awarded a penalty.</div></div>
-        <div class="rule-item"><div class="rule-item-label">d</div><div class="rule-item-text">All commentated races will be streamed on any of the F1XL Twitch or YouTube channels. Confirmation will be sent prior to the race.</div></div>
-      </div>
-
-      <div class="rule">
-        <div class="rule-header"><div class="rule-num">6</div><div class="rule-title">Attendance</div></div>
-        <div class="rule-item"><div class="rule-item-label">a</div><div class="rule-item-text">5 days prior to a race, an attendance poll will open with 3 options: available, unavailable and tentative. Drivers are requested to answer it as quickly as possible. Based on that poll, the grid will be made up and reserve drivers allocated a seat.</div></div>
-        <div class="rule-item"><div class="rule-item-label">b</div><div class="rule-item-text">Drivers selecting Tentative should update their vote no later than a couple of hours prior to the race, to ensure seats are filled by primary drivers rather than reserves.</div></div>
-        <div class="rule-item"><div class="rule-item-label">c</div><div class="rule-item-text">A driver that fails to attend a race without notification and/or a valid reason for 3 concurrent weeks may be removed from their team by the Team Principal.</div></div>
-        <div class="rule-item"><div class="rule-item-label">d</div><div class="rule-item-text">Un-notified, sporadic attendance or quitting the league early may impact authorised future participation. F1XL Management may disallow entry or restrict to reserve status only.</div></div>
-        <div class="rule-item"><div class="rule-item-label">e</div><div class="rule-item-text">The latest point at which a driver may sign up is 8.30pm on the day of the race. Drivers that sign up after that time may not be allowed participation in that evening's race.</div></div>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- LEAGUE STRUCTURE -->
-  <div class="chapter" id="chapter-structure">
-    <div class="chapter-header" onclick="toggleChapter('structure')">
-      <div class="chapter-tag">Section 7–13</div>
-      <div class="chapter-title">League Structure</div>
-      <div class="chapter-chevron" id="chev-structure">▼</div>
-    </div>
-    <div class="chapter-body" id="body-structure">
-
-      <div class="rule">
-        <div class="rule-header"><div class="rule-num">7</div><div class="rule-title">General Info</div></div>
-        <div class="rule-plain">The league is split into multiple divisions with driver placement determined by time trials. There is no promotion or relegation at the end of a season, but drivers may be moved depending on number of sign ups and previous league performances. Teams are determined by the selection of Team Principals who participate in a draft to pick their drivers. Team Principals then manage their teams over the course of the season.</div>
-      </div>
-
-      <div class="rule">
-        <div class="rule-header"><div class="rule-num">8</div><div class="rule-title">Champions</div></div>
-        <div class="rule-plain">The driver/team that accumulates the most points over the season is declared Champion in each division, whilst the Team Principal with the combined most constructors' points is declared as the overall Champion.</div>
-      </div>
-
-      <div class="rule">
-        <div class="rule-header"><div class="rule-num">9</div><div class="rule-title">Classification / Points System</div></div>
-        <div class="rule-item"><div class="rule-item-label">a</div><div class="rule-item-text">All drivers who completed 90% of the total race distance will be classified even if attempting to rejoin still at the time of race completion.</div></div>
-        <div class="rule-item"><div class="rule-item-label">b</div><div class="rule-item-text">A driver who disconnected and did not rejoin after covering 90% of the race distance will be classified where their AI finished.</div></div>
-        <div class="rule-item"><div class="rule-item-label">c</div><div class="rule-item-text">Points follow the standard F1 system of 25 per win, 18 for second and so on. A point is awarded for fastest lap for any driver in the top ten. Sprint races follow real F1 scoring of 8 to 1.</div></div>
-      </div>
-
-      <div class="rule">
-        <div class="rule-header"><div class="rule-num">10</div><div class="rule-title">Mid-Season Moves</div></div>
-        <div class="rule-plain">A driver can be promoted or demoted at any point in the season at the discretion of F1XL Management. We will try to ensure all moves are done as early in the season as possible to avoid disruption, but we reserve the right to move a driver at any time if the need is valid.</div>
-      </div>
-
-      <div class="rule">
-        <div class="rule-header"><div class="rule-num">11</div><div class="rule-title">Race Timings / Lobby Information</div></div>
-        <div class="rule-item"><div class="rule-item-label">a</div><div class="rule-item-text">All divisions run to the same timing plan. Races are held weekly, every Sunday. Exceptions include festive holidays and occasions where a real life F1 race is at the same time.</div></div>
-        <div class="rule-item"><div class="rule-item-label">b</div><div class="rule-item-text">Official practice sessions start at 8pm BST and run for 45 minutes.</div></div>
-        <div class="rule-item"><div class="rule-item-label">c</div><div class="rule-item-text">Official Qualifying sessions start at 9pm BST and run for 18 minutes (Short qualifying).</div></div>
-        <div class="rule-item"><div class="rule-item-label">d</div><div class="rule-item-text">Official Sprint/Race sessions start right after the Qualifying session is finished.</div></div>
-        <div class="rule-item"><div class="rule-item-label">e</div><div class="rule-item-text">At the discretion of the Race Controllers, a 5-minute leeway is given for drivers running late. All sessions must start no later than 5 minutes after the official start time.</div></div>
-        <div class="rule-item"><div class="rule-item-label">f</div><div class="rule-item-text">We advise all drivers to hard reset your console and router before any race session to reduce any chance of lag.</div></div>
-        <div class="rule-item"><div class="rule-item-label">g</div><div class="rule-item-text">A minimum of 10 drivers is required for the race to start. A race with less than 10 drivers may be postponed or cancelled at the discretion of the League Co-ordinators.</div></div>
-        <div class="rule-item"><div class="rule-item-label">h</div><div class="rule-item-text">Drivers must ensure they are in the right car when the session is about to start. Starting the session in the wrong car will lead to a post-race penalty.</div></div>
-        <div class="rule-item"><div class="rule-item-label">i</div><div class="rule-item-text">Only the drivers and commentators are allowed in the lobby.</div></div>
-      </div>
-
-      <div class="rule">
-        <div class="rule-header"><div class="rule-num">12</div><div class="rule-title">Set Ups</div></div>
-        <div class="rule-item"><div class="rule-item-label">a</div><div class="rule-item-text">The use of custom setups in F1XL is not allowed.</div></div>
-        <div class="rule-item"><div class="rule-item-label">b</div><div class="rule-item-text">You may use any of the 5 default setups.</div></div>
-        <div class="rule-item"><div class="rule-item-label">c</div><div class="rule-item-text">You may only change parts of your setup that the game allows you to (fuel level for the race, front wing angle at the first pitstop, differential and brake bias out on track etc.)</div></div>
-        <div class="rule-item"><div class="rule-item-label">d</div><div class="rule-item-text">F1XL Management may adapt or change these rules depending on the status of the game and the functionality of its systems. This will be communicated at the first opportunity.</div></div>
-        <div class="rule-item"><div class="rule-item-label">e</div><div class="rule-item-text">Drivers are expected to use the correct tyre compound during qualifying and races. Going on track on intermediates or wets in dry conditions, or going on dry tyres in the wet, is NOT allowed.</div></div>
-      </div>
-
-      <div class="rule">
-        <div class="rule-header"><div class="rule-num">13</div><div class="rule-title">Lobby Settings</div></div>
-        <div class="rule-plain" style="margin-bottom:10px;">All lobbies must use the following settings:</div>
-        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:4px 16px;font-size:12px;color:var(--text-muted);margin-bottom:12px;">
-          <div>Qualifying: Short (18 mins)</div><div>Race distance: 50%</div>
-          <div>Weather: Dynamic</div><div>Weather accuracy: Approximate</div>
-          <div>Session start time: Realistic</div><div>Car performance: Equal</div>
-          <div>Parc Fermé: On</div><div>Damage: Reduced</div>
-          <div>Damage Rate: Standard</div><div>Collisions: On</div>
-          <div>Safety car: Standard</div><div>Safety car experience: Immersive</div>
-          <div>Corner cutting: Strict</div><div>Red flags: On</div>
-          <div>Formation lap: On</div><div>Formation lap experience: Immersive</div>
-          <div>Race starts: Manual</div><div>Low fuel mode: Hard</div>
-          <div>Pit stop experience: Immersive</div><div>Setup: Presets Only</div>
-        </div>
-        <div class="rule-plain" style="margin-bottom:8px;color:rgba(255,255,255,0.4);font-size:12px;">Braking Assist, Steering Assist and Pit Assist are forced off. Any other assists are allowed in all leagues.</div>
-        <table class="ai-table">
-          <tr><th>Division</th><th>AI Difficulty</th></tr>
-          <tr><td>Division 1</td><td>Level 96</td></tr>
-          <tr><td>Division 2</td><td>Level 91</td></tr>
-          <tr><td>Division 3</td><td>Level 86</td></tr>
-          <tr><td>Division 4</td><td>Level 81</td></tr>
-          <tr><td>Division 5</td><td>Level 76</td></tr>
-          <tr><td>Division 6</td><td>Level 71</td></tr>
-          <tr><td>Division 7</td><td>Level 66</td></tr>
-          <tr><td>Division 8</td><td>Level 61</td></tr>
-        </table>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- TEAMS, DRIVERS, TIERS, TPs -->
-  <div class="chapter" id="chapter-teams">
-    <div class="chapter-header" onclick="toggleChapter('teams')">
-      <div class="chapter-tag">Section 14–20</div>
-      <div class="chapter-title">Teams, Drivers, Tiers &amp; Team Principals</div>
-      <div class="chapter-chevron" id="chev-teams">▼</div>
-    </div>
-    <div class="chapter-body" id="body-teams">
-
-      <div class="rule">
-        <div class="rule-header"><div class="rule-num">14</div><div class="rule-title">Team Principals</div></div>
-        <div class="rule-plain">Duties include, but are not limited to:</div>
-        <div class="rule-item"><div class="rule-item-label">a</div><div class="rule-item-text">Selecting drivers during the preseason draft.</div></div>
-        <div class="rule-item"><div class="rule-item-label">b</div><div class="rule-item-text">Managing their drivers' needs during the season and maintaining their discipline on track and off.</div></div>
-        <div class="rule-item"><div class="rule-item-label">c</div><div class="rule-item-text">Relaying information from F1XL Management to their drivers and ensuring they understand.</div></div>
-        <div class="rule-item"><div class="rule-item-label">d</div><div class="rule-item-text">Reviewing and submitting the weekly tickets on behalf of their drivers. Tickets submitted that do not meet the criteria or clearly show there is no issue will be rejected and the TP runs the risk of receiving a warning.</div></div>
-        <div class="rule-item"><div class="rule-item-label">e</div><div class="rule-item-text">Providing a separate Discord for their team.</div></div>
-        <div class="rule-plain" style="margin-top:8px;">How TPs run their team is up to them, but F1XL standards are expected to be maintained. Multiple complaints from drivers about their TP may result in an investigation and potential removal from their position.</div>
-      </div>
-
-      <div class="rule">
-        <div class="rule-header"><div class="rule-num">15</div><div class="rule-title">Tiers</div></div>
-        <div class="rule-plain">Within each team there are 2 tiers. TPs can only have 1 driver from each tier racing for their team at any one time in each division. If a team needs a tier 1 driver but no such driver is available, they may be allowed to sign a tier 2 driver in a tier 1 slot but may not sign a tier 1 driver to a tier 2 slot.</div>
-      </div>
-
-      <div class="rule">
-        <div class="rule-header"><div class="rule-num">16</div><div class="rule-title">Time Trials</div></div>
-        <div class="rule-plain" style="margin-bottom:8px;">Time trials are used to determine which division and tier each driver should be placed into. Drivers may record themselves or book an appointment with the F1XL time trial team.</div>
-        <div class="rule-item"><div class="rule-item-label">a</div><div class="rule-item-text"><strong style="color:var(--text);">Own Recording</strong>
-          <div class="rule-sub">
-            <div class="rule-sub-item"><div class="rule-sub-label">i</div><div>Time trials are done in a multiplayer race lobby and the driver will need another person with them to start the race.</div></div>
-            <div class="rule-sub-item"><div class="rule-sub-label">ii</div><div>The second person will need to retire from the race when it starts.</div></div>
-            <div class="rule-sub-item"><div class="rule-sub-label">iii</div><div>Videos need to start on the main menu and show all lobby settings.</div></div>
-            <div class="rule-sub-item"><div class="rule-sub-label">iv</div><div>The driver has the choice of submitting one video, or two separate ones.</div></div>
-            <div class="rule-sub-item"><div class="rule-sub-label">v</div><div>During the race, the driver must not use overtake, but they are permitted to adjust brake bias and differential.</div></div>
-            <div class="rule-sub-item"><div class="rule-sub-label">vi</div><div>Settings: Multiplayer → Social Play → Create Custom Game → Friends/Invite Only. Tracks: Great Britain and Australia. Car: Equal F1 25 McLaren. Session: Short (5 laps). Setup: Fixed. No braking or steering assists. Weather: Clear. Damage: Off. Corner cutting: Strict. Collisions: Off. ERS: Off. Session start time: Realistic.</div></div>
-          </div>
-        </div></div>
-        <div class="rule-item"><div class="rule-item-label">b</div><div class="rule-item-text"><strong style="color:var(--text);">Time Trial Team</strong> — Drivers may be accompanied by a member of the Time Trial team who will set up the lobby themselves and watch on spectator.</div></div>
-        <div class="rule-item"><div class="rule-item-label">c</div><div class="rule-item-text"><strong style="color:var(--text);">Appointments &amp; Submission</strong> — Both appointments and submissions can be arranged on the relevant Discord sections.</div></div>
-        <div class="rule-highlight">F1XL Management would encourage all parties to do so to the best of their abilities. Intentionally misrepresenting your own pace will ultimately just result in you being moved and disrupting your own season.</div>
-      </div>
-
-      <div class="rule">
-        <div class="rule-header"><div class="rule-num">17</div><div class="rule-title">Draft Night</div></div>
-        <div class="rule-plain">During the draft each round is completed by TPs and tier 1 and tier 2 drivers are picked for each league. TPs will announce their picks to specified parties who will then announce on the F1XL Draft Livestream. Full instructions will be presented on the evening.</div>
-      </div>
-
-      <div class="rule">
-        <div class="rule-header"><div class="rule-num">18</div><div class="rule-title">Leaving a Team — Driver</div></div>
-        <div class="rule-plain">At any point in the season, a driver may leave their team. Any driver leaving a team must drive for a reserve team for a minimum of 2 races before being able to join another team. DNF or DSQ counts towards the 2 races unless subject to a disciplinary ticket. DNS does not count.</div>
-      </div>
-
-      <div class="rule">
-        <div class="rule-header"><div class="rule-num">19</div><div class="rule-title">Firing a Driver — Team Principal</div></div>
-        <div class="rule-item"><div class="rule-item-label">a</div><div class="rule-item-text">A TP may release a driver at any point. The TP may not sign another driver until 2 races have passed. The released driver may join another team immediately.</div></div>
-        <div class="rule-item"><div class="rule-item-label">b</div><div class="rule-item-text">If a driver fails to show up for 3 races in a row, they can be released by their TP immediately.</div></div>
-        <div class="rule-item"><div class="rule-item-label">c</div><div class="rule-item-text">If a driver is released due to misconduct (section 45), the TP may sign any eligible free agent immediately.</div></div>
-        <div class="rule-item"><div class="rule-item-label">d</div><div class="rule-item-text">If a driver is released due to inactivity, the TP may sign any eligible driver immediately.</div></div>
-      </div>
-
-      <div class="rule">
-        <div class="rule-header"><div class="rule-num">20</div><div class="rule-title">Reserve Drivers</div></div>
-        <div class="rule-plain" style="margin-bottom:8px;">Reserve drivers fall into two categories: full time drivers not selected for a team, or part time drivers who will not be competing every race.</div>
-        <div class="rule-item"><div class="rule-item-label">a</div><div class="rule-item-text"><strong style="color:var(--text);">Part Time Drivers</strong> — May sign up to each individual race but priority is always given to full time drivers. Part time drivers may still be signed by Team Principals and are subject to the same rules as any other driver.</div></div>
-        <div class="rule-item"><div class="rule-item-label">b</div><div class="rule-item-text"><strong style="color:var(--text);">Full Time Reserve Drivers</strong> — Full time drivers without an allocated team default into a reserve team. They are eligible to be signed by a TP after the season begins and have priority over part time drivers for participation.</div></div>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- ON TRACK -->
-  <div class="chapter" id="chapter-ontrack">
-    <div class="chapter-header" onclick="toggleChapter('ontrack')">
-      <div class="chapter-tag">Section 21–39</div>
-      <div class="chapter-title">On Track</div>
-      <div class="chapter-chevron" id="chev-ontrack">▼</div>
-    </div>
-    <div class="chapter-body" id="body-ontrack">
-
-      <div class="rule">
-        <div class="rule-header"><div class="rule-num">21</div><div class="rule-title">Qualifying</div></div>
-        <div class="rule-item"><div class="rule-item-label">a</div><div class="rule-item-text">Giving a tow to any driver from a different team is prohibited. Both the towing driver and the towed driver may be penalised.</div></div>
-        <div class="rule-item"><div class="rule-item-label">b</div><div class="rule-item-text">Drivers catching slower cars are allowed to move into their slipstream.</div></div>
-        <div class="rule-item"><div class="rule-item-label">c</div><div class="rule-item-text">If a driver is awarded what they believe to be an unfair grid place penalty, they must contact the League Co-ordinators as quickly as possible.</div></div>
-        <div class="rule-item"><div class="rule-item-label">d</div><div class="rule-item-text">No restart will be made if a driver spins and is disqualified for stopping in a dangerous place.</div></div>
-        <div class="rule-item"><div class="rule-item-label">e</div><div class="rule-item-text">Cars not on a flying lap must make every effort not to interfere with other vehicles. Qualifying interference includes: obstruction, visual impairment, giving dirty air, or losing control and forcing evasive actions.</div></div>
-        <div class="rule-item"><div class="rule-item-label">f</div><div class="rule-item-text">If a driver is being obstructed, they must make every reasonable effort to avoid causing a crash. Failure to do so may result in a penalty.</div></div>
-        <div class="rule-item"><div class="rule-item-label">g</div><div class="rule-item-text">Purposefully crashing during qualifying is a serious offence. You MUST record the incident if you crash out of qualifying.</div></div>
-        <div class="rule-item"><div class="rule-item-label">h</div><div class="rule-item-text">You may only retire whilst inside your pit box during qualifying. Retiring out on track makes you liable for any resulting tickets.</div></div>
-        <div class="rule-item"><div class="rule-item-label">i</div><div class="rule-item-text">If there is not enough time to start a final push lap, drivers should not leave the pits as the AI will take control when the timer hits 0:00.</div></div>
-      </div>
-
-      <div class="rule">
-        <div class="rule-header"><div class="rule-num">22</div><div class="rule-title">Qualifying Ban</div></div>
-        <div class="rule-item"><div class="rule-item-label">a</div><div class="rule-item-text">Drivers serving a qualifying ban are allowed to do an "installation lap" — leave the pits and go straight back in without crossing the start/finish line.</div></div>
-        <div class="rule-item"><div class="rule-item-label">b</div><div class="rule-item-text">If the lobby is reset between qualifying and the race, a driver having served their qualifying ban will be put at the back of the grid.</div></div>
-      </div>
-
-      <div class="rule">
-        <div class="rule-header"><div class="rule-num">23</div><div class="rule-title">Qualifying Tyres</div></div>
-        <div class="rule-plain">Drivers are expected to use the correct tyre compound during qualifying. Going on track on intermediates or wets in dry conditions, or going on dry tyres in the wet, is NOT allowed.</div>
-      </div>
-
-      <div class="rule">
-        <div class="rule-header"><div class="rule-num">24</div><div class="rule-title">Race Tyres</div></div>
-        <div class="rule-item"><div class="rule-item-label">a</div><div class="rule-item-text">During a dry race, all drivers are required to use at least 2 different dry tyre compounds, failure to do so will result in a disqualification. If wet tyres are required during the race, the previous rule no longer applies.</div></div>
-        <div class="rule-item"><div class="rule-item-label">b</div><div class="rule-item-text">Going on track on intermediates or wets in dry conditions, or going on dry tyres in the wet, is NOT allowed.</div></div>
-      </div>
-
-      <div class="rule">
-        <div class="rule-header"><div class="rule-num">25</div><div class="rule-title">Formation Lap &amp; Grid Start</div></div>
-        <div class="rule-item"><div class="rule-item-label">a</div><div class="rule-item-text">The driver starting from pole position will set the pace.</div></div>
-        <div class="rule-item"><div class="rule-item-label">b</div><div class="rule-item-text">Drivers must remain within roughly 10 car lengths of the car ahead.</div></div>
-        <div class="rule-item"><div class="rule-item-label">c</div><div class="rule-item-text">Deliberately crashing on the formation lap is not allowed and will result in a severe penalty.</div></div>
-        <div class="rule-item"><div class="rule-item-label">d</div><div class="rule-item-text">Intentionally hitting another driver under formation lap conditions is not permitted.</div></div>
-        <div class="rule-item"><div class="rule-item-label">e</div><div class="rule-item-text">The Race Controllers decide when to press 'A' to begin the race. Any driver pressing it before this time will receive a reprimand + 5 seconds penalty.</div></div>
-      </div>
-
-      <div class="rule">
-        <div class="rule-header"><div class="rule-num">26</div><div class="rule-title">Pit Entry, Pit Lane, Pit Exit</div></div>
-        <div class="rule-item"><div class="rule-item-label">a</div><div class="rule-item-text">The section of track between the first safety car line and the beginning of the pit lane is designated the "pit entry".</div></div>
-        <div class="rule-item"><div class="rule-item-label">b</div><div class="rule-item-text">The section of track between the end of the pit lane and the second safety car line is designated the "pit exit".</div></div>
-        <div class="rule-item"><div class="rule-item-label">c</div><div class="rule-item-text">Any driver intending to enter the pits must make sure it is safe to do so and must not hinder or unreasonably endanger other cars.</div></div>
-        <div class="rule-item"><div class="rule-item-label">d</div><div class="rule-item-text">When all four tyres are fully across the pit entry line, the driver must not re-enter the track and must continue into the pits.</div></div>
-        <div class="rule-item"><div class="rule-item-label">e</div><div class="rule-item-text">Any driver exiting the pits must not cross the white line.</div></div>
-        <div class="rule-item"><div class="rule-item-label">f</div><div class="rule-item-text">Rules 26c, 26d and 26e can be disregarded by the stewards in cases of uncontrollable events.</div></div>
-        <div class="rule-item"><div class="rule-item-label">g</div><div class="rule-item-text">If a track has a temporary change to these rules for a specific race, these will be communicated prior to the race. Not being aware of announced temporary rules is not a valid defence.</div></div>
-      </div>
-
-      <div class="rule">
-        <div class="rule-header"><div class="rule-num">27</div><div class="rule-title">Starting the Race</div></div>
-        <div class="rule-plain">Drivers must start the race by themselves. Starting the race in AI mode will automatically result in a warning. If any advantage is gained, a more severe penalty will be awarded.</div>
-      </div>
-
-      <div class="rule">
-        <div class="rule-header"><div class="rule-num">28</div><div class="rule-title">Track Limits</div></div>
-        <div class="rule-item"><div class="rule-item-label">a</div><div class="rule-item-text">The white lines that define the track edges are considered to be part of the track, but the kerbs are not.</div></div>
-        <div class="rule-item"><div class="rule-item-label">b</div><div class="rule-item-text">Drivers must make every reasonable effort to stay on the track at all times and may not deliberately leave the track without justifiable reason.</div></div>
-        <div class="rule-item"><div class="rule-item-label">c</div><div class="rule-item-text">A driver will be judged to have left the track if no part of their car remains in contact with the track.</div></div>
-        <div class="rule-item"><div class="rule-item-label">d</div><div class="rule-item-text">A driver who has left the track may rejoin only if it is safe to do so and without gaining an advantage.</div></div>
-        <div class="rule-item"><div class="rule-item-label">e</div><div class="rule-item-text">If a driver is deemed to have gained an advantage by leaving the track, they must make every effort to give back the whole of any advantage gained.</div></div>
-      </div>
-
-      <div class="rule">
-        <div class="rule-header"><div class="rule-num">29</div><div class="rule-title">Resetting to the Track</div></div>
-        <div class="rule-plain">Drivers are allowed to reset to the track as long as they do not endanger any other driver. A track reset is deemed dangerous when a driver rejoins in front of another, irrespective of whether you are ghosted or not.</div>
-      </div>
-
-      <div class="rule">
-        <div class="rule-header"><div class="rule-num">30</div><div class="rule-title">Track Furniture</div></div>
-        <div class="rule-item"><div class="rule-item-label">a</div><div class="rule-item-text">Intentionally taking out brake marker boards is considered unsportsmanlike behaviour and is prohibited.</div></div>
-        <div class="rule-item"><div class="rule-item-label">b</div><div class="rule-item-text">Drivers will not be penalised for impacting and displacing any bollard on the circuit.</div></div>
-      </div>
-
-      <div class="rule">
-        <div class="rule-header"><div class="rule-num">31</div><div class="rule-title">Driving Standards</div></div>
-        <div class="rule-item"><div class="rule-item-label">a</div><div class="rule-item-text">At no time may a car be driven unnecessarily slowly, erratically, or in any manner that may be deemed potentially dangerous.</div></div>
-        <div class="rule-item"><div class="rule-item-label">b</div><div class="rule-item-text">Drivers are allowed to go into AI (by pausing the game) for a limited amount of time but they are always responsible for what their car does.</div></div>
-      </div>
-
-      <div class="rule">
-        <div class="rule-header"><div class="rule-num">32</div><div class="rule-title">Overtaking and Defending</div></div>
-        <div class="rule-item"><div class="rule-item-label">a</div><div class="rule-item-text">Overtaking may be done from the left or the right.</div></div>
-        <div class="rule-item"><div class="rule-item-label">b</div><div class="rule-item-text">More than one change of direction to defend a position is not permitted.</div></div>
-        <div class="rule-item"><div class="rule-item-label">c</div><div class="rule-item-text">At the beginning of a straight, a driver may "break the tow" by moving off-line and getting back onto the racing line once without it being considered a defensive manoeuvre.</div></div>
-        <div class="rule-item"><div class="rule-item-label">d</div><div class="rule-item-text">Any driver defending their position on a straight may use the full width of the track during their first move providing there is no significant portion of the opposing car alongside them. A significant portion is defined as any part of the front wheel ahead of the rear axle of the car in front.</div></div>
-        <div class="rule-item"><div class="rule-item-label">e</div><div class="rule-item-text">Defensive manoeuvres should always be proactive. Reactive defending and blocking are strictly prohibited.</div></div>
-        <div class="rule-item"><div class="rule-item-label">f</div><div class="rule-item-text">A driver having defended their position off-line may move back towards the racing line but must leave a car width of space between them and the edge of the track.</div></div>
-        <div class="rule-item"><div class="rule-item-label">g</div><div class="rule-item-text">Moving under braking is prohibited and may result in a penalty.</div></div>
-        <div class="rule-item"><div class="rule-item-label">h</div><div class="rule-item-text">Deliberate crowding of a car beyond the edge of the track or any abnormal change in direction such as weaving on a straight is not permitted.</div></div>
-        <div class="rule-item"><div class="rule-item-label">i</div><div class="rule-item-text">If a driver leaves the track whilst defending their position, they may be awarded a penalty for leaving the track and gaining an advantage.</div></div>
-        <div class="rule-item"><div class="rule-item-label">j</div><div class="rule-item-text">When 2 drivers are fighting side-by-side through a corner, the defending driver is expected to leave racing room to the overtaking driver as long as they remain sufficiently alongside. A driver is deemed alongside when their front axle is in front of the other driver's rear axle.</div></div>
-        <div class="rule-item"><div class="rule-item-label">k</div><div class="rule-item-text">Causing collisions to gain advantages is prohibited. Running into the side of another car on the exit of a corner to hinder them is prohibited.</div></div>
-        <div class="rule-item"><div class="rule-item-label">l</div><div class="rule-item-text">An overtaking car must take reasonable effort to avoid contact and must not make dangerous or unnecessary manoeuvres to pass.</div></div>
-        <div class="rule-item"><div class="rule-item-label">m</div><div class="rule-item-text">A defending car must be aware of when to concede their position. Any action deemed dangerous may be penalised.</div></div>
-        <div class="rule-item"><div class="rule-item-label">n</div><div class="rule-item-text">If a driver's car is ghosted, they must continue to race as though it is not. Using the situation to their advantage by driving purposefully through other cars is prohibited.</div></div>
-        <div class="rule-item"><div class="rule-item-label">o</div><div class="rule-item-text">This list is by no means exhaustive and F1XL Management reserve the right to amend and update as needed.</div></div>
-      </div>
-
-      <div class="rule">
-        <div class="rule-header"><div class="rule-num">33</div><div class="rule-title">Giving Back a Position</div></div>
-        <div class="rule-item"><div class="rule-item-label">a</div><div class="rule-item-text">A driver looking to give a position away should first make sure it is safe to do so.</div></div>
-        <div class="rule-item"><div class="rule-item-label">b</div><div class="rule-item-text">When a driver gives up a position gained illegally, letting the other driver get ahead is not sufficient — they are expected to end the wheel-to-wheel battle before attempting another overtake.</div></div>
-        <div class="rule-item"><div class="rule-item-label">c</div><div class="rule-item-text">In case of illegal overtakes, drivers must give back the position at the earliest opportunity.</div></div>
-        <div class="rule-item"><div class="rule-item-label">d</div><div class="rule-item-text">Drivers should not slow down and wait to let an overtaken driver through, even as a sportsmanship act. Doing so will not be taken into consideration by the stewards.</div></div>
-      </div>
-
-      <div class="rule">
-        <div class="rule-header"><div class="rule-num">34</div><div class="rule-title">Lapped Cars</div></div>
-        <div class="rule-item"><div class="rule-item-label">a</div><div class="rule-item-text">As soon as a driver is caught by another about to lap them, they must allow the faster driver through at the earliest opportunity. They have the current and the entirety of the next sector to do so.</div></div>
-        <div class="rule-item"><div class="rule-item-label">b</div><div class="rule-item-text">Any driver deemed to have deliberately blocked or hindered the faster car will be severely penalised.</div></div>
-        <div class="rule-item"><div class="rule-item-label">c</div><div class="rule-item-text">Lapped cars are allowed to unlap themselves if their pace allows them to create a gap in a reasonable amount of time. However, they are not allowed to battle the lapping car.</div></div>
-      </div>
-
-      <div class="rule">
-        <div class="rule-header"><div class="rule-num">35</div><div class="rule-title">Safety Car / Virtual Safety Car</div></div>
-        <div class="rule-item"><div class="rule-item-label">a</div><div class="rule-item-text">When the SC/VSC is deployed, drivers must respect the SC/VSC Delta. Failure to do so may result in a penalty.</div></div>
-        <div class="rule-item"><div class="rule-item-label">b</div><div class="rule-item-text">If a driver overtakes another as the Safety Car is deployed, they must give up the position(s) gained if the move was clearly completed after the "Safety Car deployed" message is displayed.</div></div>
-        <div class="rule-item"><div class="rule-item-label">c</div><div class="rule-item-text">At no time should a driver be more than 2 seconds under the delta unless in exceptional circumstances.</div></div>
-        <div class="rule-item"><div class="rule-item-label">d</div><div class="rule-item-text">Drivers must drive safely under SC/VSC. Sudden changes of direction or heavy braking may be penalised.</div></div>
-        <div class="rule-item"><div class="rule-item-label">e</div><div class="rule-item-text">Overtaking under SC/VSC is prohibited except: if signalled by the game; when entering/exiting the pits relative to the safety car lines; when the SC is returning to pits and has passed the first SC line; whilst in the pit area; or if a car noticeably slows due to an issue.</div></div>
-        <div class="rule-item"><div class="rule-item-label">f</div><div class="rule-item-text">Letting other drivers through under SC/VSC conditions is prohibited unless under glitches or mitigating circumstances.</div></div>
-        <div class="rule-item"><div class="rule-item-label">g</div><div class="rule-item-text">Under Safety Car conditions, drivers must remain within 10 car-lengths of the car in front.</div></div>
-        <div class="rule-item"><div class="rule-item-label">h</div><div class="rule-item-text">Drivers not having caught up to the queue must always try to rejoin it as quickly as possible.</div></div>
-        <div class="rule-item"><div class="rule-item-label">i</div><div class="rule-item-text">Until the restart, drivers are not allowed to go alongside one another.</div></div>
-        <div class="rule-item"><div class="rule-item-label">j</div><div class="rule-item-text">When the Safety Car is about to come in, the leader may dictate the pace and fall back more than 10 car-lengths. Once the leader decides to restart they are not allowed to slow down again — start-and-stops are prohibited.</div></div>
-        <div class="rule-item"><div class="rule-item-label">k</div><div class="rule-item-text">When the Safety Car period ends, overtaking before the start/finish line is prohibited.</div></div>
-        <div class="rule-item"><div class="rule-item-label">l</div><div class="rule-item-text">After the Safety Car pits, the lead car must not reduce speed below 50mph / 80kph.</div></div>
-      </div>
-
-      <div class="rule">
-        <div class="rule-header"><div class="rule-num">36</div><div class="rule-title">Cheating</div></div>
-        <div class="rule-item"><div class="rule-item-label">a</div><div class="rule-item-text">Cheating is strictly prohibited and will result in an indefinite ban.</div></div>
-        <div class="rule-item"><div class="rule-item-label">b</div><div class="rule-item-text">If a driver is subject to a glitch and gains an advantage out of it, they are expected to give it up as soon as possible.</div></div>
-        <div class="rule-item"><div class="rule-item-label">c</div><div class="rule-item-text">Abusing any game glitch is prohibited and may be punished.</div></div>
-        <div class="rule-item"><div class="rule-item-label">d</div><div class="rule-item-text">If a driver is found to have cheated, they will be disqualified from all races they have taken part in.</div></div>
-        <div class="rule-item"><div class="rule-item-label">e</div><div class="rule-item-text">Drivers must drive for themselves and their own team. Any cooperation between drivers from different teams is strictly prohibited.</div></div>
-        <div class="rule-item"><div class="rule-item-label">f</div><div class="rule-item-text">Deliberately crashing is not allowed and will result in a severe penalty.</div></div>
-        <div class="rule-item"><div class="rule-item-label">g</div><div class="rule-item-text">Deliberately causing another driver severe damage or a DNF will result in a severe penalty up to and including a permanent ban.</div></div>
-        <div class="rule-item"><div class="rule-item-label">h</div><div class="rule-item-text">Deliberate attempts to circumvent any perceived loopholes or temporary rule changes will result in severe penalties.</div></div>
-      </div>
-
-      <div class="rule">
-        <div class="rule-header"><div class="rule-num">37</div><div class="rule-title">Game Related Issues</div></div>
-        <div class="rule-item"><div class="rule-item-label">a</div><div class="rule-item-text"><strong style="color:var(--text);">Disconnections during Qualifying</strong> — Drivers may rejoin during the session. If unable to rejoin, the lobby carries on and the driver may try to join again for the race. If multiple drivers disconnect, the lobby may be restarted with a new host.</div></div>
-        <div class="rule-item"><div class="rule-item-label">b</div><div class="rule-item-text"><strong style="color:var(--text);">Disconnections between Qualifying and Race</strong> — League Co-ordinators may set up a new lobby using the grid editor. Prior qualifying results will stand.</div></div>
-        <div class="rule-item"><div class="rule-item-label">c</div><div class="rule-item-text"><strong style="color:var(--text);">Disconnections during the Race</strong> — Drivers may rejoin and retake control. The race will not be restarted due to a disconnection. If a driver cannot rejoin before the end, they will be awarded full points as long as 75% of the race has been completed.</div></div>
-      </div>
-
-      <div class="rule">
-        <div class="rule-header"><div class="rule-num">38</div><div class="rule-title">Collapsed, Split or Glitched Lobby</div></div>
-        <div class="rule-item"><div class="rule-item-label">a</div><div class="rule-item-text">Actions taken are at the discretion of the League Co-ordinators.</div></div>
-        <div class="rule-item"><div class="rule-item-label">b</div><div class="rule-item-text">Less than 50% completed: postponement or full restart may be called. 50–75% completed: race result called with half points. Over 75% completed: race result called with full points.</div></div>
-      </div>
-
-      <div class="rule">
-        <div class="rule-header"><div class="rule-num">39</div><div class="rule-title">Reset Lobby</div></div>
-        <div class="rule-item"><div class="rule-item-label">a</div><div class="rule-item-text">Weather settings for a new race lobby will be based on the original race conditions using custom weather settings. If qualifying is restarted, dynamic weather will be used.</div></div>
-        <div class="rule-item"><div class="rule-item-label">b</div><div class="rule-item-text">If the session fails to start within 50 minutes of the original scheduled start time, the event will be abandoned and either postponed or cancelled.</div></div>
-        <div class="rule-item"><div class="rule-item-label">c</div><div class="rule-item-text">If a lobby is reset in qualifying, a full qualifying should be undertaken if noted within the first 5 minutes. If noted after 5 minutes, the original session is void and a one-shot qualifying session will be undertaken.</div></div>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- STEWARDING -->
-  <div class="chapter" id="chapter-stewarding">
-    <div class="chapter-header" onclick="toggleChapter('stewarding')">
-      <div class="chapter-tag">Section 40–46</div>
-      <div class="chapter-title">Stewarding, Tickets &amp; Appeals</div>
-      <div class="chapter-chevron" id="chev-stewarding">▼</div>
-    </div>
-    <div class="chapter-body" id="body-stewarding">
-
-      <div class="rule">
-        <div class="rule-header"><div class="rule-num">40</div><div class="rule-title">Stewards Briefing</div></div>
-        <div class="rule-item"><div class="rule-item-label">a</div><div class="rule-item-text">Shortly before every race the Stewards will advise the Team Principals of any outstanding penalties, who will then relay it to their drivers.</div></div>
-        <div class="rule-item"><div class="rule-item-label">b</div><div class="rule-item-text">Any ruleset changes will be relayed to TPs and the wider community. These temporary changes will override relevant sections in the League Rules.</div></div>
-      </div>
-
-      <div class="rule">
-        <div class="rule-header"><div class="rule-num">41</div><div class="rule-title">Submitting Tickets</div></div>
-        <div class="rule-plain" style="margin-bottom:8px;">If a driver is involved in an incident they deem worthy of raising, this is done via their Team Principal who will submit the ticket on their behalf.</div>
-        <div class="rule-item"><div class="rule-item-label">a</div><div class="rule-item-text">The ticket should be submitted via the appropriate page on this website.</div></div>
-        <div class="rule-item"><div class="rule-item-label">b</div><div class="rule-item-text">The deadline is 9pm the day immediately following the race (Monday).</div></div>
-        <div class="rule-item"><div class="rule-item-label">c</div><div class="rule-item-text">Any ticket without evidence will be rejected. The more evidence provided, the better.</div></div>
-        <div class="rule-item"><div class="rule-item-label">d</div><div class="rule-item-text">Video evidence submitted via clips on phone are not permitted.</div></div>
-        <div class="rule-item"><div class="rule-item-label">e</div><div class="rule-item-text">Car contact incidents and qualifying interference can only be reported by the drivers involved. If replay or highlights footage is used, it MUST show at least 1x speed.</div></div>
-        <div class="rule-item"><div class="rule-item-label">f</div><div class="rule-item-text">For incidents of other types (illegal overtake, pit infringements, track limits etc.), they can be reported by any driver with any sort of footage.</div></div>
-      </div>
-
-      <div class="rule">
-        <div class="rule-header"><div class="rule-num">42</div><div class="rule-title">In-Game Penalty Removal</div></div>
-        <div class="rule-item"><div class="rule-item-label">a</div><div class="rule-item-text">Track limits warnings will not be removed except under certain circumstances, accompanied with video evidence and the FULL race director.</div></div>
-        <div class="rule-item"><div class="rule-item-label">b</div><div class="rule-item-text">In case of multiple warnings for the same incident, the full lap must be provided as well as the full race director.</div></div>
-        <div class="rule-item"><div class="rule-item-label">c</div><div class="rule-item-text">If awarded an overly harsh corner cutting penalty, a driver may request removal with video evidence and FULL race director. The penalty may be removed or converted to a warning.</div></div>
-        <div class="rule-item"><div class="rule-item-label">d</div><div class="rule-item-text">If awarded a penalty for other reasons, the driver must provide video evidence and prove it was not served in the pits.</div></div>
-      </div>
-
-      <div class="rule">
-        <div class="rule-header"><div class="rule-num">43</div><div class="rule-title">Penalties</div></div>
-        <div class="rule-plain" style="margin-bottom:8px;">Drivers deemed to have caused an incident may be awarded the following post-race penalties:</div>
-        <div class="rule-item"><div class="rule-item-label">i</div><div class="rule-item-text">Time Penalties</div></div>
-        <div class="rule-item"><div class="rule-item-label">ii</div><div class="rule-item-text">Warnings</div></div>
-        <div class="rule-item"><div class="rule-item-label">iii</div><div class="rule-item-text">Reprimands</div></div>
-        <div class="rule-item"><div class="rule-item-label">iv</div><div class="rule-item-text">Qualifying Ban</div></div>
-        <div class="rule-item"><div class="rule-item-label">v</div><div class="rule-item-text">Race Ban</div></div>
-        <div class="rule-item"><div class="rule-item-label">vi</div><div class="rule-item-text">Expulsion from season</div></div>
-        <div class="rule-item"><div class="rule-item-label">vii</div><div class="rule-item-text">Ban from F1XL</div></div>
-        <div class="rule-plain" style="margin-top:8px;font-size:12px;color:rgba(255,255,255,0.4);">Both the ticket and appeals team have the option to add additional time penalties to any of the above.</div>
-      </div>
-
-      <div class="rule">
-        <div class="rule-header"><div class="rule-num">44</div><div class="rule-title">Drivers Licence</div></div>
-        <div class="rule-plain" style="margin-bottom:8px;">Each penalty given will result in points on the driver's licence:</div>
-        <table class="pts-table" style="margin-bottom:12px;">
-          <tr><th>Penalty</th><th>Licence Points</th></tr>
-          <tr><td>Warning</td><td>1.5 points</td></tr>
-          <tr><td>Reprimand</td><td>3 points</td></tr>
-          <tr><td>Qualifying Ban</td><td>3 points</td></tr>
-          <tr><td>Race Ban</td><td>4.5 points</td></tr>
-          <tr><td>Chat / party abuse</td><td>3 points</td></tr>
-        </table>
-        <div class="rule-plain" style="margin-bottom:8px;">When reaching a certain points total an extra punishment follows:</div>
-        <table class="pts-table" style="margin-bottom:12px;">
-          <tr><th>Points Total</th><th>Extra Punishment</th></tr>
-          <tr><td>9 points</td><td>Qualifying ban</td></tr>
-          <tr><td>12 points</td><td>Qualifying ban</td></tr>
-          <tr><td>15 points</td><td>Race ban</td></tr>
-          <tr><td>18 points</td><td>Management review — may result in multiple race bans, season ban, or permanent ban</td></tr>
-        </table>
-        <div class="rule-plain" style="margin-bottom:8px;">Some incidents carry standardised penalties:</div>
-        <div class="rule-item"><div class="rule-item-label">i</div><div class="rule-item-text">Racing in wrong car — 10 second time penalty</div></div>
-        <div class="rule-item"><div class="rule-item-label">ii</div><div class="rule-item-text">Retiring on track — Qualifying ban</div></div>
-        <div class="rule-item"><div class="rule-item-label">iii</div><div class="rule-item-text">Crashing on purpose (qualifying) — Qualifying ban</div></div>
-        <div class="rule-item"><div class="rule-item-label">iv</div><div class="rule-item-text">Qualifying interference — Qualifying ban</div></div>
-        <div class="rule-item"><div class="rule-item-label">v</div><div class="rule-item-text">Organised slipstream (non-teammate) — Qualifying ban</div></div>
-        <div class="rule-item"><div class="rule-item-label">vi</div><div class="rule-item-text">Failing to serve qualifying ban — Disqualification</div></div>
-        <div class="rule-item"><div class="rule-item-label">vii</div><div class="rule-item-text">Unsafe reset to track — 5 second time penalty</div></div>
-        <div class="rule-item"><div class="rule-item-label">viii</div><div class="rule-item-text">Crashing on purpose (race) — Race ban</div></div>
-        <div class="rule-item"><div class="rule-item-label">ix</div><div class="rule-item-text">Intentional impediment or damage of another driver — Race ban</div></div>
-        <div class="rule-item"><div class="rule-item-label">x</div><div class="rule-item-text">Intentional "crashing out" of another driver — Minimum 3 race ban</div></div>
-        <div class="rule-item"><div class="rule-item-label">xi</div><div class="rule-item-text">Any driver found to be intoxicated and/or under the influence of illegal substances causing issues in the race will receive a mandatory race ban on top of any other tickets that may arise.</div></div>
-        <div class="rule-plain" style="margin-top:8px;font-size:12px;color:rgba(255,255,255,0.4);">If a driver misses the race in which a penalty was to be served, the penalty will carry over. Time penalties carry over to the next race if the driver had a DNF. Penalties in a cancelled event carry over to the next round.</div>
-      </div>
-
-      <div class="rule">
-        <div class="rule-header"><div class="rule-num">45</div><div class="rule-title">Misconduct</div></div>
-        <div class="rule-item"><div class="rule-item-label">a</div><div class="rule-item-text">No deliberate "flaming" or "trolling".</div></div>
-        <div class="rule-item"><div class="rule-item-label">b</div><div class="rule-item-text">No bigotry of any kind. Any kind of hate speech, sexism, racism, or attacks against the LGBTQ+ community will result in an immediate ban.</div></div>
-        <div class="rule-item"><div class="rule-item-label">c</div><div class="rule-item-text">Please keep any discourse polite. Personal attacks will not be tolerated.</div></div>
-        <div class="rule-item"><div class="rule-item-label">d</div><div class="rule-item-text">Feel free to discuss incidents on track, but we encourage clear-headedness. If you cannot do this, submit your ticket and leave no comment in the chat.</div></div>
-        <div class="rule-item"><div class="rule-item-label">e</div><div class="rule-item-text">No inappropriate, offensive or illegal content posted on Discord directly or via link. This includes inappropriate nicknames.</div></div>
-        <div class="rule-item"><div class="rule-item-label">f</div><div class="rule-item-text">Political and religious discussion is allowed, however abusing or belittling someone because their views differ from yours is not.</div></div>
-        <div class="rule-item"><div class="rule-item-label">g</div><div class="rule-item-text">No spamming.</div></div>
-        <div class="rule-item"><div class="rule-item-label">h</div><div class="rule-item-text">No impersonating other members.</div></div>
-        <div class="rule-item"><div class="rule-item-label">i</div><div class="rule-item-text">If you are banned from F1XL, any attempts to evade or circumvent this ban by joining under an alternative identity will result in the new account being immediately banned.</div></div>
-        <div class="rule-item"><div class="rule-item-label">j</div><div class="rule-item-text">F1XL is not responsible for any content posted on Discord by members. If you take offence to any content, please message a member of F1XL Management.</div></div>
-      </div>
-
-      <div class="rule">
-        <div class="rule-header"><div class="rule-num">46</div><div class="rule-title">Appeal Process</div></div>
-        <div class="rule-plain" style="margin-bottom:8px;">Appeals are for both disagreements with ticket results or requests to remove an in-game penalty.</div>
-        <div class="rule-item"><div class="rule-item-label">a</div><div class="rule-item-text">The appeal deadline is by default 24 hours after ticket results are posted, but can be extended at F1XL Management's discretion.</div></div>
-        <div class="rule-item"><div class="rule-item-label">b</div><div class="rule-item-text">Appeals are to be submitted to a driver's TP who will lodge the appeal on their behalf.</div></div>
-        <div class="rule-item"><div class="rule-item-label">c</div><div class="rule-item-text">Appeals are lodged in the same way as regular tickets, clearly stating that it is an appeal.</div></div>
-        <div class="rule-item"><div class="rule-item-label">d</div><div class="rule-item-text">For an incident to be reviewed again, the driver must either bring new relevant evidence or highlight a mistake in the findings. Footage not submitted in time will NOT count. Failure to do so will result in the appeal being dismissed.</div></div>
-        <div class="rule-item"><div class="rule-item-label">e</div><div class="rule-item-text">The Head Steward may refuse to open an appeal thread if the appeal is for the wrong reasons or the decision is extremely unlikely to be overturned.</div></div>
-        <div class="rule-item"><div class="rule-item-label">f</div><div class="rule-item-text">Appeal verdicts are final.</div></div>
-      </div>
-
-    </div>
-  </div>
-
-</div>
+<div class="content" id="rules-content">
+  <div class="loading-msg" style="padding:40px 24px;">Loading league rules...</div>
+</div></div>
 
 <footer>
   <div style="display:flex;align-items:center;gap:10px;">
@@ -722,26 +212,189 @@
   <div class="footer-text">f1xl.co.uk</div>
 </footer>
 
+<script src="config.js"></script>
 <script>
+// ── CHAPTER ID MAP ────────────────────────────────────────────────────────────
+const CHAPTER_IDS = {
+  'FROM THE ADMINS': 'admins',
+  'GENERAL INFORMATION': 'general',
+  'LEAGUE STRUCTURE': 'structure',
+  'TEAMS, DRIVERS, TIERS, AND TEAM PRINCIPALS': 'teams',
+  'ON TRACK': 'ontrack',
+  'STEWARDING, TICKETS & APPEALS': 'stewarding',
+  'STEWARDING, TICKETS &amp; APPEALS': 'stewarding',
+};
+const CHAPTER_LABELS = {
+  'admins': 'From the Admins',
+  'general': 'General Information',
+  'structure': 'League Structure',
+  'teams': 'Teams & Drivers',
+  'ontrack': 'On Track',
+  'stewarding': 'Stewarding & Tickets',
+};
+
 function toggleChapter(id) {
   const body = document.getElementById('body-' + id);
   const chev = document.getElementById('chev-' + id);
   const header = document.querySelector(`#chapter-${id} .chapter-header`);
   const open = body.classList.toggle('open');
   chev.classList.toggle('open', open);
-  header.classList.toggle('open', open);
+  if (header) header.classList.toggle('open', open);
 }
 
 function openChapter(id) {
   const body = document.getElementById('body-' + id);
-  if (!body.classList.contains('open')) toggleChapter(id);
-  document.getElementById('chapter-' + id).scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const chev = document.getElementById('chev-' + id);
+  const header = document.querySelector(`#chapter-${id} .chapter-header`);
+  if (body && !body.classList.contains('open')) {
+    body.classList.add('open');
+    if (chev) chev.classList.add('open');
+    if (header) header.classList.add('open');
+  }
+  const el = document.getElementById('chapter-' + id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-function toggleMenu() {
-  document.getElementById('mobile-menu').classList.toggle('open');
+function toggleMenu(){
   document.getElementById('hamburger').classList.toggle('open');
+  document.getElementById('mobile-menu').classList.toggle('open');
 }
+
+// ── PARSER ────────────────────────────────────────────────────────────────────
+function parseDocHtml(html) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+  const body = doc.body;
+  if (!body) return [];
+
+  const chapters = [];
+  let currentChapter = null;
+  let currentSection = null;
+
+  function cleanText(el) {
+    return (el.textContent || '').trim()
+      .replace(/\u00a0/g, ' ')
+      .replace(/\s+/g, ' ').trim();
+  }
+
+  function isSubLabel(text) {
+    return /^[a-z]$/.test(text) || /^\d{1,2}$/.test(text);
+  }
+
+  for (const node of body.children) {
+    const tag = node.tagName.toLowerCase();
+    const text = cleanText(node);
+
+    if (tag === 'h1') {
+      if (!text) continue;
+      const id = CHAPTER_IDS[text.toUpperCase()] || text.toLowerCase().replace(/[^a-z]/g, '');
+      currentChapter = { title: text, id, sections: [], intro: [] };
+      currentSection = null;
+      chapters.push(currentChapter);
+    } else if (tag === 'h2') {
+      if (!text || !currentChapter) continue;
+      currentSection = { title: text, items: [] };
+      currentChapter.sections.push(currentSection);
+    } else if (tag === 'p') {
+      if (!text) continue;
+      const target = currentSection || currentChapter;
+      if (!target) continue;
+      const arr = currentSection ? currentSection.items : currentChapter.intro;
+      if (isSubLabel(text)) {
+        arr.push({ type: 'label', text });
+      } else {
+        arr.push({ type: 'para', text });
+      }
+    }
+  }
+  return chapters;
+}
+
+function renderItems(items) {
+  let html = '';
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    if (item.type === 'label') {
+      // Check if next item is a para — render inline
+      const next = items[i + 1];
+      if (next && next.type === 'para') {
+        html += `<div class="rule-item"><span class="rule-label">${item.text}</span><span class="rule-text">${next.text}</span></div>`;
+        i++; // skip next
+      } else {
+        html += `<div class="rule-label-only">${item.text}</div>`;
+      }
+    } else {
+      html += `<p class="rule-para">${item.text}</p>`;
+    }
+  }
+  return html;
+}
+
+function renderChapters(chapters) {
+  // Build quick nav
+  const validChapters = chapters.filter(ch => ch.id !== 'admins' && (ch.sections.length > 0 || ch.intro.length > 0));
+  const qnav = document.getElementById('quick-nav');
+  if (qnav) {
+    qnav.innerHTML = validChapters.map(ch =>
+      `<button class="quick-nav-btn" onclick="openChapter('${ch.id}')">${CHAPTER_LABELS[ch.id] || ch.title}</button>`
+    ).join('');
+  }
+
+  // Build content
+  let html = '';
+  chapters.forEach(ch => {
+    const label = CHAPTER_LABELS[ch.id] || ch.title;
+    html += `<div class="chapter" id="chapter-${ch.id}">
+      <div class="chapter-header" onclick="toggleChapter('${ch.id}')">
+        <div class="chapter-title">${label}</div>
+        <div class="chapter-chevron" id="chev-${ch.id}">▼</div>
+      </div>
+      <div class="chapter-body" id="body-${ch.id}">`;
+
+    // Intro content (before any h2)
+    if (ch.intro.length) {
+      html += `<div class="section-body">${renderItems(ch.intro)}</div>`;
+    }
+
+    // Sections
+    ch.sections.forEach(sec => {
+      html += `<div class="rule-section">
+        <div class="rule-section-title">${sec.title}</div>
+        <div class="section-body">${renderItems(sec.items)}</div>
+      </div>`;
+    });
+
+    html += `</div></div>`;
+  });
+
+  document.getElementById('rules-content').innerHTML = html;
+
+  // Auto-open first non-admins chapter
+  const first = validChapters[0];
+  if (first) openChapter(first.id);
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+async function init() {
+  try {
+    const rulesUrl = await getConfigValue('league_rules_url');
+    if (!rulesUrl) throw new Error('No league_rules_url in config');
+
+    const res = await fetch(rulesUrl);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const html = await res.text();
+
+    const chapters = parseDocHtml(html);
+    if (!chapters.length) throw new Error('No content found');
+    renderChapters(chapters);
+  } catch(e) {
+    document.getElementById('rules-content').innerHTML =
+      `<div class="loading-msg">Could not load rules: ${e.message}</div>`;
+    console.error(e);
+  }
+}
+
+init();
 </script>
 </body>
 </html>
