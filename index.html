@@ -357,7 +357,7 @@ window.addEventListener('appinstalled', () => {
 // Register service worker
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(e => console.log('SW failed:', e));
+    navigator.serviceWorker.register('./sw.js').catch(e => console.log('SW failed:', e));
   });
 }
 </script>
