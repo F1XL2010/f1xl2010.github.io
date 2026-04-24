@@ -163,9 +163,6 @@
   <a href="applications.html">Applications</a>
   <a href="league-rules.html">League Rules</a>
 </div>
-  <button class="pwa-banner-btn" id="pwa-install-btn">Install</button>
-  <button class="pwa-banner-close" onclick="dismissBanner()" title="Dismiss">✕</button>
-</div>
 
 <!-- HERO -->
 <div class="hero">
@@ -318,22 +315,6 @@ async function init(){
 }
 
 init();
-
-document.getElementById('pwa-install-btn').addEventListener('click', async () => {
-  if (!deferredPrompt) return;
-  deferredPrompt.prompt();
-  const { outcome } = await deferredPrompt.userChoice;
-  deferredPrompt = null;
-  document.getElementById('pwa-banner').classList.remove('show');
-  if (outcome === 'accepted') localStorage.setItem('f1xl_pwa_dismissed', '1');
-});
-function dismissBanner() {
-  document.getElementById('pwa-banner').classList.remove('show');
-  localStorage.setItem('f1xl_pwa_dismissed', '1');
-}
-window.addEventListener('appinstalled', () => {
-  document.getElementById('pwa-banner').classList.remove('show');
-});
 
 </script>
 </body>
