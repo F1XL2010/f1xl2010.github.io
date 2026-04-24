@@ -248,13 +248,14 @@ function parseFullStats(rows){
     const totalRaces   = parseInt(g(row,9))||0;
 
     // Season breakdown — only include seasons with races > 0
+    // Each season group: col=Wins, col+1=Podiums, col+2=Poles, col+3=SprintWins, col+4=Races
     const seasonBreakdown = [];
     for(const {season, col} of seasons){
-      const wins    = parseInt(g(row, col+1))||0;
-      const pods    = parseInt(g(row, col+2))||0;
-      const poles   = parseInt(g(row, col+3))||0;
-      const sprints = parseInt(g(row, col+4))||0;
-      const races   = parseInt(g(row, col+5))||0;
+      const wins    = parseInt(g(row, col))||0;
+      const pods    = parseInt(g(row, col+1))||0;
+      const poles   = parseInt(g(row, col+2))||0;
+      const sprints = parseInt(g(row, col+3))||0;
+      const races   = parseInt(g(row, col+4))||0;
       if(races>0) seasonBreakdown.push({season, races, wins, pods, poles, sprints});
     }
     // Sort newest first
