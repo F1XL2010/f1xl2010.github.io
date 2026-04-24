@@ -384,11 +384,10 @@ function renderLB(drivers, totalDrivers){
     {key:'races',   label:'Most races started'},
   ];
 
-  // Update hero stats — season count from config, years from 2010
-  const currentSeason = await getCurrentSeason();
+  // Hero season count filled in by init() after await
   const yearsRunning = new Date().getFullYear() - 2010;
   document.getElementById('hero-stats').innerHTML = `
-    <div><div class="hero-stat-val">${currentSeason}</div><div class="hero-stat-lbl">Seasons</div></div>
+    <div><div class="hero-stat-val" id="hero-season-val">—</div><div class="hero-stat-lbl">Seasons</div></div>
     <div><div class="hero-stat-val">${totalDrivers}</div><div class="hero-stat-lbl">Drivers</div></div>
     <div><div class="hero-stat-val">${yearsRunning}</div><div class="hero-stat-lbl">Years</div></div>
   `;
@@ -681,6 +680,10 @@ async function init(){
     if(results.stats){
       const drivers = parseStatsForLB(results.stats);
       renderLB(drivers, drivers.length);
+      // Fill in season count now that we're in async context
+      const currentSeason = await getCurrentSeason();
+      const heroVal = document.getElementById('hero-season-val');
+      if(heroVal) heroVal.textContent = currentSeason || overallData.length;
     }
 
     // Parse overall
