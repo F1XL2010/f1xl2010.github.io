@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>F1XL — The UK's Longest Running F1 League</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#111816">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="F1XL">
+<link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -164,6 +170,13 @@
   <a href="league-rules.html">League Rules</a>
 </div>
 
+<!-- PWA INSTALL BANNER -->
+<div class="pwa-banner" id="pwa-banner">
+  <div class="pwa-banner-text"><strong>Add F1XL to your home screen</strong> — quick access, app-like experience</div>
+  <button class="pwa-banner-btn" id="pwa-install-btn">Install</button>
+  <button class="pwa-banner-close" onclick="dismissBanner()" title="Dismiss">✕</button>
+</div>
+
 <!-- HERO -->
 <div class="hero">
   <div class="hero-bg-word">F1XL</div>
@@ -315,6 +328,38 @@ async function init(){
 }
 
 init();
+
+// PWA install banner
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  if (!localStorage.getItem('f1xl_pwa_dismissed')) {
+    document.getElementById('pwa-banner').classList.add('show');
+  }
+});
+document.getElementById('pwa-install-btn').addEventListener('click', async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  document.getElementById('pwa-banner').classList.remove('show');
+  if (outcome === 'accepted') localStorage.setItem('f1xl_pwa_dismissed', '1');
+});
+function dismissBanner() {
+  document.getElementById('pwa-banner').classList.remove('show');
+  localStorage.setItem('f1xl_pwa_dismissed', '1');
+}
+window.addEventListener('appinstalled', () => {
+  document.getElementById('pwa-banner').classList.remove('show');
+});
+
+// Register service worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(e => console.log('SW failed:', e));
+  });
+}
 </script>
 </body>
 </html>
