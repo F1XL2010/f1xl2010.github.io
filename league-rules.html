@@ -395,11 +395,9 @@ async function init() {
     const rulesUrl = await getConfigValue('league_rules_url');
     if (!rulesUrl) throw new Error('No league_rules_url in config');
 
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(rulesUrl)}`;
-    const res = await fetch(proxyUrl);
+    const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(rulesUrl)}`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    const html = data.contents;
+    const html = await res.text();
 
     console.log('HTML length:', html.length);
     console.log('Has h1:', html.includes('<h1'));
