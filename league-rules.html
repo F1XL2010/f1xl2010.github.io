@@ -406,20 +406,18 @@ function renderChapters(chapters) {
 // ── INIT ──────────────────────────────────────────────────────────────────────
 async function init() {
   try {
+    console.error('DEBUG init started');
     const rulesUrl = await getConfigValue('league_rules_url');
+    console.error('DEBUG rulesUrl:', rulesUrl);
     if (!rulesUrl) throw new Error('No league_rules_url in config');
 
     const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(rulesUrl)}`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const html = await res.text();
 
-    console.log('HTML length:', html.length);
-    console.log('Has h1:', html.includes('<h1'));
-    console.log('Has h2:', html.includes('<h2'));
-    console.log('First 500 body chars:', (() => {
-      const m = html.match(/<body[^>]*>([\s\S]{0,500})/);
-      return m ? m[1] : 'no body tag';
-    })());
+    console.error('DEBUG HTML length:', html.length);
+    console.error('DEBUG Has h1:', html.includes('<h1'));
+    console.error('DEBUG Has h2:', html.includes('<h2'));
     const chapters = parseDocHtml(html);
     if (!chapters.length) throw new Error('No content found');
     renderChapters(chapters);
