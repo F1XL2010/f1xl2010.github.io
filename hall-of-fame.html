@@ -197,14 +197,6 @@
   <a href="league-rules.html">League Rules</a>
 </div>
 
-<!-- SECTION NAV -->
-<div class="section-nav">
-  <button class="section-nav-btn active" onclick="scrollToSection('leaderboards',this)">Leaderboards</button>
-  <button class="section-nav-btn" onclick="scrollToSection('seasons',this)">Seasons</button>
-  <button class="section-nav-btn" onclick="scrollToSection('division-records',this)">Division Records</button>
-  <button class="section-nav-btn" onclick="scrollToSection('league-records',this)">League Records</button>
-</div>
-
 <!-- HERO -->
 <div class="hero">
   <div class="hero-bg">F1XL</div>
@@ -215,6 +207,14 @@
     <div><div class="hero-stat-val">—</div><div class="hero-stat-lbl">Drivers</div></div>
     <div><div class="hero-stat-val">14</div><div class="hero-stat-lbl">Years</div></div>
   </div>
+</div>
+
+<!-- SECTION NAV -->
+<div class="section-nav">
+  <button class="section-nav-btn active" onclick="scrollToSection('leaderboards',this)">Leaderboards</button>
+  <button class="section-nav-btn" onclick="scrollToSection('seasons',this)">Seasons</button>
+  <button class="section-nav-btn" onclick="scrollToSection('division-records',this)">Division Records</button>
+  <button class="section-nav-btn" onclick="scrollToSection('league-records',this)">League Records</button>
 </div>
 
 <!-- LEADERBOARDS -->
@@ -242,16 +242,13 @@
 
 <div class="section-div"></div>
 
-<!-- ACCOLADES TABLES -->
+<!-- DIVISION RECORDS -->
 <div id="division-records"></div>
 <div class="chapter">
   <div class="chapter-eyebrow">The Champions</div>
   <div class="chapter-title">Division Records</div>
 </div>
-<div class="acc-wrap">
-  <div class="acc-tabs" id="acc-tabs"></div>
-  <div id="acc-panels"><div class="loading-msg">Loading...</div></div>
-</div>
+<div class="lr-wrap" id="div-records-wrap"><div class="loading-msg">Loading...</div></div>
 
 <div id="league-records"></div>
 <div class="chapter">
@@ -458,67 +455,70 @@ function selectSeason(seasonNum, card){
   </div>`;
 }
 
-// ── RENDER ACCOLADES TABLES ───────────────────────────────────────────────────
-function renderAccolades(){
-  const tabs = document.getElementById('acc-tabs');
-  const panels = document.getElementById('acc-panels');
+// ── RENDER DIVISION RECORDS ───────────────────────────────────────────────────
+function renderDivisionRecords(){
+  const wrap = document.getElementById('div-records-wrap');
 
-  const divEntries = Object.entries(allDivData);
-  // Add Overall tab
-  const allTabs = [
-    {key:'overall', label:'Overall'},
-    ...divEntries.map(([div]) => ({key:div.toLowerCase().replace(' ',''), label:div}))
-  ];
-
-  tabs.innerHTML = allTabs.map((t,i) =>
-    `<button class="acc-tab${i===0?' active':''}" onclick="switchAccTab('${t.key}',this)">${t.label}</button>`
-  ).join('');
-
-  // Overall panel
-  let panelsHtml = `<div class="acc-panel active" id="acc-panel-overall">
-    <table class="acc-table">
-      <thead><tr><th>#</th><th>Season</th><th>Overall Champion</th><th>Team</th><th>Points</th><th>Runner Up</th><th>Team</th></tr></thead>
-      <tbody>${overallData.map((s,i)=>`<tr>
-        <td>${i+1}</td>
-        <td class="acc-name">S${s.season}</td>
-        <td class="acc-name">${s.owner}</td>
-        <td class="acc-team">${s.ownerTeam}</td>
-        <td>${s.ownerPts?Math.floor(parseFloat(s.ownerPts)):''}</td>
-        <td>${s.ru}</td>
-        <td class="acc-team">${s.ruTeam}</td>
-      </tr>`).join('')}</tbody>
-    </table>
-  </div>`;
-
-  // Division panels
-  divEntries.forEach(([div, seasons]) => {
-    const key = div.toLowerCase().replace(' ','');
-    panelsHtml += `<div class="acc-panel" id="acc-panel-${key}">
+  function seasonTable(title, seasons, cols){
+    if(!seasons||!seasons.length) return '';
+    const headers = cols.map(c=>`<th>${c.label}</th>`).join('');
+    const rows = seasons.map((s,i)=>{
+      const cells = cols.map(c=>{
+        const val = s[c.key];
+        if(c.key==='season') return `<td class="acc-name">S${val}</td>`;
+        if(c.key==='champPts'||c.key==='ownerPts') return `<td>${val?Math.floor(parseFloat(val)):''}</td>`;
+        if(c.key==='consdrivers') return `<td class="acc-team">${[s.consDriver1,s.consDriver2].filter(Boolean).join(' · ')}</td>`;
+        return `<td${c.muted?' class="acc-team"':''}>${val||''}</td>`;
+      }).join('');
+      return `<tr><td>${i+1}</td>${cells}</tr>`;
+    }).join('');
+    return `<div class="lr-card" style="grid-column:1/-1;">
+      <div class="lr-card-title">${title}</div>
       <table class="acc-table">
-        <thead><tr><th>#</th><th>Season</th><th>Champion</th><th>Team</th><th>Points</th><th>Runner Up</th><th>Constructor</th><th>Drivers</th></tr></thead>
-        <tbody>${seasons.map((s,i)=>`<tr>
-          <td>${i+1}</td>
-          <td class="acc-name">S${s.season}</td>
-          <td class="acc-name">${s.champ}</td>
-          <td class="acc-team">${s.champTeam}</td>
-          <td>${s.champPts?Math.floor(parseFloat(s.champPts)):''}</td>
-          <td>${s.ru}</td>
-          <td class="acc-team">${s.constructor}</td>
-          <td class="acc-team">${[s.consDriver1,s.consDriver2].filter(Boolean).join(' · ')}</td>
-        </tr>`).join('')}</tbody>
+        <thead><tr><th>#</th>${headers}</tr></thead>
+        <tbody>${rows}</tbody>
       </table>
+    </div>`;
+  }
+
+  let html = '';
+
+  // Overall
+  if(overallData.length){
+    html += `<div class="lr-div-section">
+      <div class="lr-div-title">Overall</div>
+      <div class="lr-grid">
+        ${seasonTable('Season by Season', overallData, [
+          {key:'season',label:'Season'},
+          {key:'owner',label:'Team Owner'},
+          {key:'ownerTeam',label:'Team',muted:true},
+          {key:'ownerPts',label:'Points'},
+          {key:'ru',label:'Runner Up'},
+          {key:'ruTeam',label:'Team',muted:true},
+        ])}
+      </div>
+    </div>`;
+  }
+
+  // Divisions
+  Object.entries(allDivData).forEach(([div, seasons]) => {
+    html += `<div class="lr-div-section">
+      <div class="lr-div-title">${div}</div>
+      <div class="lr-grid">
+        ${seasonTable('Season by Season', seasons, [
+          {key:'season',label:'Season'},
+          {key:'champ',label:'Champion'},
+          {key:'champTeam',label:'Team',muted:true},
+          {key:'champPts',label:'Points'},
+          {key:'ru',label:'Runner Up'},
+          {key:'constructor',label:'Constructor',muted:true},
+          {key:'consdrivers',label:'Drivers',muted:true},
+        ])}
+      </div>
     </div>`;
   });
 
-  panels.innerHTML = panelsHtml;
-}
-
-function switchAccTab(key, btn){
-  document.querySelectorAll('.acc-tab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.acc-panel').forEach(p=>p.classList.remove('active'));
-  btn.classList.add('active');
-  const panel = document.getElementById('acc-panel-'+key);
-  if(panel) panel.classList.add('active');
+  wrap.innerHTML = html || '<div class="loading-msg">No data.</div>';
 }
 
 // ── SECTION NAV ──────────────────────────────────────────────────────────────
@@ -702,8 +702,8 @@ async function init(){
     // Render seasons
     renderSeasonStrip();
 
-    // Render accolade tables
-    renderAccolades();
+    // Render division records
+    renderDivisionRecords();
 
     // Render league records — pass raw rows for parsing
     const divRawRows = {};
