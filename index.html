@@ -5,691 +5,105 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>F1XL — The UK's Longest Running F1 League</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --red: #E10600;
-    --green: #3DCC47;
-    --teal: #5ECFCF;
-    --red-dark: #b30500;
-    --black: #111816;
-    --dark: #161d1b;
-    --dark2: #1a2320;
-    --dark3: #1e2a27;
-    --border: rgba(255,255,255,0.07);
-    --text: #ffffff;
-    --text-muted: rgba(255,255,255,0.45);
-    --text-faint: rgba(255,255,255,0.35);
-    --discord: #5865F2;
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  html { scroll-behavior: smooth; }
-
-  body {
-    background:#111816;background-image:linear-gradient(rgba(255,255,255,0.025) 0px,rgba(255,255,255,0.025) 4px,rgba(0,0,0,0.06) 4px,rgba(0,0,0,0.06) 8px),linear-gradient(90deg,rgba(0,0,0,0.06) 0px,rgba(0,0,0,0.06) 4px,rgba(255,255,255,0.025) 4px,rgba(255,255,255,0.025) 8px);background-size:8px 8px;
-    color: var(--text);
-    font-family: 'Barlow', sans-serif;
-    font-weight: 400;
-    line-height: 1.6;
-    min-height: 100vh;
-  }
-
-  /* ── NAV ── */
-  nav {
-    position: sticky;
-    top: 0;
-    z-index: 200;
-    background: rgba(9,9,9,0.97);
-    backdrop-filter: blur(8px);
-    border-bottom: 1px solid var(--border);
-    padding: 0 24px;
-    height: 56px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .nav-left {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    flex-shrink: 0;
-  }
-
-  .nav-logo {
-    background: var(--green);
-    color: #fff;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 14px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    padding: 5px 11px;
-    border-radius: 3px;
-    text-transform: uppercase;
-    text-decoration: none;
-  }
-
-  .nav-title {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 16px;
-    font-weight: 500;
-    letter-spacing: 1px;
-    color: var(--text-muted);
-    text-transform: uppercase;
-  }
-
-  /* Desktop nav */
-  .nav-links {
-    display: flex;
-    align-items: stretch;
-    height: 56px;
-  }
-
-  .nav-item {
-    position: relative;
-    display: flex;
-    align-items: stretch;
-  }
-
-  .nav-item > a, .nav-item > button {
-    color: var(--text-muted);
-    text-decoration: none;
-    font-size: 12px;
-    font-weight: 500;
-    letter-spacing: 0.5px;
-    padding: 0 13px;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    border-bottom: 2px solid transparent;
-    border-top: none;
-    border-left: none;
-    border-right: none;
-    background: none;
-    cursor: pointer;
-    font-family: 'Barlow', sans-serif;
-    text-transform: uppercase;
-    transition: color 0.2s;
-    white-space: nowrap;
-  }
-
-  .nav-item > a:hover,
-  .nav-item > button:hover { color: var(--text); }
-
-  .nav-item > a.active,
-  .nav-item > button.active { color: var(--text); border-bottom-color: var(--green); }
-
-  .nav-chevron {
-    font-size: 8px;
-    opacity: 0.5;
-    transition: transform 0.2s;
-  }
-
-  .nav-item:hover .nav-chevron { transform: rotate(180deg); }
-
-  /* Dropdowns */
-  .nav-dropdown {
-    display: none;
-    position: absolute;
-    top: 100%;
-    left: 0;
-    background: #141414;
-    border: 1px solid var(--border2);
-    border-top: 2px solid var(--green);
-    border-radius: 0 0 6px 6px;
-    min-width: 180px;
-    padding: 6px 0;
-    z-index: 300;
-  }
-
-  .nav-item:hover .nav-dropdown { display: block; }
-
-  .nav-dropdown a {
-    display: block;
-    padding: 9px 16px;
-    color: var(--text-muted);
-    text-decoration: none;
-    font-size: 12px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    transition: color 0.15s, background 0.15s;
-    white-space: nowrap;
-  }
-
-  .nav-dropdown a:hover {
-    color: var(--text);
-    background: rgba(255,255,255,0.05);
-  }
-
-  /* Hamburger */
-  .nav-hamburger {
-    display: none;
-    flex-direction: column;
-    gap: 5px;
-    cursor: pointer;
-    padding: 8px;
-    background: none;
-    border: none;
-  }
-
-  .nav-hamburger span {
-    display: block;
-    width: 22px;
-    height: 2px;
-    background: var(--text-muted);
-    border-radius: 2px;
-    transition: all 0.25s;
-  }
-
-  .nav-hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
-  .nav-hamburger.open span:nth-child(2) { opacity: 0; }
-  .nav-hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
-
-  /* Mobile menu */
-  .mobile-menu {
-    display: none;
-    position: fixed;
-    top: 56px;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: #0d0d0d;
-    z-index: 150;
-    overflow-y: auto;
-    padding: 16px 0 32px;
-  }
-
-  .mobile-menu.open { display: block; }
-
-  .mobile-section {
-    margin-bottom: 4px;
-  }
-
-  .mobile-section-header {
-    padding: 10px 24px;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--green);
-  }
-
-  .mobile-section a {
-    display: block;
-    padding: 11px 32px;
-    color: var(--text-muted);
-    text-decoration: none;
-    font-size: 15px;
-    font-weight: 400;
-    border-bottom: 1px solid var(--border);
-    transition: color 0.15s;
-  }
-
-  .mobile-section a:hover { color: var(--text); }
-
-  .mobile-divider {
-    height: 1px;
-    background: var(--border);
-    margin: 12px 24px;
-  }
-
-  @media (max-width: 860px) {
-    .nav-links { display: none; }
-    .nav-title { display: none; }
-    .nav-hamburger { display: flex; }
-  }
-
-  @media (min-width: 861px) {
-    .mobile-menu { display: none !important; }
-  }
-
-  /* ── HERO ── */
-  .hero {
-    position: relative;
-    min-height: 520px;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    padding: 48px 24px 40px;
-    overflow: hidden;
-  }
-
-  .hero-bg {
-    position: absolute;
-    inset: 0;
-    background: var(--black);
-  }
-
-  .hero-pattern {
-    position: absolute;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(61,204,71,0.06) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(61,204,71,0.06) 1px, transparent 1px);
-    background-size: 40px 40px;
-  }
-
-  .hero-glow {
-    position: absolute;
-    top: -80px;
-    right: -80px;
-    width: 400px;
-    height: 400px;
-    background: radial-gradient(circle, rgba(61,204,71,0.12) 0%, transparent 70%);
-    pointer-events: none;
-  }
-
-  .hero-fade {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(to top, var(--black) 0%, rgba(9,9,9,0.5) 60%, transparent 100%);
-  }
-
-  .hero-top-bar {
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 3px;
-    background: var(--green);
-  }
-
-  .hero-est-unused {
-    position: absolute;
-    top: 20px;
-    right: 24px;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 11px;
-    letter-spacing: 3px;
-    color: var(--text-faint);
-    text-transform: uppercase;
-  }
-
-  .hero-content {
-    position: relative;
-    z-index: 1;
-    max-width: 640px;
-  }
-
-  .hero-season {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    margin-bottom: 16px;
-  }
-
-  .hero-season-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--green);
-    animation: pulse 2s infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
-  }
-
-  .hero-season-text {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 12px;
-    letter-spacing: 2.5px;
-    color: var(--green);
-    text-transform: uppercase;
-    font-weight: 600;
-  }
-
-  .hero-logo {
-    width: 340px;
-    max-width: 90%;
-    margin: 0 auto 24px;
-    display: block;
-    filter: drop-shadow(0 0 24px rgba(61,204,71,0.3));
-  }
-
-  .hero-title {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: clamp(40px, 8vw, 72px);
-    font-weight: 700;
-    line-height: 1.0;
-    letter-spacing: -0.5px;
-    text-transform: uppercase;
-    margin-bottom: 16px;
-  }
-
-  .hero-title em {
-    color: var(--green);
-    font-style: normal;
-  }
-
-  .hero-desc {
-    font-size: 15px;
-    color: var(--text-muted);
-    line-height: 1.7;
-    max-width: 480px;
-    margin-bottom: 28px;
-  }
-
-  .hero-desc strong {
-    color: rgba(255,255,255,0.75);
-    font-weight: 500;
-  }
-
-  .hero-actions {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 22px;
-    border-radius: 4px;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 14px;
-    font-weight: 600;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    text-decoration: none;
-    cursor: pointer;
-    transition: opacity 0.2s, transform 0.1s;
-    border: none;
-  }
-
-  .btn:active { transform: scale(0.98); }
-
-  .btn-red {
-    background: var(--green);
-    color: #fff;
-  }
-
-  .btn-red:hover { background: var(--red-dark); }
-
-  .btn-discord {
-    background: var(--discord);
-    color: #fff;
-  }
-
-  .btn-discord:hover { opacity: 0.9; }
-
-  .btn-outline {
-    background: transparent;
-    color: var(--text-muted);
-    border: 1px solid var(--border);
-  }
-
-  .btn-outline:hover { color: var(--text); border-color: rgba(255,255,255,0.35); }
-
-  .discord-icon {
-    width: 16px;
-    height: 16px;
-    fill: #fff;
-  }
-
-  /* ── STATS STRIP ── */
-  .stats-strip {
-    background: var(--dark);
-    border-top: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-  }
-
-  .stat-item {
-    padding: 18px 16px;
-    text-align: center;
-    border-right: 1px solid var(--border);
-  }
-
-  .stat-item:last-child { border-right: none; }
-
-  .stat-num {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 28px;
-    font-weight: 700;
-    color: var(--green);
-    line-height: 1;
-  }
-
-  .stat-label {
-    font-size: 11px;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-top: 4px;
-  }
-
-  /* ── SECTIONS ── */
-  .section {
-    padding: 48px 24px;
-    max-width: 960px;
-    margin: 0 auto;
-  }
-
-  .section-tag {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 24px;
-  }
-
-  .section-tag-bar {
-    width: 3px;
-    height: 18px;
-    background: var(--green);
-    border-radius: 1px;
-    flex-shrink: 0;
-  }
-
-  .section-tag-text {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--text-muted);
-  }
-
-  /* ── ABOUT ── */
-  .about-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-
-  @media (min-width: 640px) {
-    .about-grid { grid-template-columns: 1fr 1fr; }
-  }
-
-  .about-card {
-    background: var(--dark2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 24px;
-  }
-
-  .about-card-icon {
-    width: 36px;
-    height: 36px;
-    background: rgba(61,204,71,0.12);
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 14px;
-  }
-
-  .about-card-icon svg {
-    width: 18px;
-    height: 18px;
-    fill: var(--green);
-  }
-
-  .about-card h3 {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 16px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    margin-bottom: 8px;
-  }
-
-  .about-card p {
-    font-size: 14px;
-    color: var(--text-muted);
-    line-height: 1.7;
-  }
-
-  /* ── JOIN BANNER ── */
-  .join-banner {
-    background: var(--dark2);
-    border-top: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-    padding: 40px 24px;
-    text-align: center;
-  }
-
-  .join-banner h2 {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: clamp(24px, 5vw, 40px);
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 10px;
-  }
-
-  .join-banner h2 em {
-    color: var(--green);
-    font-style: normal;
-  }
-
-  .join-banner p {
-    font-size: 14px;
-    color: var(--text-muted);
-    max-width: 440px;
-    margin: 0 auto 24px;
-    line-height: 1.7;
-  }
-
-  .join-actions {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-
-  /* ── SOCIAL ── */
-  .social-section {
-    padding: 32px 24px;
-    max-width: 960px;
-    margin: 0 auto;
-  }
-
-  .social-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-  }
-
-  @media (min-width: 500px) {
-    .social-grid { grid-template-columns: repeat(3, 1fr); }
-  }
-
-  @media (min-width: 768px) {
-    .social-grid { grid-template-columns: repeat(6, 1fr); }
-  }
-
-  .social-card {
-    background: var(--dark2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 16px;
-    text-align: center;
-    text-decoration: none;
-    transition: border-color 0.2s, background 0.2s;
-    display: block;
-  }
-
-  .social-card:hover {
-    background: var(--dark3);
-    border-color: rgba(255,255,255,0.15);
-  }
-
-  .social-name {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 14px;
-    font-weight: 600;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    color: var(--text);
-    margin-top: 8px;
-  }
-
-  .social-handle {
-    font-size: 11px;
-    color: var(--text-muted);
-    margin-top: 2px;
-  }
-
-  .social-icon {
-    width: 28px;
-    height: 28px;
-    margin: 0 auto;
-  }
-
-  /* ── FOOTER ── */
-  footer {
-    background: var(--dark);
-    border-top: 1px solid var(--border);
-    padding: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-
-  .footer-left {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .footer-logo {
-    background: var(--green);
-    color: #fff;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    padding: 4px 9px;
-    border-radius: 3px;
-  }
-
-  .footer-text {
-    font-size: 12px;
-    color: var(--text-faint);
-  }
-
-  .footer-right {
-    font-size: 12px;
-    color: var(--text-faint);
-  }
+  :root{
+    --green:#3DCC47;--teal:#5ECFCF;--red:#E10600;
+    --black:#111816;--dark:#161d1b;--dark2:#1a2320;--dark3:#1e2a27;
+    --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+    --text:#ffffff;--text-muted:rgba(255,255,255,0.60);--text-faint:rgba(255,255,255,0.30);
+    --gold:#E8B84B;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--black);color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;}
+
+  /* NAV */
+  nav{background:rgba(17,24,22,0.97);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;backdrop-filter:blur(8px);}
+  .nav-left{display:flex;align-items:center;gap:14px;flex-shrink:0;}
+  .nav-logo{background:var(--green);color:#000;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;padding:5px 11px;border-radius:3px;text-decoration:none;}
+  .nav-links{display:flex;align-items:stretch;height:56px;}
+  .nav-item{position:relative;display:flex;align-items:stretch;}
+  .nav-item>a,.nav-item>button{color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:500;letter-spacing:0.5px;padding:0 13px;display:flex;align-items:center;gap:4px;border-bottom:2px solid transparent;border-top:none;border-left:none;border-right:none;background:none;cursor:pointer;font-family:'Barlow',sans-serif;text-transform:uppercase;transition:color 0.2s;white-space:nowrap;}
+  .nav-item>a:hover,.nav-item>button:hover{color:var(--text);}
+  .nav-item>a.active,.nav-item>button.active{color:var(--text);border-bottom-color:var(--green);}
+  .nav-chevron{font-size:8px;opacity:0.5;transition:transform 0.2s;}
+  .nav-item:hover .nav-chevron{transform:rotate(180deg);}
+  .nav-dropdown{display:none;position:absolute;top:100%;left:0;background:#141a18;border:1px solid var(--border2);border-top:2px solid var(--green);border-radius:0 0 6px 6px;min-width:180px;padding:6px 0;z-index:300;}
+  .nav-item:hover .nav-dropdown{display:block;}
+  .nav-dropdown a{display:block;padding:9px 16px;color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;transition:color 0.15s,background 0.15s;white-space:nowrap;}
+  .nav-dropdown a:hover{color:var(--text);background:rgba(255,255,255,0.05);}
+  .nav-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:8px;background:none;border:none;}
+  .nav-hamburger span{display:block;width:22px;height:2px;background:var(--text-muted);border-radius:2px;transition:all 0.25s;}
+  .nav-hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+  .nav-hamburger.open span:nth-child(2){opacity:0;}
+  .nav-hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+  .mobile-menu{display:none;position:fixed;top:56px;left:0;right:0;background:#141a18;border-bottom:1px solid var(--border2);z-index:199;padding:12px 0;}
+  .mobile-menu.open{display:block;}
+  .mobile-menu a{display:block;padding:10px 24px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;}
+  .mobile-menu a:hover{color:var(--text);}
+  @media(max-width:768px){.nav-links{display:none;}.nav-hamburger{display:flex;}}
+
+  /* HERO */
+  .hero{padding:56px 24px 48px;border-bottom:1px solid var(--border);position:relative;overflow:hidden;min-height:calc(100vh - 56px);display:flex;align-items:center;}
+  .hero-bg-word{position:absolute;bottom:-40px;right:-20px;font-family:'Barlow Condensed',sans-serif;font-size:240px;font-weight:900;color:rgba(255,255,255,0.018);line-height:1;pointer-events:none;letter-spacing:-6px;user-select:none;}
+  .hero-accent{position:absolute;top:0;left:0;width:4px;height:100%;background:var(--green);}
+  .hero-inner{max-width:700px;position:relative;z-index:1;}
+  .hero-status{display:inline-flex;align-items:center;gap:8px;background:rgba(61,204,71,0.08);border:1px solid rgba(61,204,71,0.2);border-radius:20px;padding:5px 12px;margin-bottom:20px;}
+  .hero-status-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+  .hero-status-text{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--green);}
+  .hero-title{font-family:'Barlow Condensed',sans-serif;font-size:clamp(48px,8vw,80px);font-weight:900;text-transform:uppercase;letter-spacing:1px;line-height:0.9;margin-bottom:20px;}
+  .hero-title em{color:var(--green);font-style:normal;}
+  .hero-desc{font-size:15px;color:var(--text-muted);line-height:1.7;max-width:520px;margin-bottom:32px;}
+  .hero-desc strong{color:var(--text);}
+  .hero-actions{display:flex;gap:12px;flex-wrap:wrap;}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:11px 22px;border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;transition:all 0.2s;cursor:pointer;border:none;}
+  .btn-primary{background:var(--green);color:#000;}
+  .btn-primary:hover{background:#4de359;}
+  .btn-discord{background:#5865F2;color:#fff;}
+  .btn-discord:hover{background:#6b79f7;}
+  .btn-outline{background:none;color:var(--text-muted);border:1px solid var(--border2);}
+  .btn-outline:hover{color:var(--text);border-color:rgba(255,255,255,0.3);background:rgba(255,255,255,0.04);}
+  .discord-icon{width:18px;height:18px;fill:currentColor;}
+
+  /* STATS */
+  .stats-row{display:flex;border-bottom:1px solid var(--border);}
+  .stat-cell{flex:1;padding:24px 28px;border-right:1px solid var(--border);text-align:center;}
+  .stat-cell:last-child{border-right:none;}
+  .stat-num{font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:800;color:var(--text);line-height:1;margin-bottom:4px;}
+  .stat-num span{color:var(--green);}
+  .stat-lbl{font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;}
+  @media(max-width:600px){.stats-row{flex-wrap:wrap;}.stat-cell{flex:1 1 50%;border-bottom:1px solid var(--border);}}
+
+  /* QUICK LINKS */
+  .quick-section{padding:32px 24px;border-bottom:1px solid var(--border);}
+  .quick-label{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--text-faint);margin-bottom:16px;}
+  .quick-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;}
+  .quick-link{display:flex;flex-direction:column;gap:4px;padding:16px 18px;background:var(--dark2);border:1px solid var(--border);border-radius:8px;text-decoration:none;transition:border-color 0.2s,background 0.2s;}
+  .quick-link:hover{border-color:var(--border2);background:var(--dark3);}
+  .quick-link-label{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text);}
+  .quick-link-sub{font-size:11px;color:var(--text-faint);}
+  .quick-link-arrow{font-size:11px;color:var(--green);margin-top:4px;}
+
+  /* SOCIALS */
+  .social-section{padding:32px 24px 40px;}
+  .social-label{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--text-faint);margin-bottom:16px;}
+  .social-grid{display:flex;gap:8px;flex-wrap:wrap;}
+  .social-btn{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;background:var(--dark2);border:1px solid var(--border);border-radius:6px;text-decoration:none;transition:border-color 0.2s,background 0.2s;font-size:12px;font-weight:500;color:var(--text-muted);}
+  .social-btn:hover{background:var(--dark3);border-color:var(--border2);color:var(--text);}
+  .social-btn svg{width:16px;height:16px;flex-shrink:0;}
+
+  /* FOOTER */
+  footer{border-top:1px solid var(--border);padding:20px 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;}
+  .footer-logo{background:var(--green);color:#000;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;padding:4px 9px;border-radius:3px;}
+  .footer-text{font-size:11px;color:var(--text-faint);}
 </style>
 </head>
 <body>
 
 <!-- NAV -->
 <nav>
-  <div class="nav-left">
-    <a href="index.html" class="nav-logo">F1XL</a>
-  </div>
-
+  <div class="nav-left"><a href="index.html" class="nav-logo">F1XL</a></div>
   <div class="nav-links">
     <div class="nav-item"><a href="index.html" class="active">Home</a></div>
     <div class="nav-item">
@@ -698,241 +112,202 @@
         <a href="standings.html">Current Season</a>
         <a href="results.html">Results</a>
         <a href="past-seasons.html">Past Seasons</a>
-        <a href="winners-records.html">Winners &amp; Records</a>
       </div>
     </div>
-    <div class="nav-item">
-      <a href="teams.html">Teams</a>
-    </div>
+    <div class="nav-item"><a href="teams.html">Teams</a></div>
     <div class="nav-item">
       <button>Race Tickets <span class="nav-chevron">▼</span></button>
       <div class="nav-dropdown">
-        <a href="submit-ticket.html">Submit Ticket</a>
         <a href="ticket-outcomes.html">Ticket Outcomes</a>
         <a href="drivers-licence.html">Drivers Licence</a>
       </div>
     </div>
     <div class="nav-item">
       <button>Schedule <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown"><a href="schedule.html">Schedule</a></div>
+    </div>
+    <div class="nav-item">
+      <button>History <span class="nav-chevron">▼</span></button>
       <div class="nav-dropdown">
-        <a href="schedule.html">S27 Schedule</a>
-        <a href="track-guide.html">Track Guide</a>
+        <a href="hall-of-records.html">Hall of Records</a>
+        <a href="hall-of-fame.html">Hall of Fame</a>
+        <a href="asr.html">All Star Race</a>
       </div>
     </div>
     <div class="nav-item"><a href="track-records.html">Track Records</a></div>
-    <div class="nav-item"><a href="applications.html">Applications</a></div>
     <div class="nav-item"><a href="league-rules.html">League Rules</a></div>
   </div>
-
-  <button class="nav-hamburger" id="hamburger" onclick="toggleMenu()">
-    <span></span><span></span><span></span>
-  </button>
+  <button class="nav-hamburger" id="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></button>
 </nav>
 
 <!-- MOBILE MENU -->
 <div class="mobile-menu" id="mobile-menu">
-  <div class="mobile-section">
-    <div class="mobile-section-header">Standings</div>
-    <a href="standings.html">Current Season</a>
-    <a href="results.html">Results</a>
-    <a href="past-seasons.html">Past Seasons</a>
-    <a href="winners-records.html">Winners &amp; Records</a>
-  </div>
-  <div class="mobile-divider"></div>
-  <div class="mobile-section">
-    <a href="teams.html">Teams</a>
-  </div>
-  <div class="mobile-divider"></div>
-  <div class="mobile-section">
-    <div class="mobile-section-header">Race Tickets</div>
-    <a href="submit-ticket.html">Submit Ticket</a>
-    <a href="ticket-outcomes.html">Ticket Outcomes</a>
-    <a href="drivers-licence.html">Drivers Licence</a>
-  </div>
-  <div class="mobile-divider"></div>
-  <div class="mobile-section">
-    <div class="mobile-section-header">Schedule</div>
-    <a href="schedule.html">S27 Schedule</a>
-    <a href="track-guide.html">Track Guide</a>
-  </div>
-  <div class="mobile-divider"></div>
-  <div class="mobile-section">
-    <a href="track-records.html">Track Records</a>
-    <a href="applications.html">Applications</a>
-    <a href="league-rules.html">League Rules</a>
-  </div>
+  <a href="index.html">Home</a>
+  <a href="standings.html">Standings</a>
+  <a href="results.html">Results</a>
+  <a href="past-seasons.html">Past Seasons</a>
+  <a href="teams.html">Teams</a>
+  <a href="ticket-outcomes.html">Ticket Outcomes</a>
+  <a href="drivers-licence.html">Drivers Licence</a>
+  <a href="schedule.html">Schedule</a>
+  <a href="hall-of-records.html">Hall of Records</a>
+  <a href="hall-of-fame.html">Hall of Fame</a>
+  <a href="asr.html">All Star Race</a>
+  <a href="track-records.html">Track Records</a>
+  <a href="league-rules.html">League Rules</a>
 </div>
 
 <!-- HERO -->
-<section class="hero">
-  <div class="hero-bg"></div>
-  <div class="hero-pattern"></div>
-  <div class="hero-glow"></div>
-  <div class="hero-fade"></div>
-  <div class="hero-top-bar"></div>
-  <div class="hero-content">
-    <div class="hero-season">
-      <div class="hero-season-dot"></div>
-      <div class="hero-season-text">Season 27 · Now racing</div>
+<div class="hero">
+  <div class="hero-bg-word">F1XL</div>
+  <div class="hero-accent"></div>
+  <div class="hero-inner">
+    <div class="hero-status">
+      <div class="hero-status-dot"></div>
+      <div class="hero-status-text" id="hero-status-text">Season 28 · Now Racing</div>
     </div>
-    <img src="TRANSPARENT.png" alt="F1XL" class="hero-logo">
     <h1 class="hero-title">The UK's longest<br>running <em>F1 league</em></h1>
     <p class="hero-desc">
-      <strong>F1XL has been racing every season since 2010.</strong> Multiplatform, casual, and welcoming to all skill levels — with 4 to 6 divisions every season, there's a place for everyone on the grid. Races every Sunday at 9pm.
+      <strong>Racing every season since 2010.</strong> Multiplatform, competitive, and welcoming to all skill levels — with up to 6 divisions every season, there's a place for everyone on the grid. Races every Sunday at 9pm.
     </p>
     <div class="hero-actions">
       <a href="https://discord.gg/3gKvrQA34x" class="btn btn-discord" target="_blank">
-        <svg class="discord-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.015.043.032.054a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/>
-        </svg>
+        <svg class="discord-icon" viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.015.043.032.054a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
         Join us on Discord
       </a>
-      <a href="standings.html" class="btn btn-outline">View standings</a>
-    </div>
-  </div>
-</section>
-
-<!-- STATS STRIP -->
-<div class="stats-strip">
-  <div class="stat-item">
-    <div class="stat-num">27</div>
-    <div class="stat-label">Seasons</div>
-  </div>
-  <div class="stat-item">
-    <div class="stat-num">14</div>
-    <div class="stat-label">Years running</div>
-  </div>
-  <div class="stat-item">
-    <div class="stat-num">4–6</div>
-    <div class="stat-label">Divisions</div>
-  </div>
-  <div class="stat-item">
-    <div class="stat-num">3</div>
-    <div class="stat-label">Platforms</div>
-  </div>
-</div>
-
-<!-- ABOUT -->
-<div class="section">
-  <div class="section-tag">
-    <div class="section-tag-bar"></div>
-    <div class="section-tag-text">About F1XL</div>
-  </div>
-  <div class="about-grid">
-    <div class="about-card">
-      <div class="about-card-icon">
-        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-      </div>
-      <h3>Multiplatform racing</h3>
-      <p>Xbox, PlayStation 5, and PC all race together. We use preset settings so no one is left behind by hardware differences.</p>
-    </div>
-    <div class="about-card">
-      <div class="about-card-icon">
-        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      </div>
-      <h3>Team Principals</h3>
-      <p>Uniquely, every season features Team Principals who draft drivers into their teams — broadcast live on Twitch. There's nothing else like it.</p>
-    </div>
-    <div class="about-card">
-      <div class="about-card-icon">
-        <svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
-      </div>
-      <h3>A division for everyone</h3>
-      <p>With 4 to 6 divisions each season, newcomers and veterans alike find their level. Promotion and relegation keeps competition fierce.</p>
-    </div>
-    <div class="about-card">
-      <div class="about-card-icon">
-        <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-      </div>
-      <h3>Global community</h3>
-      <p>Based in the UK but racing worldwide — drivers from the USA, Romania, South Africa, Canada, Australia and beyond have all raced with F1XL.</p>
+      <a href="standings.html" class="btn btn-outline">View standings →</a>
     </div>
   </div>
 </div>
 
-<!-- JOIN BANNER -->
-<div class="join-banner">
-  <h2>Ready to <em>race?</em></h2>
-  <p>Applications for Season 28 will open soon. Join our Discord to be the first to know and get involved with the community.</p>
-  <div class="join-actions">
-    <a href="https://discord.gg/3gKvrQA34x" class="btn btn-discord" target="_blank">
-      <svg class="discord-icon" viewBox="0 0 24 24">
-        <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.015.043.032.054a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/>
-      </svg>
-      Join Discord
+<!-- STATS -->
+<div class="stats-row">
+  <div class="stat-cell">
+    <div class="stat-num" id="stat-seasons"><span>28</span></div>
+    <div class="stat-lbl">Seasons</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-num"><span>16</span></div>
+    <div class="stat-lbl">Years running</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-num"><span>3</span></div>
+    <div class="stat-lbl">Platforms</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-num"><span>300+</span></div>
+    <div class="stat-lbl">Drivers all-time</div>
+  </div>
+</div>
+
+<!-- QUICK LINKS -->
+<div class="quick-section">
+  <div class="quick-label">Current season</div>
+  <div class="quick-grid">
+    <a href="standings.html" class="quick-link">
+      <div class="quick-link-label">Standings</div>
+      <div class="quick-link-sub">Driver & constructor</div>
+      <div class="quick-link-arrow">→</div>
     </a>
-    <a href="apply.html" class="btn btn-red">Apply for Season 28</a>
+    <a href="results.html" class="quick-link">
+      <div class="quick-link-label">Results</div>
+      <div class="quick-link-sub">Race by race</div>
+      <div class="quick-link-arrow">→</div>
+    </a>
+    <a href="schedule.html" class="quick-link">
+      <div class="quick-link-label">Schedule</div>
+      <div class="quick-link-sub">Upcoming races</div>
+      <div class="quick-link-arrow">→</div>
+    </a>
+    <a href="teams.html" class="quick-link">
+      <div class="quick-link-label">Teams</div>
+      <div class="quick-link-sub">Drivers & line-ups</div>
+      <div class="quick-link-arrow">→</div>
+    </a>
+    <a href="drivers-licence.html" class="quick-link">
+      <div class="quick-link-label">Licence</div>
+      <div class="quick-link-sub">Penalty points</div>
+      <div class="quick-link-arrow">→</div>
+    </a>
+    <a href="league-rules.html" class="quick-link">
+      <div class="quick-link-label">Rules</div>
+      <div class="quick-link-sub">League regulations</div>
+      <div class="quick-link-arrow">→</div>
+    </a>
   </div>
 </div>
 
-<!-- SOCIAL LINKS -->
+<!-- SOCIALS -->
 <div class="social-section">
-  <div class="section-tag">
-    <div class="section-tag-bar"></div>
-    <div class="section-tag-text">Find us online</div>
-  </div>
+  <div class="social-label">Find us online</div>
   <div class="social-grid">
-    <a href="https://discord.gg/3gKvrQA34x" class="social-card" target="_blank">
-      <svg class="social-icon" viewBox="0 0 24 24" fill="#5865F2">
-        <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.015.043.032.054a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/>
-      </svg>
-      <div class="social-name">Discord</div>
-      <div class="social-handle">Main community hub</div>
+
+    <a href="https://discord.gg/3gKvrQA34x" class="social-btn" target="_blank">
+      <svg viewBox="0 0 24 24" fill="#5865F2"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.015.043.032.054a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+      Discord
     </a>
-    <a href="https://www.twitch.tv/f1xl" class="social-card" target="_blank">
-      <svg class="social-icon" viewBox="0 0 24 24" fill="#9146FF">
-        <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/>
-      </svg>
-      <div class="social-name">Twitch</div>
-      <div class="social-handle">Live draft & races</div>
+
+    <a href="https://www.youtube.com/@F1XL" class="social-btn" target="_blank">
+      <svg viewBox="0 0 24 24" fill="#FF0000"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+      YouTube
     </a>
-    <a href="https://www.twitch.tv/f1xl_plus" class="social-card" target="_blank">
-      <svg class="social-icon" viewBox="0 0 24 24" fill="#9146FF">
-        <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/>
-      </svg>
-      <div class="social-name">Twitch Plus</div>
-      <div class="social-handle">F1XL Plus channel</div>
+
+    <a href="https://www.twitch.tv/f1xl" class="social-btn" target="_blank">
+      <svg viewBox="0 0 24 24" fill="#9146FF"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/></svg>
+      Twitch
     </a>
-    <a href="https://www.facebook.com/F1XboxLeagues/" class="social-card" target="_blank">
-      <svg class="social-icon" viewBox="0 0 24 24" fill="#1877F2">
-        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-      </svg>
-      <div class="social-name">Facebook</div>
-      <div class="social-handle">F1XboxLeagues</div>
+
+    <a href="https://www.twitch.tv/f1xl_plus" class="social-btn" target="_blank">
+      <svg viewBox="0 0 24 24" fill="#9146FF"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/></svg>
+      Twitch+
     </a>
-    <a href="https://twitter.com/F1XboxLeagues/" class="social-card" target="_blank">
-      <svg class="social-icon" viewBox="0 0 24 24" fill="#1DA1F2">
-        <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
-      </svg>
-      <div class="social-name">Twitter</div>
-      <div class="social-handle">@F1XboxLeagues</div>
+
+    <a href="https://twitter.com/F1XboxLeagues/" class="social-btn" target="_blank">
+      <svg viewBox="0 0 24 24" fill="#fff"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+      X / Twitter
     </a>
-    <a href="https://www.youtube.com/@F1XL" class="social-card" target="_blank">
-      <svg class="social-icon" viewBox="0 0 24 24" fill="#FF0000">
-        <path d="M23.495 6.205a3.007 3.007 0 0 0-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 0 0 .527 6.205a31.247 31.247 0 0 0-.522 5.805 31.247 31.247 0 0 0 .522 5.783 3.007 3.007 0 0 0 2.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 0 0 2.088-2.088 31.247 31.247 0 0 0 .5-5.783 31.247 31.247 0 0 0-.5-5.805zM9.609 15.601V8.408l6.264 3.602z"/>
-      </svg>
-      <div class="social-name">YouTube</div>
-      <div class="social-handle">@F1XL</div>
+
+    <a href="https://www.facebook.com/F1XboxLeagues/" class="social-btn" target="_blank">
+      <svg viewBox="0 0 24 24" fill="#1877F2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+      Facebook
     </a>
+
+    <a href="https://www.tiktok.com/@f1xboxleagues" class="social-btn" target="_blank">
+      <svg viewBox="0 0 24 24" fill="#fff"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.75a4.85 4.85 0 0 1-1.01-.06z"/></svg>
+      TikTok
+    </a>
+
   </div>
 </div>
 
-<!-- FOOTER -->
 <footer>
-  <div class="footer-left">
+  <div style="display:flex;align-items:center;gap:10px;">
     <div class="footer-logo">F1XL</div>
     <div class="footer-text">The UK's longest running F1 league · Est. 2010</div>
   </div>
-  <div class="footer-right">f1xl.co.uk</div>
+  <div class="footer-text">f1xl.co.uk</div>
 </footer>
 
+<script src="config.js"></script>
 <script>
-function toggleMenu() {
-  const menu = document.getElementById('mobile-menu');
-  const burger = document.getElementById('hamburger');
-  menu.classList.toggle('open');
-  burger.classList.toggle('open');
+function toggleMenu(){
+  document.getElementById('hamburger').classList.toggle('open');
+  document.getElementById('mobile-menu').classList.toggle('open');
 }
+
+async function init(){
+  try {
+    const season = await getCurrentSeason();
+    if(season){
+      document.getElementById('hero-status-text').textContent = `Season ${season} · Now Racing`;
+      document.getElementById('stat-seasons').innerHTML = `<span>${season}</span>`;
+    }
+    const yr = new Date().getFullYear() - 2010;
+    document.querySelectorAll('.stat-num')[1].innerHTML = `<span>${yr}</span>`;
+  } catch(e){ console.error(e); }
+}
+
+init();
 </script>
 </body>
 </html>
