@@ -290,14 +290,14 @@ function parseAccolades(rows){
 
     const accolades = [];
 
-    const ownerChamp = g(row,2);
-    const ownerRU    = g(row,3);
-    const driverChamp = g(row,5);
-    const driverRU    = g(row,6);
-    const consChamp  = g(row,8);
-    const consRU     = g(row,9);
-    const overallChamp = g(row,11);
-    const overallRU    = g(row,12);
+    const ownerChamp = g(row,1);
+    const ownerRU    = g(row,2);
+    const driverChamp = g(row,4);
+    const driverRU    = g(row,5);
+    const consChamp  = g(row,7);
+    const consRU     = g(row,8);
+    const overallChamp = g(row,10);
+    const overallRU    = g(row,11);
 
     if(driverChamp)  accolades.push({type:'champ', label:'Driver Champion',      seasons:driverChamp});
     if(driverRU)     accolades.push({type:'ru',    label:'Driver Runner Up',      seasons:driverRU});
