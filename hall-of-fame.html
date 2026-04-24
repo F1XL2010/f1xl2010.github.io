@@ -45,6 +45,13 @@
   .hero-stat-val{font-family:'Barlow Condensed',sans-serif;font-size:40px;font-weight:800;color:var(--gold);line-height:1;}
   .hero-stat-lbl{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1.5px;margin-top:2px;}
 
+  /* SECTION NAV */
+  .section-nav{position:sticky;top:56px;z-index:100;background:rgba(14,18,16,0.97);border-bottom:1px solid var(--border);display:flex;gap:0;padding:0 28px;overflow-x:auto;scrollbar-width:none;}
+  .section-nav::-webkit-scrollbar{display:none;}
+  .section-nav-btn{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:13px 16px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-faint);cursor:pointer;white-space:nowrap;margin-bottom:-1px;}
+  .section-nav-btn:hover{color:var(--text-muted);}
+  .section-nav-btn.active{color:var(--gold);border-bottom-color:var(--gold);}
+
   /* CHAPTER */
   .chapter{padding:32px 28px 16px;}
   .chapter-eyebrow{font-size:10px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:var(--gold);margin-bottom:6px;}
@@ -58,8 +65,8 @@
   .lb-card-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-faint);margin-bottom:14px;}
   .lb-row{display:flex;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
   .lb-row:last-child{border:none;}
-  .lb-pos{font-family:'Barlow Condensed',sans-serif;font-size:44px;font-weight:900;color:rgba(255,255,255,0.04);line-height:1;width:48px;flex-shrink:0;text-align:center;}
-  .lb-pos.p1{color:rgba(232,184,75,0.15);}
+  .lb-pos{font-family:'Barlow Condensed',sans-serif;font-size:44px;font-weight:900;color:rgba(255,255,255,0.15);line-height:1;width:48px;flex-shrink:0;text-align:center;}
+  .lb-pos.p1{color:rgba(232,184,75,0.45);}
   .lb-info{flex:1;padding:0 6px;}
   .lb-name{font-size:13px;font-weight:500;color:var(--text);}
   .lb-sub{font-size:11px;color:var(--text-faint);margin-top:1px;}
@@ -116,6 +123,20 @@
 
   /* LOADING */
   .loading-msg{text-align:center;padding:48px 24px;color:var(--text-faint);font-size:13px;}
+
+  /* LEAGUE RECORDS */
+  .lr-wrap{padding:0 28px 32px;}
+  .lr-div-section{margin-bottom:28px;}
+  .lr-div-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gold);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+  .lr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+  @media(max-width:600px){.lr-grid{grid-template-columns:1fr;}}
+  .lr-card{background:var(--dark2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;}
+  .lr-card-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-faint);margin-bottom:12px;}
+  .lr-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+  .lr-row:last-child{border:none;}
+  .lr-rank{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--text-faint);width:16px;flex-shrink:0;}
+  .lr-name{flex:1;font-size:12px;color:var(--text);}
+  .lr-val{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--gold);}
 
   footer{border-top:1px solid var(--border);padding:20px 24px;display:flex;justify-content:space-between;align-items:center;margin-top:40px;}
   .footer-logo{background:var(--gold);color:#000;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;padding:4px 9px;border-radius:3px;}
@@ -176,6 +197,14 @@
   <a href="league-rules.html">League Rules</a>
 </div>
 
+<!-- SECTION NAV -->
+<div class="section-nav">
+  <button class="section-nav-btn active" onclick="scrollToSection('leaderboards',this)">Leaderboards</button>
+  <button class="section-nav-btn" onclick="scrollToSection('seasons',this)">Seasons</button>
+  <button class="section-nav-btn" onclick="scrollToSection('division-records',this)">Division Records</button>
+  <button class="section-nav-btn" onclick="scrollToSection('league-records',this)">League Records</button>
+</div>
+
 <!-- HERO -->
 <div class="hero">
   <div class="hero-bg">F1XL</div>
@@ -189,6 +218,7 @@
 </div>
 
 <!-- LEADERBOARDS -->
+<div id="leaderboards"></div>
 <div class="chapter">
   <div class="chapter-eyebrow">The Records</div>
   <div class="chapter-title">All-Time Leaderboards</div>
@@ -200,6 +230,7 @@
 <div class="section-div"></div>
 
 <!-- SEASONS -->
+<div id="seasons"></div>
 <div class="chapter">
   <div class="chapter-eyebrow">The Seasons</div>
   <div class="chapter-title">Season by Season</div>
@@ -212,6 +243,7 @@
 <div class="section-div"></div>
 
 <!-- ACCOLADES TABLES -->
+<div id="division-records"></div>
 <div class="chapter">
   <div class="chapter-eyebrow">The Champions</div>
   <div class="chapter-title">Division Records</div>
@@ -220,6 +252,15 @@
   <div class="acc-tabs" id="acc-tabs"></div>
   <div id="acc-panels"><div class="loading-msg">Loading...</div></div>
 </div>
+
+<div id="league-records"></div>
+<div class="chapter">
+  <div class="chapter-eyebrow">The Records</div>
+  <div class="chapter-title">League Records</div>
+</div>
+<div class="lr-wrap" id="lr-wrap"><div class="loading-msg">Loading...</div></div>
+
+<div class="section-div" style="margin-bottom:0;"></div>
 
 <footer>
   <div style="display:flex;align-items:center;gap:10px;">
@@ -343,12 +384,13 @@ function renderLB(drivers, totalDrivers){
     {key:'races',   label:'Most races started'},
   ];
 
-  // Update hero stats
-  const maxSeasons = Math.max(...drivers.map(d=>d.seasons));
+  // Update hero stats — season count from config, years from 2010
+  const currentSeason = await getCurrentSeason();
+  const yearsRunning = new Date().getFullYear() - 2010;
   document.getElementById('hero-stats').innerHTML = `
-    <div><div class="hero-stat-val">${maxSeasons}</div><div class="hero-stat-lbl">Seasons run</div></div>
+    <div><div class="hero-stat-val">${currentSeason}</div><div class="hero-stat-lbl">Seasons</div></div>
     <div><div class="hero-stat-val">${totalDrivers}</div><div class="hero-stat-lbl">Drivers</div></div>
-    <div><div class="hero-stat-val">14</div><div class="hero-stat-lbl">Years</div></div>
+    <div><div class="hero-stat-val">${yearsRunning}</div><div class="hero-stat-lbl">Years</div></div>
   `;
 
   const grid = document.getElementById('lb-grid');
@@ -480,6 +522,138 @@ function switchAccTab(key, btn){
   if(panel) panel.classList.add('active');
 }
 
+// ── SECTION NAV ──────────────────────────────────────────────────────────────
+function scrollToSection(id, btn){
+  document.querySelectorAll('.section-nav-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const el = document.getElementById(id);
+  if(el){
+    const offset = 56 + 44; // nav height + section nav height
+    const top = el.getBoundingClientRect().top + window.scrollY - offset;
+    window.scrollTo({top, behavior:'smooth'});
+  }
+}
+
+// ── PARSE LEAGUE RECORDS ──────────────────────────────────────────────────────
+// Aggregated section starts after a blank row following the season data
+// Format: row with "Champions"/"Runners Up"/"Constructors" headers
+// Then "Drivers"/"Team"/"No. Of Wins" headers
+// Then data rows: blank, blank, Name, Count
+function parseLeagueRecords(rows){
+  // Find the aggregated section — look for "Champions" label
+  let aggStart = -1;
+  for(let i=0; i<rows.length; i++){
+    if(g(rows[i],2).toLowerCase()==='champions'){ aggStart=i; break; }
+  }
+  if(aggStart<0) return null;
+
+  // Row aggStart = section headers (Champions | Runners Up | Constructors drivers)
+  // Row aggStart+1 = column headers (Drivers | No. Of Wins | | | Drivers | No. Of Wins...)
+  // Row aggStart+2+ = data until "Constructors" sub-header
+
+  const champDrivers = [];
+  const ruDrivers = [];
+  const consDrivers = [];
+  const consTeams = [];
+
+  // Data rows start at aggStart+2
+  let inConsTeams = false;
+  for(let i=aggStart+2; i<rows.length; i++){
+    const row = rows[i];
+    const col2 = g(row,2);
+    const col3 = g(row,3);
+    const col6 = g(row,6);
+    const col7 = g(row,7);
+    const col10 = g(row,10);
+    const col11 = g(row,11);
+
+    // Check for "Constructors" sub-header (team section)
+    if(col2.toLowerCase()==='constructors'){ inConsTeams=true; continue; }
+    if(col2.toLowerCase()==='team'&&col3.toLowerCase().includes('win')){ continue; }
+
+    if(!inConsTeams){
+      if(col2 && col3 && !isNaN(parseFloat(col3))) champDrivers.push({name:col2, val:parseInt(col3)});
+      if(col6 && col7 && !isNaN(parseFloat(col7))) ruDrivers.push({name:col6, val:parseInt(col7)});
+      if(col10 && col11 && !isNaN(parseFloat(col11))) consDrivers.push({name:col10, val:parseInt(col11)});
+    } else {
+      if(col2 && col3 && !isNaN(parseFloat(col3))) consTeams.push({name:col2, val:parseInt(col3)});
+      // Also keep checking ru and consDrivers columns
+      if(col6 && col7 && !isNaN(parseFloat(col7))) ruDrivers.push({name:col6, val:parseInt(col7)});
+      if(col10 && col11 && !isNaN(parseFloat(col11))) consDrivers.push({name:col10, val:parseInt(col11)});
+    }
+  }
+
+  return { champDrivers, ruDrivers, consDrivers, consTeams };
+}
+
+function parseOverallLeagueRecords(rows){
+  // Overall: "Team Owner" / "Total Wins" | "Team Owner" / "Total Runner Up"
+  let aggStart = -1;
+  for(let i=0; i<rows.length; i++){
+    if(g(rows[i],2).toLowerCase()==='team owner'){ aggStart=i+1; break; }
+  }
+  if(aggStart<0) return null;
+
+  const champions = [];
+  const runners = [];
+  for(let i=aggStart; i<rows.length; i++){
+    const row = rows[i];
+    const c2=g(row,2), c3=g(row,3), c6=g(row,6), c7=g(row,7);
+    if(c2&&c3&&!isNaN(parseFloat(c3))) champions.push({name:c2,val:parseInt(c3)});
+    if(c6&&c7&&!isNaN(parseFloat(c7))) runners.push({name:c6,val:parseInt(c7)});
+  }
+  return {champions, runners};
+}
+
+function renderLeagueRecords(divDataRaw, overallDataRaw){
+  const wrap = document.getElementById('lr-wrap');
+
+  function lrTable(title, items){
+    if(!items||!items.length) return '';
+    return `<div class="lr-card">
+      <div class="lr-card-title">${title}</div>
+      ${items.sort((a,b)=>b.val-a.val).map((item,i)=>`
+        <div class="lr-row">
+          <div class="lr-rank">${i+1}</div>
+          <div class="lr-name">${item.name}</div>
+          <div class="lr-val">${item.val}</div>
+        </div>`).join('')}
+    </div>`;
+  }
+
+  let html = '';
+
+  // Overall section
+  if(overallDataRaw){
+    const rec = parseOverallLeagueRecords(overallDataRaw);
+    if(rec){
+      html += `<div class="lr-div-section">
+        <div class="lr-div-title">Overall</div>
+        <div class="lr-grid">
+          ${lrTable('Team Owner Champions', rec.champions)}
+          ${lrTable('Team Owner Runners Up', rec.runners)}
+        </div>
+      </div>`;
+    }
+  }
+
+  // Per division
+  Object.entries(divDataRaw).forEach(([div, rows]) => {
+    const rec = parseLeagueRecords(rows);
+    if(!rec) return;
+    html += `<div class="lr-div-section">
+      <div class="lr-div-title">${div}</div>
+      <div class="lr-grid">
+        ${lrTable('Driver Champions', rec.champDrivers)}
+        ${lrTable('Driver Runners Up', rec.ruDrivers)}
+        ${lrTable('Constructor Teams', rec.consTeams)}
+      </div>
+    </div>`;
+  });
+
+  wrap.innerHTML = html || '<div class="loading-msg">No league records found.</div>';
+}
+
 // ── INIT ──────────────────────────────────────────────────────────────────────
 async function init(){
   try {
@@ -527,6 +701,13 @@ async function init(){
 
     // Render accolade tables
     renderAccolades();
+
+    // Render league records — pass raw rows for parsing
+    const divRawRows = {};
+    for(let d=1;d<=8;d++){
+      if(results[`d${d}`]) divRawRows[`Division ${d}`] = results[`d${d}`];
+    }
+    renderLeagueRecords(divRawRows, results.overall);
 
   } catch(e){
     console.error('Hall of Fame init error:', e);
