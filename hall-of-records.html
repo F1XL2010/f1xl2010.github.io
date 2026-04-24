@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>F1XL — Hall of Records</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--green:#3DCC47;--teal:#5ECFCF;--red:#E10600;--black:#111816;--dark:#161d1b;--dark2:#1a2320;--dark3:#1e2a27;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);--text:#ffffff;--text-muted:rgba(255,255,255,0.60);--text-faint:rgba(255,255,255,0.30);--gold:#E8B84B;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:#111816;color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;}
+  nav{background:rgba(17,24,22,0.97);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;}
+  .nav-left{display:flex;align-items:center;gap:14px;flex-shrink:0;}
+  .nav-logo{background:var(--green);color:#000;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;padding:5px 11px;border-radius:3px;text-decoration:none;}
+  .nav-links{display:flex;align-items:stretch;height:56px;}
+  .nav-item{position:relative;display:flex;align-items:stretch;}
+  .nav-item>a,.nav-item>button{color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:500;letter-spacing:0.5px;padding:0 13px;display:flex;align-items:center;gap:4px;border-bottom:2px solid transparent;border-top:none;border-left:none;border-right:none;background:none;cursor:pointer;font-family:'Barlow',sans-serif;text-transform:uppercase;transition:color 0.2s;white-space:nowrap;}
+  .nav-item>a:hover,.nav-item>button:hover{color:var(--text);}
+  .nav-item>a.active,.nav-item>button.active{color:var(--text);border-bottom-color:var(--green);}
+  .nav-chevron{font-size:8px;opacity:0.5;transition:transform 0.2s;}
+  .nav-item:hover .nav-chevron{transform:rotate(180deg);}
+  .nav-dropdown{display:none;position:absolute;top:100%;left:0;background:#141a18;border:1px solid var(--border2);border-top:2px solid var(--green);border-radius:0 0 6px 6px;min-width:180px;padding:6px 0;z-index:300;}
+  .nav-item:hover .nav-dropdown{display:block;}
+  .nav-dropdown a{display:block;padding:9px 16px;color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;transition:color 0.15s,background 0.15s;white-space:nowrap;}
+  .nav-dropdown a:hover{color:var(--text);background:rgba(255,255,255,0.05);}
+  .nav-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:8px;background:none;border:none;}
+  .nav-hamburger span{display:block;width:22px;height:2px;background:var(--text-muted);border-radius:2px;transition:all 0.25s;}
+  .nav-hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+  .nav-hamburger.open span:nth-child(2){opacity:0;}
+  .nav-hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+  .mobile-menu{display:none;position:fixed;top:56px;left:0;right:0;background:#141a18;border-bottom:1px solid var(--border2);z-index:199;padding:12px 0;}
+  .mobile-menu.open{display:block;}
+  .mobile-menu a{display:block;padding:10px 24px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;}
+  .mobile-menu a:hover{color:var(--text);}
+
+  /* PAGE */
+  .page-header{padding:28px 24px 20px;border-bottom:1px solid var(--border);}
+  .page-eyebrow{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--teal);margin-bottom:6px;}
+  .page-title{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:700;text-transform:uppercase;letter-spacing:1px;line-height:1;}
+  .page-sub{font-size:12px;color:var(--text-faint);margin-top:4px;}
+  .page-body{max-width:900px;margin:0 auto;padding:24px;}
+
+  /* SEARCH */
+  .search-wrap{margin-bottom:16px;}
+  .search-input{width:100%;padding:10px 14px;background:var(--dark2);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-size:13px;font-family:'Barlow',sans-serif;outline:none;transition:border-color 0.2s;}
+  .search-input:focus{border-color:var(--teal);}
+  .search-input::placeholder{color:var(--text-faint);}
+  .driver-count{font-size:11px;color:var(--text-faint);margin-bottom:12px;}
+
+  /* DRIVER ENTRIES */
+  .driver-entry{background:var(--dark2);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden;transition:border-color 0.2s;}
+  .driver-entry:hover{border-color:var(--border2);}
+  .driver-header{display:flex;align-items:center;gap:12px;padding:12px 16px;cursor:pointer;user-select:none;}
+  .driver-avatar{width:36px;height:36px;border-radius:50%;background:#0f3d2e;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--green);flex-shrink:0;font-family:'Barlow Condensed',sans-serif;}
+  .driver-name-block{flex:1;min-width:0;}
+  .driver-name-primary{font-size:14px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .driver-name-aka{font-size:11px;color:var(--text-faint);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .title-pill{display:inline-block;background:#1a3d1a;color:var(--green);font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;margin-left:8px;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.5px;vertical-align:middle;}
+  .driver-inline-stats{display:flex;gap:16px;flex-shrink:0;}
+  .istat{text-align:right;}
+  .istat-val{font-size:14px;font-weight:500;color:var(--text);font-family:'Barlow Condensed',sans-serif;}
+  .istat-lbl{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;}
+  .driver-chev{font-size:10px;color:var(--text-faint);margin-left:8px;transition:transform 0.2s;flex-shrink:0;}
+  .driver-chev.open{transform:rotate(180deg);}
+
+  /* EXPANDED BODY */
+  .driver-body{display:none;border-top:1px solid var(--border);}
+  .driver-body.open{display:block;}
+
+  /* TOP SECTION — stats + accolades */
+  .driver-top{padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:16px;border-bottom:1px solid var(--border);}
+  @media(max-width:600px){.driver-top{grid-template-columns:1fr;}}
+  .sec-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-faint);margin-bottom:10px;font-weight:500;}
+  .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+  .stat-box{background:#111816;border-radius:6px;padding:10px 12px;}
+  .stat-box-val{font-size:22px;font-weight:700;color:var(--text);font-family:'Barlow Condensed',sans-serif;line-height:1;}
+  .stat-box-lbl{font-size:10px;color:var(--text-faint);margin-top:2px;}
+  .accolade-list{display:flex;flex-direction:column;gap:4px;}
+  .accolade-item{font-size:12px;color:var(--text-muted);padding:5px 8px;background:#111816;border-radius:5px;display:flex;align-items:flex-start;gap:6px;line-height:1.5;}
+  .accolade-item.none{color:var(--text-faint);font-style:italic;}
+  .badge{font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;flex-shrink:0;margin-top:1px;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.3px;}
+  .badge-champ{background:#1a3d1a;color:var(--green);}
+  .badge-ru{background:rgba(255,255,255,0.06);color:var(--text-faint);}
+  .badge-gold{background:#3d2e0a;color:var(--gold);}
+
+  /* SEASON BREAKDOWN */
+  .driver-season{padding:16px;}
+  .season-table{width:100%;font-size:12px;border-collapse:collapse;}
+  .season-table th{text-align:left;padding:5px 10px;font-size:10px;color:var(--text-faint);border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:0.5px;font-weight:500;}
+  .season-table td{padding:6px 10px;border-bottom:1px solid rgba(255,255,255,0.04);color:var(--text-muted);}
+  .season-table td:first-child{color:var(--text);font-weight:600;font-family:'Barlow Condensed',sans-serif;font-size:13px;}
+  .season-table tr:last-child td{border:none;}
+  .season-table tr:hover td{background:rgba(255,255,255,0.02);}
+
+  /* LOADING */
+  .loading-msg{text-align:center;padding:48px 24px;color:var(--text-faint);font-size:13px;}
+
+  footer{border-top:1px solid var(--border);padding:20px 24px;display:flex;justify-content:space-between;align-items:center;margin-top:40px;}
+  .footer-logo{background:var(--green);color:#000;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;padding:4px 9px;border-radius:3px;}
+  .footer-text{font-size:11px;color:var(--text-faint);}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-left"><a href="index.html" class="nav-logo">F1XL</a></div>
+  <div class="nav-links">
+    <div class="nav-item"><a href="index.html">Home</a></div>
+    <div class="nav-item">
+      <button>Standings <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown">
+        <a href="standings.html">Current Season</a>
+        <a href="results.html">Results</a>
+        <a href="past-seasons.html">Past Seasons</a>
+      </div>
+    </div>
+    <div class="nav-item"><a href="teams.html">Teams</a></div>
+    <div class="nav-item">
+      <button>Race Tickets <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown">
+        <a href="ticket-outcomes.html">Ticket Outcomes</a>
+        <a href="drivers-licence.html">Drivers Licence</a>
+      </div>
+    </div>
+    <div class="nav-item">
+      <button>Schedule <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown"><a href="schedule.html">Schedule</a></div>
+    </div>
+    <div class="nav-item">
+      <button class="active">History <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown">
+        <a href="hall-of-records.html" class="active">Hall of Records</a>
+        <a href="hall-of-fame.html">Hall of Fame</a>
+        <a href="asr.html">All Star Race</a>
+      </div>
+    </div>
+    <div class="nav-item"><a href="track-records.html">Track Records</a></div>
+    <div class="nav-item"><a href="league-rules.html">League Rules</a></div>
+  </div>
+  <button class="nav-hamburger" id="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></button>
+</nav>
+<div class="mobile-menu" id="mobile-menu">
+  <a href="index.html">Home</a>
+  <a href="standings.html">Standings</a>
+  <a href="results.html">Results</a>
+  <a href="past-seasons.html">Past Seasons</a>
+  <a href="teams.html">Teams</a>
+  <a href="ticket-outcomes.html">Ticket Outcomes</a>
+  <a href="drivers-licence.html">Drivers Licence</a>
+  <a href="schedule.html">Schedule</a>
+  <a href="hall-of-records.html">Hall of Records</a>
+  <a href="hall-of-fame.html">Hall of Fame</a>
+  <a href="asr.html">All Star Race</a>
+  <a href="track-records.html">Track Records</a>
+  <a href="league-rules.html">League Rules</a>
+</div>
+
+<div class="page-header">
+  <div class="page-eyebrow">F1XL · Est. 2010</div>
+  <div class="page-title">Hall of Records</div>
+  <div class="page-sub" id="page-sub">The complete driver database</div>
+</div>
+
+<div class="page-body">
+  <div class="search-wrap">
+    <input type="text" class="search-input" id="search" placeholder="Search driver..." oninput="filterDrivers(this.value)">
+  </div>
+  <div class="driver-count" id="driver-count">Loading...</div>
+  <div id="driver-list"><div class="loading-msg">Loading records...</div></div>
+</div>
+
+<footer>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="footer-logo">F1XL</div>
+    <div class="footer-text">The UK's longest running F1 league · Est. 2010</div>
+  </div>
+  <div class="footer-text">f1xl.co.uk</div>
+</footer>
+
+<script src="config.js"></script>
+<script>
+
+function toggleMenu(){
+  document.getElementById('hamburger').classList.toggle('open');
+  document.getElementById('mobile-menu').classList.toggle('open');
+}
+
+function parseCSV(text){
+  const rows=[];let cells=[],cur='',inQ=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(c==='"'){inQ=!inQ;}
+    else if(c===','&&!inQ){cells.push(cur.trim());cur='';}
+    else if((c==='\n'||c==='\r')&&!inQ){
+      cells.push(cur.trim());
+      if(cells.some(v=>v))rows.push(cells);
+      cells=[];cur='';
+      if(c==='\r'&&text[i+1]==='\n')i++;
+    }else cur+=c;
+  }
+  cells.push(cur.trim());
+  if(cells.some(v=>v))rows.push(cells);
+  return rows;
+}
+
+function g(row,col){return((row&&row[col])||'').trim();}
+
+// ── PARSE FULL STATS ──────────────────────────────────────────────────────────
+// Row 0: season group labels (SEASON at col 11, 17, 23...)
+// Row 1: season numbers (26, 25, 24...)
+// Row 2: "TOP FIVE'S" | DRIVER | Total Seasons | Total Wins | Total Podiums | Total Poles | Sprint Wins | Races Started
+// Row 3: headers (Driver | Season | | DRIVER | Total Seasons...)
+// Row 4+: data
+// Driver col = 3, Seasons=4, Wins=5, Podiums=6, Poles=7, SprintWins=8, Races=9
+// Season breakdown: starting col 11, every 6 cols = one season
+// Season number in row 1 at col 11, 17, 23, 29... (offset 0 of each group)
+// Per season group: Wins=+1, Podiums=+2, Poles=+3, SprintWins=+4, Races=+5
+
+function parseFullStats(rows){
+  // Find season numbers from row 1 (index 1)
+  const seasonRow = rows[1] || [];
+  const headerRow = rows[2] || [];
+  const seasons = [];
+  // Season groups start at col 11, spaced 6 apart
+  for(let col=11; col<seasonRow.length; col+=6){
+    const sNum = parseFloat(g(seasonRow, col));
+    if(!isNaN(sNum)) seasons.push({season: sNum, col});
+  }
+
+  const drivers = [];
+  // Data starts at row 4 (index 4), skip rows 0-3
+  for(let i=4; i<rows.length; i++){
+    const row = rows[i];
+    const driverRaw = g(row, 3);
+    if(!driverRaw || driverRaw.toLowerCase()==='driver') continue;
+
+    // Split primary name from aliases
+    const parts = driverRaw.split('/').map(s=>s.trim()).filter(Boolean);
+    const primary = parts[0];
+    const aliases = parts.slice(1);
+
+    const totalSeasons = parseInt(g(row,4))||0;
+    const totalWins    = parseInt(g(row,5))||0;
+    const totalPodiums = parseInt(g(row,6))||0;
+    const totalPoles   = parseInt(g(row,7))||0;
+    const sprintWins   = parseInt(g(row,8))||0;
+    const totalRaces   = parseInt(g(row,9))||0;
+
+    // Season breakdown — only include seasons with races > 0
+    const seasonBreakdown = [];
+    for(const {season, col} of seasons){
+      const wins    = parseInt(g(row, col+1))||0;
+      const pods    = parseInt(g(row, col+2))||0;
+      const poles   = parseInt(g(row, col+3))||0;
+      const sprints = parseInt(g(row, col+4))||0;
+      const races   = parseInt(g(row, col+5))||0;
+      if(races>0) seasonBreakdown.push({season, races, wins, pods, poles, sprints});
+    }
+    // Sort newest first
+    seasonBreakdown.sort((a,b)=>b.season-a.season);
+
+    drivers.push({
+      primary, aliases, driverRaw,
+      totalSeasons, totalWins, totalPodiums, totalPoles, sprintWins, totalRaces,
+      seasonBreakdown,
+      accolades: [] // filled later
+    });
+  }
+
+  // Sort alphabetically by primary name
+  drivers.sort((a,b)=>a.primary.localeCompare(b.primary, undefined, {sensitivity:'base'}));
+  return drivers;
+}
+
+// ── PARSE ACCOLADES ───────────────────────────────────────────────────────────
+// Col 0 = Driver name
+// Col 1 header = "Team Owner" → col 2 = Champion seasons, col 3 = Runner Up seasons
+// Col 4 header = "Driver"     → col 5 = Champion seasons, col 6 = Runner Up seasons
+// Col 7 header = "Division Constructors title" → col 8 = Champions, col 9 = Runners Up
+// Col 10 header = "overall constructors team"  → col 11 = Champions, col 12 = Runners Up
+// Data starts row 3 (index 2, after two header rows)
+
+function parseAccolades(rows){
+  const map = {}; // keyed by driver name (lowercase)
+  for(let i=2; i<rows.length; i++){
+    const row = rows[i];
+    const name = g(row,0);
+    if(!name || name.toLowerCase()==='driver') continue;
+
+    const accolades = [];
+
+    const ownerChamp = g(row,2);
+    const ownerRU    = g(row,3);
+    const driverChamp = g(row,5);
+    const driverRU    = g(row,6);
+    const consChamp  = g(row,8);
+    const consRU     = g(row,9);
+    const overallChamp = g(row,11);
+    const overallRU    = g(row,12);
+
+    if(driverChamp)  accolades.push({type:'champ', label:'Driver Champion',      seasons:driverChamp});
+    if(driverRU)     accolades.push({type:'ru',    label:'Driver Runner Up',      seasons:driverRU});
+    if(ownerChamp)   accolades.push({type:'gold',  label:'Team Owner Champion',   seasons:ownerChamp});
+    if(ownerRU)      accolades.push({type:'ru',    label:'Team Owner Runner Up',  seasons:ownerRU});
+    if(consChamp)    accolades.push({type:'champ', label:'Constructor Champion',  seasons:consChamp});
+    if(consRU)       accolades.push({type:'ru',    label:'Constructor Runner Up', seasons:consRU});
+    if(overallChamp) accolades.push({type:'gold',  label:'Overall Constructor Champion', seasons:overallChamp});
+    if(overallRU)    accolades.push({type:'ru',    label:'Overall Constructor Runner Up', seasons:overallRU});
+
+    map[name.toLowerCase()] = accolades;
+  }
+  return map;
+}
+
+// ── MATCH ACCOLADES TO DRIVERS ────────────────────────────────────────────────
+function matchAccolades(drivers, accoladesMap){
+  drivers.forEach(driver => {
+    // Try matching by any name variant
+    const allNames = [driver.primary, ...driver.aliases];
+    for(const name of allNames){
+      const key = name.toLowerCase();
+      if(accoladesMap[key]){
+        driver.accolades = accoladesMap[key];
+        break;
+      }
+      // Try partial match — accolades may have combined name
+      for(const [mapKey, val] of Object.entries(accoladesMap)){
+        if(mapKey.includes(key) || key.includes(mapKey.split('/')[0].trim().toLowerCase())){
+          driver.accolades = val;
+          break;
+        }
+      }
+      if(driver.accolades.length) break;
+    }
+  });
+}
+
+// ── COUNT TITLES ──────────────────────────────────────────────────────────────
+function countTitles(accolades){
+  return accolades.filter(a=>a.type==='champ'||a.type==='gold').reduce((n, a) => {
+    // Count comma-separated season references
+    return n + (a.seasons.split(',').length);
+  }, 0);
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function initials(name){
+  const words = name.split(/\s+/);
+  if(words.length>=2) return (words[0][0]+(words[1][0]||'')).toUpperCase();
+  return name.substring(0,2).toUpperCase();
+}
+
+let allDrivers = [];
+let filteredDrivers = [];
+
+function renderDrivers(drivers){
+  const list = document.getElementById('driver-list');
+  const count = document.getElementById('driver-count');
+
+  if(!drivers.length){
+    list.innerHTML = '<div class="loading-msg">No drivers found.</div>';
+    count.textContent = '0 drivers';
+    return;
+  }
+
+  count.textContent = `${drivers.length} driver${drivers.length!==1?'s':''} · complete to S26`;
+
+  list.innerHTML = drivers.map((d, idx) => {
+    const titles = countTitles(d.accolades);
+    const init = initials(d.primary);
+    const hasAliases = d.aliases.length > 0;
+    const id = 'drv-' + idx;
+
+    return `<div class="driver-entry" id="entry-${id}">
+      <div class="driver-header" onclick="toggleDriver('${id}')">
+        <div class="driver-avatar">${init}</div>
+        <div class="driver-name-block">
+          <div class="driver-name-primary">${d.primary}${titles>0?`<span class="title-pill">${titles} title${titles!==1?'s':''}</span>`:''}</div>
+          <div class="driver-name-aka">${hasAliases?'also known as: '+d.aliases.join(' · '):'&nbsp;'}</div>
+        </div>
+        <div class="driver-inline-stats">
+          <div class="istat"><div class="istat-val">${d.totalSeasons}</div><div class="istat-lbl">seasons</div></div>
+          <div class="istat"><div class="istat-val">${d.totalWins}</div><div class="istat-lbl">wins</div></div>
+          <div class="istat"><div class="istat-val">${d.totalRaces}</div><div class="istat-lbl">races</div></div>
+        </div>
+        <span class="driver-chev" id="chev-${id}">▼</span>
+      </div>
+      <div class="driver-body" id="body-${id}">
+        <div class="driver-top">
+          <div>
+            <div class="sec-label">Career stats</div>
+            <div class="stats-grid">
+              <div class="stat-box"><div class="stat-box-val">${d.totalSeasons}</div><div class="stat-box-lbl">Seasons</div></div>
+              <div class="stat-box"><div class="stat-box-val">${d.totalRaces}</div><div class="stat-box-lbl">Races</div></div>
+              <div class="stat-box"><div class="stat-box-val">${d.totalWins}</div><div class="stat-box-lbl">Wins</div></div>
+              <div class="stat-box"><div class="stat-box-val">${d.totalPodiums}</div><div class="stat-box-lbl">Podiums</div></div>
+              <div class="stat-box"><div class="stat-box-val">${d.totalPoles}</div><div class="stat-box-lbl">Poles</div></div>
+              <div class="stat-box"><div class="stat-box-val">${d.sprintWins}</div><div class="stat-box-lbl">Sprint wins</div></div>
+            </div>
+          </div>
+          <div>
+            <div class="sec-label">Accolades</div>
+            <div class="accolade-list">
+              ${d.accolades.length
+                ? d.accolades.map(a=>`<div class="accolade-item"><span class="badge badge-${a.type==='gold'?'gold':a.type==='champ'?'champ':'ru'}">${a.type==='ru'?'Runner Up':'Champion'}</span>${a.label} · ${a.seasons}</div>`).join('')
+                : '<div class="accolade-item none">No titles recorded</div>'
+              }
+            </div>
+          </div>
+        </div>
+        ${d.seasonBreakdown.length ? `
+        <div class="driver-season">
+          <div class="sec-label">Season by season</div>
+          <table class="season-table">
+            <thead><tr><th>Season</th><th>Races</th><th>Wins</th><th>Podiums</th><th>Poles</th><th>Sprint wins</th></tr></thead>
+            <tbody>
+              ${d.seasonBreakdown.map(s=>`<tr><td>S${s.season}</td><td>${s.races}</td><td>${s.wins}</td><td>${s.pods}</td><td>${s.poles}</td><td>${s.sprints}</td></tr>`).join('')}
+            </tbody>
+          </table>
+        </div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleDriver(id){
+  const body = document.getElementById('body-'+id);
+  const chev = document.getElementById('chev-'+id);
+  const open = body.classList.toggle('open');
+  chev.classList.toggle('open', open);
+}
+
+function filterDrivers(q){
+  q = q.toLowerCase().trim();
+  if(!q){
+    filteredDrivers = allDrivers;
+  } else {
+    filteredDrivers = allDrivers.filter(d => {
+      const all = [d.primary, ...d.aliases].join(' ').toLowerCase();
+      return all.includes(q);
+    });
+  }
+  renderDrivers(filteredDrivers);
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+async function init(){
+  try {
+    const [statsUrl, accoladesUrl] = await Promise.all([
+      getConfigValue('stats_url'),
+      getConfigValue('accolades_url')
+    ]);
+
+    if(!statsUrl) throw new Error('stats_url not found in config');
+    if(!accoladesUrl) throw new Error('accolades_url not found in config');
+
+    // Extract sheet ID and GID from URL
+    function parseSheetUrl(url){
+      const idMatch = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+      const gidMatch = url.match(/gid=(\d+)/);
+      return {
+        id: idMatch ? idMatch[1] : null,
+        gid: gidMatch ? gidMatch[1] : null
+      };
+    }
+
+    const statsParsed = parseSheetUrl(statsUrl);
+    const accoladesParsed = parseSheetUrl(accoladesUrl);
+
+    if(!statsParsed.id || !statsParsed.gid) throw new Error('Invalid stats_url format');
+    if(!accoladesParsed.id || !accoladesParsed.gid) throw new Error('Invalid accolades_url format');
+
+    const [statsResp, accoladesResp] = await Promise.all([
+      fetch(`https://docs.google.com/spreadsheets/d/${statsParsed.id}/export?format=csv&gid=${statsParsed.gid}`),
+      fetch(`https://docs.google.com/spreadsheets/d/${accoladesParsed.id}/export?format=csv&gid=${accoladesParsed.gid}`)
+    ]);
+
+    if(!statsResp.ok) throw new Error(`Stats HTTP ${statsResp.status}`);
+    if(!accoladesResp.ok) throw new Error(`Accolades HTTP ${accoladesResp.status}`);
+
+    const [statsText, accoladesText] = await Promise.all([
+      statsResp.text(),
+      accoladesResp.text()
+    ]);
+
+    if(statsText.includes('<!DOCTYPE')) throw new Error('Stats sheet not published');
+    if(accoladesText.includes('<!DOCTYPE')) throw new Error('Accolades sheet not published');
+
+    const statsRows = parseCSV(statsText);
+    const accoladesRows = parseCSV(accoladesText);
+
+    allDrivers = parseFullStats(statsRows);
+    const accoladesMap = parseAccolades(accoladesRows);
+    matchAccolades(allDrivers, accoladesMap);
+
+    filteredDrivers = allDrivers;
+    renderDrivers(filteredDrivers);
+
+    document.getElementById('page-sub').textContent =
+      `${allDrivers.length} drivers · complete to S26`;
+
+  } catch(e) {
+    document.getElementById('driver-list').innerHTML =
+      `<div class="loading-msg">Could not load records: ${e.message}</div>`;
+    document.getElementById('driver-count').textContent = '';
+    console.error(e);
+  }
+}
+
+init();
+</script>
+</body>
+</html>
