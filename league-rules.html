@@ -287,6 +287,8 @@ function parseDocHtml(html) {
   let currentSection = null;
 
   function cleanText(el) {
+    // Remove br elements before reading text
+    el.querySelectorAll('br').forEach(br => br.replaceWith(' '));
     return (el.textContent || '').trim()
       .replace(/\u00a0/g, ' ')
       .replace(/\s+/g, ' ').trim();
@@ -409,17 +411,12 @@ async function init() {
     const rulesUrl = await getConfigValue('league_rules_url');
     if (!rulesUrl) throw new Error('No league_rules_url in config');
 
-    // Convert /pub URL to embedded URL
-    const embedUrl = rulesUrl.replace('/pub', '/pub?embedded=true');
-
-    // Hide quick nav and content div, show iframe instead
-    document.getElementById('quick-nav').style.display = 'none';
-    document.getElementById('rules-content').innerHTML = `
-      <iframe
-        src="${embedUrl}"
-        style="width:100%;height:calc(100vh - 56px);border:none;display:block;"
-        frameborder="0">
-      </iframe>`;
+    const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(rulesUrl)}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const html = await res.text();
+    const chapters = parseDocHtml(html);
+    if (!chapters.length) throw new Error('No content found');
+    renderChapters(chapters);
   } catch(e) {
     document.getElementById('rules-content').innerHTML =
       `<div class="loading-msg">Could not load rules: ${e.message}</div>`;
