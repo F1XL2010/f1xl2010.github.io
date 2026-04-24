@@ -296,7 +296,21 @@ function parseDocHtml(html) {
     return /^[a-z]$/.test(text) || /^\d{1,2}$/.test(text);
   }
 
-  for (const node of body.children) {
+  // Google published docs wrap content in divs — walk all descendants
+  function* walkNodes(parent) {
+    for (const node of parent.children) {
+      yield node;
+      yield* walkNodes(node);
+    }
+  }
+
+  // Debug: log first few tags seen
+  const firstTags = [...body.children].slice(0,5).map(n=>n.tagName+':'+n.textContent.trim().slice(0,30));
+  console.log('Top level tags:', firstTags);
+  const allH1 = doc.querySelectorAll('h1,h2,h3');
+  console.log('All headings found:', allH1.length, [...allH1].slice(0,3).map(h=>h.tagName+':'+h.textContent.trim().slice(0,40)));
+
+  for (const node of doc.querySelectorAll('h1,h2,h3,p')) {
     const tag = node.tagName.toLowerCase();
     const text = cleanText(node);
 
@@ -306,7 +320,7 @@ function parseDocHtml(html) {
       currentChapter = { title: text, id, sections: [], intro: [] };
       currentSection = null;
       chapters.push(currentChapter);
-    } else if (tag === 'h2') {
+    } else if (tag === 'h2' || tag === 'h3') {
       if (!text || !currentChapter) continue;
       currentSection = { title: text, items: [] };
       currentChapter.sections.push(currentSection);
