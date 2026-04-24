@@ -401,6 +401,13 @@ async function init() {
     const data = await res.json();
     const html = data.contents;
 
+    console.log('HTML length:', html.length);
+    console.log('Has h1:', html.includes('<h1'));
+    console.log('Has h2:', html.includes('<h2'));
+    console.log('First 500 body chars:', (() => {
+      const m = html.match(/<body[^>]*>([\s\S]{0,500})/);
+      return m ? m[1] : 'no body tag';
+    })());
     const chapters = parseDocHtml(html);
     if (!chapters.length) throw new Error('No content found');
     renderChapters(chapters);
