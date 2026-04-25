@@ -14,9 +14,9 @@
     --gold:#E8B84B;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{background:#111816 url('images/schedule_background.webp') center center/cover no-repeat fixed;color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;}
-  body::before{content:'';position:fixed;inset:0;background:rgba(17,24,22,0.82);z-index:-1;}
-  nav{background:rgba(9,9,9,0.97);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;}
+  body{background-color:#111816;background-image:url('images/schedule_background.webp');background-size:cover;background-position:center;background-attachment:fixed;background-repeat:no-repeat;color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;}
+  body::before{content:'';position:fixed;inset:0;background:rgba(17,24,22,0.80);z-index:0;pointer-events:none;}
+  nav{position:relative;z-index:200;background:rgba(9,9,9,0.97);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;}
   .nav-left{display:flex;align-items:center;gap:14px;flex-shrink:0;}
   .nav-logo{background:var(--green);color:#000;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;padding:5px 11px;border-radius:3px;text-decoration:none;}
   .nav-links{display:flex;align-items:stretch;height:56px;}
@@ -42,7 +42,7 @@
   .mobile-divider{height:1px;background:var(--border);margin:12px 24px;}
   @media(max-width:860px){.nav-links{display:none;}.nav-title{display:none;}.nav-hamburger{display:flex;}}
   @media(min-width:861px){.mobile-menu{display:none !important;}}
-  .page-header{background:var(--dark);border-bottom:1px solid var(--border);padding:24px;}
+  .page-header{position:relative;z-index:1;background:rgba(22,29,27,0.85);border-bottom:1px solid var(--border);padding:24px;}
   .page-eyebrow{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:2.5px;color:var(--teal);text-transform:uppercase;font-weight:600;margin-bottom:4px;}
   .page-title{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:700;text-transform:uppercase;line-height:1;}
   .page-meta{font-size:13px;color:rgba(255,255,255,0.45);margin-top:6px;}
@@ -54,19 +54,19 @@
   .next-hero{position:relative;background:var(--dark2);border:1px solid var(--border2);border-top:3px solid var(--green);border-radius:10px;padding:24px 24px 24px 24px;margin-bottom:28px;overflow:hidden;min-height:120px;background-size:cover;background-position:center;background-repeat:no-repeat;}
   .next-hero::before{content:'';position:absolute;inset:0;background:rgba(17,24,22,0.55);z-index:0;}
   .next-hero>*{position:relative;z-index:1;}
-  .next-hero-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:var(--red);font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
-  .next-hero-name{font-family:'Barlow Condensed',sans-serif;font-size:52px;font-weight:900;text-transform:uppercase;line-height:1;margin-bottom:4px;}
+  .next-hero-label{font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:3px;text-transform:uppercase;color:var(--green);font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+  .next-hero-name{font-family:'Barlow Condensed',sans-serif;font-size:64px;font-weight:900;text-transform:uppercase;line-height:1;margin-bottom:6px;}
   .next-hero-circuit{font-size:15px;color:rgba(255,255,255,0.8);margin-bottom:8px;font-weight:500;}
   .next-hero-date{font-size:17px;color:rgba(255,255,255,0.9);font-weight:500;}
   .next-hero-badges{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;}
   .next-hero-visual{position:absolute;right:0;top:0;bottom:0;width:200px;display:flex;align-items:center;justify-content:center;overflow:hidden;}
 
-  .badge{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;padding:4px 10px;border-radius:3px;}
-  .badge-round{background:rgba(61,204,71,0.12);color:var(--green);border:1px solid rgba(61,204,71,0.25);display:inline-flex;align-items:center;gap:5px;}
-  .badge-sprint{background:rgba(100,150,255,0.15);color:rgba(130,170,255,0.9);border:1px solid rgba(100,150,255,0.2);}
+  .badge{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;padding:6px 12px;border-radius:4px;}
+  .badge-round{background:rgba(61,204,71,0.25);color:var(--green);border:1px solid rgba(61,204,71,0.5);display:inline-flex;align-items:center;gap:5px;}
+  .badge-sprint{background:rgba(100,150,255,0.3);color:rgba(160,190,255,1);border:1px solid rgba(100,150,255,0.5);}
   .badge-done{background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.45);border:1px solid var(--border);}
   .badge-allstar{background:rgba(232,184,75,0.12);color:var(--gold);border:1px solid rgba(232,184,75,0.25);}
-  .badge-next{background:rgba(61,204,71,0.12);color:var(--green);border:1px solid rgba(61,204,71,0.25);display:inline-flex;align-items:center;gap:4px;}
+  .badge-next{background:rgba(61,204,71,0.25);color:var(--green);border:1px solid rgba(61,204,71,0.5);display:inline-flex;align-items:center;gap:4px;}
   .pulse{width:6px;height:6px;background:var(--green);border-radius:50%;flex-shrink:0;animation:pulse 1.5s ease-in-out infinite;}
   @keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(0.7);}}
 
@@ -185,7 +185,7 @@
 </div>
 <div class="disclaimer">All races start at 9:00pm BST unless otherwise announced on Discord.</div>
 
-<div class="schedule" id="schedule">
+<div class="schedule" id="schedule" style="position:relative;z-index:1;">
   <div class="loading-msg">Loading schedule...</div>
 </div>
 
