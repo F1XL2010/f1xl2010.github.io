@@ -50,7 +50,9 @@
   .loading-msg{text-align:center;padding:48px;color:var(--text-muted);font-size:14px;}
 
   /* NEXT RACE HERO */
-  .next-hero{position:relative;background:var(--dark2);border:1px solid var(--border2);border-top:3px solid var(--green);border-radius:10px;padding:24px 24px 24px 24px;margin-bottom:28px;overflow:hidden;min-height:120px;}
+  .next-hero{position:relative;background:var(--dark2);border:1px solid var(--border2);border-top:3px solid var(--green);border-radius:10px;padding:24px 24px 24px 24px;margin-bottom:28px;overflow:hidden;min-height:120px;background-size:cover;background-position:center;background-repeat:no-repeat;}
+  .next-hero::before{content:'';position:absolute;inset:0;background:rgba(17,24,22,0.78);z-index:0;}
+  .next-hero>*{position:relative;z-index:1;}
   .next-hero-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:var(--red);font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
   .next-hero-name{font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:700;text-transform:uppercase;line-height:1;margin-bottom:3px;}
   .next-hero-circuit{font-size:13px;color:var(--text-muted);margin-bottom:8px;}
@@ -76,8 +78,10 @@
   .round-card.is-next{border-color:rgba(61,204,71,0.35);background:rgba(61,204,71,0.02);}
   .round-card.allstar{border-color:rgba(232,184,75,0.3);background:rgba(232,184,75,0.03);}
 
-  .round-visual{width:80px;flex-shrink:0;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;background:rgba(255,255,255,0.025);border-right:1px solid var(--border);background-size:cover;background-position:center;background-repeat:no-repeat;}
-  .round-visual::after{content:'';position:absolute;inset:0;background:rgba(17,24,22,0.45);z-index:1;}
+  .round-visual{width:80px;flex-shrink:0;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;background:rgba(255,255,255,0.025);border-right:1px solid var(--border);}
+  .round-body{position:relative;overflow:hidden;background-size:cover;background-position:center;background-repeat:no-repeat;}
+  .round-body::after{content:'';position:absolute;inset:0;background:rgba(17,24,22,0.82);z-index:0;pointer-events:none;}
+  .round-info,.round-badges{position:relative;z-index:1;}
   .round-num-overlay{position:absolute;top:4px;left:6px;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;color:rgba(255,255,255,0.35);z-index:3;line-height:1;}
 
   .round-body{flex:1;padding:12px 16px;display:flex;align-items:center;gap:12px;}
@@ -304,7 +308,8 @@ async function loadSchedule() {
     // Hero
     if (next) {
       const td=next.track;
-      html+=`<div class="next-hero">
+      const heroBg = td && td.country ? `style="background-image:url('${countryToImg(td.country)}')"` : '';
+      html+=`<div class="next-hero" ${heroBg}>
         <div class="next-hero-label"><div class="pulse"></div>Next Race</div>
         <div class="next-hero-name">${next.circuit} Grand Prix</div>
         ${td?`<div class="next-hero-circuit">${td.name} · ${td.country}</div>`:''}
@@ -368,10 +373,10 @@ function card(r, isNext, isCompleted) {
   const bgImg = td && td.country ? countryToImg(td.country) : '';
   const bgStyle = bgImg ? `style="background-image:url('${bgImg}')"` : '';
   return `<div class="round-card ${isCompleted?'completed':''} ${isNext?'is-next':''}">
-    <div class="round-visual" ${bgStyle}>
+    <div class="round-visual">
       <div class="round-num-overlay">${r.round}</div>
     </div>
-    <div class="round-body">
+    <div class="round-body" ${bgStyle}>
       <div class="round-info">
         <div class="round-name">${r.circuit}</div>
         ${td?`<div class="round-circuit-name">${td.name}</div>`:''}
