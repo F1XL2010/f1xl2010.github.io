@@ -109,7 +109,9 @@
   .st-driver-name{font-size:13px;font-weight:500;color:#fff;}
   .st-driver-team{font-size:10px;color:rgba(255,255,255,0.5);}
   .st-race{width:38px;min-width:38px;text-align:center;}
-  .st-race-header{height:100px;display:flex;flex-direction:column;justify-content:space-between;align-items:center;padding:5px 2px;box-sizing:border-box;}
+  .st-race-header{height:100px;display:flex;flex-direction:column;justify-content:space-between;align-items:center;padding:5px 2px;box-sizing:border-box;position:relative;overflow:hidden;}
+  .st-race-header::before{content:'';position:absolute;inset:0;background-size:cover;background-position:center;background-repeat:no-repeat;opacity:0.35;z-index:0;}
+  .st-race-round,.st-race-name{position:relative;z-index:1;}
   .st-race-round{font-size:9px;font-weight:700;color:#fff;}
   .st-race-name{font-size:9px;color:rgba(255,255,255,0.8);line-height:1;display:block;text-align:center;margin-top:2px;}
   .st-sprint-first{border-left:2px solid rgba(100,160,255,0.5)!important;border-top:2px solid rgba(100,160,255,0.5)!important;}
@@ -592,7 +594,10 @@ async function loadDrivers() {
       } else {
         const roundNum = r.label.replace(/\(s\)/i,'').trim();
         const sprintSuffix = r.sprint ? `<span style="font-size:8px;color:rgba(130,170,255,0.9);">(S)</span>` : '';
-        hHtml += `<th class="st-race ${sc}"><div class="st-race-header">
+        const countryKey = (r.short||r.label).toLowerCase().replace(/[^a-z ]/g,'').replace(/ /g,'_').trim();
+        const bgImg = countryKey ? `images/vertical_${countryKey}.webp` : '';
+        const bgStyleAttr = bgImg ? `style="background-image:url('${bgImg}');background-size:cover;background-position:center;"` : '';
+        hHtml += `<th class="st-race ${sc}"><div class="st-race-header" ${bgStyleAttr}>
           <span class="st-race-round">${roundNum}${sprintSuffix}</span>
           <span class="st-race-name">${(r.short||r.label).slice(0,3).toUpperCase()}</span>
         </div></th>`;
