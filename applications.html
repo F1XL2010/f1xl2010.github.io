@@ -16,18 +16,18 @@
   body{background:#111816;background-image:linear-gradient(rgba(255,255,255,0.025) 0px,rgba(255,255,255,0.025) 4px,rgba(0,0,0,0.06) 4px,rgba(0,0,0,0.06) 8px),linear-gradient(90deg,rgba(0,0,0,0.06) 0px,rgba(0,0,0,0.06) 4px,rgba(255,255,255,0.025) 4px,rgba(255,255,255,0.025) 8px);background-size:8px 8px;color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;display:flex;flex-direction:column;}
 
   /* NAV */
-  nav{background:rgba(17,24,22,0.97);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;backdrop-filter:blur(8px);}
-  .nav-left{display:flex;align-items:center;flex-shrink:0;}
+  nav{background:rgba(9,9,9,0.97);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;}
+  .nav-left{display:flex;align-items:center;gap:14px;flex-shrink:0;}
   .nav-logo{display:flex;align-items:center;height:40px;text-decoration:none;}
   .nav-logo img{height:34px;width:auto;display:block;}
   .nav-links{display:flex;align-items:stretch;height:56px;}
   .nav-item{position:relative;display:flex;align-items:stretch;}
   .nav-item>a,.nav-item>button{color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:500;letter-spacing:0.5px;padding:0 13px;display:flex;align-items:center;gap:4px;border-bottom:2px solid transparent;border-top:none;border-left:none;border-right:none;background:none;cursor:pointer;font-family:'Barlow',sans-serif;text-transform:uppercase;transition:color 0.2s;white-space:nowrap;}
   .nav-item>a:hover,.nav-item>button:hover{color:var(--text);}
-  .nav-item>a.active,.nav-item>button.active{color:var(--text);border-bottom-color:var(--green);}
+  .nav-item>a.active{color:var(--text);border-bottom-color:var(--green);}
   .nav-chevron{font-size:8px;opacity:0.5;transition:transform 0.2s;}
   .nav-item:hover .nav-chevron{transform:rotate(180deg);}
-  .nav-dropdown{display:none;position:absolute;top:100%;left:0;background:#141a18;border:1px solid var(--border2);border-top:2px solid var(--green);border-radius:0 0 6px 6px;min-width:180px;padding:6px 0;z-index:300;}
+  .nav-dropdown{display:none;position:absolute;top:100%;left:0;background:#141414;border:1px solid var(--border2);border-top:2px solid var(--green);border-radius:0 0 6px 6px;min-width:180px;padding:6px 0;z-index:300;}
   .nav-item:hover .nav-dropdown{display:block;}
   .nav-dropdown a{display:block;padding:9px 16px;color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;transition:color 0.15s,background 0.15s;white-space:nowrap;}
   .nav-dropdown a:hover{color:var(--text);background:rgba(255,255,255,0.05);}
@@ -36,12 +36,12 @@
   .nav-hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
   .nav-hamburger.open span:nth-child(2){opacity:0;}
   .nav-hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
-  .mobile-menu{display:none;position:fixed;top:56px;left:0;right:0;background:#141a18;border-bottom:1px solid var(--border2);z-index:199;padding:12px 0;max-height:calc(100vh - 56px);overflow-y:auto;}
+  .mobile-menu{display:none;position:fixed;top:56px;left:0;right:0;bottom:0;background:#0d0d0d;z-index:150;overflow-y:auto;padding:16px 0 32px;}
   .mobile-menu.open{display:block;}
-  .mob-section{font-size:10px;letter-spacing:2px;color:var(--text-faint);padding:12px 24px 4px;text-transform:uppercase;}
-  .mobile-menu a{display:block;padding:10px 24px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;}
-  .mobile-menu a:hover{color:var(--text);}
-  @media(max-width:900px){.nav-links{display:none;}.nav-hamburger{display:flex;}}
+  .mobile-section-header{padding:10px 24px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--green);}
+  .mobile-section a{display:block;padding:11px 32px;color:var(--text-muted);text-decoration:none;font-size:15px;border-bottom:1px solid var(--border);}
+  .mobile-divider{height:1px;background:var(--border);margin:12px 24px;}
+  @media(max-width:860px){.nav-links{display:none;}.nav-title{display:none;}.nav-hamburger{display:flex;}}
   @media(min-width:861px){.mobile-menu{display:none !important;}}
 
   /* PAGE HEADER */
@@ -160,7 +160,37 @@
     </div>
   </div>
 
+  <div class="app-card" id="card-staff">
+    <button class="app-card-btn" onclick="toggleForm('staff')">
+      <div class="app-card-left">
+        <div class="app-card-title">Staff Application</div>
+        <div class="app-card-desc">Join the F1XL team as a steward, race controller, commentator or in another capacity.</div>
+      </div>
+      <div class="app-card-chevron" id="chev-staff">▼</div>
+    </button>
+    <div class="app-form-wrap" id="form-staff">
+      <iframe class="form-frame"
+        src="https://docs.google.com/forms/d/e/1FAIpQLSczd-YDc_6yAuolgyWkRQmboaPzax8sqpYYwJ3f0vFTf8rKgw/viewform?embedded=true"
+        frameborder="0" marginheight="0" marginwidth="0">Loading...</iframe>
+    </div>
+  </div>
 
+  <div class="app-card" id="card-timetrial">
+    <button class="app-card-btn" onclick="toggleForm('timetrial')">
+      <div class="app-card-left">
+        <div class="app-card-title">Time Trial Submission</div>
+        <div class="app-card-desc">Submit your time trial recording. Make sure it meets the requirements in Section 16 of the League Rules before submitting.</div>
+      </div>
+      <div class="app-card-chevron" id="chev-timetrial">▼</div>
+    </button>
+    <div class="app-form-wrap" id="form-timetrial">
+      <iframe class="form-frame"
+        src="https://docs.google.com/forms/d/e/1FAIpQLSdWo3z0h758ZlMGGYuOyg47ky1hZB0hVF54VctH9-RHP8OkvQ/viewform?embedded=true"
+        frameborder="0" marginheight="0" marginwidth="0">Loading...</iframe>
+    </div>
+  </div>
+
+</div>
 
 <footer>
   <div style="display:flex;align-items:center;gap:10px;">
