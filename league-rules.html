@@ -220,7 +220,6 @@
 <script>
 // ── CHAPTER ID MAP ────────────────────────────────────────────────────────────
 const CHAPTER_IDS = {
-  'FROM THE ADMINS': 'admins',
   'GENERAL INFORMATION': 'general',
   'LEAGUE STRUCTURE': 'structure',
   'TEAMS, DRIVERS, TIERS, AND TEAM PRINCIPALS': 'teams',
@@ -229,7 +228,6 @@ const CHAPTER_IDS = {
   'STEWARDING, TICKETS &amp; APPEALS': 'stewarding',
 };
 const CHAPTER_LABELS = {
-  'admins': 'From the Admins',
   'general': 'General Information',
   'structure': 'League Structure',
   'teams': 'Teams & Drivers',
@@ -362,7 +360,7 @@ function renderChapters(chapters) {
 
   // Build content
   let html = '';
-  chapters.forEach(ch => {
+  chapters.filter(ch => ch.id !== 'admins').forEach(ch => {
     const label = CHAPTER_LABELS[ch.id] || ch.title;
     html += `<div class="chapter" id="chapter-${ch.id}">
       <div class="chapter-header" onclick="toggleChapter('${ch.id}')">

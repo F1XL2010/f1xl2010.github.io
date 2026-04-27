@@ -15,7 +15,8 @@
   *{box-sizing:border-box;margin:0;padding:0;}
   body{background:#111816;background-image:linear-gradient(rgba(255,255,255,0.025) 0px,rgba(255,255,255,0.025) 4px,rgba(0,0,0,0.06) 4px,rgba(0,0,0,0.06) 8px),linear-gradient(90deg,rgba(0,0,0,0.06) 0px,rgba(0,0,0,0.06) 4px,rgba(255,255,255,0.025) 4px,rgba(255,255,255,0.025) 8px);background-size:8px 8px;color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;display:flex;flex-direction:column;}
 
-    nav{background:rgba(17,24,22,0.97);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;backdrop-filter:blur(8px);}
+  /* NAV */
+  nav{background:rgba(17,24,22,0.97);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;backdrop-filter:blur(8px);}
   .nav-left{display:flex;align-items:center;flex-shrink:0;}
   .nav-logo{display:flex;align-items:center;height:40px;text-decoration:none;}
   .nav-logo img{height:34px;width:auto;display:block;}
@@ -40,7 +41,10 @@
   .mob-section{font-size:10px;letter-spacing:2px;color:var(--text-faint);padding:12px 24px 4px;text-transform:uppercase;}
   .mobile-menu a{display:block;padding:10px 24px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;}
   .mobile-menu a:hover{color:var(--text);}
-  @media(max-width:900px){.nav-links{display:none;}.nav-hamburger{display:flex;}}/* PAGE HEADER */
+  @media(max-width:900px){.nav-links{display:none;}.nav-hamburger{display:flex;}}
+  @media(min-width:861px){.mobile-menu{display:none !important;}}
+
+  /* PAGE HEADER */
   .page-header{background:var(--dark);border-bottom:1px solid var(--border);padding:24px;}
   .page-eyebrow{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:2.5px;color:var(--teal);text-transform:uppercase;font-weight:600;margin-bottom:4px;}
   .page-title{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:700;text-transform:uppercase;line-height:1;}
@@ -156,52 +160,7 @@
     </div>
   </div>
 
-  <div class="app-card" id="card-f2">
-    <button class="app-card-btn" onclick="toggleForm('f2')">
-      <div class="app-card-left">
-        <div class="app-card-title">F2 Driver Application</div>
-        <div class="app-card-desc">Apply to race in the F2 category.</div>
-      </div>
-      <div class="app-card-chevron" id="chev-f2">▼</div>
-    </button>
-    <div class="app-form-wrap" id="form-f2">
-      <iframe class="form-frame"
-        src="https://docs.google.com/forms/d/e/1FAIpQLSf0tZrEGEc6wIeLdHWfOiFOObkWYgouOQN3yBy3cBouY5DfFA/viewform?embedded=true"
-        frameborder="0" marginheight="0" marginwidth="0">Loading...</iframe>
-    </div>
-  </div>
 
-  <div class="app-card" id="card-staff">
-    <button class="app-card-btn" onclick="toggleForm('staff')">
-      <div class="app-card-left">
-        <div class="app-card-title">Staff Application</div>
-        <div class="app-card-desc">Join the F1XL team as a steward, race controller, commentator or in another capacity.</div>
-      </div>
-      <div class="app-card-chevron" id="chev-staff">▼</div>
-    </button>
-    <div class="app-form-wrap" id="form-staff">
-      <iframe class="form-frame"
-        src="https://docs.google.com/forms/d/e/1FAIpQLSczd-YDc_6yAuolgyWkRQmboaPzax8sqpYYwJ3f0vFTf8rKgw/viewform?embedded=true"
-        frameborder="0" marginheight="0" marginwidth="0">Loading...</iframe>
-    </div>
-  </div>
-
-  <div class="app-card" id="card-timetrial">
-    <button class="app-card-btn" onclick="toggleForm('timetrial')">
-      <div class="app-card-left">
-        <div class="app-card-title">Time Trial Submission</div>
-        <div class="app-card-desc">Submit your time trial recording. Make sure it meets the requirements in Section 16 of the League Rules before submitting.</div>
-      </div>
-      <div class="app-card-chevron" id="chev-timetrial">▼</div>
-    </button>
-    <div class="app-form-wrap" id="form-timetrial">
-      <iframe class="form-frame"
-        src="https://docs.google.com/forms/d/e/1FAIpQLSdWo3z0h758ZlMGGYuOyg47ky1hZB0hVF54VctH9-RHP8OkvQ/viewform?embedded=true"
-        frameborder="0" marginheight="0" marginwidth="0">Loading...</iframe>
-    </div>
-  </div>
-
-</div>
 
 <footer>
   <div style="display:flex;align-items:center;gap:10px;">
@@ -221,9 +180,9 @@ function toggleForm(name) {
   if (!isOpen) card.classList.add('open');
 }
 
-function toggleMenu(){
-  document.getElementById('hamburger').classList.toggle('open');
+function toggleMenu() {
   document.getElementById('mobile-menu').classList.toggle('open');
+  document.getElementById('hamburger').classList.toggle('open');
 }
 </script>
 </body>
