@@ -59,7 +59,7 @@
   .div-tabs{display:flex;gap:4px;padding:14px 24px 0;flex-wrap:wrap;}
   .div-tab{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:6px 14px;border-radius:4px 4px 0 0;border:none;background:rgba(255,255,255,0.05);color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:color 0.2s;}
   .div-tab:hover{color:var(--text);}
-  .div-tab.active{color:#fff;border-bottom-color:var(--div-colour,var(--green));background:rgba(var(--div-colour-rgb,61,204,71),0.1);}
+  .div-tab.active{color:#fff;border-bottom-color:var(--green);background:rgba(61,204,71,0.06);}
   .overall-accordion{margin:16px 24px 0;border:1px solid rgba(232,184,75,0.3);border-radius:8px;overflow:hidden;}
   .overall-accordion-header{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;background:rgba(232,184,75,0.12);cursor:pointer;user-select:none;transition:background 0.2s;}
   .overall-accordion-header:hover{background:rgba(232,184,75,0.18);}
@@ -1080,6 +1080,7 @@ async function renderS20plus(id, season, sc, body){
   }
 
   body.insertAdjacentHTML('beforeend', tabsHtml + contentHtml);
+  colourActiveDivTabs();
   await loadS20DivContent(id, 1, sc);
 }
 
@@ -1459,6 +1460,7 @@ async function renderS28(id, season, sc, body){
   }
 
   body.insertAdjacentHTML('beforeend', tabsHtml + contentHtml);
+  colourActiveDivTabs();
   await loadS28DivContent(id, 1, sc);
 }
 
