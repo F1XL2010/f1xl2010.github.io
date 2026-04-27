@@ -444,6 +444,7 @@ async function openDiv(idx) {
   if(title) title.style.color = hex;
   const innerTabs = document.getElementById('inner-tabs');
   if(innerTabs){
+    innerTabs.style.background = `rgba(${r},${g},${b},0.18)`;
     innerTabs.style.borderBottomColor = `rgba(${r},${g},${b},0.4)`;
     innerTabs.querySelectorAll('.inner-tab.active').forEach(t => t.style.borderBottomColor = hex);
   }
