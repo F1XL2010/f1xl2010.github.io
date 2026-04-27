@@ -310,8 +310,11 @@ function clearDivTabColour(tabEl){
 }
 
 function colourActiveDivTabs(){
+  console.log('colourActiveDivTabs called, DIVISION_COLOURS:', window.DIVISION_COLOURS);
   document.querySelectorAll('.div-tab.active').forEach(tab => {
+    console.log('found active tab:', tab.id);
     const idMatch = tab.id.match(/-dtab-(\d+)$/);
+    console.log('idMatch:', idMatch);
     if(idMatch) applyDivTabColour(tab, parseInt(idMatch[1]));
   });
 }
