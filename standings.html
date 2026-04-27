@@ -293,7 +293,7 @@
     <div class="div-view-title" id="div-view-title"></div>
     <div class="div-view-meta" id="div-view-meta"></div>
   </div>
-  <div class="inner-tabs">
+  <div class="inner-tabs" id="inner-tabs">
     <button class="inner-tab active" onclick="showTab('drivers',this)">Drivers</button>
     <button class="inner-tab" onclick="showTab('constructors',this)">Constructors</button>
     <button class="inner-tab" onclick="showTab('stats',this)">Driver Stats</button>
@@ -442,12 +442,22 @@ async function openDiv(idx) {
   if(header) header.style.cssText += `background:rgba(${r},${g},${b},0.15);border-bottom-color:rgba(${r},${g},${b},0.4);`;
   const title = document.getElementById('div-view-title');
   if(title) title.style.color = hex;
+  const innerTabs = document.getElementById('inner-tabs');
+  if(innerTabs){
+    innerTabs.style.borderBottomColor = `rgba(${r},${g},${b},0.4)`;
+    innerTabs.querySelectorAll('.inner-tab.active').forEach(t => t.style.borderBottomColor = hex);
+  }
+  // Store current div colour for tab switching
+  innerTabs && (innerTabs.dataset.divColour = hex);
   document.getElementById('selector-view').style.display = 'none';
   document.getElementById('div-view').classList.add('active');
   document.getElementById('div-view-title').textContent = currentDiv.name;
   document.getElementById('div-view-meta').textContent = 'Loading...';
 
-  document.querySelectorAll('.inner-tab').forEach((t,i) => t.classList.toggle('active', i===0));
+  document.querySelectorAll('.inner-tab').forEach((t,i) => {
+    t.classList.toggle('active', i===0);
+    t.style.borderBottomColor = i===0 ? hex : 'transparent';
+  });
   document.querySelectorAll('.tab-panel').forEach((p,i) => p.classList.toggle('active', i===0));
   document.getElementById('drivers-header').innerHTML = '';
   document.getElementById('drivers-body').innerHTML = '<tr><td colspan="30"><div class="loading-msg">Loading driver standings...</div></td></tr>';
@@ -464,10 +474,12 @@ function showSelector() {
 }
 
 function showTab(name, btn) {
-  document.querySelectorAll('.inner-tab').forEach(t => t.classList.remove('active'));
+  const innerTabs = document.getElementById('inner-tabs');
+  const divColour = innerTabs ? innerTabs.dataset.divColour : null;
+  document.querySelectorAll('.inner-tab').forEach(t => { t.classList.remove('active'); t.style.borderBottomColor = 'transparent'; });
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-
   btn.classList.add('active');
+  if(divColour) btn.style.borderBottomColor = divColour;
   document.getElementById('tab-' + name).classList.add('active');
 }
 
@@ -625,23 +637,32 @@ async function loadDrivers() {
 
     document.getElementById('drivers-header').innerHTML = hHtml;
 
+    // Collect all data rows first, then sort by points
+    const dataRows = [];
+    for (let i=hIdx+1; i<rows.length; i++) {
+      const row = rows[i];
+      const driver = cs(row,2);
+      if (!driver) continue;
+      const pts = ptsCol>=0 ? parseFloat(cs(row,ptsCol)) || 0 : 0;
+      dataRows.push({row, pts});
+    }
+    dataRows.sort((a,b) => b.pts - a.pts);
+
     // Body
     let bHtml = '';
     let rounds = 0;
     let firstDriver = true;
 
-    for (let i=hIdx+1; i<rows.length; i++) {
-      const row = rows[i];
-      const pos = cs(row,0);
+    for (let ri=0; ri<dataRows.length; ri++) {
+      const {row} = dataRows[ri];
+      const pos = ri+1;
       const driver = cs(row,2);
-      if (!driver) continue;
 
       const nat = cs(row,1);
       const teamRaw = cs(row,3).trim();
-      // If team col is blank (image), look up from driver-team mapping
       const team = teamRaw || driverTeams[driver.toLowerCase()] || '';
       const color = teamColors[team] || teamColors[Object.keys(teamColors).find(k=>k.toLowerCase()===team.toLowerCase())||''] || '#555';
-      const posN = parseInt(pos);
+      const posN = pos;
       const pc = pClass(posN);
 
       if (firstDriver) {
@@ -654,7 +675,7 @@ async function loadDrivers() {
       }
 
       let rHtml = `<tr>
-        <td class="st-pos"><span class="st-pos-cell ${pc}">${pos||''}</span></td>
+        <td class="st-pos"><span class="st-pos-cell ${pc}">${pos}</span></td>
         <td class="st-driver"><div class="st-driver-cell">
           <span class="st-driver-name">${driver}</span>
           <span class="st-driver-team">${team||''}</span>
