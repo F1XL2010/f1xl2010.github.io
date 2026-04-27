@@ -183,4 +183,3 @@ function getRaceGIDs(seasonConfig, division) {
   }
   return gids;
 }
-
