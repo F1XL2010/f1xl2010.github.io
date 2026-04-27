@@ -125,6 +125,18 @@
   /* LOADING */
   .loading-msg{text-align:center;padding:48px 24px;color:var(--text-faint);font-size:13px;}
 
+  /* EXPANDABLE LB ROWS */
+  .lb-row-wrap{border-bottom:1px solid rgba(255,255,255,0.04);}
+  .lb-row-wrap:last-child{border:none;}
+  .lb-row-wrap .lb-row{border:none;cursor:pointer;user-select:none;}
+  .lb-row-wrap .lb-row:hover{background:rgba(255,255,255,0.03);border-radius:4px;}
+  .lb-expand{padding:0 8px 8px 48px;display:none;}
+  .lb-expand.open{display:block;}
+  .lb-pills{display:flex;flex-wrap:wrap;gap:5px;}
+  .lb-pill{font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(232,184,75,0.12);color:var(--gold);font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:0.5px;}
+  .lb-chevron{font-size:10px;color:var(--text-faint);margin-left:4px;transition:transform 0.2s;display:inline-block;}
+  .lb-chevron.open{transform:rotate(90deg);}
+
   /* LEAGUE RECORDS */
   .lr-wrap{padding:0 28px 32px;}
   .lr-div-section{margin-bottom:28px;}
@@ -382,8 +394,91 @@ function parseStatsForLB(rows){
   return drivers;
 }
 
+// ── PARSE ACCOLADES FOR TITLE LEADERBOARDS ────────────────────────────────────
+// Col 3=driver name, col 4=league titles (comma-sep seasons), col 7=constructor titles
+function parseAccoladesForTitles(rows){
+  const leagueTitles = [];
+  const consTitles = [];
+  for(let i=1; i<rows.length; i++){
+    const row = rows[i];
+    const name = g(row,3);
+    if(!name||name.toLowerCase()==='driver'||name.toLowerCase()==='name') continue;
+    const primary = name.split('/')[0].trim();
+
+    const leagueRaw = g(row,4);
+    if(leagueRaw){
+      const seasons = leagueRaw.split(',').map(s=>s.trim()).filter(Boolean);
+      if(seasons.length) leagueTitles.push({name:primary, val:seasons.length, seasons});
+    }
+
+    const consRaw = g(row,7);
+    if(consRaw){
+      const seasons = consRaw.split(',').map(s=>s.trim()).filter(Boolean);
+      if(seasons.length) consTitles.push({name:primary, val:seasons.length, seasons});
+    }
+  }
+  leagueTitles.sort((a,b)=>b.val-a.val);
+  consTitles.sort((a,b)=>b.val-a.val);
+  return {leagueTitles, consTitles};
+}
+
+// ── PARSE OVERALL WINNERS FOR OWNER TITLES ───────────────────────────────────
+function parseOverallTitles(rows){
+  const map = {};
+  for(let i=4; i<rows.length; i++){
+    const row = rows[i];
+    const s = parseFloat(g(row,1));
+    if(isNaN(s)) continue;
+    const owner = g(row,2);
+    if(!owner) continue;
+    if(!map[owner]) map[owner] = [];
+    map[owner].push(`S${Math.floor(s)}`);
+  }
+  return Object.entries(map)
+    .map(([name,seasons])=>({name, val:seasons.length, seasons}))
+    .sort((a,b)=>b.val-a.val);
+}
+
+let _lbToggleCounter = 0;
+
+function makeLBCard(title, entries, expandable){
+  const top5 = entries.slice(0,5);
+  if(!top5.length) return '';
+  const rows = top5.map((d,i) => {
+    if(!expandable){
+      return `<div class="lb-row">
+        <div class="lb-pos${i===0?' p1':''}">${i+1}</div>
+        <div class="lb-info">
+          <div class="lb-name">${d.name}</div>
+          <div class="lb-sub">${d.seasons.join(' · ')}</div>
+        </div>
+        <div class="lb-val">${d.val}</div>
+      </div>`;
+    }
+    const id = 'lbx-'+(++_lbToggleCounter);
+    const pills = d.seasons.map(s=>`<span class="lb-pill">${s}</span>`).join('');
+    return `<div class="lb-row-wrap">
+      <div class="lb-row" onclick="toggleLBExpand('${id}',this)">
+        <div class="lb-pos${i===0?' p1':''}">${i+1}</div>
+        <div class="lb-info"><div class="lb-name">${d.name} <span class="lb-chevron" id="chev-${id}">›</span></div></div>
+        <div class="lb-val">${d.val}</div>
+      </div>
+      <div class="lb-expand" id="${id}"><div class="lb-pills">${pills}</div></div>
+    </div>`;
+  }).join('');
+  return `<div class="lb-card"><div class="lb-card-title">${title}</div>${rows}</div>`;
+}
+
+function toggleLBExpand(id, row){
+  const expand = document.getElementById(id);
+  const chev = document.getElementById('chev-'+id);
+  if(!expand) return;
+  const open = expand.classList.toggle('open');
+  if(chev) chev.classList.toggle('open', open);
+}
+
 // ── RENDER LEADERBOARDS ───────────────────────────────────────────────────────
-function renderLB(drivers, totalDrivers){
+function renderLB(drivers, totalDrivers, accoladesRows, overallRows){
   const lbs = [
     {key:'wins',    label:'Most wins'},
     {key:'seasons', label:'Most seasons'},
@@ -402,7 +497,9 @@ function renderLB(drivers, totalDrivers){
   `;
 
   const grid = document.getElementById('lb-grid');
-  grid.innerHTML = lbs.map(lb => {
+
+  // Standard stat leaderboards
+  let html = lbs.map(lb => {
     const sorted = [...drivers].sort((a,b)=>b[lb.key]-a[lb.key]).slice(0,5);
     const rows = sorted.map((d,i) => `
       <div class="lb-row">
@@ -412,6 +509,21 @@ function renderLB(drivers, totalDrivers){
       </div>`).join('');
     return `<div class="lb-card"><div class="lb-card-title">${lb.label}</div>${rows}</div>`;
   }).join('');
+
+  // Title leaderboards from accolades
+  if(accoladesRows){
+    const {leagueTitles, consTitles} = parseAccoladesForTitles(accoladesRows);
+    html += makeLBCard('Most league titles', leagueTitles, true);
+    html += makeLBCard('Most constructor titles', consTitles, true);
+  }
+
+  // Overall titles
+  if(overallRows){
+    const ownerTitles = parseOverallTitles(overallRows);
+    html += makeLBCard('Most overall titles', ownerTitles, false);
+  }
+
+  grid.innerHTML = html;
 }
 
 // ── RENDER SEASON STRIP + DETAIL ─────────────────────────────────────────────
@@ -696,7 +808,7 @@ function switchLRTab(key, btn){
 async function init(){
   try {
     // Load all config values
-    const keys = ['stats_url','overall_winners_url','d1_winners_url','d2_winners_url','d3_winners_url','d4_winners_url','d5_winners_url','d6_winners_url','d7_winners_url','d8_winners_url'];
+    const keys = ['stats_url','accolades_url','overall_winners_url','d1_winners_url','d2_winners_url','d3_winners_url','d4_winners_url','d5_winners_url','d6_winners_url','d7_winners_url','d8_winners_url'];
     const vals = await Promise.all(keys.map(k=>getConfigValue(k)));
     const cfg = {};
     keys.forEach((k,i)=>cfg[k]=vals[i]);
@@ -704,6 +816,7 @@ async function init(){
     // Fetch all in parallel
     const fetches = {};
     if(cfg.stats_url) fetches.stats = fetchCSV(cfg.stats_url);
+    if(cfg.accolades_url) fetches.accolades = fetchCSV(cfg.accolades_url);
     if(cfg.overall_winners_url) fetches.overall = fetchCSV(cfg.overall_winners_url);
     for(let d=1;d<=8;d++){
       const key = `d${d}_winners_url`;
@@ -718,7 +831,7 @@ async function init(){
     // Parse stats for leaderboards
     if(results.stats){
       const drivers = parseStatsForLB(results.stats);
-      renderLB(drivers, drivers.length);
+      renderLB(drivers, drivers.length, results.accolades, results.overall);
       // Fill in season count now that we're in async context
       const currentSeason = await getCurrentSeason();
       const heroVal = document.getElementById('hero-season-val');
