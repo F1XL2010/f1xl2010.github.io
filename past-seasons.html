@@ -319,7 +319,7 @@ function _clearDivColour(tabEl){
 }
 function _colourActiveTabs(){
   document.querySelectorAll('.div-tab.active').forEach(tab=>{
-    const m=tab.id.match(/-dtab-(\d+)$/);
+    const m=tab.id.match(/-dtab-(\d+)s?$/);
     if(m) _applyDivColour(tab,parseInt(m[1]));
   });
 }
@@ -543,9 +543,12 @@ function switchDivTab(id, tabKey){
   if(anyTab){
     anyTab.parentElement.querySelectorAll('.div-tab').forEach(b=>{ b.classList.remove('active'); _clearDivColour(b); });
     anyTab.classList.add('active');
-    const divNum=parseInt(tabKey);
-    if(!isNaN(divNum)) _applyDivColour(anyTab,divNum);
+    // Extract div number — strip trailing 's' for stats tabs
+    const divNum = parseInt(tabKey);
+    if(!isNaN(divNum)) _applyDivColour(anyTab, divNum);
   }
+  // Recolour all other active tabs (non-active ones stay muted)
+  setTimeout(_colourActiveTabs, 0);
   // Lazy load if not yet loaded — get div number from tabKey (strip trailing 's' for stats)
   if(anyContent.dataset.loaded === 'false' && _currentSeasonConfig){
     const divNum = parseInt(tabKey);
