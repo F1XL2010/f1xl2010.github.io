@@ -296,11 +296,26 @@ function _applyDivColour(tabEl, divNum){
   tabEl.style.color='#fff';
   tabEl.style.borderBottomColor=hex;
   tabEl.style.background=`rgba(${r},${g},${b},0.18)`;
+  // Find the associated content div and tint its table thead
+  const tabId = tabEl.id; // e.g. s25-dtab-1
+  const contentId = tabId.replace('-dtab-','-dcontent-');
+  const content = document.getElementById(contentId);
+  if(content){
+    content.querySelectorAll('.st thead tr').forEach(tr=>{
+      tr.style.background=`rgba(${r},${g},${b},0.25)`;
+    });
+  }
 }
 function _clearDivColour(tabEl){
   tabEl.style.color='';
   tabEl.style.borderBottomColor='';
   tabEl.style.background='';
+  const tabId = tabEl.id;
+  const contentId = tabId.replace('-dtab-','-dcontent-');
+  const content = document.getElementById(contentId);
+  if(content){
+    content.querySelectorAll('.st thead tr').forEach(tr=>{ tr.style.background=''; });
+  }
 }
 function _colourActiveTabs(){
   document.querySelectorAll('.div-tab.active').forEach(tab=>{
@@ -507,6 +522,7 @@ async function loadDivContent(id, d, sc){
   else divHtml += '<div class="div-loading">No driver data available.</div>';
   if(constRows) divHtml += buildS3Constructors(constRows);
   divEl.innerHTML = divHtml;
+  setTimeout(_colourActiveTabs, 0);
 
   // Stats tab
   if(statsRows){
@@ -1118,6 +1134,7 @@ async function loadS20DivContent(id, d, sc){
   }
 
   divEl.innerHTML = divHtml;
+  setTimeout(_colourActiveTabs, 0);
 
   // Driver stats tab
   if(statsRows){
@@ -1490,6 +1507,7 @@ async function loadS28DivContent(id, d, sc){
   }
 
   divEl.innerHTML = divHtml;
+  setTimeout(_colourActiveTabs, 0);
 
   if(statsRows){
     const statsEl = document.getElementById(id+'-dcontent-'+d+'s');
