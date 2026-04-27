@@ -128,6 +128,21 @@ async function getConfigValue(key) {
   return config[key.toLowerCase()] || null;
 }
 
+// F1 2025 Team Colours
+const TEAM_COLOURS = {
+  'McLaren':           '#EF8733',
+  'Mercedes':          '#75F1D3',
+  'Red Bull Racing':   '#4570C0',
+  'Ferrari':           '#D52E37',
+  'Williams':          '#3267D4',
+  'VCARB':             '#7091F8',
+  'Aston Martin':      '#4B9774',
+  'Haas':              '#DFE1E2',
+  'Audi':              '#EB4526',
+  'Alpine':            '#479FE2',
+  'Cadillac':          '#AAAADD',
+};
+
 // Get race GIDs array for a season/division (returns array of gid|null per round)
 function getRaceGIDs(seasonConfig, division) {
   const d = 'd' + division;
