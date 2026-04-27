@@ -59,7 +59,7 @@
   .div-tabs{display:flex;gap:4px;padding:14px 24px 0;flex-wrap:wrap;}
   .div-tab{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:6px 14px;border-radius:4px 4px 0 0;border:none;background:rgba(255,255,255,0.05);color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:color 0.2s;}
   .div-tab:hover{color:var(--text);}
-  .div-tab.active{color:#fff;border-bottom-color:var(--green);background:rgba(61,204,71,0.06);}
+  .div-tab.active{color:#fff;border-bottom-color:#3DCC47;background:rgba(61,204,71,0.06);}
   .overall-accordion{margin:16px 24px 0;border:1px solid rgba(232,184,75,0.3);border-radius:8px;overflow:hidden;}
   .overall-accordion-header{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;background:rgba(232,184,75,0.12);cursor:pointer;user-select:none;transition:background 0.2s;}
   .overall-accordion-header:hover{background:rgba(232,184,75,0.18);}
@@ -289,46 +289,35 @@ async function toggleSeason(id, season){
   }
 }
 
-function divTabColour(divNum){
-  if(!window.DIVISION_COLOURS) return null;
-  return DIVISION_COLOURS[divNum] || null;
-}
-
-function applyDivTabColour(tabEl, divNum){
-  const hex = divTabColour(divNum);
-  if(!hex) return;
+function _applyDivColour(tabEl, divNum){
+  const hex = (typeof DIVISION_COLOURS !== 'undefined') ? DIVISION_COLOURS[divNum] : null;
+  if(!hex){ return; }
   const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
-  tabEl.style.color = '#fff';
-  tabEl.style.borderBottomColor = hex;
-  tabEl.style.background = `rgba(${r},${g},${b},0.18)`;
+  tabEl.style.color='#fff';
+  tabEl.style.borderBottomColor=hex;
+  tabEl.style.background=`rgba(${r},${g},${b},0.18)`;
 }
-
-function clearDivTabColour(tabEl){
-  tabEl.style.color = '';
-  tabEl.style.borderBottomColor = '';
-  tabEl.style.background = '';
+function _clearDivColour(tabEl){
+  tabEl.style.color='';
+  tabEl.style.borderBottomColor='';
+  tabEl.style.background='';
 }
-
-function colourActiveDivTabs(){
-  console.log('colourActiveDivTabs called, DIVISION_COLOURS:', window.DIVISION_COLOURS);
-  document.querySelectorAll('.div-tab.active').forEach(tab => {
-    console.log('found active tab:', tab.id);
-    const idMatch = tab.id.match(/-dtab-(\d+)$/);
-    console.log('idMatch:', idMatch);
-    if(idMatch) applyDivTabColour(tab, parseInt(idMatch[1]));
+function _colourActiveTabs(){
+  document.querySelectorAll('.div-tab.active').forEach(tab=>{
+    const m=tab.id.match(/-dtab-(\d+)$/);
+    if(m) _applyDivColour(tab,parseInt(m[1]));
   });
 }
 
 function switchDiv(id, div, total){
   for(let d=1;d<=total;d++){
-    const tab = document.getElementById(id+'-dtab-'+d);
-    const con = document.getElementById(id+'-dcontent-'+d);
+    const tab=document.getElementById(id+'-dtab-'+d);
+    const con=document.getElementById(id+'-dcontent-'+d);
     if(tab){
-      tab.classList.toggle('active', d===div);
-      if(d===div) applyDivTabColour(tab, d);
-      else clearDivTabColour(tab);
+      tab.classList.toggle('active',d===div);
+      if(d===div) _applyDivColour(tab,d); else _clearDivColour(tab);
     }
-    if(con) con.classList.toggle('hidden', d!==div);
+    if(con) con.classList.toggle('hidden',d!==div);
   }
 }
 
@@ -484,7 +473,7 @@ async function renderS3to5(id, season, sc, body){
   }
 
   body.innerHTML = tabsHtml + contentHtml;
-  colourActiveDivTabs();
+  setTimeout(_colourActiveTabs, 0);
 
   // Load D1 immediately
   await loadDivContent(id, 1, sc);
@@ -536,11 +525,12 @@ function switchDivTab(id, tabKey){
   anyContent.classList.remove('hidden');
   const anyTab = document.getElementById(id+'-dtab-'+tabKey);
   if(anyTab){
-    anyTab.parentElement.querySelectorAll('.div-tab').forEach(b=>{ b.classList.remove('active'); clearDivTabColour(b); });
+    anyTab.parentElement.querySelectorAll('.div-tab').forEach(b=>{ b.classList.remove('active'); _clearDivColour(b); });
     anyTab.classList.add('active');
-    const divNum = parseInt(tabKey);
-    if(!isNaN(divNum)) applyDivTabColour(anyTab, divNum);
+    const divNum=parseInt(tabKey);
+    if(!isNaN(divNum)) _applyDivColour(anyTab,divNum);
   }
+  // Lazy load if not yet loaded — get div number from tabKey (strip trailing 's' for stats)
   if(anyContent.dataset.loaded === 'false' && _currentSeasonConfig){
     const divNum = parseInt(tabKey);
     if(!isNaN(divNum)){
@@ -753,7 +743,7 @@ async function renderS10(id, season, sc, body){
   }
 
   body.innerHTML = tabsHtml + contentHtml;
-  colourActiveDivTabs();
+  setTimeout(_colourActiveTabs, 0);
 }
 
 function buildS10Drivers(rows){
@@ -1083,7 +1073,7 @@ async function renderS20plus(id, season, sc, body){
   }
 
   body.insertAdjacentHTML('beforeend', tabsHtml + contentHtml);
-  colourActiveDivTabs();
+  setTimeout(_colourActiveTabs, 0);
   await loadS20DivContent(id, 1, sc);
 }
 
@@ -1463,7 +1453,7 @@ async function renderS28(id, season, sc, body){
   }
 
   body.insertAdjacentHTML('beforeend', tabsHtml + contentHtml);
-  colourActiveDivTabs();
+  setTimeout(_colourActiveTabs, 0);
   await loadS28DivContent(id, 1, sc);
 }
 
