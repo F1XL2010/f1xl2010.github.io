@@ -143,6 +143,36 @@ const TEAM_COLOURS = {
   'Cadillac':          '#AAAADD',
 };
 
+// Division Colours — used for headers, cards, badges across all pages
+// Apply as: background tint via rgba(r,g,b,0.22) + border rgba(r,g,b,0.45) + solid badge
+const DIVISION_COLOURS = {
+  1: '#8B3A3A',
+  2: '#8B6B2E',
+  3: '#7A8B2E',
+  4: '#2E8B57',
+  5: '#2E7A8B',
+  6: '#2E458B',
+  7: '#6B2E8B',
+  8: '#8B2E6B',
+};
+
+// Helper — returns CSS styles for a division tinted box
+function divisionBoxStyle(div) {
+  const hex = DIVISION_COLOURS[div];
+  if (!hex) return '';
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  return `background:rgba(${r},${g},${b},0.22);border-color:rgba(${r},${g},${b},0.45);`;
+}
+
+// Helper — returns CSS background for a solid division badge
+function divisionBadgeStyle(div) {
+  const hex = DIVISION_COLOURS[div];
+  return hex ? `background:${hex};` : '';
+}
+
+
 // Get race GIDs array for a season/division (returns array of gid|null per round)
 function getRaceGIDs(seasonConfig, division) {
   const d = 'd' + division;
