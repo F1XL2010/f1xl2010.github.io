@@ -675,9 +675,12 @@ async function loadDrivers() {
         firstDriver = false;
       }
 
+      const teamSlug = (team||'').toLowerCase().replace(/\s+/g,'').replace(/[^a-z0-9]/g,'');
+      const driverBg = teamSlug ? `style="background-image:url('images/thinlogo_${teamSlug}.webp');background-size:cover;background-position:center;background-repeat:no-repeat;"` : '';
+
       let rHtml = `<tr>
         <td class="st-pos"><span class="st-pos-cell ${pc}">${pos}</span></td>
-        <td class="st-driver"><div class="st-driver-cell">
+        <td class="st-driver" ${driverBg}><div class="st-driver-cell">
           <span class="st-driver-name">${driver}</span>
           <span class="st-driver-team">${team||''}</span>
         </div></td>`;
