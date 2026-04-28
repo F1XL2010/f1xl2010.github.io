@@ -634,7 +634,7 @@ async function loadDrivers() {
         const roundNum = r.label.replace(/\(s\)/i,'').trim();
         const sprintSuffix = r.sprint ? `<span style="font-size:8px;color:rgba(130,170,255,0.9);">(S)</span>` : '';
         const countryKey = (r.short||r.label).toLowerCase().replace(/[^a-z ]/g,'').replace(/ /g,'_').trim();
-        const bgImg = countryKey ? `images/vertical_${countryKey}.webp` : '';
+        const bgImg = countryKey ? `images/verticalflags/vertical_${countryKey}.webp` : '';
         const bgStyleAttr = bgImg ? `style="background-image:url('${bgImg}');background-size:cover;background-position:center;"` : '';
         hHtml += `<th class="st-race ${sc}"><div class="st-race-header" ${bgStyleAttr}>
           <span class="st-race-round">${roundNum}${sprintSuffix}</span>
@@ -700,7 +700,7 @@ async function loadDrivers() {
       }
 
       const teamSlug = (team||'').toLowerCase().replace(/\s+/g,'').replace(/[^a-z0-9]/g,'');
-      const logoStyle = teamSlug ? `background-image:linear-gradient(rgba(22,29,27,0.5),rgba(22,29,27,0.5)),url('images/thinlogo_${teamSlug}.webp');` : '';
+      const logoStyle = teamSlug ? `background-image:linear-gradient(rgba(22,29,27,0.5),rgba(22,29,27,0.5)),url('images/teamlogos/thinlogo_${teamSlug}.webp');` : '';
       const hasLogo = teamSlug ? ' has-logo' : '';
       const teamSpan = teamSlug ? '' : `<span class="st-driver-team">${team||''}</span>`;
 

@@ -245,7 +245,7 @@ function renderCard(t){
     const drvs=d.drivers.map(dr=>dr.name+(dr.champion?' '+CROWN:'')).join(' &middot; ');
     divs+='<div class="tc-div"><div class="tc-div-row"><span class="tc-div-lbl">Division '+d.div+'</span>'+(d.champion?'<span class="tc-crown">'+CROWN+'</span>':'')+'</div><div class="tc-drivers">'+(drvs||'&mdash;')+'</div></div>';
   });
-  const imgSlug = 'images/squarelogo_' + t.name.toLowerCase().replace(/\s+/g,'').replace(/[^a-z0-9]/g,'') + '.webp';
+  const imgSlug = 'images/teamlogos/squarelogo_' + t.name.toLowerCase().replace(/\s+/g,'').replace(/[^a-z0-9]/g,'') + '.webp';
   const imgTag = '<img class="tc-header-img" src="'+imgSlug+'" alt="" onerror="this.style.display=\'none\'">';
   return '<div class="team-card'+(isC?' is-champion':'')+'">'+imgTag+'<div class="tc-header"><div class="tc-header-content"><div class="tc-bar" style="background:'+t.color+'"></div><div><div class="tc-name">'+t.name+'</div><div class="tc-owner-row"><span class="tc-owner-lbl">Owner</span><span class="tc-owner">'+(t.owner||'&mdash;')+'</span>'+(t.ownerChampion?'<span class="tc-crown">'+CROWN+'</span>':'')+'</div></div></div></div><div class="tc-body">'+(divs||'<div style="font-size:12px;color:var(--text-faint)">No division data</div>')+'</div></div>';
 }
@@ -371,7 +371,7 @@ function parseS28DataTab(rows, divNum) {
 
 function renderS28Card(t) {
   const color = getColor(t.name);
-  const imgSlug28 = 'images/squarelogo_' + t.name.toLowerCase().replace(/\s+/g,'').replace(/[^a-z0-9]/g,'') + '.webp';
+  const imgSlug28 = 'images/teamlogos/squarelogo_' + t.name.toLowerCase().replace(/\s+/g,'').replace(/[^a-z0-9]/g,'') + '.webp';
   return `<div class="team-card"><img class="tc-header-img" src="${imgSlug28}" alt="" onerror="this.style.display='none'">
     <div class="tc-header">
       <div class="tc-header-content">
@@ -430,7 +430,7 @@ function renderS28Season(divDataArr, seasonNum) {
         </div>
       </div>`;
     });
-    const imgSlugS28 = 'images/squarelogo_' + t.name.toLowerCase().replace(/\s+/g,'').replace(/[^a-z0-9]/g,'') + '.webp';
+    const imgSlugS28 = 'images/teamlogos/squarelogo_' + t.name.toLowerCase().replace(/\s+/g,'').replace(/[^a-z0-9]/g,'') + '.webp';
     html += `<div class="team-card"><img class="tc-header-img" src="${imgSlugS28}" alt="" onerror="this.style.display='none'">
       <div class="tc-header">
         <div class="tc-header-content">
