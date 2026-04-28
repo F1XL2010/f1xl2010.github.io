@@ -98,11 +98,12 @@
   .standings-table td.st-pos{background:#161d1b;}
   .st-driver{position:sticky;left:38px;z-index:3;min-width:170px;text-align:left;}
   .standings-table th.st-driver{z-index:8;background:#1a2320;text-align:left;}
-  .standings-table td.st-driver{background:#161d1b;position:relative;overflow:hidden;max-width:170px;}
+  .standings-table td.st-driver{background:#161d1b;position:relative;max-width:170px;}
   .standings-table tr:hover td.st-pos,
   .standings-table tr:hover td.st-driver{background:#1e2a27!important;}
   .standings-table tr:hover td.st-driver.has-logo{background:rgba(30,42,39,0.6)!important;}
-  .st-driver-bg{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;opacity:0.50;z-index:0;pointer-events:none;display:block;}
+  .st-driver-bg-wrap{position:absolute;top:0;left:0;width:100%;height:100%;overflow:hidden;z-index:0;pointer-events:none;}
+  .st-driver-bg{width:100%;height:100%;object-fit:cover;object-position:center;opacity:0.50;display:block;}
   .st-pos-cell{padding:10px 5px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:#fff;text-align:center;display:block;}
   .st-pos-cell.p1{color:#E8B84B;}.st-pos-cell.p2{color:#C0C0C0;}.st-pos-cell.p3{color:#cd7f32;}
   .st-pos-header{padding:8px 5px;display:block;text-align:center;}
@@ -678,7 +679,7 @@ async function loadDrivers() {
       }
 
       const teamSlug = (team||'').toLowerCase().replace(/\s+/g,'').replace(/[^a-z0-9]/g,'');
-      const logoImg = teamSlug ? `<img class="st-driver-bg" src="images/thinlogo_${teamSlug}.webp" alt="" onerror="this.parentElement.classList.remove('has-logo');this.remove();">` : '';
+      const logoImg = teamSlug ? `<div class="st-driver-bg-wrap"><img class="st-driver-bg" src="images/thinlogo_${teamSlug}.webp" alt="" onerror="this.parentElement.parentElement.classList.remove('has-logo');this.parentElement.remove();"></div>` : '';
       const hasLogo = teamSlug ? ' has-logo' : '';
       const teamSpan = teamSlug ? '' : `<span class="st-driver-team">${team||''}</span>`;
 
