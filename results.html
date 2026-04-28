@@ -866,11 +866,13 @@ async function loadLegacyDivision(d){
         const parts = dateStr.split('/');
         if(parts.length===3) date = new Date(parts[2], parts[1]-1, parts[0]);
       }
-      const done = !!(date && date < today);
+      // For legacy seasons, mark all rounds as done — dates may be broken
+      const done = true;
       if(done) lastDone = rounds.length;
       // Get GID for this round
       const rawGid = sc[`d${d}_r${num}_gid`];
-      rounds.push({round:num, circuit, date, isSprint, gid:rawGid, done});
+      // Only add round if GID exists
+      if(rawGid) rounds.push({round:num, circuit, date, isSprint, gid:rawGid, done});
     }
 
     const sel = document.getElementById('round-selector');
