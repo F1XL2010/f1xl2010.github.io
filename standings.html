@@ -98,14 +98,16 @@
   .standings-table td.st-pos{background:#161d1b;}
   .st-driver{position:sticky;left:38px;z-index:3;min-width:170px;text-align:left;}
   .standings-table th.st-driver{z-index:8;background:#1a2320;text-align:left;}
-  .standings-table td.st-driver{background:#161d1b;}
+  .standings-table td.st-driver{background:#161d1b;position:relative;overflow:hidden;}
   .standings-table tr:hover td.st-pos,
   .standings-table tr:hover td.st-driver{background:#1e2a27!important;}
+  .standings-table tr:hover td.st-driver.has-logo{background:rgba(30,42,39,0.6)!important;}
+  .st-driver-bg{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;opacity:0.25;z-index:0;pointer-events:none;}
   .st-pos-cell{padding:10px 5px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:#fff;text-align:center;display:block;}
   .st-pos-cell.p1{color:#E8B84B;}.st-pos-cell.p2{color:#C0C0C0;}.st-pos-cell.p3{color:#cd7f32;}
   .st-pos-header{padding:8px 5px;display:block;text-align:center;}
   .st-driver-header{padding:8px 10px;display:block;}
-  .st-driver-cell{padding:5px 8px;display:flex;flex-direction:column;gap:1px;}
+  .st-driver-cell{padding:5px 8px;display:flex;flex-direction:column;gap:1px;position:relative;z-index:1;}
   .st-driver-name{font-size:13px;font-weight:500;color:#fff;}
   .st-driver-team{font-size:10px;color:rgba(255,255,255,0.5);}
   .st-race{width:38px;min-width:38px;text-align:center;}
@@ -676,13 +678,15 @@ async function loadDrivers() {
       }
 
       const teamSlug = (team||'').toLowerCase().replace(/\s+/g,'').replace(/[^a-z0-9]/g,'');
-      const driverBg = teamSlug ? `style="background-image:url('images/thinlogo_${teamSlug}.webp');background-size:cover;background-position:center;background-repeat:no-repeat;"` : '';
+      const logoImg = teamSlug ? `<img class="st-driver-bg" src="images/thinlogo_${teamSlug}.webp" alt="" onerror="this.parentElement.classList.remove('has-logo');this.remove();">` : '';
+      const hasLogo = teamSlug ? ' has-logo' : '';
+      const teamSpan = teamSlug ? '' : `<span class="st-driver-team">${team||''}</span>`;
 
       let rHtml = `<tr>
         <td class="st-pos"><span class="st-pos-cell ${pc}">${pos}</span></td>
-        <td class="st-driver" ${driverBg}><div class="st-driver-cell">
+        <td class="st-driver${hasLogo}">${logoImg}<div class="st-driver-cell">
           <span class="st-driver-name">${driver}</span>
-          <span class="st-driver-team">${team||''}</span>
+          ${teamSpan}
         </div></td>`;
 
       races.forEach((r, idx) => {
