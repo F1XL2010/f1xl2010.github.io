@@ -210,7 +210,7 @@ const teamColors = (typeof TEAM_COLOURS !== 'undefined') ? TEAM_COLOURS : {
   'Ferrari':'#D52E37','Williams':'#3267D4',
   'Racing Bull':'#7091F8','Racing Bulls':'#7091F8','RB':'#7091F8',
   'Aston Martin':'#4B9774','Haas':'#DFE1E2','Audi':'#EB4526',
-  'Alpine':'#479FE2','Cadillac':'#AAAADD','Sauber':'#52C254','Reserve':'#555'
+  'Alpine':'#479FE2','Cadillac':'#AAAADD','Sauber':'#52C254','Reserve':'#ffffff'
 };
 
 function csv(text){
@@ -832,62 +832,55 @@ async function showLegacyDiv(d){
 async function loadLegacyDivision(d){
   const sc = _seasonCfg;
   const sheetId = sc[`d${d}_sheet_id`];
-  const calGid  = sc[`d${d}_calendar_gid`];
-  if(!sheetId || !calGid){
-    document.getElementById('round-selector').innerHTML = '<div style="color:var(--text-faint);font-size:13px;">No calendar data for this division.</div>';
+  if(!sheetId){
+    document.getElementById('round-selector').innerHTML = '<div style="color:var(--text-faint);font-size:13px;">No data for this division.</div>';
     return;
   }
 
   document.getElementById('page-meta').textContent = `Season ${_currentSeason} · Division ${d}`;
   document.getElementById('round-selector').innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Loading...</div>';
 
-  try{
-    const calUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${calGid}`;
-    const res = await fetch(calUrl);
-    const text = await res.text();
-    if(text.includes('<!DOCTYPE')) throw new Error('Sheet not published');
-    const rows = csv(text);
-    rounds = [];
-    let lastDone = -1;
-    const today = new Date();
+  // Build round list directly from config GIDs — don't rely on calendar sheet
+  // which may have broken formula refs in old seasons
+  rounds = [];
+  let lastDone = -1;
 
-    for(let i=1; i<rows.length; i++){
-      const row = rows[i];
-      const r0 = (row[0]||'').trim();
-      if(!r0 || r0.toLowerCase().includes('all star')) continue;
-      const num = parseInt(r0);
-      if(isNaN(num)||num<1||num>25) continue;
-      const isSprint = (row[1]||'').trim().toLowerCase() === 'sprint';
-      const dateStr = (row[2]||'').trim();
-      const circuit = (row[4]||'').trim();
-      // Parse DD/MM/YYYY
-      let date = null;
-      if(dateStr){
-        const parts = dateStr.split('/');
-        if(parts.length===3) date = new Date(parts[2], parts[1]-1, parts[0]);
+  // Try to get sprint info from calendar if available, otherwise default to no sprints
+  let sprintRounds = new Set();
+  const calGid = sc[`d${d}_calendar_gid`];
+  if(calGid){
+    try{
+      const calUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${calGid}`;
+      const res = await fetch(calUrl);
+      const text = await res.text();
+      if(!text.includes('<!DOCTYPE')){
+        const rows = csv(text);
+        for(let i=1; i<rows.length; i++){
+          const row = rows[i];
+          const num = parseInt((row[0]||'').trim());
+          if(!isNaN(num) && (row[1]||'').trim().toLowerCase()==='sprint') sprintRounds.add(num);
+        }
       }
-      // For legacy seasons, mark all rounds as done — dates may be broken
-      const done = true;
-      if(done) lastDone = rounds.length;
-      // Get GID for this round
-      const rawGid = sc[`d${d}_r${num}_gid`];
-      // Only add round if GID exists
-      if(rawGid) rounds.push({round:num, circuit, date, isSprint, gid:rawGid, done});
-    }
-
-    const sel = document.getElementById('round-selector');
-    sel.innerHTML = rounds.map(r=>
-      `<button class="round-btn${r.isSprint?' sprint':''}" id="rb${r.round}" onclick="selectLegacyRound(${r.round})">${r.isSprint?'⚡ ':''}R${r.round}${r.circuit?' · '+r.circuit:''}</button>`
-    ).join('');
-
-    const done = rounds.filter(r=>r.done).length;
-    if(rounds.length) document.getElementById('page-meta').textContent = `Season ${_currentSeason} · Division ${d} · ${rounds.length} rounds · ${done} completed`;
-
-    if(lastDone>=0) selectLegacyRound(rounds[lastDone].round);
-    else document.getElementById('content').innerHTML = '<div class="loading-msg">No completed rounds yet.</div>';
-  } catch(e){
-    document.getElementById('round-selector').innerHTML = `<div style="color:#ff6b6b;font-size:13px;">Could not load rounds: ${e.message}</div>`;
+    } catch(e){ /* ignore calendar errors */ }
   }
+
+  // Build rounds from GID entries in config
+  for(let i=1; i<=25; i++){
+    const rawGid = sc[`d${d}_r${i}_gid`];
+    if(!rawGid) continue;
+    rounds.push({round:i, circuit:'', date:null, isSprint:sprintRounds.has(i), gid:rawGid, done:true});
+    lastDone = rounds.length - 1;
+  }
+
+  const sel = document.getElementById('round-selector');
+  sel.innerHTML = rounds.map(r=>
+    `<button class="round-btn${r.isSprint?' sprint':''}" id="rb${r.round}" onclick="selectLegacyRound(${r.round})">${r.isSprint?'⚡ ':''}R${r.round}</button>`
+  ).join('');
+
+  if(rounds.length) document.getElementById('page-meta').textContent = `Season ${_currentSeason} · Division ${d} · ${rounds.length} rounds`;
+
+  if(lastDone>=0) selectLegacyRound(rounds[lastDone].round);
+  else document.getElementById('content').innerHTML = '<div class="loading-msg">No rounds available.</div>';
 }
 
 async function selectLegacyRound(num){

@@ -145,6 +145,7 @@ const TEAM_COLOURS = {
   'Audi':              '#EB4526',
   'Alpine':            '#479FE2',
   'Cadillac':          '#AAAADD',
+  'Reserve':           '#ffffff',
 };
 
 // Division Colours — used for headers, cards, badges across all pages
