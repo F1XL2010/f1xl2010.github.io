@@ -131,11 +131,14 @@ async function getConfigValue(key) {
 // F1 2025 Team Colours
 const TEAM_COLOURS = {
   'McLaren':           '#EF8733',
+  'Mclaren':           '#EF8733',
   'Mercedes':          '#75F1D3',
   'Red Bull Racing':   '#4570C0',
   'Ferrari':           '#D52E37',
   'Williams':          '#3267D4',
   'VCARB':             '#7091F8',
+  'Racing Bulls':      '#7091F8',
+  'RB':                '#7091F8',
   'Aston Martin':      '#4B9774',
   'Haas':              '#DFE1E2',
   'Audi':              '#EB4526',
