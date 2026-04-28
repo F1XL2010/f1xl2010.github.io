@@ -9,7 +9,7 @@
 <style>
   :root{--green:#3DCC47;--teal:#5ECFCF;--red:#E10600;--black:#111816;--dark:#161d1b;--dark2:#1a2320;--dark3:#1e2a27;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);--text:#ffffff;--text-muted:rgba(255,255,255,0.60);--text-faint:rgba(255,255,255,0.30);--gold:#E8B84B;}
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{background:#111816;background-image:linear-gradient(rgba(255,255,255,0.025) 0px,rgba(255,255,255,0.025) 4px,rgba(0,0,0,0.06) 4px,rgba(0,0,0,0.06) 8px),linear-gradient(90deg,rgba(0,0,0,0.06) 0px,rgba(0,0,0,0.06) 4px,rgba(255,255,255,0.025) 4px,rgba(255,255,255,0.025) 8px);background-size:8px 8px;color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;}
+  body{background:#111816;color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;}
     nav{background:rgba(17,24,22,0.97);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;backdrop-filter:blur(8px);}
   .nav-left{display:flex;align-items:center;flex-shrink:0;}
   .nav-logo{display:flex;align-items:center;height:40px;text-decoration:none;}
@@ -204,6 +204,14 @@ let RACE_GIDS = []; // populated from config
 
 const today = new Date(); today.setHours(0,0,0,0);
 let rounds=[], cache={};
+const teamColors = (typeof TEAM_COLOURS !== 'undefined') ? TEAM_COLOURS : {
+  'McLaren':'#EF8733','Mclaren':'#EF8733','Mercedes':'#75F1D3',
+  'Red Bull Racing':'#4570C0','Red Bull':'#4570C0',
+  'Ferrari':'#D52E37','Williams':'#3267D4',
+  'Racing Bull':'#7091F8','Racing Bulls':'#7091F8','RB':'#7091F8',
+  'Aston Martin':'#4B9774','Haas':'#DFE1E2','Audi':'#EB4526',
+  'Alpine':'#479FE2','Cadillac':'#AAAADD','Sauber':'#52C254','Reserve':'#555'
+};
 
 function csv(text){
   const rows=[]; let cells=[],cur='',inQ=false;
@@ -383,6 +391,12 @@ async function showSeason(season, div){
   if(!_seasonCfg){
     document.getElementById('page-meta').textContent = 'Season '+season;
     document.getElementById('round-selector').innerHTML = '<div style="color:var(--text-faint);font-size:13px;">No results data available for this season.</div>';
+    return;
+  }
+
+  // Route to legacy renderer for seasons 27 and below
+  if(parseFloat(season) <= 27){
+    await showLegacySeason(season, div);
     return;
   }
 
@@ -645,6 +659,272 @@ function srTable(data,title,weather){
 function box(title,inner){
   return`<div class="results-box"><div class="results-box-title">${title}</div>${inner}</div>`;
 }
+
+// ── LEGACY RENDERER (S27 and below) ──────────────────────────────────────────
+// Sheet structure: horizontal layout, Qualifying left, Race right
+// Sprint weekends: Sprint Quali | Sprint Race | Quali | Race
+
+function legacyParseURL(gid){
+  // Returns {sheetId, gid} from either a full URL or plain GID
+  if(!gid) return null;
+  if(String(gid).includes('spreadsheets/d/')){
+    const idMatch = gid.match(/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+    const gidMatch = gid.match(/[?&#]gid=(\d+)/);
+    if(idMatch) return {sheetId: idMatch[1], gid: gidMatch ? gidMatch[1] : '0'};
+  }
+  return null; // plain GID — caller uses SHEET_ID
+}
+
+function legacyFetchURL(sheetId, gid, fallbackSheetId){
+  const sid = sheetId || fallbackSheetId;
+  return `https://docs.google.com/spreadsheets/d/${sid}/export?format=csv&gid=${gid}`;
+}
+
+function legacyExtractSection(rows, colOffset, isRace){
+  const results = [];
+  for(let i=5; i<rows.length; i++){
+    const row = rows[i] || [];
+    const rawPos = (row[colOffset]||'').toString().trim();
+    if(!rawPos || rawPos === ' ') break;
+    const posNum = parseInt(rawPos);
+    if(isNaN(posNum) && !isDNF(rawPos)) break;
+    const driver = (row[colOffset+3]||'').toString().trim();
+    if(!driver || driver === ' ') break;
+    const team = (row[colOffset+4]||'').toString().trim();
+    if(isRace){
+      results.push({
+        pos: rawPos,
+        num: (row[colOffset+2]||'').toString().trim(),
+        driver, team,
+        stops: (row[colOffset+6]||'').toString().trim(),
+        gap: (row[colOffset+7]||'').toString().trim(),
+        pts: String(Math.floor(parseFloat((row[colOffset+8]||'').toString())||0)||'0'),
+        fl: (row[colOffset+10]||'').toString().trim(),
+        pen: (row[colOffset+11]||'').toString().trim()
+      });
+    } else {
+      results.push({
+        pos: rawPos,
+        num: (row[colOffset+2]||'').toString().trim(),
+        driver, team,
+        time: (row[colOffset+6]||'').toString().trim(),
+        tyre: (row[colOffset+7]||'').toString().trim(),
+        pen: (row[colOffset+9]||'').toString().trim()
+      });
+    }
+  }
+  return results;
+}
+
+function legacyParseRound(rows, isSprint){
+  const meta = {
+    circuit: (rows[0]||[])[4]||'',
+    weather: (rows[0]||[])[21]||'',
+    sc: ((rows[2]||[])[24]||'0').toString().trim(),
+    rf: ((rows[3]||[])[10]||'0').toString().trim(),
+    isSprint
+  };
+
+  if(!isSprint){
+    // Normal: Quali (col 0) | Race (col 12)
+    const quali = legacyExtractSection(rows, 0, false);
+    const race  = legacyExtractSection(rows, 12, true);
+    return {meta, quali, race, sprintQuali:[], sprintRace:[]};
+  } else {
+    // Sprint: Sprint Quali (col 0) | Sprint Race (col 12) | Quali (col 25) | Race (col 38)
+    const sprintQuali = legacyExtractSection(rows, 0, false);
+    const sprintRace  = legacyExtractSection(rows, 12, true);
+    const quali       = legacyExtractSection(rows, 25, false);
+    const race        = legacyExtractSection(rows, 38, true);
+    return {meta, sprintQuali, sprintRace, quali, race};
+  }
+}
+
+function legacyTeamBar(team){
+  const c = (typeof teamColors !== 'undefined') ?
+    (teamColors[team] || teamColors[Object.keys(teamColors).find(k=>k.toLowerCase()===(team||'').toLowerCase())||''] || '#555') : '#555';
+  return team ? `<span style="display:inline-block;width:3px;height:12px;background:${c};border-radius:1px;margin-right:5px;vertical-align:middle;"></span>` : '';
+}
+
+function legacyQTable(data, title){
+  if(!data||!data.length) return '';
+  let html = `<div class="results-box"><div class="results-box-title">${title}</div>
+    <table class="rt"><thead><tr><th>Pos</th><th>#</th><th>Driver / Team</th><th>Time</th><th>Tyre</th></tr></thead><tbody>`;
+  data.forEach(d=>{
+    const dnf = isDNF(d.pos);
+    html += `<tr>
+      <td>${dnf?`<span class="pdnf">${d.pos}</span>`:`<span class="p ${posClass(d.pos)}">${d.pos}</span>`}</td>
+      <td><span class="dnum">${d.num}</span></td>
+      <td><span class="dname">${d.driver}</span>${d.pen?`<span class="pen">+${d.pen}</span>`:''}
+        ${d.team?`<br>${legacyTeamBar(d.team)}<span class="stops">${d.team}</span>`:''}
+      </td>
+      <td><span class="qtime">${d.time||'—'}</span></td>
+      <td>${tyreBadge(d.tyre)}</td>
+    </tr>`;
+  });
+  return html + '</tbody></table></div>';
+}
+
+function legacyRTable(data, title){
+  if(!data||!data.length) return '';
+  let html = `<div class="results-box"><div class="results-box-title">${title}</div>
+    <table class="rt"><thead><tr><th>Pos</th><th>#</th><th>Driver</th><th>Stops</th><th>Gap</th><th>Pts</th></tr></thead><tbody>`;
+  data.forEach(d=>{
+    const dnf = isDNF(d.pos);
+    const pts = parseInt(d.pts)||0;
+    const hasFl = d.fl && d.fl.trim() && d.fl.toLowerCase()==='y';
+    html += `<tr>
+      <td>${dnf?`<span class="pdnf">${d.pos}</span>`:`<span class="p ${posClass(d.pos)}">${d.pos}</span>`}</td>
+      <td><span class="dnum">${d.num}</span></td>
+      <td><span class="dname">${d.driver}</span>${hasFl?`<span class="fl" title="Fastest Lap"></span>`:''}${d.pen?`<span class="pen">+${d.pen}</span>`:''}
+        ${d.team?`<br>${legacyTeamBar(d.team)}<span class="stops">${d.team}</span>`:''}
+      </td>
+      <td><span class="stops">${d.stops||'—'}</span></td>
+      <td><span class="rgap">${d.gap||'—'}</span></td>
+      <td><span class="rpts${pts===0?' z':''}">${d.pts||'0'}</span></td>
+    </tr>`;
+  });
+  return html + '</tbody></table></div>';
+}
+
+function legacyRenderRound(r, parsed){
+  const {meta, quali, race, sprintQuali, sprintRace} = parsed;
+  const circuit = meta.circuit || r.circuit || '';
+  let html = header(r, circuit, race.length ? race[0].driver : '', meta.sc, meta.rf, meta.isSprint);
+  html += '<div class="results-grid">';
+  if(meta.isSprint){
+    html += legacyQTable(sprintQuali, 'Sprint Qualifying');
+    html += legacyRTable(sprintRace, 'Sprint Race');
+    html += legacyQTable(quali, 'Qualifying');
+    html += legacyRTable(race, 'Race');
+  } else {
+    html += legacyQTable(quali, 'Qualifying');
+    html += legacyRTable(race, 'Race');
+  }
+  html += '</div>';
+  document.getElementById('content').innerHTML = html;
+}
+
+async function showLegacySeason(season, div){
+  // Build division bar — only show D1 for legacy seasons initially
+  const numDivs = parseInt(_seasonCfg['divisions']) || 1;
+  let divBtns = '';
+  for(let d=1; d<=numDivs; d++){
+    if(_seasonCfg[`d${d}_has_results`] === 'yes'){
+      divBtns += `<button class="div-btn${d===div?' active':''}" id="divbtn${d}" onclick="showLegacyDiv(${d})">Division ${d}</button>`;
+    }
+  }
+  document.getElementById('div-bar').innerHTML = divBtns || '';
+  await loadLegacyDivision(div);
+}
+
+async function showLegacyDiv(d){
+  _currentDiv = d;
+  document.querySelectorAll('.div-btn').forEach(b=>b.classList.remove('active'));
+  const btn = document.getElementById('divbtn'+d);
+  if(btn) btn.classList.add('active');
+  rounds = [];
+  cache = {};
+  document.getElementById('content').innerHTML = '';
+  await loadLegacyDivision(d);
+}
+
+async function loadLegacyDivision(d){
+  const sc = _seasonCfg;
+  const sheetId = sc[`d${d}_sheet_id`];
+  const calGid  = sc[`d${d}_calendar_gid`];
+  if(!sheetId || !calGid){
+    document.getElementById('round-selector').innerHTML = '<div style="color:var(--text-faint);font-size:13px;">No calendar data for this division.</div>';
+    return;
+  }
+
+  document.getElementById('page-meta').textContent = `Season ${_currentSeason} · Division ${d}`;
+  document.getElementById('round-selector').innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Loading...</div>';
+
+  try{
+    const calUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${calGid}`;
+    const res = await fetch(calUrl);
+    const text = await res.text();
+    if(text.includes('<!DOCTYPE')) throw new Error('Sheet not published');
+    const rows = csv(text);
+    rounds = [];
+    let lastDone = -1;
+    const today = new Date();
+
+    for(let i=1; i<rows.length; i++){
+      const row = rows[i];
+      const r0 = (row[0]||'').trim();
+      if(!r0 || r0.toLowerCase().includes('all star')) continue;
+      const num = parseInt(r0);
+      if(isNaN(num)||num<1||num>25) continue;
+      const isSprint = (row[1]||'').trim().toLowerCase() === 'sprint';
+      const dateStr = (row[2]||'').trim();
+      const circuit = (row[4]||'').trim();
+      // Parse DD/MM/YYYY
+      let date = null;
+      if(dateStr){
+        const parts = dateStr.split('/');
+        if(parts.length===3) date = new Date(parts[2], parts[1]-1, parts[0]);
+      }
+      const done = !!(date && date < today);
+      if(done) lastDone = rounds.length;
+      // Get GID for this round
+      const rawGid = sc[`d${d}_r${num}_gid`];
+      rounds.push({round:num, circuit, date, isSprint, gid:rawGid, done});
+    }
+
+    const sel = document.getElementById('round-selector');
+    sel.innerHTML = rounds.map(r=>
+      `<button class="round-btn${r.isSprint?' sprint':''}" id="rb${r.round}" onclick="selectLegacyRound(${r.round})">${r.isSprint?'⚡ ':''}R${r.round}${r.circuit?' · '+r.circuit:''}</button>`
+    ).join('');
+
+    const done = rounds.filter(r=>r.done).length;
+    if(rounds.length) document.getElementById('page-meta').textContent = `Season ${_currentSeason} · Division ${d} · ${rounds.length} rounds · ${done} completed`;
+
+    if(lastDone>=0) selectLegacyRound(rounds[lastDone].round);
+    else document.getElementById('content').innerHTML = '<div class="loading-msg">No completed rounds yet.</div>';
+  } catch(e){
+    document.getElementById('round-selector').innerHTML = `<div style="color:#ff6b6b;font-size:13px;">Could not load rounds: ${e.message}</div>`;
+  }
+}
+
+async function selectLegacyRound(num){
+  const r = rounds.find(x=>x.round===num);
+  if(!r) return;
+  document.querySelectorAll('.round-btn').forEach(b=>b.classList.remove('active'));
+  const btn = document.getElementById(`rb${num}`);
+  if(btn) btn.classList.add('active');
+  if(!r.done){
+    document.getElementById('content').innerHTML = '<div class="loading-msg">This race has not yet taken place.</div>';
+    return;
+  }
+  if(cache[num]){ legacyRenderRound(r, cache[num]); return; }
+  document.getElementById('content').innerHTML = '<div class="loading-msg">Loading...</div>';
+  try{
+    // Parse GID — may be full URL or plain number
+    let fetchSheetId, fetchGid;
+    const parsed = legacyParseURL(r.gid);
+    if(parsed){
+      fetchSheetId = parsed.sheetId;
+      fetchGid = parsed.gid;
+    } else {
+      fetchSheetId = _seasonCfg[`d${_currentDiv}_sheet_id`];
+      fetchGid = r.gid;
+    }
+    const url = `https://docs.google.com/spreadsheets/d/${fetchSheetId}/export?format=csv&gid=${fetchGid}`;
+    const res = await fetch(url);
+    const text = await res.text();
+    if(text.includes('<!DOCTYPE')) throw new Error('Sheet not published');
+    const rows = csv(text);
+    const parsed2 = legacyParseRound(rows, r.isSprint);
+    cache[num] = parsed2;
+    legacyRenderRound(r, parsed2);
+  } catch(e){
+    document.getElementById('content').innerHTML = `<div class="loading-msg">Could not load round: ${e.message}</div>`;
+  }
+}
+
+// ── END LEGACY RENDERER ───────────────────────────────────────────────────────
 
 function toggleMenu(){
   document.getElementById('hamburger').classList.toggle('open');
