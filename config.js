@@ -136,7 +136,6 @@ const TEAM_COLOURS = {
   'Red Bull Racing':   '#4570C0',
   'Ferrari':           '#D52E37',
   'Williams':          '#3267D4',
-  'VCARB':             '#7091F8',
   'Racing Bulls':      '#7091F8',
   'RB':                '#7091F8',
   'Aston Martin':      '#4B9774',
