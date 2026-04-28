@@ -296,26 +296,20 @@ function _applyDivColour(tabEl, divNum){
   tabEl.style.color='#fff';
   tabEl.style.borderBottomColor=hex;
   tabEl.style.background=`rgba(${r},${g},${b},0.18)`;
-  // Find the associated content div and tint its table thead
-  const tabId = tabEl.id; // e.g. s25-dtab-1
+  const tabBar = tabEl.parentElement;
+  if(tabBar) tabBar.style.background=`rgba(${r},${g},${b},0.12)`;
+  const tabId = tabEl.id;
   const contentId = tabId.replace('-dtab-','-dcontent-');
   const content = document.getElementById(contentId);
   if(content){
-    content.querySelectorAll('.st thead tr').forEach(tr=>{
-      tr.style.background=`rgba(${r},${g},${b},0.25)`;
-    });
+    content.querySelectorAll('.st thead tr').forEach(tr=>{ tr.style.background=`rgba(${r},${g},${b},0.28)`; });
+    content.querySelectorAll('td.sticky,th.sticky,td.sticky2,th.sticky2').forEach(el=>{ el.style.background=`rgba(${r},${g},${b},0.15)`; });
   }
 }
 function _clearDivColour(tabEl){
   tabEl.style.color='';
   tabEl.style.borderBottomColor='';
   tabEl.style.background='';
-  const tabId = tabEl.id;
-  const contentId = tabId.replace('-dtab-','-dcontent-');
-  const content = document.getElementById(contentId);
-  if(content){
-    content.querySelectorAll('.st thead tr').forEach(tr=>{ tr.style.background=''; });
-  }
 }
 function _colourActiveTabs(){
   document.querySelectorAll('.div-tab.active').forEach(tab=>{
