@@ -582,31 +582,47 @@ function parseOverallConstructors(rows){
 function buildOverallSection(rows){
   const teams = parseOverallConstructors(rows);
   if(!teams.length) return '';
-  const cards = teams.map(t=>{
+
+  const tdStyle = 'padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.06);border-right:1px solid rgba(255,255,255,0.06);';
+  const thStyle = 'padding:8px 12px;background:#1a2320;color:rgba(255,255,255,0.5);font-family:\'Barlow Condensed\',sans-serif;font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;border-bottom:2px solid rgba(232,184,75,0.5);border-right:1px solid rgba(255,255,255,0.07);';
+
+  let html = `<div class="st-wrap" style="margin:12px 0 0;">
+    <table class="standings-table" style="width:100%;">
+      <thead><tr>
+        <th style="${thStyle}">Pos</th>
+        <th style="${thStyle}text-align:left;">Team</th>
+        <th style="${thStyle}">Points</th>
+        <th style="${thStyle}">Gap</th>
+        <th style="${thStyle}text-align:left;">Team Principal</th>
+      </tr></thead><tbody>`;
+
+  teams.forEach(t=>{
     const slug = t.team.toLowerCase().replace(/\s+/g,'').replace(/[^a-z0-9]/g,'');
-    const bgUrl = `images/teamlogos/thinlogo_${slug}.webp`;
-    const pc = t.pos===1?'p1':t.pos===2?'p2':t.pos===3?'p3':'';
-    const tp = t.tp && t.tp.toLowerCase()==='reserve' ? 'RESERVE' : (t.tp ? `TP — ${t.tp}` : '');
-    const gapStr = t.gap && t.gap!=='-' && t.gap!=='0' && t.gap!=='' ? `<span class="overall-card-gap">-${t.gap.replace(/^-/,'')}</span>` : '';
-    return `<div class="overall-card">
-      <div class="overall-card-bg" style="background-image:url('${bgUrl}')"></div>
-      <div class="overall-card-overlay"></div>
-      <div class="overall-card-content">
-        <div class="overall-card-pos ${pc}">P${t.pos}</div>
-        <div class="overall-card-team">${t.team}</div>
-        <div><span class="overall-card-pts">${t.pts}</span>${gapStr}</div>
-        ${tp?`<div class="overall-card-tp">${tp}</div>`:''}
-      </div>
-    </div>`;
-  }).join('');
+    const color = (typeof TEAM_COLOURS !== 'undefined') ? (TEAM_COLOURS[t.team] || TEAM_COLOURS[Object.keys(TEAM_COLOURS).find(k=>k.toLowerCase()===t.team.toLowerCase())||''] || '#555') : '#555';
+    const r2=parseInt(color.slice(1,3),16)||85, g2=parseInt(color.slice(3,5),16)||85, b2=parseInt(color.slice(5,7),16)||85;
+    const rowBg = `background:rgba(${r2},${g2},${b2},0.1);`;
+    const teamBg = `background:rgba(${r2},${g2},${b2},0.2);border-left:3px solid ${color};`;
+    const logoStyle = `background-image:linear-gradient(rgba(22,29,27,0.5),rgba(22,29,27,0.5)),url('images/teamlogos/thinlogo_${slug}.webp');background-size:cover;background-position:center;`;
+    const pc = t.pos===1?'#E8B84B':t.pos===2?'#C0C0C0':t.pos===3?'#cd7f32':'rgba(255,255,255,0.5)';
+    const tp = t.tp && t.tp.toLowerCase()==='reserve' ? 'RESERVE' : (t.tp || '—');
+    const gap = t.gap && t.gap!=='-' && t.gap!=='0' && t.gap!=='' ? `-${t.gap.replace(/^-/,'')}` : '—';
+    html += `<tr>
+      <td style="${tdStyle}${rowBg}"><span style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:${pc};">${t.pos}</span></td>
+      <td style="${tdStyle}${teamBg}${logoStyle}"><div class="ps-driver-cell"><span class="ps-driver-name">${t.team}</span></div></td>
+      <td style="${tdStyle}${rowBg}text-align:right;"><span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#3DCC47;">${t.pts}</span></td>
+      <td style="${tdStyle}${rowBg}text-align:right;color:rgba(255,255,255,0.6);">${gap}</td>
+      <td style="${tdStyle}${rowBg}color:rgba(255,255,255,0.7);font-size:12px;">${tp}</td>
+    </tr>`;
+  });
+
+  html += '</tbody></table></div>';
+
   return `<div class="overall-accordion">
     <div class="overall-accordion-header" onclick="this.nextElementSibling.classList.toggle('open');this.querySelector('.overall-accordion-chevron').classList.toggle('open')">
       <span class="overall-accordion-title">Overall Constructors Championship</span>
       <span class="overall-accordion-chevron">▼</span>
     </div>
-    <div class="overall-accordion-body open">
-      <div class="overall-section"><div class="overall-grid">${cards}</div></div>
-    </div>
+    <div class="overall-accordion-body open">${html}</div>
   </div>`;
 }
 
@@ -616,11 +632,13 @@ async function fetchAndInsertOverall(id, sc, body){
   try{
     const mId = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
     const mGid = url.match(/gid=(\d+)/);
-    if(!mId || !mGid) return;
+    if(!mId || !mGid){ console.warn('Overall: could not parse URL', url); return; }
     const rows = await fetchCSV(mId[1], mGid[1]);
+    if(!rows || !rows.length){ console.warn('Overall: no rows returned'); return; }
     const html = buildOverallSection(rows);
     if(html) body.insertAdjacentHTML('beforeend', html);
-  } catch(e){ /* no overall data */ }
+    else console.warn('Overall: buildOverallSection returned empty for', id);
+  } catch(e){ console.warn('Overall fetch error:', e.message); }
 }
 
 async function renderS3to5(id, season, sc, body){
