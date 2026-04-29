@@ -532,9 +532,9 @@ function buildS1S2Constructors(rows){
 // ── OVERALL CONSTRUCTORS RENDERER ────────────────────────────────────────────
 function parseOverallConstructors(rows){
   const teams = [];
-  // Detect format: S20+ has 'Pos' in col 3, older has 'Pos' in col 1
   let posCol=-1, teamCol=-1, ptsCol=-1, gapCol=-1, tpCol=-1;
   let headerIdx=-1;
+
   for(let i=0;i<rows.length;i++){
     const r=rows[i];
     for(let c=0;c<r.length;c++){
@@ -544,6 +544,7 @@ function parseOverallConstructors(rows){
     if(headerIdx>=0) break;
   }
   if(headerIdx<0) return [];
+
   const hdr=rows[headerIdx];
   for(let c=0;c<hdr.length;c++){
     const v=(hdr[c]||'').trim().toLowerCase();
@@ -552,6 +553,17 @@ function parseOverallConstructors(rows){
     if(v==='gap') gapCol=c;
     if(v==='name') tpCol=c;
   }
+
+  // S20-style offset fix: header says 'Team' is in col X but data is in col X+1 (merged cell export)
+  if(teamCol>=0 && headerIdx+1 < rows.length){
+    const firstData = rows[headerIdx+1];
+    const valAtTeamCol = (firstData[teamCol]||'').trim();
+    const valAtTeamColPlus1 = (firstData[teamCol+1]||'').trim();
+    if(!valAtTeamCol && valAtTeamColPlus1 && !valAtTeamColPlus1.startsWith('#')){
+      teamCol = teamCol + 1;
+    }
+  }
+
   for(let i=headerIdx+1;i<rows.length;i++){
     const r=rows[i];
     const posRaw=(r[posCol]||'').trim();
@@ -560,7 +572,7 @@ function parseOverallConstructors(rows){
     const team=(r[teamCol]||'').trim();
     if(!team||team.startsWith('#')) continue;
     const pts=(r[ptsCol]||'').trim().replace(/,/g,'');
-    const gap=gapCol>=0?(r[gapCol]||'').trim().replace(/,/g,''):'';
+    const gap=gapCol>=0?(r[gapCol]||'').trim().replace(/,/g,'').replace(/^-$/,''):'';
     const tp=tpCol>=0?(r[tpCol]||'').trim():'';
     teams.push({pos, team, pts, gap, tp});
   }
@@ -587,7 +599,15 @@ function buildOverallSection(rows){
       </div>
     </div>`;
   }).join('');
-  return `<div class="overall-section"><div class="overall-label">Overall Constructors Championship</div><div class="overall-grid">${cards}</div></div>`;
+  return `<div class="overall-accordion">
+    <div class="overall-accordion-header" onclick="this.nextElementSibling.classList.toggle('open');this.querySelector('.overall-accordion-chevron').classList.toggle('open')">
+      <span class="overall-accordion-title">Overall Constructors Championship</span>
+      <span class="overall-accordion-chevron">▼</span>
+    </div>
+    <div class="overall-accordion-body open">
+      <div class="overall-section"><div class="overall-grid">${cards}</div></div>
+    </div>
+  </div>`;
 }
 
 async function fetchAndInsertOverall(id, sc, body){
