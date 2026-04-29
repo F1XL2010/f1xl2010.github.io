@@ -79,6 +79,42 @@
   .div-loading{font-size:13px;color:var(--text-faint);padding:12px 0;}
   .section-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--teal);padding:14px 0 6px;border-top:1px solid var(--border);margin-top:4px;}
   .section-label:first-child{border-top:none;padding-top:0;}
+
+  /* ── STANDINGS-STYLE TABLE ─────────────────────────────────────────────────── */
+  .standings-table{border-collapse:separate;border-spacing:0;font-size:12px;white-space:nowrap;width:100%;}
+  .standings-table th{position:sticky;top:0;z-index:5;background:#1a2320;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;padding:0;border-bottom:2px solid rgba(255,255,255,0.15);border-right:1px solid rgba(255,255,255,0.07);}
+  .standings-table td{background:#161d1b;color:#fff;padding:0;border-bottom:1px solid rgba(255,255,255,0.06);border-right:1px solid rgba(255,255,255,0.06);}
+  .standings-table tr:hover td{background:#1e2a27!important;}
+  .ps-st-pos{position:sticky;left:0;z-index:3;width:38px;min-width:38px;}
+  .standings-table th.ps-st-pos{z-index:8;background:#1a2320;}
+  .standings-table td.ps-st-pos{background:#161d1b;}
+  .ps-st-driver{position:sticky;left:38px;z-index:3;min-width:170px;text-align:left;}
+  .standings-table th.ps-st-driver{z-index:8;background:#1a2320;text-align:left;}
+  .standings-table td.ps-st-driver{background:#161d1b;max-width:170px;}
+  .standings-table tr:hover td.ps-st-pos{background-color:#1e2a27!important;}
+  .standings-table tr:hover td.ps-st-driver{background-color:#1e2a27!important;}
+  .ps-driver-cell{position:relative;z-index:1;padding:5px 8px;display:flex;flex-direction:column;gap:1px;}
+  .ps-pos-cell{padding:10px 5px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:#fff;text-align:center;display:block;}
+  .ps-pos-cell.p1{color:#E8B84B;}.ps-pos-cell.p2{color:#C0C0C0;}.ps-pos-cell.p3{color:#cd7f32;}
+  .ps-pos-header{padding:8px 5px;display:block;text-align:center;}
+  .ps-driver-header{padding:8px 10px;display:block;}
+  .ps-driver-name{font-size:13px;font-weight:500;color:#fff;}
+  .ps-driver-team{font-size:10px;color:rgba(255,255,255,0.5);}
+  .ps-result{width:38px;min-width:38px;height:40px;vertical-align:middle;text-align:center;}
+  .ps-ri{width:38px;height:40px;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:600;}
+  .ps-ri.r1{background:#FFD700;color:#5a3e00;}
+  .ps-ri.r2{background:#C0C0C0;color:#222;}
+  .ps-ri.r3{background:#cd7f32;color:#fff;}
+  .ps-ri.r46{background:#1a4a1a;color:#7dcc7d;}
+  .ps-ri.r710{background:#0f2e1a;color:#4aaa6a;}
+  .ps-ri.rdnf{background:#3a0a0a;color:#ff6b6b;font-size:10px;}
+  .ps-ri.rout{color:rgba(255,255,255,0.15);}
+  .ps-sprint-first{border-left:2px solid rgba(100,160,255,0.5)!important;}
+  .ps-sprint-last{border-right:2px solid rgba(100,160,255,0.5)!important;}
+  .ps-pts{color:#fff;font-size:14px;font-weight:700;padding:0 8px;display:block;}
+  .ps-pts.zero{color:rgba(255,255,255,0.2);}
+  .ps-round-header{height:48px;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding:4px 2px;font-size:9px;font-weight:700;letter-spacing:0.5px;}
+
   .st-wrap{overflow-x:auto;margin-bottom:16px;border-radius:6px;border:1px solid var(--border);}
   .st{width:100%;border-collapse:collapse;font-size:13px;}
   .st thead tr{background:var(--dark3);}
@@ -258,6 +294,19 @@ async function fetchCSV(sheetId, gid){
 
 function posClass(p){return p===1?'p1':p===2?'p2':p===3?'p3':p<=10?'pp':p>10?'pout':'';}
 function trClass(p){return p===1?' class="p1"':p===2?' class="p2"':p===3?' class="p3"':'';}
+function psRiClass(val){
+  if(!val||val==='—') return 'rout';
+  const s = String(val).trim().toUpperCase();
+  if(s==='DNF'||s==='DNS'||s==='DSQ'||s==='BAN'||s==='RET') return 'rdnf';
+  const n = parseInt(s);
+  if(isNaN(n)) return 'rout';
+  if(n===1) return 'r1';
+  if(n===2) return 'r2';
+  if(n===3) return 'r3';
+  if(n<=6) return 'r46';
+  if(n<=10) return 'r710';
+  return 'rout';
+}
 
 
 // ============================================================
@@ -612,13 +661,12 @@ function buildRaceGridDrivers(rows){
   const hasPointsData = dataRows.some(d=>d.pts>0);
   if(hasPointsData) dataRows.sort((a,b)=>b.pts-a.pts);
 
-  let html = '<div class="section-label">Drivers</div><div class="st-wrap"><table class="st">';
-  // Headers
+  let html = '<div class="section-label">Drivers</div><div class="st-wrap"><table class="standings-table">';
   html += '<thead><tr>';
-  html += '<th class="th-l sticky" style="width:36px">Pos</th>';
-  html += '<th class="th-l sticky2">Driver</th>';
-  circuits.forEach(c=>{ html += '<th>'+(c||'?')+'</th>'; });
-  if(hasPointsData) html += '<th>Pts</th>';
+  html += '<th class="ps-st-pos"><span class="ps-pos-header">Pos</span></th>';
+  html += '<th class="ps-st-driver"><span class="ps-driver-header">Driver</span></th>';
+  circuits.forEach(c=>{ html += '<th class="ps-result"><div class="ps-round-header">'+(c||'?')+'</div></th>'; });
+  if(hasPointsData) html += '<th class="ps-result"><div class="ps-round-header">Pts</div></th>';
   html += '</tr></thead><tbody>';
 
   dataRows.forEach((entry,idx)=>{
@@ -627,24 +675,16 @@ function buildRaceGridDrivers(rows){
     const driver=(r[2]||'').trim();
     const team=(r[3]||'').trim();
     const pts=(r[ptsCol]||'').trim();
-    const pc=posClass(pos);
-    html += '<tr'+trClass(pos)+'>';
-    html += '<td class="sticky"><span class="st-pos">'+pos+'</span></td>';
-    html += '<td class="td-l sticky2"><span class="dname">'+driver+'</span><br><span class="tname">'+(team||'&mdash;')+'</span></td>';
+    const pc=pos===1?'p1':pos===2?'p2':pos===3?'p3':'';
+    html += '<tr>';
+    html += '<td class="ps-st-pos"><span class="ps-pos-cell '+pc+'">'+pos+'</span></td>';
+    html += '<td class="ps-st-driver"><div class="ps-driver-cell"><span class="ps-driver-name">'+driver+'</span>'+(team?'<span class="ps-driver-team">'+team+'</span>':'')+'</div></td>';
     for(let c=0;c<activeRounds;c++){
       const val=(r[4+c]||'').trim();
-      if(!val) html += '<td class="rr-blank">&mdash;</td>';
-      else if(val==='DNF') html += '<td><span class="pos-cell pdnf" style="width:34px;font-size:10px;">DNF</span></td>';
-      else if(val==='DSQ') html += '<td><span class="pos-cell pdnf" style="width:34px;font-size:10px;">DSQ</span></td>';
-      else if(val==='BAN') html += '<td><span class="pos-cell pdnf" style="width:34px;font-size:10px;">BAN</span></td>';
-      else if(val==='DNS') html += '<td><span class="pos-cell pdnf" style="width:34px;font-size:10px;">DNS</span></td>';
-      else{
-        const n=parseInt(val);
-        const rc=n===1?'p1':n===2?'p2':n===3?'p3':n<=10?'pp':isNaN(n)?'':'pout';
-        html += '<td><span class="pos-cell '+rc+'">'+val+'</span></td>';
-      }
+      const ric = psRiClass(val);
+      html += '<td class="ps-result"><div class="ps-ri '+ric+'">'+(val||'')+'</div></td>';
     }
-    if(hasPointsData) html += '<td><span class="pts">'+(pts||'&mdash;')+'</span></td>';
+    if(hasPointsData) html += '<td class="ps-result"><span class="ps-pts">'+(pts||'—')+'</span></td>';
     html += '</tr>';
   });
 
@@ -767,8 +807,8 @@ function buildS10Drivers(rows){
   }
   if(start<0) return '<div class="div-loading">No driver data.</div>';
 
-  let html = '<div class="section-label">Drivers</div><div class="st-wrap"><table class="st">';
-  html += '<thead><tr><th class="th-l" style="width:30px">Pos</th><th class="th-l">Driver</th><th>Points</th></tr></thead><tbody>';
+  let html = '<div class="section-label">Drivers</div><div class="st-wrap"><table class="standings-table">';
+  html += '<thead><tr><th class="ps-st-pos"><span class="ps-pos-header">Pos</span></th><th class="ps-st-driver"><span class="ps-driver-header">Driver</span></th><th class="ps-result"><div class="ps-round-header">Pts</div></th></tr></thead><tbody>';
 
   let pos = 1;
   for(let i=start;i<rows.length;i++){
@@ -777,10 +817,11 @@ function buildS10Drivers(rows){
     if(!driver) continue;
     const team = (r[3]||'').trim();
     const pts  = (r[4]||'').trim();
-    html += '<tr'+trClass(pos)+'>'+
-      '<td><span class="st-pos">'+pos+'</span></td>'+
-      '<td class="td-l"><span class="dname">'+driver+'</span><br><span class="tname">'+(team||'&mdash;')+'</span></td>'+
-      '<td><span class="pts">'+(pts||'&mdash;')+'</span></td>'+
+    const pc = pos===1?'p1':pos===2?'p2':pos===3?'p3':'';
+    html += '<tr>'+
+      '<td class="ps-st-pos"><span class="ps-pos-cell '+pc+'">'+pos+'</span></td>'+
+      '<td class="ps-st-driver"><div class="ps-driver-cell"><span class="ps-driver-name">'+driver+'</span>'+(team?'<span class="ps-driver-team">'+team+'</span>':'')+'</div></td>'+
+      '<td class="ps-result"><span class="ps-pts">'+(pts||'—')+'</span></td>'+
       '</tr>';
     pos++;
   }
@@ -1201,18 +1242,15 @@ function buildS20Drivers(rows, roundNames){
 
   const hasPointsData = dataRows.some(r=>parseFloat((r[ptsCol]||'').trim())>0);
 
-  let html = '<div class="section-label">Drivers</div><div class="st-wrap"><table class="st"><thead><tr>';
-  html += '<th class="th-l sticky" style="width:28px">Pos</th>';
-  html += '<th class="th-l sticky2">Driver</th>';
+  let html = '<div class="section-label">Drivers</div><div class="st-wrap"><table class="standings-table"><thead><tr>';
+  html += '<th class="ps-st-pos"><span class="ps-pos-header">Pos</span></th>';
+  html += '<th class="ps-st-driver"><span class="ps-driver-header">Driver</span></th>';
   roundCols.forEach((rc,idx)=>{
-    const nextIsSprint = idx+1 < roundCols.length && roundCols[idx+1].isSprint;
-    let style = '';
-    if(rc.isSprint) style = 'color:rgba(130,170,255,0.9);border-left:2px solid rgba(100,150,255,0.4);';
-    else if(rc.isSprintRace) style = 'color:rgba(130,170,255,0.7);border-right:2px solid rgba(100,150,255,0.4);';
-    const suffix = rc.isSprint ? ' (S)' : rc.isSprintRace ? ' (R)' : '';
-    html += '<th'+(style?' style="'+style+'"':'')+' title="'+rc.label+'">'+(rc.label||'?')+suffix+'</th>';
+    const sc = rc.isSprint ? ' ps-sprint-first' : rc.isSprintRace ? ' ps-sprint-last' : '';
+    const suffix = rc.isSprint ? '<span style="font-size:8px;opacity:0.6;display:block;">S</span>' : rc.isSprintRace ? '<span style="font-size:8px;opacity:0.6;display:block;">R</span>' : '';
+    html += '<th class="ps-result'+sc+'"><div class="ps-round-header">'+(rc.label||'?')+suffix+'</div></th>';
   });
-  if(hasPointsData) html += '<th>Pts</th>';
+  if(hasPointsData) html += '<th class="ps-result"><div class="ps-round-header">Pts</div></th>';
   html += '</tr></thead><tbody>';
 
   dataRows.forEach((r,idx)=>{
@@ -1220,22 +1258,17 @@ function buildS20Drivers(rows, roundNames){
     const driver = (r[2]||'').trim();
     const team = (r[3]||'').trim();
     const pts = (r[ptsCol]||'').trim();
-    html += '<tr'+trClass(pos)+'>';
-    html += '<td class="sticky"><span class="st-pos">'+pos+'</span></td>';
-    html += '<td class="td-l sticky2"><span class="dname">'+driver+'</span>'+(team?'<br><span class="tname">'+team+'</span>':'')+'</td>';
+    const pc = pos===1?'p1':pos===2?'p2':pos===3?'p3':'';
+    html += '<tr>';
+    html += '<td class="ps-st-pos"><span class="ps-pos-cell '+pc+'">'+pos+'</span></td>';
+    html += '<td class="ps-st-driver"><div class="ps-driver-cell"><span class="ps-driver-name">'+driver+'</span>'+(team?'<span class="ps-driver-team">'+team+'</span>':'')+'</div></td>';
     roundCols.forEach(rc=>{
       const val = (r[rc.col]||'').trim().replace(/^ $/, '');
-      const sprintStyle = rc.isSprint ? 'border-left:2px solid rgba(100,150,255,0.4);' : rc.isSprintRace ? 'border-right:2px solid rgba(100,150,255,0.4);' : '';
-      if(!val) html += '<td class="rr-blank"'+(sprintStyle?' style="'+sprintStyle+'"':'')+'>&#8212;</td>';
-      else if(val==='DNF'||val==='DNS'||val==='DSQ'||val==='BAN'){
-        html += '<td'+(sprintStyle?' style="'+sprintStyle+'"':'')+'><span class="pos-cell pdnf" style="width:34px;font-size:10px;">'+val+'</span></td>';
-      } else {
-        const n=parseInt(val);
-        const rc2=n===1?'p1':n===2?'p2':n===3?'p3':n<=10?'pp':isNaN(n)?'':'pout';
-        html += '<td'+(sprintStyle?' style="'+sprintStyle+'"':'')+'><span class="pos-cell '+rc2+'">'+val+'</span></td>';
-      }
+      const sc = rc.isSprint ? ' ps-sprint-first' : rc.isSprintRace ? ' ps-sprint-last' : '';
+      const ric = psRiClass(val);
+      html += '<td class="ps-result'+sc+'"><div class="ps-ri '+ric+'">'+(val||'')+'</div></td>';
     });
-    if(hasPointsData) html += '<td><span class="pts">'+(pts||'&mdash;')+'</span></td>';
+    if(hasPointsData) html += '<td class="ps-result"><span class="ps-pts'+((!pts||pts==='0')?' zero':'')+'">'+(pts||'—')+'</span></td>';
     html += '</tr>';
   });
 
@@ -1580,18 +1613,16 @@ function buildS28Drivers(rows){
   const hasPoints = sorted.some(r=>parseFloat((r[ptsCol]||'').trim())>0);
   const hasFL     = flCol>=0;
 
-  let html = '<div class="section-label">Drivers</div><div class="st-wrap"><table class="st"><thead><tr>';
-  html += '<th class="th-l sticky" style="width:28px">Pos</th>';
-  html += '<th class="th-l sticky2">Driver</th>';
+  let html = '<div class="section-label">Drivers</div><div class="st-wrap"><table class="standings-table"><thead><tr>';
+  html += '<th class="ps-st-pos"><span class="ps-pos-header">Pos</span></th>';
+  html += '<th class="ps-st-driver"><span class="ps-driver-header">Driver</span></th>';
   roundCols.forEach(rc=>{
-    let style = '';
-    if(rc.isSprint)     style = 'color:rgba(130,170,255,0.9);border-left:2px solid rgba(100,150,255,0.4);';
-    if(rc.isSprintRace) style = 'color:rgba(130,170,255,0.7);border-right:2px solid rgba(100,150,255,0.4);';
-    const suffix = rc.isSprint ? '<span style="font-size:9px;opacity:0.7;"> S</span>' : rc.isSprintRace ? '<span style="font-size:9px;opacity:0.7;"> R</span>' : '';
-    html += '<th'+(style?' style="'+style+'"':'')+' title="'+rc.label+'">'+rc.label+suffix+'</th>';
+    const sc = rc.isSprint ? ' ps-sprint-first' : rc.isSprintRace ? ' ps-sprint-last' : '';
+    const suffix = rc.isSprint ? '<span style="font-size:8px;opacity:0.6;display:block;">S</span>' : rc.isSprintRace ? '<span style="font-size:8px;opacity:0.6;display:block;">R</span>' : '';
+    html += '<th class="ps-result'+sc+'"><div class="ps-round-header">'+rc.label+suffix+'</div></th>';
   });
-  if(hasFL) html += '<th title="Fastest Lap">FL</th>';
-  if(hasPoints) html += '<th>Pts</th>';
+  if(hasFL) html += '<th class="ps-result" title="Fastest Lap"><div class="ps-round-header">FL</div></th>';
+  if(hasPoints) html += '<th class="ps-result"><div class="ps-round-header">Pts</div></th>';
   html += '</tr></thead><tbody>';
 
   sorted.forEach((r,idx)=>{
@@ -1601,26 +1632,18 @@ function buildS28Drivers(rows){
     const ptsRaw  = parseFloat((r[ptsCol]||'0').trim())||0;
     const pts    = hasPoints ? Math.floor(ptsRaw) : '';
     const fl     = hasFL ? (r[flCol]||'').trim() : '';
-    html += '<tr'+trClass(pos)+'>';
-    html += '<td class="sticky"><span class="st-pos">'+pos+'</span></td>';
-    html += '<td class="td-l sticky2"><span class="dname">'+driver+'</span>'+(team?'<br><span class="tname">'+team+'</span>':'')+'</td>';
+    const pc = pos===1?'p1':pos===2?'p2':pos===3?'p3':'';
+    html += '<tr>';
+    html += '<td class="ps-st-pos"><span class="ps-pos-cell '+pc+'">'+pos+'</span></td>';
+    html += '<td class="ps-st-driver"><div class="ps-driver-cell"><span class="ps-driver-name">'+driver+'</span>'+(team?'<span class="ps-driver-team">'+team+'</span>':'')+'</div></td>';
     roundCols.forEach(rc=>{
       const val = (r[rc.col]||'').trim().replace(/^ $/, '');
-      let sprintStyle = '';
-      if(rc.isSprint)     sprintStyle = 'border-left:2px solid rgba(100,150,255,0.4);';
-      if(rc.isSprintRace) sprintStyle = 'border-right:2px solid rgba(100,150,255,0.4);';
-      if(!val){
-        html += '<td class="rr-blank"'+(sprintStyle?' style="'+sprintStyle+'"':'')+'>&#8212;</td>';
-      } else if(val==='DNF'||val==='DNS'||val==='DSQ'){
-        html += '<td'+(sprintStyle?' style="'+sprintStyle+'"':'')+'><span class="pos-cell pdnf" style="width:34px;font-size:10px;">'+val+'</span></td>';
-      } else {
-        const n=parseInt(val);
-        const cl=n===1?'p1':n===2?'p2':n===3?'p3':n<=10?'pp':'pout';
-        html += '<td'+(sprintStyle?' style="'+sprintStyle+'"':'')+'><span class="pos-cell '+cl+'">'+val+'</span></td>';
-      }
+      const sc = rc.isSprint ? ' ps-sprint-first' : rc.isSprintRace ? ' ps-sprint-last' : '';
+      const ric = psRiClass(val);
+      html += '<td class="ps-result'+sc+'"><div class="ps-ri '+ric+'">'+(val||'')+'</div></td>';
     });
-    if(hasFL) html += '<td>'+(fl&&fl!=='0'?'<span style="color:var(--gold);font-weight:600;">'+fl+'</span>':'&mdash;')+'</td>';
-    if(hasPoints) html += '<td><span class="pts">'+(pts||'&mdash;')+'</span></td>';
+    if(hasFL) html += '<td class="ps-result"><div class="ps-ri '+(fl&&fl!=='0'?'r1':'rout')+'">'+(fl&&fl!=='0'?fl:'')+'</div></td>';
+    if(hasPoints) html += '<td class="ps-result"><span class="ps-pts'+(pts===0?' zero':'')+'">'+(pts!==''?pts:'—')+'</span></td>';
     html += '</tr>';
   });
 
