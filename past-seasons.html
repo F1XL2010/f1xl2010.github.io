@@ -80,6 +80,21 @@
   .section-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--teal);padding:14px 0 6px;border-top:1px solid var(--border);margin-top:4px;}
   .section-label:first-child{border-top:none;padding-top:0;}
 
+  /* ── OVERALL CONSTRUCTORS CARDS ─────────────────────────────────────────── */
+  .overall-section{padding:16px 24px 0;}
+  .overall-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#E8B84B;margin-bottom:10px;}
+  .overall-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-bottom:16px;}
+  .overall-card{position:relative;border-radius:8px;overflow:hidden;border:1px solid var(--border);background:#1a2320;min-height:90px;display:flex;flex-direction:column;justify-content:flex-end;}
+  .overall-card-bg{position:absolute;top:0;left:0;width:100%;height:100%;background-size:cover;background-position:center;background-repeat:no-repeat;opacity:0.45;}
+  .overall-card-overlay{position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(to bottom,rgba(17,24,22,0.2),rgba(17,24,22,0.85));}
+  .overall-card-content{position:relative;z-index:1;padding:10px 12px;}
+  .overall-card-pos{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:rgba(255,255,255,0.4);margin-bottom:2px;}
+  .overall-card-pos.p1{color:#E8B84B;}.overall-card-pos.p2{color:#C0C0C0;}.overall-card-pos.p3{color:#cd7f32;}
+  .overall-card-team{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;text-transform:uppercase;color:#fff;line-height:1.1;margin-bottom:4px;}
+  .overall-card-pts{font-size:12px;font-weight:600;color:#fff;}
+  .overall-card-gap{font-size:11px;color:rgba(255,255,255,0.5);margin-left:6px;}
+  .overall-card-tp{font-size:10px;color:rgba(255,255,255,0.55);margin-top:3px;font-style:italic;}
+
   /* ── STANDINGS-STYLE TABLE ─────────────────────────────────────────────────── */
   .standings-table{border-collapse:separate;border-spacing:0;font-size:12px;white-space:nowrap;width:100%;}
   .standings-table th{position:sticky;top:0;z-index:5;background:#1a2320;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;padding:0;border-bottom:2px solid rgba(255,255,255,0.15);border-right:1px solid rgba(255,255,255,0.07);}
@@ -514,16 +529,80 @@ function buildS1S2Constructors(rows){
 // S3: 2 divisions, S4: 2 divisions (F1/F2), S5: 3 divisions
 // All share identical data format
 // ============================================================
+// ── OVERALL CONSTRUCTORS RENDERER ────────────────────────────────────────────
+function parseOverallConstructors(rows){
+  const teams = [];
+  // Detect format: S20+ has 'Pos' in col 3, older has 'Pos' in col 1
+  let posCol=-1, teamCol=-1, ptsCol=-1, gapCol=-1, tpCol=-1;
+  let headerIdx=-1;
+  for(let i=0;i<rows.length;i++){
+    const r=rows[i];
+    for(let c=0;c<r.length;c++){
+      const v=(r[c]||'').trim().toLowerCase();
+      if(v==='pos.'||v==='pos'){ posCol=c; headerIdx=i; break; }
+    }
+    if(headerIdx>=0) break;
+  }
+  if(headerIdx<0) return [];
+  const hdr=rows[headerIdx];
+  for(let c=0;c<hdr.length;c++){
+    const v=(hdr[c]||'').trim().toLowerCase();
+    if(v==='team') teamCol=c;
+    if(v==='points') ptsCol=c;
+    if(v==='gap') gapCol=c;
+    if(v==='name') tpCol=c;
+  }
+  for(let i=headerIdx+1;i<rows.length;i++){
+    const r=rows[i];
+    const posRaw=(r[posCol]||'').trim();
+    const pos=parseInt(posRaw);
+    if(isNaN(pos)||pos<1) continue;
+    const team=(r[teamCol]||'').trim();
+    if(!team||team.startsWith('#')) continue;
+    const pts=(r[ptsCol]||'').trim().replace(/,/g,'');
+    const gap=gapCol>=0?(r[gapCol]||'').trim().replace(/,/g,''):'';
+    const tp=tpCol>=0?(r[tpCol]||'').trim():'';
+    teams.push({pos, team, pts, gap, tp});
+  }
+  return teams;
+}
+
+function buildOverallSection(rows){
+  const teams = parseOverallConstructors(rows);
+  if(!teams.length) return '';
+  const cards = teams.map(t=>{
+    const slug = t.team.toLowerCase().replace(/\s+/g,'').replace(/[^a-z0-9]/g,'');
+    const bgUrl = `images/teamlogos/thinlogo_${slug}.webp`;
+    const pc = t.pos===1?'p1':t.pos===2?'p2':t.pos===3?'p3':'';
+    const tp = t.tp && t.tp.toLowerCase()==='reserve' ? 'RESERVE' : (t.tp ? `TP — ${t.tp}` : '');
+    const gapStr = t.gap && t.gap!=='-' && t.gap!=='0' && t.gap!=='' ? `<span class="overall-card-gap">-${t.gap.replace(/^-/,'')}</span>` : '';
+    return `<div class="overall-card">
+      <div class="overall-card-bg" style="background-image:url('${bgUrl}')"></div>
+      <div class="overall-card-overlay"></div>
+      <div class="overall-card-content">
+        <div class="overall-card-pos ${pc}">P${t.pos}</div>
+        <div class="overall-card-team">${t.team}</div>
+        <div><span class="overall-card-pts">${t.pts}</span>${gapStr}</div>
+        ${tp?`<div class="overall-card-tp">${tp}</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+  return `<div class="overall-section"><div class="overall-label">Overall Constructors Championship</div><div class="overall-grid">${cards}</div></div>`;
+}
+
 async function renderS3to5(id, season, sc, body){
   const divisions = parseInt(sc['divisions'])||1;
 
-  // Build tabs — division + optional stats tab per division
+
+  const hasOverall35 = !!(sc['overall_gid'] && sc['overall_gid'].trim()!=='');
+
   let tabsHtml = '<div class="div-tabs">';
-  let firstTab = true;
+  if(hasOverall35){
+    tabsHtml += '<button class="div-tab active" id="'+id+'-dtab-overall" onclick="switchDivTab(\''+id+'\',\'overall\')">Overall</button>';
+  }
   for(let d=1;d<=divisions;d++){
-    const active = firstTab ? ' active' : '';
+    const active = !hasOverall35 && d===1 ? ' active' : '';
     tabsHtml += '<button class="div-tab'+active+'" id="'+id+'-dtab-'+d+'" onclick="switchDivTab(\''+id+'\',\''+d+'\')">Division '+d+'</button>';
-    firstTab = false;
     const sgid = sc['d'+d+'_driver_stats_gid'];
     if(sgid!==undefined && sgid!==''){
       tabsHtml += '<button class="div-tab" id="'+id+'-dtab-'+d+'s" onclick="switchDivTab(\''+id+'\',\''+d+'s\')">D'+d+' Stats</button>';
@@ -531,13 +610,15 @@ async function renderS3to5(id, season, sc, body){
   }
   tabsHtml += '</div>';
 
-  // Build placeholder content — D1 loads immediately, others lazy
   let contentHtml = '';
+  if(hasOverall35){
+    contentHtml += '<div class="div-content" id="'+id+'-dcontent-overall" data-loaded="false"><div class="div-loading">Loading...</div></div>';
+  }
   for(let d=1;d<=divisions;d++){
     const sgid = sc['d'+d+'_driver_stats_gid'];
-    const hidden = d===1 ? '' : ' hidden';
+    const hidden = (!hasOverall35 && d===1) ? '' : ' hidden';
     const loading = '<div class="div-loading">Click to load Division '+d+'</div>';
-    contentHtml += '<div class="div-content'+hidden+'" id="'+id+'-dcontent-'+d+'" data-loaded="false" data-div="'+d+'">'+loading+'</div>';
+    contentHtml += '<div class="div-content'+hidden+'" id="'+id+'-dcontent-'+d+'" data-loaded="false" data-div="'+d+'">' + loading + '</div>';
     if(sgid!==undefined && sgid!==''){
       contentHtml += '<div class="div-content hidden" id="'+id+'-dcontent-'+d+'s" data-loaded="false" data-div="'+d+'s"></div>';
     }
@@ -546,8 +627,11 @@ async function renderS3to5(id, season, sc, body){
   body.innerHTML = tabsHtml + contentHtml;
   setTimeout(_colourActiveTabs, 0);
 
-  // Load D1 immediately
-  await loadDivContent(id, 1, sc);
+  if(hasOverall35){
+    await loadS20OverallContent(id, sc);
+  } else {
+    await loadDivContent(id, 1, sc);
+  }
 }
 
 async function loadDivContent(id, d, sc){
@@ -605,13 +689,18 @@ function switchDivTab(id, tabKey){
   }
   // Recolour all other active tabs (non-active ones stay muted)
   setTimeout(_colourActiveTabs, 0);
-  // Lazy load if not yet loaded — get div number from tabKey (strip trailing 's' for stats)
+  // Lazy load — handle 'overall' tab specially
   if(anyContent.dataset.loaded === 'false' && _currentSeasonConfig){
-    const divNum = parseInt(tabKey);
-    if(!isNaN(divNum)){
-      const s = parseFloat(_currentSeason||0);
-      if(s>=20) loadS20DivContent(id, divNum, _currentSeasonConfig);
-      else loadDivContent(id, divNum, _currentSeasonConfig);
+    if(tabKey === 'overall'){
+      loadS20OverallContent(id, _currentSeasonConfig);
+    } else {
+      const divNum = parseInt(tabKey);
+      if(!isNaN(divNum)){
+        const s = parseFloat(_currentSeason||0);
+        if(s>=28) loadS28DivContent(id, divNum, _currentSeasonConfig);
+        else if(s>=20) loadS20DivContent(id, divNum, _currentSeasonConfig);
+        else loadDivContent(id, divNum, _currentSeasonConfig);
+      }
     }
   }
 }
@@ -779,16 +868,33 @@ function buildS3Constructors(rows){
 async function renderS10(id, season, sc, body){
   const divisions = parseInt(sc['divisions'])||1;
 
-  let tabsHtml = '';
-  if(divisions > 1){
-    tabsHtml = '<div class="div-tabs">';
-    for(let d=1;d<=divisions;d++){
-      tabsHtml += '<button class="div-tab'+(d===1?' active':'')+'" id="'+id+'-dtab-'+d+'" onclick="switchDiv(\''+id+'\','+d+','+divisions+')">Division '+d+'</button>';
-    }
-    tabsHtml += '</div>';
+  const hasOverall10 = !!(sc['overall_gid'] && sc['overall_gid'].trim()!=='');
+  let overallRows10 = null;
+  if(hasOverall10){
+    try{
+      const mId=sc['overall_gid'].match(/\/d\/([a-zA-Z0-9_-]+)/);
+      const mGid=sc['overall_gid'].match(/gid=(\d+)/);
+      if(mId&&mGid) overallRows10 = await fetchCSV(mId[1], mGid[1]).catch(()=>null);
+    } catch(e){}
   }
 
+  let tabsHtml = '<div class="div-tabs">';
+  if(hasOverall10 && overallRows10){
+    tabsHtml += '<button class="div-tab active" id="'+id+'-dtab-overall" onclick="switchDivTab(\''+id+'\',\'overall\')">Overall</button>';
+  }
+  if(divisions > 1 || (hasOverall10 && overallRows10)){
+    for(let d=1;d<=divisions;d++){
+      const active = (!hasOverall10 || !overallRows10) && d===1 ? ' active' : '';
+      tabsHtml += '<button class="div-tab'+active+'" id="'+id+'-dtab-'+d+'" onclick="switchDiv(\''+id+'\','+d+','+divisions+')">Division '+d+'</button>';
+    }
+  }
+  tabsHtml += '</div>';
+
   let contentHtml = '';
+  if(hasOverall10 && overallRows10){
+    contentHtml += '<div class="div-content" id="'+id+'-dcontent-overall" data-loaded="true">'+buildOverallConstTable(overallRows10)+'</div>';
+  }
+
   for(let d=1;d<=divisions;d++){
     const sid = sc['d'+d+'_sheet_id'];
     const dgid = sc['d'+d+'_driver_results_gid'];
@@ -805,7 +911,8 @@ async function renderS10(id, season, sc, body){
     if(cRows) divHtml += buildS3Constructors(cRows);
     if(sRows) divHtml += buildDriverStats(sRows);
 
-    contentHtml += '<div class="div-content'+(d===1?'':' hidden')+'" id="'+id+'-dcontent-'+d+'">'+divHtml+'</div>';
+    const hidden = (hasOverall10 && overallRows10) || d!==1 ? ' hidden' : '';
+    contentHtml += '<div class="div-content'+hidden+'" id="'+id+'-dcontent-'+d+'">'+divHtml+'</div>';
   }
 
   body.innerHTML = tabsHtml + contentHtml;
@@ -944,14 +1051,21 @@ function buildDriverStats(rows){
 // ============================================================
 function buildOverallConstTable(rows){
   if(!rows) return '<div class="div-loading">No data available.</div>';
-  let start=-1, teamCol=-1, ptsCol=-1;
+  // Find header row — look for 'Pos' or 'Pos.'
+  let start=-1, posCol=-1, teamCol=-1, ptsCol=-1, gapCol=-1, tpCol=-1;
   for(let i=0;i<rows.length;i++){
     const r=rows[i];
-    const posIdx=r.findIndex(v=>(v||'').trim().toLowerCase()==='pos');
+    const posIdx=r.findIndex(v=>(v||'').trim().toLowerCase().startsWith('pos'));
     if(posIdx>=0){
+      posCol=posIdx;
       teamCol=r.findIndex(v=>(v||'').trim().toLowerCase()==='team');
       if(teamCol<0) teamCol=posIdx+1;
       ptsCol=r.findIndex(v=>(v||'').trim().toLowerCase()==='points');
+      gapCol=r.findIndex(v=>(v||'').trim().toLowerCase()==='gap');
+      // TP is the last non-blank column header
+      for(let c=r.length-1;c>=0;c--){
+        if((r[c]||'').trim()){ tpCol=c; break; }
+      }
       start=i+1; break;
     }
   }
@@ -962,20 +1076,41 @@ function buildOverallConstTable(rows){
     let t=(r[teamCol]||'').trim();
     if(!t) t=(r[teamCol+1]||'').trim();
     if(!t||t.startsWith('#')) continue;
-    const pts=parseFloat((r[ptsCol]||'').trim())||0;
-    data.push({team:t,pts});
+    const pts=parseFloat((r[ptsCol]||'').trim().replace(/,/g,''))||0;
+    const gap=(gapCol>=0?(r[gapCol]||'').trim():'')||'';
+    const tp=(tpCol>=0?(r[tpCol]||'').trim():'')||'';
+    const tpDisplay = tp.toLowerCase()==='reserve'?'RESERVE':tp;
+    data.push({team:t, pts, gap, tp:tpDisplay});
   }
   data.sort((a,b)=>b.pts-a.pts);
   if(!data.length) return '<div class="div-loading">No data found.</div>';
-  let html='<div class="st-wrap"><table class="st"><thead><tr>';
-  html+='<th style="width:30px">Pos</th><th class="th-l">Team</th><th>Points</th>';
+
+  let html='<div class="st-wrap"><table class="standings-table"><thead><tr>';
+  html+='<th class="ps-st-pos"><span class="ps-pos-header">Pos</span></th>';
+  html+='<th class="ps-st-driver"><span class="ps-driver-header">Team</span></th>';
+  html+='<th class="ps-result"><div class="ps-round-header">Pts</div></th>';
+  if(gapCol>=0) html+='<th class="ps-result"><div class="ps-round-header">Gap</div></th>';
   html+='</tr></thead><tbody>';
+
   data.forEach((d,idx)=>{
     const pos=idx+1;
-    html+='<tr'+trClass(pos)+'><td><span class="st-pos">'+pos+'</span></td>';
-    html+='<td class="td-l"><span class="dname">'+d.team+'</span></td>';
-    html+='<td><span class="pts">'+Math.floor(d.pts)+'</span></td></tr>';
+    const pc=pos===1?'p1':pos===2?'p2':pos===3?'p3':'';
+    const slug=psTeamSlug(d.team);
+    const logoStyle=slug?`background-image:linear-gradient(rgba(22,29,27,0.5),rgba(22,29,27,0.5)),url('images/teamlogos/thinlogo_${slug}.webp');background-size:cover;background-position:center;background-repeat:no-repeat;`:'';
+    const hasLogo=slug?' has-logo':'';
+    const ptsClean=Math.floor(d.pts).toLocaleString();
+    html+='<tr>';
+    html+='<td class="ps-st-pos"><span class="ps-pos-cell '+pc+'">'+pos+'</span></td>';
+    html+='<td class="ps-st-driver'+hasLogo+'" style="'+logoStyle+'">';
+    html+='<div class="ps-driver-cell">';
+    html+='<span class="ps-driver-name">'+d.team+'</span>';
+    if(d.tp) html+='<span class="ps-driver-team">Team Principal · '+d.tp+'</span>';
+    html+='</div></td>';
+    html+='<td class="ps-result"><span class="ps-pts">'+ptsClean+'</span></td>';
+    if(gapCol>=0) html+='<td class="ps-result"><span style="font-size:12px;color:rgba(255,255,255,0.5);">'+(d.gap&&d.gap!=='-'?d.gap:'—')+'</span></td>';
+    html+='</tr>';
   });
+
   html+='</tbody></table></div>';
   return html;
 }
@@ -1087,61 +1222,57 @@ async function toggleOverallAccordion(id, sc){
 async function renderS20plus(id, season, sc, body){
   const divisions = parseInt(sc['divisions'])||1;
 
-  // Overall Constructors accordion
-  const overallGid = sc['overall_gid'];
-  const wtGid = sc['w_totals_gid'];
-  if(overallGid && overallGid.trim()!==''){
-    const hasWt = wtGid && wtGid.trim()!=='';
-    const accordionHtml = `
-    <div class="overall-accordion" id="${id}-overall-accordion">
-      <div class="overall-accordion-header" onclick="toggleOverallAccordion('${id}', _currentSeasonConfig)">
-        <div style="display:flex;align-items:center;gap:12px;">
-          <span class="overall-accordion-tag">Season ${season}</span>
-          <span class="overall-accordion-title">Overall Constructors</span>
-        </div>
-        <span class="overall-accordion-chevron" id="${id}-overall-chev">&#9660;</span>
-      </div>
-      <div class="overall-accordion-body" id="${id}-overall-body" data-loaded="false">
-        ${hasWt ? `
-        <div class="overall-inner-tabs">
-          <button class="overall-inner-tab active" data-tab="overall" onclick="switchOverallTab('${id}','overall')">Overall</button>
-          <button class="overall-inner-tab" data-tab="wtotals" onclick="switchOverallTab('${id}','wtotals')">Weekly Totals</button>
-        </div>` : ''}
-        <div class="overall-inner-content" id="${id}-overall-content"></div>
-        ${hasWt ? `<div class="overall-inner-content" id="${id}-wtotals-content" style="display:none"></div>` : ''}
-      </div>
-    </div>`;
-    body.insertAdjacentHTML('beforeend', accordionHtml);
+  const hasOverall20 = !!(sc['overall_gid'] && sc['overall_gid'].trim()!=='');
+  let tabsHtml = '<div class="div-tabs">';
+  let contentHtml = '';
+
+  if(hasOverall20){
+    tabsHtml += '<button class="div-tab active" id="'+id+'-dtab-overall" onclick="switchDivTab(\''+id+'\',\'overall\')">Overall</button>';
+    contentHtml += '<div class="div-content" id="'+id+'-dcontent-overall" data-loaded="false"><div class="div-loading">Loading...</div></div>';
   }
 
-  // Build tabs
-  let tabsHtml = '<div class="div-tabs">';
-  let firstTab = true;
   for(let d=1;d<=divisions;d++){
-    const active = firstTab ? ' active' : '';
+    const active = !hasOverall20 && d===1 ? ' active' : '';
+    const hidden = hasOverall20 || d!==1 ? ' hidden' : '';
     tabsHtml += '<button class="div-tab'+active+'" id="'+id+'-dtab-'+d+'" onclick="switchDivTab(\''+id+'\',\''+d+'\')">Division '+d+'</button>';
-    firstTab = false;
     const sgid = sc['d'+d+'_driver_stats_gid'];
     if(sgid!==undefined && sgid!==''){
       tabsHtml += '<button class="div-tab" id="'+id+'-dtab-'+d+'s" onclick="switchDivTab(\''+id+'\',\''+d+'s\')">D'+d+' Stats</button>';
     }
-  }
-  tabsHtml += '</div>';
-
-  // Placeholders for lazy loading
-  let contentHtml = '';
-  for(let d=1;d<=divisions;d++){
-    const sgid = sc['d'+d+'_driver_stats_gid'];
-    const hidden = d===1 ? '' : ' hidden';
     contentHtml += '<div class="div-content'+hidden+'" id="'+id+'-dcontent-'+d+'" data-loaded="false" data-div="'+d+'"><div class="div-loading">Loading...</div></div>';
     if(sgid!==undefined && sgid!==''){
       contentHtml += '<div class="div-content hidden" id="'+id+'-dcontent-'+d+'s" data-loaded="false"></div>';
     }
   }
+  tabsHtml += '</div>';
 
   body.insertAdjacentHTML('beforeend', tabsHtml + contentHtml);
   setTimeout(_colourActiveTabs, 0);
-  await loadS20DivContent(id, 1, sc);
+
+  if(hasOverall20){
+    await loadS20OverallContent(id, sc);
+  } else {
+    await loadS20DivContent(id, 1, sc);
+  }
+}
+
+async function loadS20OverallContent(id, sc){
+  const el = document.getElementById(id+'-dcontent-overall');
+  if(!el || el.dataset.loaded==='true') return;
+  el.dataset.loaded='true';
+  const overallUrl = sc['overall_gid'];
+  if(!overallUrl){ el.innerHTML='<div class="div-loading">No overall data.</div>'; return; }
+  const mId=overallUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  const mGid=overallUrl.match(/gid=(\d+)/);
+  if(!mId||!mGid){ el.innerHTML='<div class="div-loading">Invalid URL.</div>'; return; }
+  try{
+    const rows = await fetchCSV(mId[1], mGid[1]);
+    el.innerHTML = buildOverallConstTable(rows);
+    setTimeout(_colourActiveTabs, 0);
+  } catch(e){
+    el.innerHTML='<div class="div-loading">Could not load overall data.</div>';
+  }
+
 }
 
 async function loadS20DivContent(id, d, sc){
@@ -1470,51 +1601,34 @@ function buildS20DriverStats(rows){
 async function renderS28(id, season, sc, body){
   const divisions = parseInt(sc['divisions'])||1;
 
-  // Overall Constructors accordion — same as renderS20plus
-  const overallGid = sc['overall_gid'];
-  const wtGid = sc['w_totals_gid'];
-  if(overallGid && overallGid.trim()!==''){
-    const hasWt = wtGid && wtGid.trim()!=='';
-    const accordionHtml = `
-    <div class="overall-accordion" id="${id}-overall-accordion">
-      <div class="overall-accordion-header" onclick="toggleOverallAccordion('${id}', _currentSeasonConfig)">
-        <div style="display:flex;align-items:center;gap:12px;">
-          <span class="overall-accordion-tag">Season ${season}</span>
-          <span class="overall-accordion-title">Overall Constructors</span>
-        </div>
-        <span class="overall-accordion-chevron" id="${id}-overall-chev">&#9660;</span>
-      </div>
-      <div class="overall-accordion-body" id="${id}-overall-body" data-loaded="false">
-        ${hasWt ? `
-        <div class="overall-inner-tabs">
-          <button class="overall-inner-tab active" data-tab="overall" onclick="switchOverallTab('${id}','overall')">Overall</button>
-          <button class="overall-inner-tab" data-tab="wtotals" onclick="switchOverallTab('${id}','wtotals')">Weekly Totals</button>
-        </div>` : ''}
-        <div class="overall-inner-content" id="${id}-overall-content"></div>
-        ${hasWt ? `<div class="overall-inner-content" id="${id}-wtotals-content" style="display:none"></div>` : ''}
-      </div>
-    </div>`;
-    body.insertAdjacentHTML('beforeend', accordionHtml);
+  const hasOverall28 = !!(sc['overall_gid'] && sc['overall_gid'].trim()!=='');
+  let tabsHtml = '<div class="div-tabs">';
+  let contentHtml = '';
+
+  if(hasOverall28){
+    tabsHtml += '<button class="div-tab active" id="'+id+'-dtab-overall" onclick="switchDivTab(\''+id+'\',\'overall\')">Overall</button>';
+    contentHtml += '<div class="div-content" id="'+id+'-dcontent-overall" data-loaded="false"><div class="div-loading">Loading...</div></div>';
   }
 
-  let tabsHtml = '<div class="div-tabs">';
   for(let d=1;d<=divisions;d++){
-    const active = d===1 ? ' active' : '';
+    const active = !hasOverall28 && d===1 ? ' active' : '';
+    const hidden = hasOverall28 || d!==1 ? ' hidden' : '';
     tabsHtml += '<button class="div-tab'+active+'" id="'+id+'-dtab-'+d+'" onclick="switchDivTab(\''+id+'\',\''+d+'\')">Division '+d+'</button>';
     tabsHtml += '<button class="div-tab" id="'+id+'-dtab-'+d+'s" onclick="switchDivTab(\''+id+'\',\''+d+'s\')">D'+d+' Stats</button>';
-  }
-  tabsHtml += '</div>';
-
-  let contentHtml = '';
-  for(let d=1;d<=divisions;d++){
-    const hidden = d===1 ? '' : ' hidden';
     contentHtml += '<div class="div-content'+hidden+'" id="'+id+'-dcontent-'+d+'" data-loaded="false" data-div="'+d+'"><div class="div-loading">Loading...</div></div>';
     contentHtml += '<div class="div-content hidden" id="'+id+'-dcontent-'+d+'s" data-loaded="false"></div>';
   }
+  tabsHtml += '</div>';
 
   body.insertAdjacentHTML('beforeend', tabsHtml + contentHtml);
   setTimeout(_colourActiveTabs, 0);
-  await loadS28DivContent(id, 1, sc);
+
+  if(hasOverall28){
+    await loadS20OverallContent(id, sc);
+  } else {
+    await loadS28DivContent(id, 1, sc);
+  }
+
 }
 
 async function loadS28DivContent(id, d, sc){
