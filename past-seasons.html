@@ -605,6 +605,7 @@ async function fetchAndInsertOverall(id, sc, body){
 
 async function renderS3to5(id, season, sc, body){
   const divisions = parseInt(sc['divisions'])||1;
+  body.innerHTML = '';
 
   await fetchAndInsertOverall(id, sc, body);
 
@@ -865,6 +866,7 @@ function buildS3Constructors(rows){
 // ============================================================
 async function renderS10(id, season, sc, body){
   const divisions = parseInt(sc['divisions'])||1;
+  body.innerHTML = '';
 
   await fetchAndInsertOverall(id, sc, body);
 
@@ -1203,6 +1205,7 @@ async function toggleOverallAccordion(id, sc){
 // ============================================================
 async function renderS20plus(id, season, sc, body){
   const divisions = parseInt(sc['divisions'])||1;
+  body.innerHTML = '';
 
   await fetchAndInsertOverall(id, sc, body);
 
@@ -1572,6 +1575,7 @@ function buildS20DriverStats(rows){
 
 async function renderS28(id, season, sc, body){
   const divisions = parseInt(sc['divisions'])||1;
+  body.innerHTML = '';
 
   await fetchAndInsertOverall(id, sc, body);
 
