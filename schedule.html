@@ -232,6 +232,34 @@ const TRACKS = {
     path:'M33,57 L22,45 L22,28 L35,18 L57,18 L68,30 L68,47 L57,57 L33,57' },
   'bahrain':      { flag:'🇧🇭', name:'Bahrain International Circuit', country:'Bahrain',
     path:'M23,62 L23,40 L28,28 L45,18 L62,25 L67,37 L62,53 L50,57 L45,52 L38,57 L38,67 L50,72 L63,67 L68,57' },
+  'monaco':       { flag:'🇲🇨', name:'Circuit de Monaco', country:'Monaco',
+    path:'M28,35 L28,55 L40,67 L60,67 L72,55 L72,35 L60,23 L40,23 L28,35' },
+  'spain':        { flag:'🇪🇸', name:'Circuit de Barcelona-Catalunya', country:'Spain',
+    path:'M23,52 L23,30 L35,18 L65,18 L72,30 L72,52 L65,62 L35,62 L23,52' },
+  'mexico':       { flag:'🇲🇽', name:'Autodromo Hermanos Rodriguez', country:'Mexico',
+    path:'M28,57 L23,40 L30,23 L50,18 L70,23 L77,40 L70,57 L57,62 L57,52 L43,52 L43,62 L28,57' },
+  'usa':          { flag:'🇺🇸', name:'Circuit of the Americas', country:'USA',
+    path:'M23,67 L23,28 L35,18 L72,18 L72,42 L57,42 L57,57 L45,57 L45,42 L35,42 L35,67 L23,67' },
+  'miami':        { flag:'🇺🇸', name:'Miami International Autodrome', country:'USA',
+    path:'M23,67 L23,28 L35,18 L72,18 L72,42 L57,42 L57,57 L45,57 L45,42 L35,42 L35,67 L23,67' },
+  'rwanda':       { flag:'🇷🇼', name:'Kigali Circuit', country:'Rwanda',
+    path:'M35,22 L35,62 L50,72 L65,62 L65,22 L50,12 L35,22' },
+  'argentina':    { flag:'🇦🇷', name:'Autodromo Oscar Alfredo Galvez', country:'Argentina',
+    path:'M23,52 L23,28 L38,18 L62,18 L77,28 L77,52 L62,62 L38,62 L23,52' },
+  'france':       { flag:'🇫🇷', name:'Circuit Paul Ricard', country:'France',
+    path:'M23,57 L23,23 L77,23 L77,57 L60,57 L60,43 L40,43 L40,57 L23,57' },
+  'portugal':     { flag:'🇵🇹', name:'Autodromo Internacional do Algarve', country:'Portugal',
+    path:'M28,57 L23,40 L28,23 L50,18 L72,23 L77,40 L72,57 L50,62 L28,57' },
+  'thailand':     { flag:'🇹🇭', name:'Chang International Circuit', country:'Thailand',
+    path:'M28,52 L23,35 L35,18 L65,18 L77,35 L72,52 L60,62 L40,62 L28,52' },
+  'turkey':       { flag:'🇹🇷', name:'Istanbul Park', country:'Turkey',
+    path:'M23,57 L23,28 L50,18 L77,28 L77,57 L50,67 L23,57' },
+  'india':        { flag:'🇮🇳', name:'Buddh International Circuit', country:'India',
+    path:'M28,62 L23,40 L30,22 L52,17 L70,27 L75,45 L65,60 L50,65 L35,65 L28,62' },
+  'south korea':  { flag:'🇰🇷', name:'Korea International Circuit', country:'South Korea',
+    path:'M23,52 L23,28 L50,18 L77,28 L77,52 L65,62 L35,62 L23,52' },
+  'south africa': { flag:'🇿🇦', name:'Kyalami Circuit', country:'South Africa',
+    path:'M28,57 L23,40 L30,23 L50,18 L70,23 L77,40 L70,57 L50,62 L28,57' },
 };
 
 const today = new Date(); today.setHours(0,0,0,0);
@@ -360,6 +388,8 @@ function countryToImg(country) {
     .replace('great britain', 'britain')
     .replace('united arab emirates', 'abu_dhabi')
     .replace('saudi arabia', 'saudi_arabia')
+    .replace('south korea', 'south_korea')
+    .replace('south africa', 'south_africa')
     .replace(' ', '_');
   return `images/largeflags/grunge_${name}.webp`;
 }
