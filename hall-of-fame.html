@@ -241,6 +241,25 @@
 
 <div class="section-div"></div>
 
+<!-- DIVISION RECORDS -->
+<div id="division-records"></div>
+<div class="chapter">
+  <div class="chapter-eyebrow">The Champions</div>
+  <div class="chapter-title">Division Records</div>
+</div>
+<div class="lr-wrap" id="div-records-wrap"><div class="loading-msg">Loading...</div></div>
+
+<div class="section-div"></div>
+
+<div id="league-records"></div>
+<div class="chapter">
+  <div class="chapter-eyebrow">The Records</div>
+  <div class="chapter-title">League Records</div>
+</div>
+<div class="lr-wrap" id="lr-wrap"><div class="loading-msg">Loading...</div></div>
+
+<div class="section-div"></div>
+
 <!-- SEASONS -->
 <div id="seasons"></div>
 <div class="chapter">
@@ -251,23 +270,6 @@
   <div class="season-strip" id="season-strip"><div class="loading-msg">Loading...</div></div>
   <div id="season-detail"><div class="season-detail-loading">Select a season above</div></div>
 </div>
-
-<div class="section-div"></div>
-
-<!-- DIVISION RECORDS -->
-<div id="division-records"></div>
-<div class="chapter">
-  <div class="chapter-eyebrow">The Champions</div>
-  <div class="chapter-title">Division Records</div>
-</div>
-<div class="lr-wrap" id="div-records-wrap"><div class="loading-msg">Loading...</div></div>
-
-<div id="league-records"></div>
-<div class="chapter">
-  <div class="chapter-eyebrow">The Records</div>
-  <div class="chapter-title">League Records</div>
-</div>
-<div class="lr-wrap" id="lr-wrap"><div class="loading-msg">Loading...</div></div>
 
 <div class="section-div" style="margin-bottom:0;"></div>
 
@@ -327,9 +329,11 @@ async function fetchCSV(url){
 // Row 4+: data
 function parseDivTab(rows, divName){
   const seasons = [];
-  for(let i=4; i<rows.length; i++){
+  for(let i=1; i<rows.length; i++){
     const row = rows[i];
-    const s = parseFloat(g(row,1));
+    const raw = g(row,1);
+    if(!raw || raw.toLowerCase()==='season') continue;
+    const s = parseFloat(raw);
     if(isNaN(s)) continue;
     seasons.push({
       season: s,
@@ -347,9 +351,11 @@ function parseDivTab(rows, divName){
 // Same structure but cols: Season, Team Owner, Team, Points, blank, Runner Up, Team, Points
 function parseOverallTab(rows){
   const seasons = [];
-  for(let i=4; i<rows.length; i++){
+  for(let i=1; i<rows.length; i++){
     const row = rows[i];
-    const s = parseFloat(g(row,1));
+    const raw = g(row,1);
+    if(!raw || raw.toLowerCase()==='season') continue;
+    const s = parseFloat(raw);
     if(isNaN(s)) continue;
     seasons.push({
       season: s,
@@ -496,12 +502,12 @@ function renderDivisionRecords(){
   // Overall
   if(overallData.length){
     tabKeys.push({key:'overall', label:'Overall'});
-    tabPanels['overall'] = seasonTable(overallData, [
+    tabPanels['overall'] = seasonTable(overallData.slice(0,10), [
       {key:'season',label:'Season'},
       {key:'owner',label:'Team Owner'},
       {key:'ownerTeam',label:'Team',muted:true},
       {key:'ownerPts',label:'Points'},
-      {key:'ru',label:'Runner Up'},
+      {key:'ru',label:'Runner Up (Team Owner)'},
       {key:'ruTeam',label:'Team',muted:true},
     ]);
   }
@@ -510,12 +516,13 @@ function renderDivisionRecords(){
   Object.entries(allDivData).forEach(([div, seasons]) => {
     const key = div.toLowerCase().replace(' ','');
     tabKeys.push({key, label:div});
-    tabPanels[key] = seasonTable(seasons, [
+    tabPanels[key] = seasonTable(seasons.slice(0,10), [
       {key:'season',label:'Season'},
       {key:'champ',label:'Champion'},
       {key:'champTeam',label:'Team',muted:true},
       {key:'champPts',label:'Points'},
       {key:'ru',label:'Runner Up'},
+      {key:'ruTeam',label:'Team',muted:true},
       {key:'constructor',label:'Constructor',muted:true},
       {key:'consdrivers',label:'Drivers',muted:true},
     ]);
