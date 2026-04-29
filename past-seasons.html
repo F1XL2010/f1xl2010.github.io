@@ -108,7 +108,8 @@
   .standings-table th.ps-st-driver{z-index:8;background:#1a2320;text-align:left;}
   .standings-table td.ps-st-driver{background:#161d1b;max-width:170px;}
   .standings-table tr:hover td.ps-st-pos{background-color:#1e2a27!important;}
-  .standings-table tr:hover td.ps-st-driver{background-color:#1e2a27!important;}
+  .standings-table tr:hover td.ps-st-driver:not(.has-logo){background-color:#1e2a27!important;}
+  .standings-table tr:hover td.ps-st-driver.has-logo{box-shadow:inset 0 0 0 9999px rgba(30,42,39,0.35);}
   .ps-driver-cell{position:relative;z-index:1;padding:5px 8px;display:flex;flex-direction:column;gap:1px;}
   .ps-pos-cell{padding:10px 5px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:#fff;text-align:center;display:block;}
   .ps-pos-cell.p1{color:#E8B84B;}.ps-pos-cell.p2{color:#C0C0C0;}.ps-pos-cell.p3{color:#cd7f32;}
