@@ -590,19 +590,30 @@ function buildOverallSection(rows){
   return `<div class="overall-section"><div class="overall-label">Overall Constructors Championship</div><div class="overall-grid">${cards}</div></div>`;
 }
 
+async function fetchAndInsertOverall(id, sc, body){
+  const url = sc['overall_gid'];
+  if(!url || !url.trim()) return;
+  try{
+    const mId = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+    const mGid = url.match(/gid=(\d+)/);
+    if(!mId || !mGid) return;
+    const rows = await fetchCSV(mId[1], mGid[1]);
+    const html = buildOverallSection(rows);
+    if(html) body.insertAdjacentHTML('beforeend', html);
+  } catch(e){ /* no overall data */ }
+}
+
 async function renderS3to5(id, season, sc, body){
   const divisions = parseInt(sc['divisions'])||1;
 
-
-  const hasOverall35 = !!(sc['overall_gid'] && sc['overall_gid'].trim()!=='');
+  await fetchAndInsertOverall(id, sc, body);
 
   let tabsHtml = '<div class="div-tabs">';
-  if(hasOverall35){
-    tabsHtml += '<button class="div-tab active" id="'+id+'-dtab-overall" onclick="switchDivTab(\''+id+'\',\'overall\')">Overall</button>';
-  }
+  let firstTab = true;
   for(let d=1;d<=divisions;d++){
-    const active = !hasOverall35 && d===1 ? ' active' : '';
+    const active = firstTab ? ' active' : '';
     tabsHtml += '<button class="div-tab'+active+'" id="'+id+'-dtab-'+d+'" onclick="switchDivTab(\''+id+'\',\''+d+'\')">Division '+d+'</button>';
+    firstTab = false;
     const sgid = sc['d'+d+'_driver_stats_gid'];
     if(sgid!==undefined && sgid!==''){
       tabsHtml += '<button class="div-tab" id="'+id+'-dtab-'+d+'s" onclick="switchDivTab(\''+id+'\',\''+d+'s\')">D'+d+' Stats</button>';
@@ -611,12 +622,9 @@ async function renderS3to5(id, season, sc, body){
   tabsHtml += '</div>';
 
   let contentHtml = '';
-  if(hasOverall35){
-    contentHtml += '<div class="div-content" id="'+id+'-dcontent-overall" data-loaded="false"><div class="div-loading">Loading...</div></div>';
-  }
   for(let d=1;d<=divisions;d++){
     const sgid = sc['d'+d+'_driver_stats_gid'];
-    const hidden = (!hasOverall35 && d===1) ? '' : ' hidden';
+    const hidden = d===1 ? '' : ' hidden';
     const loading = '<div class="div-loading">Click to load Division '+d+'</div>';
     contentHtml += '<div class="div-content'+hidden+'" id="'+id+'-dcontent-'+d+'" data-loaded="false" data-div="'+d+'">' + loading + '</div>';
     if(sgid!==undefined && sgid!==''){
@@ -624,14 +632,9 @@ async function renderS3to5(id, season, sc, body){
     }
   }
 
-  body.innerHTML = tabsHtml + contentHtml;
+  body.insertAdjacentHTML('beforeend', tabsHtml + contentHtml);
   setTimeout(_colourActiveTabs, 0);
-
-  if(hasOverall35){
-    await loadS20OverallContent(id, sc);
-  } else {
-    await loadDivContent(id, 1, sc);
-  }
+  await loadDivContent(id, 1, sc);
 }
 
 async function loadDivContent(id, d, sc){
@@ -689,18 +692,13 @@ function switchDivTab(id, tabKey){
   }
   // Recolour all other active tabs (non-active ones stay muted)
   setTimeout(_colourActiveTabs, 0);
-  // Lazy load — handle 'overall' tab specially
   if(anyContent.dataset.loaded === 'false' && _currentSeasonConfig){
-    if(tabKey === 'overall'){
-      loadS20OverallContent(id, _currentSeasonConfig);
-    } else {
-      const divNum = parseInt(tabKey);
-      if(!isNaN(divNum)){
-        const s = parseFloat(_currentSeason||0);
-        if(s>=28) loadS28DivContent(id, divNum, _currentSeasonConfig);
-        else if(s>=20) loadS20DivContent(id, divNum, _currentSeasonConfig);
-        else loadDivContent(id, divNum, _currentSeasonConfig);
-      }
+    const divNum = parseInt(tabKey);
+    if(!isNaN(divNum)){
+      const s = parseFloat(_currentSeason||0);
+      if(s>=28) loadS28DivContent(id, divNum, _currentSeasonConfig);
+      else if(s>=20) loadS20DivContent(id, divNum, _currentSeasonConfig);
+      else loadDivContent(id, divNum, _currentSeasonConfig);
     }
   }
 }
@@ -868,33 +866,18 @@ function buildS3Constructors(rows){
 async function renderS10(id, season, sc, body){
   const divisions = parseInt(sc['divisions'])||1;
 
-  const hasOverall10 = !!(sc['overall_gid'] && sc['overall_gid'].trim()!=='');
-  let overallRows10 = null;
-  if(hasOverall10){
-    try{
-      const mId=sc['overall_gid'].match(/\/d\/([a-zA-Z0-9_-]+)/);
-      const mGid=sc['overall_gid'].match(/gid=(\d+)/);
-      if(mId&&mGid) overallRows10 = await fetchCSV(mId[1], mGid[1]).catch(()=>null);
-    } catch(e){}
-  }
+  await fetchAndInsertOverall(id, sc, body);
 
-  let tabsHtml = '<div class="div-tabs">';
-  if(hasOverall10 && overallRows10){
-    tabsHtml += '<button class="div-tab active" id="'+id+'-dtab-overall" onclick="switchDivTab(\''+id+'\',\'overall\')">Overall</button>';
-  }
-  if(divisions > 1 || (hasOverall10 && overallRows10)){
+  let tabsHtml = '';
+  if(divisions > 1){
+    tabsHtml = '<div class="div-tabs">';
     for(let d=1;d<=divisions;d++){
-      const active = (!hasOverall10 || !overallRows10) && d===1 ? ' active' : '';
-      tabsHtml += '<button class="div-tab'+active+'" id="'+id+'-dtab-'+d+'" onclick="switchDiv(\''+id+'\','+d+','+divisions+')">Division '+d+'</button>';
+      tabsHtml += '<button class="div-tab'+(d===1?' active':'')+'" id="'+id+'-dtab-'+d+'" onclick="switchDiv(\''+id+'\','+d+','+divisions+')">Division '+d+'</button>';
     }
+    tabsHtml += '</div>';
   }
-  tabsHtml += '</div>';
 
   let contentHtml = '';
-  if(hasOverall10 && overallRows10){
-    contentHtml += '<div class="div-content" id="'+id+'-dcontent-overall" data-loaded="true">'+buildOverallConstTable(overallRows10)+'</div>';
-  }
-
   for(let d=1;d<=divisions;d++){
     const sid = sc['d'+d+'_sheet_id'];
     const dgid = sc['d'+d+'_driver_results_gid'];
@@ -911,11 +894,10 @@ async function renderS10(id, season, sc, body){
     if(cRows) divHtml += buildS3Constructors(cRows);
     if(sRows) divHtml += buildDriverStats(sRows);
 
-    const hidden = (hasOverall10 && overallRows10) || d!==1 ? ' hidden' : '';
-    contentHtml += '<div class="div-content'+hidden+'" id="'+id+'-dcontent-'+d+'">'+divHtml+'</div>';
+    contentHtml += '<div class="div-content'+(d===1?'':' hidden')+'" id="'+id+'-dcontent-'+d+'">'+divHtml+'</div>';
   }
 
-  body.innerHTML = tabsHtml + contentHtml;
+  body.insertAdjacentHTML('beforeend', tabsHtml + contentHtml);
   setTimeout(_colourActiveTabs, 0);
 }
 
@@ -1222,18 +1204,13 @@ async function toggleOverallAccordion(id, sc){
 async function renderS20plus(id, season, sc, body){
   const divisions = parseInt(sc['divisions'])||1;
 
-  const hasOverall20 = !!(sc['overall_gid'] && sc['overall_gid'].trim()!=='');
+  await fetchAndInsertOverall(id, sc, body);
+
   let tabsHtml = '<div class="div-tabs">';
   let contentHtml = '';
-
-  if(hasOverall20){
-    tabsHtml += '<button class="div-tab active" id="'+id+'-dtab-overall" onclick="switchDivTab(\''+id+'\',\'overall\')">Overall</button>';
-    contentHtml += '<div class="div-content" id="'+id+'-dcontent-overall" data-loaded="false"><div class="div-loading">Loading...</div></div>';
-  }
-
   for(let d=1;d<=divisions;d++){
-    const active = !hasOverall20 && d===1 ? ' active' : '';
-    const hidden = hasOverall20 || d!==1 ? ' hidden' : '';
+    const active = d===1 ? ' active' : '';
+    const hidden = d!==1 ? ' hidden' : '';
     tabsHtml += '<button class="div-tab'+active+'" id="'+id+'-dtab-'+d+'" onclick="switchDivTab(\''+id+'\',\''+d+'\')">Division '+d+'</button>';
     const sgid = sc['d'+d+'_driver_stats_gid'];
     if(sgid!==undefined && sgid!==''){
@@ -1248,12 +1225,7 @@ async function renderS20plus(id, season, sc, body){
 
   body.insertAdjacentHTML('beforeend', tabsHtml + contentHtml);
   setTimeout(_colourActiveTabs, 0);
-
-  if(hasOverall20){
-    await loadS20OverallContent(id, sc);
-  } else {
-    await loadS20DivContent(id, 1, sc);
-  }
+  await loadS20DivContent(id, 1, sc);
 }
 
 async function loadS20OverallContent(id, sc){
@@ -1601,18 +1573,13 @@ function buildS20DriverStats(rows){
 async function renderS28(id, season, sc, body){
   const divisions = parseInt(sc['divisions'])||1;
 
-  const hasOverall28 = !!(sc['overall_gid'] && sc['overall_gid'].trim()!=='');
+  await fetchAndInsertOverall(id, sc, body);
+
   let tabsHtml = '<div class="div-tabs">';
   let contentHtml = '';
-
-  if(hasOverall28){
-    tabsHtml += '<button class="div-tab active" id="'+id+'-dtab-overall" onclick="switchDivTab(\''+id+'\',\'overall\')">Overall</button>';
-    contentHtml += '<div class="div-content" id="'+id+'-dcontent-overall" data-loaded="false"><div class="div-loading">Loading...</div></div>';
-  }
-
   for(let d=1;d<=divisions;d++){
-    const active = !hasOverall28 && d===1 ? ' active' : '';
-    const hidden = hasOverall28 || d!==1 ? ' hidden' : '';
+    const active = d===1 ? ' active' : '';
+    const hidden = d!==1 ? ' hidden' : '';
     tabsHtml += '<button class="div-tab'+active+'" id="'+id+'-dtab-'+d+'" onclick="switchDivTab(\''+id+'\',\''+d+'\')">Division '+d+'</button>';
     tabsHtml += '<button class="div-tab" id="'+id+'-dtab-'+d+'s" onclick="switchDivTab(\''+id+'\',\''+d+'s\')">D'+d+' Stats</button>';
     contentHtml += '<div class="div-content'+hidden+'" id="'+id+'-dcontent-'+d+'" data-loaded="false" data-div="'+d+'"><div class="div-loading">Loading...</div></div>';
@@ -1622,12 +1589,7 @@ async function renderS28(id, season, sc, body){
 
   body.insertAdjacentHTML('beforeend', tabsHtml + contentHtml);
   setTimeout(_colourActiveTabs, 0);
-
-  if(hasOverall28){
-    await loadS20OverallContent(id, sc);
-  } else {
-    await loadS28DivContent(id, 1, sc);
-  }
+  await loadS28DivContent(id, 1, sc);
 
 }
 
