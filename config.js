@@ -26,18 +26,28 @@ function parseConfigCSV(text) {
   const lines = text.split(/\r?\n/).filter(l => l.trim());
   if (!lines.length) return map;
 
-  // Read extra column headers from row 0 (cols 2+)
-  const headerParts = splitCSVLine(lines[0]);
-  const extraHeaders = headerParts.slice(2).map(h => h.replace(/^"|"$/g, '').trim().toLowerCase()).filter(h => h);
+  // Extra column headers may appear on multiple rows (e.g. "tab gid from this document", "overall_gid", "w_totals_gid")
+  // We scan all rows and pick up extra headers whenever col 0 is a known section header
+  let extraHeaders = [];
 
-  for (let li = 1; li < lines.length; li++) {
+  for (let li = 0; li < lines.length; li++) {
     const parts = splitCSVLine(lines[li]);
     const key = (parts[0] || '').replace(/^"|"$/g, '').trim().toLowerCase();
     const val = (parts[1] || '').replace(/^"|"$/g, '').trim();
+
+    // Detect header rows that define extra column names
+    if (key === 'tab gid from this document' || key === 'new seasons' || key === 'past seasons' || key === 'key') {
+      // Read extra column headers from cols 2+ of this row
+      const newHeaders = parts.slice(2).map(h => h.replace(/^"|"$/g, '').trim().toLowerCase()).filter(h => h);
+      if (newHeaders.length) extraHeaders = newHeaders;
+      continue;
+    }
+
     if (!key || !val) continue;
-    if (key === 'key' || key === 'value' || key === 'past seasons' || key === 'new seasons' || key === 'tab gid from this document') continue;
+    if (key === 'value' || key === 'hardcoded - dont touch') continue;
     map[key] = val;
-    // Store extra columns keyed as e.g. s26_gid__overall_gid
+
+    // Store extra columns using current extraHeaders
     extraHeaders.forEach((hdr, i) => {
       const extra = (parts[2 + i] || '').replace(/^"|"$/g, '').trim();
       if (extra) map[key + '__' + hdr] = extra;
