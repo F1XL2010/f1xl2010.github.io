@@ -590,11 +590,13 @@ function buildOverallSection(rows){
     <table class="standings-table" style="width:100%;">
       <thead><tr>
         <th style="${thStyle}">Pos</th>
-        <th style="${thStyle}text-align:left;">Team</th>
+        <th style="${thStyle}text-align:left;">Team / Principal</th>
         <th style="${thStyle}">Points</th>
         <th style="${thStyle}">Gap</th>
-        <th style="${thStyle}text-align:left;">Team Principal</th>
       </tr></thead><tbody>`;
+
+  // Calculate gap from leader if not provided
+  const leaderPts = teams.length ? Math.round(parseFloat((teams[0].pts||'0').replace(/,/g,''))||0) : 0;
 
   teams.forEach(t=>{
     const slug = t.team.toLowerCase().replace(/\s+/g,'').replace(/[^a-z0-9]/g,'');
@@ -604,14 +606,16 @@ function buildOverallSection(rows){
     const teamBg = `background:rgba(${r2},${g2},${b2},0.2);border-left:3px solid ${color};`;
     const logoStyle = `background-image:linear-gradient(rgba(22,29,27,0.5),rgba(22,29,27,0.5)),url('images/teamlogos/thinlogo_${slug}.webp');background-size:cover;background-position:center;`;
     const pc = t.pos===1?'#E8B84B':t.pos===2?'#C0C0C0':t.pos===3?'#cd7f32':'rgba(255,255,255,0.5)';
-    const tp = t.tp && t.tp.toLowerCase()==='reserve' ? 'RESERVE' : (t.tp || '—');
-    const gap = t.gap && t.gap!=='-' && t.gap!=='0' && t.gap!=='' ? `-${t.gap.replace(/^-/,'')}` : '—';
+    const tp = t.tp && t.tp.toLowerCase()==='reserve' ? 'RESERVE' : (t.tp || '');
+    const ptsNum = Math.round(parseFloat((t.pts||'0').replace(/,/g,''))||0);
+    const gapNum = t.pos===1 ? '—' : `-${leaderPts - ptsNum}`;
     html += `<tr>
       <td style="${tdStyle}${rowBg}"><span style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:${pc};">${t.pos}</span></td>
-      <td style="${tdStyle}${teamBg}${logoStyle}"><div class="ps-driver-cell"><span class="ps-driver-name">${t.team}</span></div></td>
-      <td style="${tdStyle}${rowBg}text-align:right;"><span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#3DCC47;">${t.pts}</span></td>
-      <td style="${tdStyle}${rowBg}text-align:right;color:rgba(255,255,255,0.6);">${gap}</td>
-      <td style="${tdStyle}${rowBg}color:rgba(255,255,255,0.7);font-size:12px;">${tp}</td>
+      <td style="${tdStyle}${teamBg}${logoStyle}"><div class="ps-driver-cell">
+        <span class="ps-driver-name">${tp ? `Team Principal · ${tp}` : '&nbsp;'}</span>
+      </div></td>
+      <td style="${tdStyle}${rowBg}text-align:right;"><span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#3DCC47;">${ptsNum}</span></td>
+      <td style="${tdStyle}${rowBg}text-align:right;color:rgba(255,255,255,0.6);">${gapNum}</td>
     </tr>`;
   });
 
