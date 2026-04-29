@@ -224,9 +224,9 @@
 <!-- SECTION NAV -->
 <div class="section-nav">
   <button class="section-nav-btn active" onclick="scrollToSection('leaderboards',this)">Leaderboards</button>
+  <button class="section-nav-btn" onclick="scrollToSection('league-records',this)">League Records</button>
   <button class="section-nav-btn" onclick="scrollToSection('seasons',this)">Seasons</button>
   <button class="section-nav-btn" onclick="scrollToSection('division-records',this)">Division Records</button>
-  <button class="section-nav-btn" onclick="scrollToSection('league-records',this)">League Records</button>
 </div>
 
 <!-- LEADERBOARDS -->
@@ -241,13 +241,12 @@
 
 <div class="section-div"></div>
 
-<!-- DIVISION RECORDS -->
-<div id="division-records"></div>
+<div id="league-records"></div>
 <div class="chapter">
-  <div class="chapter-eyebrow">The Champions</div>
-  <div class="chapter-title">Division Records</div>
+  <div class="chapter-eyebrow">The Records</div>
+  <div class="chapter-title">League Records</div>
 </div>
-<div class="lr-wrap" id="div-records-wrap"><div class="loading-msg">Loading...</div></div>
+<div class="lr-wrap" id="lr-wrap"><div class="loading-msg">Loading...</div></div>
 
 <div class="section-div"></div>
 
@@ -264,12 +263,13 @@
 
 <div class="section-div"></div>
 
-<div id="league-records"></div>
+<!-- DIVISION RECORDS -->
+<div id="division-records"></div>
 <div class="chapter">
-  <div class="chapter-eyebrow">The Records</div>
-  <div class="chapter-title">League Records</div>
+  <div class="chapter-eyebrow">The Champions</div>
+  <div class="chapter-title">Division Records</div>
 </div>
-<div class="lr-wrap" id="lr-wrap"><div class="loading-msg">Loading...</div></div>
+<div class="lr-wrap" id="div-records-wrap"><div class="loading-msg">Loading...</div></div>
 
 <div class="section-div" style="margin-bottom:0;"></div>
 
@@ -643,9 +643,10 @@ function renderLeagueRecords(divDataRaw, overallDataRaw){
 
   function lrTable(title, items){
     if(!items||!items.length) return '';
+    const top = items.sort((a,b)=>b.val-a.val).slice(0,10);
     return `<div class="lr-card">
       <div class="lr-card-title">${title}</div>
-      ${items.sort((a,b)=>b.val-a.val).map((item,i)=>`
+      ${top.map((item,i)=>`
         <div class="lr-row">
           <div class="lr-rank">${i+1}</div>
           <div class="lr-name">${item.name}</div>
