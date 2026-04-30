@@ -595,6 +595,7 @@ const CONTROLLER_ICONS = {
 function driverIcon(src, alt){
   if(!src) return '';
   return `<span style="display:inline-flex;align-items:center;justify-content:center;width:25px;height:25px;background:#1e2a27;border:1px solid rgba(255,255,255,0.2);border-radius:4px;vertical-align:middle;margin-left:4px;"><img src="${src}" alt="${alt}" title="${alt}" onerror="this.parentElement.style.display='none'" style="width:16px;height:16px;object-fit:contain;"></span>`;
+}
 
 let _driverInfoMap = {};
 
@@ -705,11 +706,15 @@ async function loadDrivers() {
       const isLast  = sprintPairs.has(idx) && r.sprintRace;
       const sc = isFirst ? 'st-sprint-first' : isLast ? 'st-sprint-last' : '';
       if (r.sprintRace) {
-        // Sprint race col — show Rx(R), track abbr blank (shown in quali col)
+        // Sprint race col — same flag as sprint quali col
         const roundNum = r.label.replace(/\(r\)/i,'').trim();
-        hHtml += `<th class="st-race ${sc}"><div class="st-race-header">
+        const prevRace = idx > 0 ? races[idx-1] : null;
+        const countryKey = prevRace ? (prevRace.short||prevRace.label).toLowerCase().replace(/[^a-z ]/g,'').replace(/ /g,'_').trim() : '';
+        const bgImg = countryKey ? `images/vertflags/vertical_${countryKey}.webp` : '';
+        const bgStyleAttr = bgImg ? `style="background-image:url('${bgImg}');background-size:cover;background-position:center;"` : '';
+        hHtml += `<th class="st-race ${sc}"><div class="st-race-header" ${bgStyleAttr}>
           <span class="st-race-round">${roundNum}<span style="font-size:8px;">(R)</span></span>
-          <span class="st-race-name">&nbsp;</span>
+          <span class="st-race-name">${prevRace ? (prevRace.short||prevRace.label).slice(0,3).toUpperCase() : ''}</span>
         </div></th>`;
       } else {
         const roundNum = r.label.replace(/\(s\)/i,'').trim();
