@@ -16,7 +16,9 @@
     --p710-bg:#0f2e1a;--p710-text:#4aaa6a;--dnf-bg:#3a0a0a;--dnf-text:#ff6b6b;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{background:#111816;color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;}
+  body{background:#111816;background-image:url('images/backgrounds/background_standings.webp');background-size:cover;background-position:center;background-attachment:fixed;color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;}
+  body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(17,24,22,0.5);z-index:0;pointer-events:none;}
+  body>*{position:relative;z-index:1;}
 
     nav{background:rgba(17,24,22,0.97);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;backdrop-filter:blur(8px);}
   .nav-left{display:flex;align-items:center;flex-shrink:0;}
