@@ -2044,6 +2044,10 @@ async function init(){
   try{ seasonObjs = await getAllSeasons(); }
   catch(e){ document.getElementById('season-content').innerHTML='<div class="loading-msg">Config error: '+e.message+'</div>'; return; }
 
+  // Remove the current active season — it belongs on the standings page not here
+  const currentSeason = await getCurrentSeason();
+  seasonObjs = seasonObjs.filter(obj => obj.season !== currentSeason);
+
   if(!seasonObjs.length){
     document.getElementById('season-content').innerHTML='<div class="loading-msg">No seasons available.</div>';
     return;
