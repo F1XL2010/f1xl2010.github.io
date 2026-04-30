@@ -1093,6 +1093,10 @@ function toggleMenu(){
 async function loadOverallConstructors() {
   const el = document.getElementById('overall-constructors-table');
   try {
+    // Ensure driver info (including team principals) is loaded
+    if(Object.keys(teamOwners).length === 0 && currentDiv && currentDiv.sheetId && currentDiv.gids && currentDiv.gids.teamInfo){
+      await loadDriverInfo(currentDiv.sheetId, currentDiv.gids.teamInfo);
+    }
     // Fetch team owners and driver-team mapping from teams sheet
     // teamOwners and driverTeams are module-level vars
     try {
