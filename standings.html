@@ -604,21 +604,22 @@ async function loadDriverInfo(sheetId, gid){
   try{
     const table = await fetchSheet(sheetId, gid);
     const rows = table.rows;
-    // Find header row - look for 'Driver' in col 0 or similar
+    // Find header row - look for 'Driver' in col A
     let hIdx = -1;
     for(let i=0;i<rows.length;i++){
       const v = cs(rows[i],0).toLowerCase();
       if(v==='driver'||v==='name'){ hIdx=i; break; }
     }
-    if(hIdx<0) hIdx = 1; // fallback
+    if(hIdx<0) hIdx = 1;
 
-    // Col W(22)=nat, Col F(5)=platform, Col G(6)=controller, Col B(1)=driver name
+    // Col A(0)=driver, Col C(2)=nat code, Col F(5)=platform, Col G(6)=controller
+    // Header row contains 'Driver' in col A
     for(let i=hIdx+1;i<rows.length;i++){
       const r = rows[i];
-      const driver = cs(r,1).trim();
+      const driver = cs(r,0).trim();
       if(!driver) continue;
       _driverInfoMap[driver.toLowerCase()] = {
-        nat:        cs(r,22).trim(),
+        nat:        cs(r,2).trim(),
         platform:   cs(r,5).trim(),
         controller: cs(r,6).trim(),
       };
