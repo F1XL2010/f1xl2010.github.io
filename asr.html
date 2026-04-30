@@ -15,7 +15,7 @@
   }
   *{box-sizing:border-box;margin:0;padding:0;}
   body{background:#111816;background-image:url('images/backgrounds/background_asr.webp');background-size:cover;background-position:center;background-attachment:fixed;color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;}
-  body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(17,24,22,0.5);z-index:0;pointer-events:none;}
+  body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(17,24,22,0.78);z-index:0;pointer-events:none;}
   body>*{position:relative;z-index:1;}
 
     nav{background:rgba(17,24,22,0.97);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;backdrop-filter:blur(8px);}
@@ -55,10 +55,10 @@
   /* SEASON GRID */
   .season-grid{padding:20px 24px;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;}
 
-  .asr-card{background:#1a2320;border:1px solid var(--border);border-radius:8px;overflow:hidden;transition:border-color 0.2s;}
+  .asr-card{background:#1e2a27;border:1px solid rgba(255,255,255,0.12);border-radius:8px;overflow:hidden;transition:border-color 0.2s;box-shadow:0 2px 8px rgba(0,0,0,0.4);}
   .asr-card.has-data{cursor:pointer;}
   .asr-card.has-data:hover{border-color:rgba(255,255,255,0.2);}
-  .asr-card-header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+  .asr-card-header{padding:18px 16px;border-bottom:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:space-between;min-height:64px;}
   .asr-card-season{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--text);}
   .asr-card-track{font-size:11px;color:var(--teal);text-transform:uppercase;letter-spacing:1px;font-family:'Barlow Condensed',sans-serif;font-weight:600;}
   .asr-card-body{padding:12px 16px;}
@@ -555,7 +555,7 @@ async function loadASR() {
 
       const onclickAttr = clickable ? ` onclick="openDetail('${season}','${sheetId}','${tableGid}','${consGid}','${resultsGid}','${track}')"` : '';
       const trackSlug = track ? track.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'') : '';
-      const trackBg = trackSlug ? `background-image:linear-gradient(rgba(22,29,27,0.6),rgba(22,29,27,0.6)),url('images/asr/asr_${trackSlug}.webp');background-size:cover;background-position:center;` : '';
+      const trackBg = trackSlug ? `background-image:linear-gradient(rgba(22,29,27,0.45),rgba(22,29,27,0.45)),url('images/asr/asr_${trackSlug}.webp');background-size:cover;background-position:center;` : '';
       html += `<div class="asr-card${clickable?' has-data':''}" id="asr-card-${idx}"${onclickAttr}>
         <div class="asr-card-header" style="${trackBg}">
           <span class="asr-card-season">S${season}</span>
