@@ -1207,7 +1207,7 @@ async function loadOverallConstructors() {
       const ownerDisplay = owner && owner.toLowerCase()==='reserve' ? 'RESERVE' : owner;
       html += `<tr>
         <td style="${tdStyle}${rowBg}"><span style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:${pc};">${pos}</span></td>
-        <td style="${tdStyle}${teamBg}${logoStyle}"><div class="ps-driver-cell">
+        <td class="has-logo" style="${tdStyle}${teamBg}${logoStyle}"><div class="ps-driver-cell">
           <span class="ps-driver-name">${ownerDisplay ? `Team Principal · ${ownerDisplay}` : '&nbsp;'}</span>
         </div></td>
         <td style="${tdStyle}${rowBg}text-align:right;"><span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#3DCC47;">${pts}</span></td>
