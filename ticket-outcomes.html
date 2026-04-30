@@ -468,6 +468,7 @@ function renderTickets() {
           </div>
           <div class="ticket-verdict">
             <div class="verdict-badge ${vc}">${vl}</div>
+            ${driverPunished ? `<div style="font-size:11px;color:var(--text-muted);margin-top:4px;text-align:center;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.5px;">${driverPunished}</div>` : ''}
             ${appealed ? `<div style="font-size:10px;background:rgba(232,184,75,0.15);color:#E8B84B;border:1px solid rgba(232,184,75,0.25);border-radius:3px;padding:2px 7px;margin-top:4px;text-align:center;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.5px;text-transform:uppercase;">Appealed</div>` : ''}
             ${points && points !== '0' ? `<div style="font-size:11px;color:var(--text-faint);margin-top:4px;text-align:right;">${points} pts</div>` : ''}
           </div>
