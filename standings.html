@@ -1120,7 +1120,7 @@ function buildOverallConstTable(rows){
     let t=(r[teamCol]||'').trim();
     if(!t) t=(r[teamCol+1]||'').trim();
     if(!t||t.startsWith('#')) continue;
-    const pts=parseFloat((r[ptsCol]||'').trim().replace(/,/g,''))||0;
+    const pts=Math.floor(parseFloat((r[ptsCol]||'').trim().replace(/,/g,''))||0);
     const gapRaw=(gapCol>=0?(r[gapCol]||'').trim():'')||'';
     const gapNum = parseFloat(gapRaw);
     const gap = !isNaN(gapNum) && gapNum !== 0 ? String(Math.round(gapNum)) : (gapRaw || '');
@@ -1144,7 +1144,7 @@ function buildOverallConstTable(rows){
   html += '<th style="'+thStyle+'">Gap</th>';
   html += '</tr></thead><tbody>';
 
-  const leader = data.length ? data[0].pts : 0;
+  const leader = data.length ? Math.floor(data[0].pts) : 0;
   data.forEach((d,idx)=>{
     const pos=idx+1;
     const pc=pos===1?'#E8B84B':pos===2?'#C0C0C0':pos===3?'#cd7f32':'rgba(255,255,255,0.5)';
