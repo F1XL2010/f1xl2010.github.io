@@ -1121,9 +1121,15 @@ function buildOverallConstTable(rows){
     if(!t) t=(r[teamCol+1]||'').trim();
     if(!t||t.startsWith('#')) continue;
     const pts=parseFloat((r[ptsCol]||'').trim().replace(/,/g,''))||0;
-    const gap=(gapCol>=0?(r[gapCol]||'').trim():'')||'';
-    const tp=(tpCol>=0?(r[tpCol]||'').trim():'')||'';
-    const tpDisplay = tp.toLowerCase()==='reserve'?'RESERVE':tp;
+    const gapRaw=(gapCol>=0?(r[gapCol]||'').trim():'')||'';
+    const gapNum = parseFloat(gapRaw);
+    const gap = !isNaN(gapNum) && gapNum !== 0 ? String(Math.round(gapNum)) : (gapRaw || '');
+    const tpRaw=(tpCol>=0?(r[tpCol]||'').trim():'')||'';
+    // Ignore numeric values in TP column (likely gap/points bleed)
+    const tpFromSheet = (!tpRaw || !isNaN(parseFloat(tpRaw))) ? '' : tpRaw;
+    // Fall back to teamOwners lookup
+    const tpFinal = tpFromSheet || (typeof teamOwners !== 'undefined' ? (teamOwners[t.toLowerCase()] || '') : '');
+    const tpDisplay = tpFinal.toLowerCase()==='reserve'?'RESERVE':tpFinal;
     data.push({team:t, pts, gap, tp:tpDisplay});
   }
   data.sort((a,b)=>b.pts-a.pts);
