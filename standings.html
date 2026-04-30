@@ -1574,63 +1574,7 @@ async function loadCoolStats() {
       cardsHtml += '</div>';
     }
 
-    // ── CARD 4: MOST CONSISTENT ───────────────────────────────────────────────
-    const consistent = drivers.map(d => {
-      const vals = raceCols.map(r => {
-        const v = cs(drRows[d.row],r.col).trim();
-        const n = parseInt(v);
-        return (v && !['DNF','DNS','DSQ'].includes(v.toUpperCase()) && !isNaN(n)) ? n : null;
-      }).filter(v=>v!==null);
-      if (vals.length<3) return null;
-      const avg = vals.reduce((s,v)=>s+v,0)/vals.length;
-      const sd = Math.sqrt(vals.map(v=>(v-avg)**2).reduce((s,v)=>s+v,0)/vals.length);
-      return {name:d.name, team:d.team, avg:avg.toFixed(1), sd:sd.toFixed(2)};
-    }).filter(Boolean).sort((a,b)=>parseFloat(a.sd)-parseFloat(b.sd)).slice(0,5);
-
-    if (consistent.length) {
-      cardsHtml += '<div class="cs-card"><div><div class="cs-card-title">Most Consistent</div><div class="cs-card-sub">Lowest std deviation of finishes</div></div>';
-      consistent.forEach((d,i) => {
-        const color = teamColors[d.team]||'#555';
-        const pc = i===0?'gold':'';
-        cardsHtml += `<div class="cs-row">
-          <span class="cs-row-pos ${pc}">${i+1}</span>
-          <div style="width:3px;height:14px;background:${color};border-radius:1px;flex-shrink:0;"></div>
-          <div style="flex:1;"><div class="cs-row-name">${d.name}</div><div class="cs-row-sub">Avg P${d.avg} · σ ${d.sd}</div></div>
-          <span class="cs-row-val" style="color:var(--teal);">${d.sd}</span>
-        </div>`;
-      });
-      cardsHtml += '</div>';
-    }
-
-    // ── CARD 5: POSITIONS GAINED ──────────────────────────────────────────────
-    // For total positions gained, need races started col
-    const colStarted = findCol('races started');
-    const gained = Object.entries(statsMap)
-      .filter(([,s])=>s.gained!==null)
-      .map(([name,s]) => {
-        const row = stRows.slice(sHdrIdx+1).find(r=>cs(r,0).trim()===name);
-        const started = row ? (parseFloat(cs(row,colStarted))||0) : 0;
-        const total = Math.round(s.gained * started);
-        return {name, team:s.team, total};
-      })
-      .sort((a,b)=>b.total-a.total).slice(0,5);
-
-    if (gained.length) {
-      cardsHtml += '<div class="cs-card"><div><div class="cs-card-title">Positions Gained</div><div class="cs-card-sub">Total positions gained this season</div></div>';
-      gained.forEach((d,i) => {
-        const color = teamColors[d.team]||'#555';
-        const pc = i===0?'gold':'';
-        const gainStr = d.total>0?`+${d.total}`:String(d.total);
-        const gainColor = d.total>0?'var(--green)':d.total<0?'#ff6b6b':'var(--text-faint)';
-        cardsHtml += `<div class="cs-row">
-          <span class="cs-row-pos ${pc}">${i+1}</span>
-          <div style="width:3px;height:14px;background:${color};border-radius:1px;flex-shrink:0;"></div>
-          <div style="flex:1;"><div class="cs-row-name">${d.name}</div><div class="cs-row-sub">${d.team}</div></div>
-          <span class="cs-row-val" style="color:${gainColor};">${gainStr}</span>
-        </div>`;
-      });
-      cardsHtml += '</div>';
-    }
+    // Cards 4 and 5 (Most Consistent, Positions Gained) removed — to be revisited
 
     cards.innerHTML = cardsHtml || '<div class="loading-msg">No stats available yet.</div>';
 
