@@ -546,8 +546,40 @@ const NAT_TO_ISO = {
 
 function natToFlag(nat) {
   if(!nat || !nat.trim()) return '';
+  const THREE_TO_TWO = {
+    'GBR':'gb','ENG':'gb','SCO':'gb','WAL':'gb','NIR':'gb',
+    'USA':'us','CAN':'ca','AUS':'au','NZL':'nz','IRL':'ie',
+    'FRA':'fr','DEU':'de','GER':'de','ESP':'es','ITA':'it',
+    'NLD':'nl','BEL':'be','PRT':'pt','SWE':'se','NOR':'no',
+    'DNK':'dk','FIN':'fi','CHE':'ch','AUT':'at','POL':'pl',
+    'CZE':'cz','SVK':'sk','HUN':'hu','ROU':'ro','BGR':'bg',
+    'HRV':'hr','SRB':'rs','SVN':'si','GRC':'gr','TUR':'tr',
+    'RUS':'ru','UKR':'ua','BLR':'by','KAZ':'kz','GEO':'ge',
+    'ARM':'am','AZE':'az','LTU':'lt','LVA':'lv','EST':'ee',
+    'BRA':'br','ARG':'ar','COL':'co','CHL':'cl','MEX':'mx',
+    'PER':'pe','VEN':'ve','URY':'uy','ECU':'ec','BOL':'bo',
+    'PRY':'py','GTM':'gt','CRI':'cr','PAN':'pa','HND':'hn',
+    'SLV':'sv','NIC':'ni','DOM':'do','CUB':'cu','JAM':'jm',
+    'TTO':'tt','BHS':'bs','BRB':'bb',
+    'CHN':'cn','JPN':'jp','KOR':'kr','IND':'in','PAK':'pk',
+    'BGD':'bd','LKA':'lk','THA':'th','VNM':'vn','IDN':'id',
+    'MYS':'my','PHL':'ph','SGP':'sg','MMR':'mm','KHM':'kh',
+    'LAO':'la','HKG':'hk','TWN':'tw','MNG':'mn',
+    'SAU':'sa','UAE':'ae','QAT':'qa','KWT':'kw','BHR':'bh',
+    'OMN':'om','YEM':'ye','IRQ':'iq','IRN':'ir','ISR':'il',
+    'JOR':'jo','LBN':'lb','SYR':'sy','PSE':'ps',
+    'ZAF':'za','NGA':'ng','KEN':'ke','EGY':'eg','ETH':'et',
+    'GHA':'gh','TZA':'tz','UGA':'ug','ZWE':'zw','MOZ':'mz',
+    'AGO':'ao','CMR':'cm','SEN':'sn','CIV':'ci','MDG':'mg',
+    'MAR':'ma','TUN':'tn','DZA':'dz','LBY':'ly','SDN':'sd',
+    'ISL':'is','MLT':'mt','CYP':'cy','LUX':'lu','MCO':'mc',
+    'AND':'ad','SMR':'sm','LIE':'li','ALB':'al','MKD':'mk',
+    'MNE':'me','BIH':'ba','XKX':'xk','KOS':'xk',
+    'MEX':'mx','VEN':'ve',
+  };
   const code = nat.trim().toUpperCase();
-  return `<img class="td-driver-flag" src="images/smallflags/${code}.svg" alt="${nat}" onerror="this.style.display='none'" style="width:18px;height:12px;object-fit:cover;border-radius:1px;vertical-align:middle;margin-right:4px;">`;
+  const iso = THREE_TO_TWO[code] || code.toLowerCase().slice(0,2);
+  return `<img class="td-driver-flag" src="images/smallflags/${iso}.svg" alt="${nat}" onerror="this.style.display='none'" style="width:18px;height:12px;object-fit:cover;border-radius:1px;vertical-align:middle;margin-right:4px;">`;
 }
 
 const PLATFORM_ICONS = {
@@ -683,7 +715,7 @@ async function loadDrivers() {
         const roundNum = r.label.replace(/\(s\)/i,'').trim();
         const sprintSuffix = r.sprint ? `<span style="font-size:8px;color:rgba(130,170,255,0.9);">(S)</span>` : '';
         const countryKey = (r.short||r.label).toLowerCase().replace(/[^a-z ]/g,'').replace(/ /g,'_').trim();
-        const bgImg = countryKey ? `images/verticalflags/vertical_${countryKey}.webp` : '';
+        const bgImg = countryKey ? `images/vertflags/vertical_${countryKey}.webp` : '';
         const bgStyleAttr = bgImg ? `style="background-image:url('${bgImg}');background-size:cover;background-position:center;"` : '';
         hHtml += `<th class="st-race ${sc}"><div class="st-race-header" ${bgStyleAttr}>
           <span class="st-race-round">${roundNum}${sprintSuffix}</span>
