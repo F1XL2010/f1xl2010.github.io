@@ -547,7 +547,7 @@ const NAT_TO_ISO = {
 function natToFlag(nat) {
   if(!nat || !nat.trim()) return '';
   const code = nat.trim().toUpperCase();
-  return `<img class="td-driver-flag" src="images/smallflags/${code}.svg" alt="${nat}" onerror="this.style.display='none'" style="width:16px;height:11px;object-fit:cover;border-radius:1px;vertical-align:middle;margin-right:3px;">`;
+  return `<img class="td-driver-flag" src="images/smallflags/${code}.svg" alt="${nat}" onerror="this.style.display='none'" style="width:18px;height:12px;object-fit:cover;border-radius:1px;vertical-align:middle;margin-right:4px;">`;
 }
 
 const PLATFORM_ICONS = {
@@ -562,7 +562,7 @@ const CONTROLLER_ICONS = {
 
 function driverIcon(src, alt){
   if(!src) return '';
-  return `<img src="${src}" alt="${alt}" title="${alt}" onerror="this.style.display='none'" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;margin-left:3px;">`;
+  return `<img src="${src}" alt="${alt}" title="${alt}" onerror="this.style.display='none'" style="width:20px;height:20px;object-fit:contain;vertical-align:middle;margin-left:4px;">`;
 }
 
 let _driverInfoMap = {};
@@ -580,10 +580,10 @@ async function loadDriverInfo(sheetId, gid){
     }
     if(hIdx<0) hIdx = 1; // fallback
 
-    // Col W = 22 (nationality), Col F = 5 (platform), Col G = 6 (controller)
+    // Col W(22)=nat, Col F(5)=platform, Col G(6)=controller, Col B(1)=driver name
     for(let i=hIdx+1;i<rows.length;i++){
       const r = rows[i];
-      const driver = cs(r,0).trim();
+      const driver = cs(r,1).trim();
       if(!driver) continue;
       _driverInfoMap[driver.toLowerCase()] = {
         nat:        cs(r,22).trim(),
