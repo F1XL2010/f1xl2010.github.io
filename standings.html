@@ -66,7 +66,7 @@
   .div-card-arrow{color:var(--green);font-size:11px;margin-top:10px;display:block;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;text-transform:uppercase;}
 
   /* DIVISION VIEW */
-  .div-view{display:none;}
+  .div-view{display:none;background:#111816;}
   .div-view.active{display:block;}
   .div-back{display:flex;align-items:center;gap:8px;padding:12px 24px;border-bottom:1px solid var(--border);cursor:pointer;background:none;border-top:none;border-left:none;border-right:none;color:var(--text-muted);font-family:'Barlow',sans-serif;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;transition:color 0.2s;width:100%;text-align:left;}
   .div-back:hover{color:var(--text);}
@@ -83,7 +83,7 @@
   .tab-panel.active{display:block;}
 
   /* LEGEND */
-  .legend{display:flex;flex-wrap:wrap;gap:8px;padding:10px 24px;background:#1a2320;border-bottom:1px solid var(--border);}
+  .legend{display:flex;flex-wrap:wrap;gap:8px;padding:10px 24px;background:#1a2320;border-bottom:1px solid rgba(255,255,255,0.07);}
   .legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-muted);}
   .legend-dot{width:18px;height:14px;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;}
   .scroll-hint{display:none;padding:8px 24px;font-size:11px;color:var(--text-faint);}
@@ -269,7 +269,7 @@
 </div>
 
 <!-- DIVISION SELECTOR -->
-<div id="overall-constructors" style="background:rgba(232,184,75,0.12);border-bottom:1px solid rgba(232,184,75,0.3);">
+<div id="overall-constructors" style="background:#1a2320;border-bottom:1px solid rgba(232,184,75,0.3);">
   <div style="padding:16px 24px 0;">
     <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#E8B84B;margin-bottom:12px;">Overall Constructors Championship</div>
     <div style="display:flex;gap:0;border-bottom:1px solid rgba(255,255,255,0.1);margin-bottom:0;">
@@ -284,7 +284,7 @@
   <div id="oc-panel-coolstats" style="display:none;"><div id="cool-stats-cards" style="display:flex;gap:12px;overflow-x:auto;padding:16px 24px;"><div class="loading-msg">Loading...</div></div></div>
 
 </div>
-<div id="selector-view">
+<div id="selector-view" style="background:#111816;">
   <div class="div-selector" id="div-selector">
     <div class="loading-msg" style="grid-column:1/-1">Loading...</div>
   </div>
@@ -615,7 +615,6 @@ async function loadDriverInfo(sheetId, gid){
     if(hIdx<0) hIdx = 1;
 
     // Col A(0)=driver, Col C(2)=nat code, Col F(5)=platform, Col G(6)=controller
-    // Header row contains 'Driver' in col A
     for(let i=hIdx+1;i<rows.length;i++){
       const r = rows[i];
       const driver = cs(r,0).trim();
@@ -625,6 +624,20 @@ async function loadDriverInfo(sheetId, gid){
         platform:   cs(r,5).trim(),
         controller: cs(r,6).trim(),
       };
+    }
+
+    // Parse Team Principal section — col J(9)=TP name, col K(10)=team name
+    let tpStart = -1;
+    for(let i=0;i<rows.length;i++){
+      if(cs(rows[i],9).toLowerCase()==='team principal'){ tpStart=i+2; break; }
+    }
+    if(tpStart>=0){
+      for(let i=tpStart;i<rows.length;i++){
+        const tp = cs(rows[i],9).trim();
+        const team = cs(rows[i],10).trim().toLowerCase();
+        if(!tp || !team) continue;
+        teamOwners[team] = tp;
+      }
     }
   } catch(e){ console.warn('Driver info load failed:', e.message); }
 }
