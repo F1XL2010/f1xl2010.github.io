@@ -1129,34 +1129,35 @@ async function loadOverallConstructors() {
       try {
         const mId = overallUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
         const mGid = overallUrl.match(/gid=(\d+)/);
-        const osid = mId ? mId[1] : null;
-        const ogid = mGid ? mGid[1] : null;
-        if (osid && ogid) {
-          const table = await fetchSheet(osid, ogid);
-          const rows = table.rows;
-          // Find header row with 'Team'
-          let hIdx = -1;
-          for (let i=0; i<rows.length; i++) {
-            if (rows[i].c.some(c => (c.v||'').toString().trim().toLowerCase() === 'team')) { hIdx=i; break; }
+        if (mId && mGid) {
+          const csvUrl = `https://docs.google.com/spreadsheets/d/${mId[1]}/export?format=csv&gid=${mGid[1]}`;
+          const res = await fetch(csvUrl);
+          const text = await res.text();
+          const csvRows = text.split(/\r?\n/).map(l=>l.split(',').map(v=>v.replace(/^"|"$/g,'').trim()));
+          // Find header row
+          let hIdx=-1, posCol=-1, teamCol=-1, ptsCol=-1, tpCol=-1;
+          for(let i=0;i<csvRows.length;i++){
+            const r=csvRows[i];
+            const posIdx=r.findIndex(v=>(v||'').toLowerCase().startsWith('pos'));
+            if(posIdx>=0){
+              posCol=posIdx;
+              teamCol=r.findIndex(v=>(v||'').toLowerCase()==='team');
+              if(teamCol<0) teamCol=posIdx+1;
+              ptsCol=r.findIndex(v=>(v||'').toLowerCase()==='points');
+              // TP is last non-blank header
+              for(let c=r.length-1;c>=0;c--){ if((r[c]||'').trim()){ tpCol=c; break; } }
+              hIdx=i; break;
+            }
           }
-          if (hIdx >= 0) {
-            const hRow = rows[hIdx];
-            const teamCol = hRow.c.findIndex(c => (c.v||'').toString().trim().toLowerCase() === 'team');
-            const ptsCol = hRow.c.findIndex(c => (c.v||'').toString().trim().toLowerCase() === 'points');
-            const nameCol = hRow.c.findIndex(c => (c.v||'').toString().trim().toLowerCase() === 'name');
-            if (teamCol >= 0 && ptsCol >= 0) {
-              for (let i=hIdx+1; i<rows.length; i++) {
-                const team = cs(rows[i], teamCol).trim();
-                const ptsRaw = cs(rows[i], ptsCol).trim();
-                if (!team || !ptsRaw) continue;
-                const pts = Math.floor(parseFloat(ptsRaw)) || 0;
-                teamPoints[team] = (teamPoints[team]||0) + pts;
-                // Store TP from Name column
-                if(nameCol >= 0){
-                  const tp = cs(rows[i], nameCol).trim();
-                  if(tp && !teamOwners[team.toLowerCase()]) teamOwners[team.toLowerCase()] = tp;
-                }
-              }
+          if(hIdx>=0 && teamCol>=0 && ptsCol>=0){
+            for(let i=hIdx+1;i<csvRows.length;i++){
+              const r=csvRows[i];
+              const team=(r[teamCol]||'').trim();
+              const ptsRaw=(r[ptsCol]||'').trim().replace(/,/g,'');
+              if(!team||!ptsRaw) continue;
+              const pts=Math.floor(parseFloat(ptsRaw))||0;
+              if(pts) teamPoints[team]=(teamPoints[team]||0)+pts;
+              if(tpCol>=0){ const tp=(r[tpCol]||'').trim(); if(tp) teamOwners[team.toLowerCase()]=tp; }
             }
           }
         }
@@ -1687,6 +1688,11 @@ async function initStandings() {
     if (eyebrow && currentSeason) eyebrow.textContent = 'Season ' + currentSeason;
 
     buildSelector();
+
+    // Load driver info (TP data) before rendering overall constructors
+    const d1 = divisions.find(d => d.sheetId && d.gids && d.gids.teamInfo);
+    if(d1) await loadDriverInfo(d1.sheetId, d1.gids.teamInfo);
+
     loadOverallConstructors();
   } catch(e) {
     console.error('Init failed:', e);
