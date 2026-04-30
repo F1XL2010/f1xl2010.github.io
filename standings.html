@@ -545,15 +545,64 @@ const NAT_TO_ISO = {
 };
 
 function natToFlag(nat) {
-  const iso = NAT_TO_ISO[nat] || NAT_TO_ISO[nat?.trim()] || '';
-  if (!iso) return '';
-  return `<img class="td-driver-flag" src="https://flagcdn.com/w40/${iso}.png" alt="${nat}" crossorigin="anonymous" onerror="this.style.display='none'">`;
+  if(!nat || !nat.trim()) return '';
+  const code = nat.trim().toUpperCase();
+  return `<img class="td-driver-flag" src="images/smallflags/${code}.svg" alt="${nat}" onerror="this.style.display='none'" style="width:16px;height:11px;object-fit:cover;border-radius:1px;vertical-align:middle;margin-right:3px;">`;
+}
+
+const PLATFORM_ICONS = {
+  'Xbox':    'images/platform_xbox.png',
+  'PS':      'images/platform_PS.png',
+  'PC':      'images/platform_PC.png',
+};
+const CONTROLLER_ICONS = {
+  'Wheel':    'images/controller_wheel.png',
+  'Gamepad':  'images/controller_gamepad.png',
+};
+
+function driverIcon(src, alt){
+  if(!src) return '';
+  return `<img src="${src}" alt="${alt}" title="${alt}" onerror="this.style.display='none'" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;margin-left:3px;">`;
+}
+
+let _driverInfoMap = {};
+
+async function loadDriverInfo(sheetId, gid){
+  if(!gid) return;
+  try{
+    const table = await fetchSheet(sheetId, gid);
+    const rows = table.rows;
+    // Find header row - look for 'Driver' in col 0 or similar
+    let hIdx = -1;
+    for(let i=0;i<rows.length;i++){
+      const v = cs(rows[i],0).toLowerCase();
+      if(v==='driver'||v==='name'){ hIdx=i; break; }
+    }
+    if(hIdx<0) hIdx = 1; // fallback
+
+    // Col W = 22 (nationality), Col F = 5 (platform), Col G = 6 (controller)
+    for(let i=hIdx+1;i<rows.length;i++){
+      const r = rows[i];
+      const driver = cs(r,0).trim();
+      if(!driver) continue;
+      _driverInfoMap[driver.toLowerCase()] = {
+        nat:        cs(r,22).trim(),
+        platform:   cs(r,5).trim(),
+        controller: cs(r,6).trim(),
+      };
+    }
+  } catch(e){ console.warn('Driver info load failed:', e.message); }
 }
 
 async function loadDrivers() {
   try {
     const table = await fetchSheet(currentDiv.sheetId, currentDiv.gids.drivers);
     const rows = table.rows;
+
+    // Load driver info (nationality, platform, controller)
+    _driverInfoMap = {};
+    const infoGid = currentDiv.gids.teamInfo;
+    if(infoGid) await loadDriverInfo(currentDiv.sheetId, infoGid);
 
     // Find header row containing "Pos"
     let hIdx = -1;
@@ -690,6 +739,12 @@ async function loadDrivers() {
       const posN = pos;
       const pc = pClass(posN);
 
+      // Driver info lookup (flag, platform, controller)
+      const dInfo = _driverInfoMap[driver.toLowerCase()] || {};
+      const flagHtml = natToFlag(dInfo.nat || nat);
+      const platformHtml = driverIcon(PLATFORM_ICONS[dInfo.platform], dInfo.platform||'');
+      const controllerHtml = driverIcon(CONTROLLER_ICONS[dInfo.controller], dInfo.controller||'');
+
       if (firstDriver) {
         races.forEach(r => {
           const v = cs(row,r.col).trim();
@@ -707,7 +762,7 @@ async function loadDrivers() {
       let rHtml = `<tr>
         <td class="st-pos"><span class="st-pos-cell ${pc}">${pos}</span></td>
         <td class="st-driver${hasLogo}" style="${logoStyle}"><div class="st-driver-cell">
-          <span class="st-driver-name">${driver}</span>
+          <span class="st-driver-name">${flagHtml}${driver}${platformHtml}${controllerHtml}</span>
           ${teamSpan}
         </div></td>`;
 
@@ -1581,6 +1636,7 @@ async function initStandings() {
           constructors: seasonConfig[`d${d}_constructors_gid`],
           driverStats:  seasonConfig[`d${d}_driver_stats_gid`],
           teamStats:    seasonConfig[`d${d}_team_stats_gid`],
+          teamInfo:     seasonConfig[`d${d}_team_info_gid`],
         },
         season: currentSeason,
         numRounds: numRounds
