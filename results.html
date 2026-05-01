@@ -919,6 +919,7 @@ async function selectLegacyRound(num){
       fetchSheetId = _seasonCfg[`d${_currentDiv}_sheet_id`];
       fetchGid = r.gid;
     }
+    console.log('Round', r.round, '| sheetId:', fetchSheetId, '| gid:', fetchGid, '| raw gid:', r.gid);
     const url = `https://docs.google.com/spreadsheets/d/${fetchSheetId}/export?format=csv&gid=${fetchGid}`;
     const res = await fetch(url);
     const text = await res.text();
