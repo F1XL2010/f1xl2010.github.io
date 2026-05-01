@@ -132,7 +132,7 @@
   .ps-pts.zero{color:rgba(255,255,255,0.2);}
   .ps-round-header{height:48px;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding:4px 2px;font-size:9px;font-weight:700;letter-spacing:0.5px;}
 
-  .st-wrap{overflow-x:auto;margin-bottom:16px;border-radius:6px;border:1px solid var(--border);}
+  .st-wrap{overflow-x:auto;margin-bottom:16px;border-radius:6px;border:1px solid var(--border);max-width:720px;}
   .st{width:100%;border-collapse:collapse;font-size:13px;}
   .st thead tr{background:var(--dark3);}
   .st th{padding:8px 10px;font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.4);border-bottom:2px solid rgba(255,255,255,0.1);border-right:1px solid rgba(255,255,255,0.06);white-space:nowrap;text-align:center;}
@@ -1112,7 +1112,7 @@ function buildOverallConstTable(rows){
   data.sort((a,b)=>b.pts-a.pts);
   if(!data.length) return '<div class="div-loading">No data found.</div>';
 
-  let html='<div class="st-wrap"><table class="standings-table"><thead><tr>';
+  let html='<div style="display:flex;justify-content:center;padding:12px 0;"><div class="st-wrap" style="width:100%;"><table class="standings-table"><thead><tr>';
   html+='<th class="ps-st-pos"><span class="ps-pos-header">Pos</span></th>';
   html+='<th class="ps-st-driver"><span class="ps-driver-header">Team</span></th>';
   html+='<th class="ps-result"><div class="ps-round-header">Pts</div></th>';
@@ -1138,7 +1138,7 @@ function buildOverallConstTable(rows){
     html+='</tr>';
   });
 
-  html+='</tbody></table></div>';
+  html+='</tbody></table></div></div>';
   return html;
 }
 
