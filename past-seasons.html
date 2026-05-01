@@ -132,7 +132,8 @@
   .ps-pts.zero{color:rgba(255,255,255,0.2);}
   .ps-round-header{height:48px;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding:4px 2px;font-size:9px;font-weight:700;letter-spacing:0.5px;}
 
-  .st-wrap{overflow-x:auto;margin-bottom:16px;border-radius:6px;border:1px solid var(--border);max-width:720px;}
+  .st-wrap{overflow-x:auto;margin-bottom:16px;border-radius:6px;border:1px solid var(--border);}
+  .st-wrap-narrow{max-width:720px;width:100%;}
   .st{width:100%;border-collapse:collapse;font-size:13px;}
   .st thead tr{background:var(--dark3);}
   .st th{padding:8px 10px;font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.4);border-bottom:2px solid rgba(255,255,255,0.1);border-right:1px solid rgba(255,255,255,0.06);white-space:nowrap;text-align:center;}
@@ -1112,7 +1113,7 @@ function buildOverallConstTable(rows){
   data.sort((a,b)=>b.pts-a.pts);
   if(!data.length) return '<div class="div-loading">No data found.</div>';
 
-  let html='<div style="display:flex;justify-content:center;padding:12px 0;"><div class="st-wrap" style="width:100%;"><table class="standings-table"><thead><tr>';
+  let html='<div style="display:flex;justify-content:center;padding:12px 0;"><div class="st-wrap st-wrap-narrow"><table class="standings-table"><thead><tr>';
   html+='<th class="ps-st-pos"><span class="ps-pos-header">Pos</span></th>';
   html+='<th class="ps-st-driver"><span class="ps-driver-header">Team</span></th>';
   html+='<th class="ps-result"><div class="ps-round-header">Pts</div></th>';
@@ -1492,17 +1493,29 @@ function buildS20ConstructorsWithTeamStats(id, d, constRows, teamStatsRows){
       }
       // Sort by points
       data.sort((a,b)=>b.pts-a.pts);
+      const leader2 = data.length ? Math.floor(data[0].pts) : 0;
       if(data.length){
-        constHtml = '<div class="st-wrap"><table class="st"><thead><tr>';
-        constHtml += '<th style="width:30px">Pos</th><th class="th-l">Team</th><th>Points</th>';
+        constHtml = '<div style="display:flex;justify-content:center;padding:4px 0;"><div class="st-wrap st-wrap-narrow"><table class="standings-table"><thead><tr>';
+        constHtml += '<th class="ps-st-pos"><span class="ps-pos-header">Pos</span></th>';
+        constHtml += '<th class="ps-st-driver"><span class="ps-driver-header">Team / Principal</span></th>';
+        constHtml += '<th class="ps-result"><div class="ps-round-header">Pts</div></th>';
+        constHtml += '<th class="ps-result"><div class="ps-round-header">Gap</div></th>';
         constHtml += '</tr></thead><tbody>';
         data.forEach((d2,idx)=>{
           const pos=idx+1;
-          constHtml += '<tr'+trClass(pos)+'><td><span class="st-pos">'+pos+'</span></td>';
-          constHtml += '<td class="td-l"><span class="dname">'+d2.team+'</span></td>';
-          constHtml += '<td><span class="pts">'+d2.pts+'</span></td></tr>';
+          const pc=pos===1?'p1':pos===2?'p2':pos===3?'p3':'';
+          const slug=psTeamSlug(d2.team);
+          const logoStyle=slug?`background-image:linear-gradient(rgba(22,29,27,0.5),rgba(22,29,27,0.5)),url('images/teamlogos/thinlogo_${slug}.webp');background-size:cover;background-position:center;`:'';
+          const hasLogo=slug?' has-logo':'';
+          const gap=idx===0?'—':'-'+(leader2-Math.floor(d2.pts));
+          constHtml += '<tr>';
+          constHtml += '<td class="ps-st-pos"><span class="ps-pos-cell '+pc+'">'+pos+'</span></td>';
+          constHtml += '<td class="ps-st-driver'+hasLogo+'" style="'+logoStyle+'"><div class="ps-driver-cell"><span class="ps-driver-name">'+d2.team+'</span></div></td>';
+          constHtml += '<td class="ps-result"><span class="ps-pts">'+Math.floor(d2.pts)+'</span></td>';
+          constHtml += '<td class="ps-result"><span style="font-size:12px;color:rgba(255,255,255,0.5);">'+gap+'</span></td>';
+          constHtml += '</tr>';
         });
-        constHtml += '</tbody></table></div>';
+        constHtml += '</tbody></table></div></div>';
       }
     }
   }
