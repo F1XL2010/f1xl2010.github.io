@@ -833,7 +833,18 @@ async function showLegacyDiv(d){
 
 async function loadLegacyDivision(d){
   const sc = _seasonCfg;
-  const sheetId = sc[`d${d}_sheet_id`];
+  let sheetId = sc[`d${d}_sheet_id`];
+
+  // For S14-S19, the data sheet URL is stored in overall_gid (col 2 of main config)
+  // If no d1_sheet_id, check if overall_gid is a full spreadsheet URL
+  if(!sheetId){
+    const og = sc['overall_gid'] || '';
+    if(og.includes('spreadsheets/d/')){
+      const m = og.match(/\/d\/([a-zA-Z0-9_-]+)/);
+      if(m) sheetId = m[1];
+    }
+  }
+
   if(!sheetId){
     document.getElementById('round-selector').innerHTML = '<div style="color:var(--text-faint);font-size:13px;">No data for this division.</div>';
     return;
