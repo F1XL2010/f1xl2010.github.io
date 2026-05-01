@@ -904,10 +904,14 @@ async function loadConstructors() {
       const ga = i===0 ? '—' : `-${teams[i-1].pts - d.pts}`;
       const rowBg = `background:rgba(${r},${g},${b},0.15);`;
       const teamCellBg = `background:rgba(${r},${g},${b},0.25);border-left:3px solid ${color};`;
+      const slug = d.team.toLowerCase().replace(/\s+/g,'').replace(/[^a-z0-9]/g,'');
+      const logoStyle2 = slug ? `background-image:linear-gradient(rgba(22,29,27,0.5),rgba(22,29,27,0.5)),url('images/teamlogos/thinlogo_${slug}.webp');background-size:cover;background-position:center;` : '';
+      const ownerName = teamOwners[d.team.toLowerCase()] || '';
+      const ownerDisplay = ownerName && ownerName.toLowerCase()==='reserve' ? 'RESERVE' : ownerName;
       html += `<tr>
         <td style="${tdStyle}${rowBg}"><span style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:${pc};">${posNum}</span></td>
-        <td style="${tdStyle}${teamCellBg}"><div style="display:flex;align-items:center;gap:8px;">
-          <span style="font-weight:500;">${d.team}</span>
+        <td class="${slug?'has-logo':''}" style="${tdStyle}${teamCellBg}${logoStyle2}"><div class="ps-driver-cell">
+          <span class="ps-driver-name">${ownerDisplay ? `Team Principal · ${ownerDisplay}` : d.team}</span>
         </div></td>
         <td style="${tdStyle}${rowBg}text-align:right;"><span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#3DCC47;">${d.pts}</span></td>
         <td style="${tdStyle}${rowBg}text-align:right;color:rgba(255,255,255,0.6);">${gl}</td>
