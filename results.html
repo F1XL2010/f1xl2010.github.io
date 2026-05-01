@@ -730,6 +730,11 @@ function legacyDetectFormat(rows){
   return {hdrRow:-1, posCol:0};
 }
 
+function cleanCell(v){
+  const s = (v||'').toString().trim();
+  return (s.includes('#NAME?') || s.includes('#REF!') || s.includes('#N/A') || s.includes('#VALUE!')) ? '' : s;
+}
+
 function legacyExtractSectionFlex(rows, hdrRow, colOffset, isRace){
   const results = [];
   for(let i=hdrRow+1;i<rows.length;i++){
@@ -741,11 +746,11 @@ function legacyExtractSectionFlex(rows, hdrRow, colOffset, isRace){
     // Find driver col - skip blank cols after posCol
     let driverCol = colOffset+1;
     while(driverCol < colOffset+4 && !(row[driverCol]||'').trim()) driverCol++;
-    const driver = (row[driverCol]||'').toString().trim();
+    const driver = cleanCell(row[driverCol]);
     if(!driver) break;
     if(isRace){
       const teamCol = driverCol+1;
-      const team = (row[teamCol]||'').toString().trim();
+      const team = cleanCell(row[teamCol]);
       const stopsCol = teamCol+1;
       const stops = (row[stopsCol]||'').toString().trim();
       const timeCol = stopsCol+2;
