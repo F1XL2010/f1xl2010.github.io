@@ -1293,8 +1293,7 @@ async function loadS20OverallContent(id, sc){
 
 }
 
-async function loadS20DivContent(id, d, sc){
-  const divEl = document.getElementById(id+'-dcontent-'+d);
+async function loadS20DivContent(id, d, sc){\n  const divEl = document.getElementById(id+'-dcontent-'+d);
   if(!divEl || divEl.dataset.loaded === 'true') return;
   divEl.dataset.loaded = 'true';
 
@@ -1303,16 +1302,28 @@ async function loadS20DivContent(id, d, sc){
   const cgid = sc['d'+d+'_constructors_gid'];
   const sgid = sc['d'+d+'_driver_stats_gid'];
   const tgid = sc['d'+d+'_team_stats_gid'];
-
+  const tigid = sc['d'+d+'_team_info_gid'];
   const calgid = sc['d'+d+'_calendar_gid'];
 
-  const [driverRows, constRows, statsRows, teamStatsRows, calRows] = await Promise.all([
+  const [driverRows, constRows, statsRows, teamStatsRows, calRows, teamInfoRows] = await Promise.all([
     (sid && dgid!==undefined && dgid!=='') ? fetchCSV(sid, dgid).catch(()=>null) : Promise.resolve(null),
     (cgid!==undefined && cgid!=='') ? fetchCSV(sid, cgid).catch(()=>null) : Promise.resolve(null),
     (sgid!==undefined && sgid!=='') ? fetchCSV(sid, sgid).catch(()=>null) : Promise.resolve(null),
     (tgid!==undefined && tgid!=='') ? fetchCSV(sid, tgid).catch(()=>null) : Promise.resolve(null),
-    (calgid!==undefined && calgid!=='') ? fetchCSV(sid, calgid).catch(()=>null) : Promise.resolve(null)
+    (calgid!==undefined && calgid!=='') ? fetchCSV(sid, calgid).catch(()=>null) : Promise.resolve(null),
+    (tigid!==undefined && tigid!=='') ? fetchCSV(sid, tigid).catch(()=>null) : Promise.resolve(null),
   ]);
+
+  // Build driver→team lookup from team info sheet
+  // Col A(0)=driver, Col D(3)=team
+  const driverTeamMap = {};
+  if(teamInfoRows){
+    for(const r of teamInfoRows){
+      const driver = (r[0]||'').trim();
+      const team = (r[3]||'').trim();
+      if(driver && team && driver.toLowerCase()!=='driver') driverTeamMap[driver.toLowerCase()] = team;
+    }
+  }
 
   // Build round->country map from calendar
   const roundNames = {};
@@ -1325,7 +1336,7 @@ async function loadS20DivContent(id, d, sc){
   }
 
   let divHtml = '';
-  if(driverRows) divHtml += buildS20Drivers(driverRows, roundNames);
+  if(driverRows) divHtml += buildS20Drivers(driverRows, roundNames, driverTeamMap);
   else divHtml += '<div class="div-loading">No driver data available.</div>';
 
   // Constructors + Team Stats as sub-tabbed section
@@ -1346,7 +1357,7 @@ async function loadS20DivContent(id, d, sc){
   }
 }
 
-function buildS20Drivers(rows, roundNames){
+function buildS20Drivers(rows, roundNames, driverTeamMap){
   // roundNames: optional map of {roundNum: countryName} from calendar
   // Row 0: circuit names (col 4+) — fallback if no calendar
   // Header row: contains 'Pos','Driver','Points' — find dynamically
@@ -1418,7 +1429,8 @@ function buildS20Drivers(rows, roundNames){
   dataRows.forEach((r,idx)=>{
     const pos = parseInt((r[0]||'').trim());
     const driver = (r[2]||'').trim();
-    const team = (r[3]||'').trim();
+    const teamFromRow = (r[3]||'').trim();
+    const team = teamFromRow || (driverTeamMap && driverTeamMap[driver.toLowerCase()]) || '';
     const pts = (r[ptsCol]||'').trim();
     const pc = pos===1?'p1':pos===2?'p2':pos===3?'p3':'';
     html += '<tr>';
