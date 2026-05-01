@@ -50,7 +50,7 @@
   .round-btn.sprint.active{background:rgba(100,150,255,0.8);border-color:rgba(100,150,255,0.8);color:#fff;}
   .content{padding:20px 24px 48px;max-width:1100px;}
   .loading-msg{text-align:center;padding:48px;color:var(--text-muted);font-size:14px;}
-  .race-header{background:#1a2320;border:1px solid var(--border2);border-top:3px solid var(--green);border-radius:8px;padding:18px 20px;margin-bottom:20px;}
+  .race-header{background:#1a2320;border:1px solid var(--border2);border-top:3px solid var(--green);border-radius:8px;margin-bottom:20px;overflow:hidden;background-size:cover;background-position:center;}
   .race-header.is-sprint{border-top-color:rgba(100,150,255,0.8);}
   .race-header-inner{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;}
   .race-title{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;text-transform:uppercase;line-height:1;}
@@ -540,9 +540,36 @@ function render(r,rows){
   document.getElementById('content').innerHTML=html;
 }
 
+const CIRCUIT_TO_COUNTRY = {
+  'bahrain':'bahrain','saudi arabia':'saudi_arabia','australia':'australia',
+  'japan':'japan','china':'china','miami':'usa','usa':'usa',
+  'emilia romagna':'italy','monaco':'monaco','canada':'canada',
+  'spain':'spain','austria':'austria','great britain':'britain','britain':'britain',
+  'hungary':'hungary','belgium':'belgium','netherlands':'netherlands',
+  'italian':'italy','italy':'italy','singapore':'singapore',
+  'azerbaijan':'azerbaijan','qatar':'qatar','mexico':'mexico',
+  'brazil':'brazil','las vegas':'usa','abu dhabi':'abu_dhabi',
+  'australian':'australia','canadian':'canada','british':'britain',
+  'german':'germany','french':'france','portuguese':'portugal',
+  'turkish':'turkey','indian':'india','korean':'south_korea',
+  'south african':'south_africa','argentinian':'argentina','rwandan':'rwanda',
+};
+
+function circuitToFlag(circuit){
+  if(!circuit) return '';
+  const cl = circuit.toLowerCase();
+  for(const [key, val] of Object.entries(CIRCUIT_TO_COUNTRY)){
+    if(cl.includes(key)) return `images/largeflags/grunge_${val}.webp`;
+  }
+  return '';
+}
+
 function header(r,circuit,winner,sc,rf,isSprint){
-  return`<div class="race-header${isSprint?' is-sprint':''}">
-    <div class="race-header-inner">
+  const flagUrl = circuitToFlag(circuit);
+  const flagStyle = flagUrl ? `background-image:url('${flagUrl}');background-size:cover;background-position:center;` : '';
+  const winnerTeam = winner && winner.team && winner.team !== 'undefined' ? winner.team : '';
+  return`<div class="race-header${isSprint?' is-sprint':''}" style="${flagStyle}">
+    <div class="race-header-inner" style="background:rgba(17,24,22,0.78);padding:16px 20px;border-radius:8px 8px 0 0;">
       <div>
         <div class="race-title">${circuit} Grand Prix</div>
         <div class="race-subtitle">${fd(r.date)}</div>
@@ -555,8 +582,8 @@ function header(r,circuit,winner,sc,rf,isSprint){
       </div>
       ${winner?`<div>
         <div class="race-winner-label">Winner</div>
-        <div class="race-winner-name">${winner.driver}</div>
-        <div class="race-winner-team">${winner.team}</div>
+        <div class="race-winner-name">${winner.driver||''}</div>
+        ${winnerTeam?`<div class="race-winner-team">${winnerTeam}</div>`:''}
       </div>`:''}
     </div>
   </div>`;
