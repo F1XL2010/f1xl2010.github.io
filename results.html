@@ -718,28 +718,118 @@ function legacyExtractSection(rows, colOffset, isRace){
   return results;
 }
 
-function legacyParseRound(rows, isSprint){
-  const meta = {
-    circuit: (rows[0]||[])[4]||'',
-    weather: (rows[0]||[])[21]||'',
-    sc: ((rows[2]||[])[24]||'0').toString().trim(),
-    rf: ((rows[3]||[])[10]||'0').toString().trim(),
-    isSprint
-  };
+function legacyDetectFormat(rows){
+  // Find header row - look for 'Pos' or 'Pos.'
+  for(let i=0;i<rows.length;i++){
+    const r = rows[i];
+    for(let c=0;c<r.length;c++){
+      const v=(r[c]||'').trim().toLowerCase();
+      if(v==='pos'||v==='pos.') return {hdrRow:i, posCol:c};
+    }
+  }
+  return {hdrRow:-1, posCol:0};
+}
 
+function legacyExtractSectionFlex(rows, hdrRow, colOffset, isRace){
+  const results = [];
+  for(let i=hdrRow+1;i<rows.length;i++){
+    const row = rows[i];
+    const rawPos = (row[colOffset]||'').toString().trim();
+    if(!rawPos||rawPos==='Pos'||rawPos==='Pos.') continue;
+    const posNum = parseInt(rawPos);
+    if(isNaN(posNum) && !isDNF(rawPos)) break;
+    // Find driver col - skip blank cols after posCol
+    let driverCol = colOffset+1;
+    while(driverCol < colOffset+4 && !(row[driverCol]||'').trim()) driverCol++;
+    const driver = (row[driverCol]||'').toString().trim();
+    if(!driver) break;
+    if(isRace){
+      const teamCol = driverCol+1;
+      const team = (row[teamCol]||'').toString().trim();
+      const stopsCol = teamCol+1;
+      const stops = (row[stopsCol]||'').toString().trim();
+      const timeCol = stopsCol+2;
+      const gap = (row[timeCol]||'').toString().trim();
+      const penCol = timeCol+1;
+      const pen = (row[penCol]||'').toString().trim();
+      const ptsCol = penCol+1;
+      const pts = (row[ptsCol]||'').toString().trim();
+      results.push({pos:rawPos, num:'', driver, team, stops, gap, fl:'', pen, pts});
+    } else {
+      const tyreCol = driverCol+1;
+      const tyre = (row[tyreCol]||'').toString().trim();
+      const timeCol = tyreCol+2;
+      const time = (row[timeCol]||'').toString().trim();
+      const penCol = timeCol+1;
+      const pen = (row[penCol]||'').toString().trim();
+      results.push({pos:rawPos, num:'', driver, team:'', time, tyre, pen});
+    }
+  }
+  return results;
+}
+
+function legacyParseRound(rows, isSprint){
+  // Detect format by finding header row
+  const {hdrRow, posCol} = legacyDetectFormat(rows);
+
+  // Find circuit from row 1 (S26 format) or row 1 (S19 format)
+  let circuit = '';
+  for(let i=0;i<Math.min(3,rows.length);i++){
+    const r = rows[i];
+    for(let c=1;c<r.length;c++){
+      const v=(r[c]||'').toString().trim();
+      if(v && v.length>3 && isNaN(parseFloat(v)) && !v.includes(':') && !v.includes('Round')){
+        circuit = v; break;
+      }
+    }
+    if(circuit) break;
+  }
+
+  const meta = {circuit, weather:'', sc:'0', rf:'0', isSprint};
+
+  if(hdrRow < 0){
+    // Old S26 style - use original extractor
+    if(!isSprint){
+      const quali = legacyExtractSection(rows, 0, false);
+      const race  = legacyExtractSection(rows, 12, true);
+      return {meta, quali, race, sprintQuali:[], sprintRace:[]};
+    } else {
+      const sprintQuali = legacyExtractSection(rows, 0, false);
+      const sprintRace  = legacyExtractSection(rows, 12, true);
+      const quali       = legacyExtractSection(rows, 25, false);
+      const race        = legacyExtractSection(rows, 38, true);
+      return {meta, sprintQuali, sprintRace, quali, race};
+    }
+  }
+
+  // New flexible format - find the two Pos columns (quali and race)
+  const hdrRow2 = rows[hdrRow];
+  const posCols = [];
+  for(let c=0;c<hdrRow2.length;c++){
+    const v=(hdrRow2[c]||'').trim().toLowerCase();
+    if(v==='pos'||v==='pos.') posCols.push(c);
+  }
+
+  if(posCols.length >= 2){
+    const quali = legacyExtractSectionFlex(rows, hdrRow, posCols[0], false);
+    const race  = legacyExtractSectionFlex(rows, hdrRow, posCols[1], true);
+    return {meta, quali, race, sprintQuali:[], sprintRace:[]};
+  } else if(posCols.length === 1){
+    // Single section - try to detect if it's quali or race by headers
+    const isRaceSection = hdrRow2.some(v=>(v||'').toString().toLowerCase().includes('stop'));
+    const data = legacyExtractSectionFlex(rows, hdrRow, posCols[0], isRaceSection);
+    return isRaceSection
+      ? {meta, quali:[], race:data, sprintQuali:[], sprintRace:[]}
+      : {meta, quali:data, race:[], sprintQuali:[], sprintRace:[]};
+  }
+
+  // Fallback to original
   if(!isSprint){
-    // Normal: Quali (col 0) | Race (col 12)
     const quali = legacyExtractSection(rows, 0, false);
     const race  = legacyExtractSection(rows, 12, true);
     return {meta, quali, race, sprintQuali:[], sprintRace:[]};
-  } else {
-    // Sprint: Sprint Quali (col 0) | Sprint Race (col 12) | Quali (col 25) | Race (col 38)
-    const sprintQuali = legacyExtractSection(rows, 0, false);
-    const sprintRace  = legacyExtractSection(rows, 12, true);
-    const quali       = legacyExtractSection(rows, 25, false);
-    const race        = legacyExtractSection(rows, 38, true);
-    return {meta, sprintQuali, sprintRace, quali, race};
   }
+  return {meta, quali:[], race:[], sprintQuali:[], sprintRace:[]};
 }
 
 function legacyTeamBar(team){
