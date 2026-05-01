@@ -706,8 +706,21 @@ async function loadDivContent(id, d, sc){
   const [driverRows, constRows, statsRows] = await Promise.all(fetches);
 
   let divHtml = '';
-  if(driverRows) divHtml += buildRaceGridDrivers(driverRows);
-  else divHtml += '<div class="div-loading">No driver data available.</div>';
+  if(driverRows){
+    // Detect format: if header row has 'Position' or 'Pos.' with no round columns → use S10 builder
+    const hdrRow = driverRows.find(r => {
+      const v = (r[1]||'').trim().toLowerCase();
+      return v==='position'||v==='pos'||v==='pos.';
+    });
+    const hasRounds = hdrRow && hdrRow.some((v,i)=>i>3 && (v||'').trim().match(/^R?\d+$/));
+    if(hasRounds){
+      divHtml += buildRaceGridDrivers(driverRows);
+    } else {
+      divHtml += buildS10Drivers(driverRows);
+    }
+  } else {
+    divHtml += '<div class="div-loading">No driver data available.</div>';
+  }
   if(constRows) divHtml += buildS3Constructors(constRows);
   divEl.innerHTML = divHtml;
   setTimeout(_colourActiveTabs, 0);
