@@ -821,8 +821,10 @@ function legacyParseRound(rows, isSprint){
 
   const meta = {circuit, weather:'', sc:'0', rf:'0', isSprint};
 
-  if(hdrRow < 0){
-    // Old S26 style - use original extractor
+  const season = parseFloat(_currentSeason || 0);
+
+  if(season >= 20){
+    // S20-S27: original horizontal format — Quali col 0, Race col 12
     if(!isSprint){
       const quali = legacyExtractSection(rows, 0, false);
       const race  = legacyExtractSection(rows, 12, true);
@@ -836,12 +838,14 @@ function legacyParseRound(rows, isSprint){
     }
   }
 
-  // New flexible format - find the two Pos columns (quali and race)
+  // S19 and below: flexible format with Pos. headers
   const hdrRow2 = rows[hdrRow];
   const posCols = [];
-  for(let c=0;c<hdrRow2.length;c++){
-    const v=(hdrRow2[c]||'').trim().toLowerCase();
-    if(v==='pos'||v==='pos.') posCols.push(c);
+  if(hdrRow >= 0){
+    for(let c=0;c<hdrRow2.length;c++){
+      const v=(hdrRow2[c]||'').trim().toLowerCase();
+      if(v==='pos'||v==='pos.') posCols.push(c);
+    }
   }
 
   if(posCols.length >= 2){
@@ -849,15 +853,14 @@ function legacyParseRound(rows, isSprint){
     const race  = legacyExtractSectionFlex(rows, hdrRow, posCols[1], true);
     return {meta, quali, race, sprintQuali:[], sprintRace:[]};
   } else if(posCols.length === 1){
-    // Single section - try to detect if it's quali or race by headers
-    const isRaceSection = hdrRow2.some(v=>(v||'').toString().toLowerCase().includes('stop'));
+    const isRaceSection = hdrRow >= 0 && hdrRow2.some(v=>(v||'').toString().toLowerCase().includes('stop'));
     const data = legacyExtractSectionFlex(rows, hdrRow, posCols[0], isRaceSection);
     return isRaceSection
       ? {meta, quali:[], race:data, sprintQuali:[], sprintRace:[]}
       : {meta, quali:data, race:[], sprintQuali:[], sprintRace:[]};
   }
 
-  // Fallback to original
+  // Fallback
   if(!isSprint){
     const quali = legacyExtractSection(rows, 0, false);
     const race  = legacyExtractSection(rows, 12, true);
