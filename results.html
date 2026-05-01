@@ -369,8 +369,10 @@ async function init(){
 }
 
 async function showSeason(season, div){
+  console.log('showSeason called with season:', season);
   div = div || 1;
   _currentSeason = season;
+  console.log('_currentSeason set to:', _currentSeason);
   _currentDiv = div;
 
   // Sync selector UI
@@ -914,7 +916,9 @@ function legacyRTable(data, title){
 function legacyRenderRound(r, parsed){
   const {meta, quali, race, sprintQuali, sprintRace} = parsed;
   const circuit = meta.circuit || r.circuit || '';
-  let html = header(r, circuit, race.length ? race[0].driver : '', meta.sc, meta.rf, meta.isSprint);
+  const winner = race.length ? race[0] : null;
+  console.log('legacyRenderRound - circuit:', circuit, '| winner:', winner, '| race.length:', race.length);
+  let html = header(r, circuit, winner, meta.sc, meta.rf, meta.isSprint);
   html += '<div class="results-grid">';
   if(meta.isSprint){
     html += legacyQTable(sprintQuali, 'Sprint Qualifying');
