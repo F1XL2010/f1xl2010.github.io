@@ -1411,11 +1411,14 @@ function buildS20Drivers(rows, roundNames, driverTeamMap){
     if(!label) continue;
     const isSprint = label.toLowerCase().includes('(s)');
     const isSprintRace = !isSprint && c>4 && (headerRow[c-1]||'').trim().toLowerCase().includes('(s)');
-    const circuit = (circuitRow[c]||'').trim();
-    if(circuit) lastCircuit = circuit;
-    // Sprint race col inherits circuit from sprint quali col before it
-    const displayLabel = circuit || (isSprintRace ? lastCircuit : label);
-    // Abbreviate to 3 chars to match older season style
+    // Extract round number from label (e.g. "R1", "R3(s)" -> 1, 3)
+    const roundNum = parseInt(label.replace(/[^0-9]/g,''));
+    // Calendar takes priority, then circuit row, then label itself
+    const calName = !isNaN(roundNum) ? (roundNames[roundNum]||'') : '';
+    const circuitFromRow = (circuitRow[c]||'').trim().replace(/#REF!/g,'').replace(/#N\/A/g,'');
+    if(circuitFromRow) lastCircuit = circuitFromRow;
+    const displayLabel = calName || circuitFromRow || (isSprintRace ? lastCircuit : label);
+    // Abbreviate to 3 chars
     const shortLabel = displayLabel.length > 3 ? displayLabel.slice(0,3).toUpperCase() : displayLabel.toUpperCase();
     roundCols.push({col:c, label: shortLabel, isSprint, isSprintRace});
   }
