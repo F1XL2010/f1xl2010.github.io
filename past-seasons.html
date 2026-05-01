@@ -1293,7 +1293,8 @@ async function loadS20OverallContent(id, sc){
 
 }
 
-async function loadS20DivContent(id, d, sc){\n  const divEl = document.getElementById(id+'-dcontent-'+d);
+async function loadS20DivContent(id, d, sc){
+  const divEl = document.getElementById(id+'-dcontent-'+d);
   if(!divEl || divEl.dataset.loaded === 'true') return;
   divEl.dataset.loaded = 'true';
 
