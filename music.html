@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>F1XL — Music</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green:#3DCC47;--teal:#5ECFCF;--red:#E10600;--gold:#E8B84B;
+    --black:#111816;--dark:#161d1b;--dark2:#1a2320;--dark3:#1e2a27;
+    --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+    --text:#ffffff;--text-muted:rgba(255,255,255,0.60);--text-faint:rgba(255,255,255,0.30);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:#111816;background-image:url('images/backgrounds/background_music.webp');background-size:cover;background-position:center;background-attachment:fixed;color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;display:flex;flex-direction:column;}
+  body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(17,24,22,0.75);z-index:0;pointer-events:none;}
+  body>*{position:relative;z-index:1;}
+
+  /* NAV */
+  nav{background:rgba(9,9,9,0.97);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;}
+  .nav-left{display:flex;align-items:center;gap:14px;flex-shrink:0;}
+  .nav-logo{display:flex;align-items:center;height:40px;text-decoration:none;}
+  .nav-logo img{height:34px;width:auto;display:block;}
+  .nav-links{display:flex;align-items:stretch;height:56px;}
+  .nav-item{position:relative;display:flex;align-items:stretch;}
+  .nav-item>a,.nav-item>button{color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:500;letter-spacing:0.5px;padding:0 13px;display:flex;align-items:center;gap:4px;border-bottom:2px solid transparent;border-top:none;border-left:none;border-right:none;background:none;cursor:pointer;font-family:'Barlow',sans-serif;text-transform:uppercase;transition:color 0.2s;white-space:nowrap;}
+  .nav-item>a:hover,.nav-item>button:hover{color:var(--text);}
+  .nav-item>a.active{color:var(--text);border-bottom-color:var(--green);}
+  .nav-chevron{font-size:8px;opacity:0.5;transition:transform 0.2s;}
+  .nav-item:hover .nav-chevron{transform:rotate(180deg);}
+  .nav-dropdown{display:none;position:absolute;top:100%;left:0;background:#141414;border:1px solid var(--border2);border-top:2px solid var(--green);border-radius:0 0 6px 6px;min-width:180px;padding:6px 0;z-index:300;}
+  .nav-item:hover .nav-dropdown{display:block;}
+  .nav-dropdown a{display:block;padding:9px 16px;color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;transition:color 0.15s,background 0.15s;white-space:nowrap;}
+  .nav-dropdown a:hover{color:var(--text);background:rgba(255,255,255,0.05);}
+  .nav-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:8px;background:none;border:none;}
+  .nav-hamburger span{display:block;width:22px;height:2px;background:var(--text-muted);border-radius:2px;transition:all 0.25s;}
+  .nav-hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+  .nav-hamburger.open span:nth-child(2){opacity:0;}
+  .nav-hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+  .mobile-menu{display:none;position:fixed;top:56px;left:0;right:0;background:#141a18;border-bottom:1px solid var(--border2);z-index:199;padding:12px 0;max-height:calc(100vh - 56px);overflow-y:auto;}
+  .mobile-menu.open{display:block;}
+  .mob-section{font-size:10px;letter-spacing:2px;color:var(--text-faint);padding:12px 24px 4px;text-transform:uppercase;}
+  .mobile-menu a{display:block;padding:10px 24px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;}
+  .mobile-menu a:hover{color:var(--text);}
+  @media(max-width:900px){.nav-links{display:none;}.nav-hamburger{display:flex;}}
+
+  /* PAGE */
+  .page-header{background:#161d1b;border-bottom:1px solid var(--border);padding:24px;}
+  .page-eyebrow{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:2.5px;color:var(--teal);text-transform:uppercase;font-weight:600;margin-bottom:4px;}
+  .page-title{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:700;text-transform:uppercase;line-height:1;margin-bottom:12px;}
+  .page-desc{font-size:13px;color:var(--text-muted);line-height:1.7;max-width:780px;}
+  .album-tag{display:inline-block;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:rgba(232,184,75,0.15);color:var(--gold);border:1px solid rgba(232,184,75,0.3);border-radius:3px;padding:3px 10px;margin-bottom:10px;}
+
+  /* MAIN LAYOUT */
+  .music-wrap{display:grid;grid-template-columns:1fr 320px;flex:1;min-height:0;}
+  @media(max-width:900px){.music-wrap{grid-template-columns:1fr;}}
+
+  /* FEATURED */
+  .featured{padding:24px;display:flex;flex-direction:column;gap:16px;border-right:1px solid var(--border);}
+  .video-wrap{position:relative;width:100%;aspect-ratio:16/9;background:#0d1a14;border-radius:8px;overflow:hidden;border:1px solid var(--border2);}
+  .video-wrap iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:none;}
+  .now-playing{}
+  .np-label{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--green);font-weight:600;margin-bottom:4px;}
+  .np-title{font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;color:#fff;line-height:1.1;}
+  .np-artist{font-size:13px;color:var(--text-muted);margin-top:3px;}
+  .np-num{font-size:11px;color:var(--text-faint);margin-top:2px;}
+  .yt-link{display:inline-flex;align-items:center;gap:7px;background:#1a2320;border:1px solid rgba(255,255,255,0.12);border-radius:4px;padding:8px 14px;font-size:11px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);text-decoration:none;transition:all 0.2s;width:fit-content;}
+  .yt-link:hover{color:#fff;border-color:rgba(255,255,255,0.25);}
+  .yt-dot{width:8px;height:8px;background:#ff0000;border-radius:50%;flex-shrink:0;}
+
+  /* PLAYLIST */
+  .playlist{background:#161d1b;overflow-y:auto;max-height:calc(100vh - 56px);position:sticky;top:56px;}
+  .playlist-hdr{padding:14px 16px 10px;border-bottom:1px solid var(--border);font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-faint);}
+  .track{display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;border-left:3px solid transparent;transition:all 0.15s;}
+  .track:hover{background:rgba(255,255,255,0.04);}
+  .track.active{background:rgba(61,204,71,0.07);border-left-color:var(--green);}
+  .track-num{font-size:11px;color:var(--text-faint);width:18px;text-align:center;flex-shrink:0;font-family:'Barlow Condensed',sans-serif;font-weight:600;}
+  .track.active .track-num{color:var(--green);}
+  .track-info{flex:1;min-width:0;}
+  .track-title{font-size:13px;font-weight:500;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .track.active .track-title{color:var(--green);}
+  .track-artist{font-size:11px;color:var(--text-faint);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+  /* FOOTER */
+  footer{background:#161d1b;border-top:1px solid var(--border);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+  .footer-logo{background:var(--green);color:#000;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;padding:4px 9px;border-radius:3px;}
+  .footer-text{font-size:12px;color:var(--text-faint);}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-left">
+    <a href="index.html" class="nav-logo"><img src="TRANSPARENT.png" alt="F1XL"></a>
+  </div>
+  <div class="nav-links">
+    <div class="nav-item"><a href="index.html">Home</a></div>
+    <div class="nav-item">
+      <button>Standings <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown">
+        <a href="standings.html">Current Season</a>
+        <a href="results.html">Results</a>
+        <a href="past-seasons.html">Past Seasons</a>
+        <a href="asr.html">All Star Race</a>
+      </div>
+    </div>
+    <div class="nav-item"><a href="teams.html">Teams</a></div>
+    <div class="nav-item">
+      <button>Race Tickets <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown">
+        <a href="submit-ticket.html">Submit Ticket</a>
+        <a href="ticket-outcomes.html">Ticket Outcomes</a>
+        <a href="drivers-licence.html">Drivers Licence</a>
+      </div>
+    </div>
+    <div class="nav-item"><a href="schedule.html">Schedule</a></div>
+    <div class="nav-item">
+      <button>History <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown">
+        <a href="hall-of-fame.html">Hall of Fame</a>
+        <a href="hall-of-records.html">Hall of Records</a>
+        <a href="track-records.html">Track Records</a>
+      </div>
+    </div>
+    <div class="nav-item"><a href="applications.html">Applications</a></div>
+    <div class="nav-item"><a href="league-rules.html">League Rules</a></div>
+    <a href="music.html" class="active" style="display:flex;align-items:center;padding:0 13px;color:#fff;text-decoration:none;font-size:12px;font-weight:500;letter-spacing:0.5px;text-transform:uppercase;border-bottom:2px solid var(--green);">Music</a>
+  </div>
+  <button class="nav-hamburger" id="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></button>
+</nav>
+
+<div class="mobile-menu" id="mobile-menu">
+  <a href="index.html">Home</a>
+  <div class="mob-section">Standings</div>
+  <a href="standings.html">Current Season</a>
+  <a href="results.html">Results</a>
+  <a href="past-seasons.html">Past Seasons</a>
+  <a href="asr.html">All Star Race</a>
+  <a href="teams.html">Teams</a>
+  <div class="mob-section">Race Tickets</div>
+  <a href="submit-ticket.html">Submit Ticket</a>
+  <a href="ticket-outcomes.html">Ticket Outcomes</a>
+  <a href="drivers-licence.html">Drivers Licence</a>
+  <a href="schedule.html">Schedule</a>
+  <div class="mob-section">History</div>
+  <a href="hall-of-fame.html">Hall of Fame</a>
+  <a href="hall-of-records.html">Hall of Records</a>
+  <a href="track-records.html">Track Records</a>
+  <a href="applications.html">Applications</a>
+  <a href="league-rules.html">League Rules</a>
+  <a href="music.html">Music</a>
+</div>
+
+<div class="page-header">
+  <div class="page-eyebrow">F1XL Community</div>
+  <div class="page-title">Music</div>
+  <div class="album-tag">Now That's What I Call F1XL</div>
+  <div class="page-desc">In the summer of 2025 we released an album entitled "Now That's What I Call F1XL". All of the tracks were dedicated to, inspired by and written about our community, the league and the members therein. Using AI to create music to accompany human written lyrics they were later accompanied by fun AI generated music videos. All of this was with tongue very much placed firmly in cheek. Here are all the videos, available to view on YouTube, along with a link to download each track should you want to do so.</div>
+</div>
+
+<div class="music-wrap">
+  <div class="featured">
+    <div class="video-wrap" id="video-wrap">
+      <iframe id="yt-player" src="https://www.youtube.com/embed/Rw_949ppz44?rel=0" allowfullscreen></iframe>
+    </div>
+    <div class="now-playing">
+      <div class="np-label">Now Playing</div>
+      <div class="np-title" id="np-title">Pointless</div>
+      <div class="np-artist" id="np-artist">Limited 1</div>
+      <div class="np-num" id="np-num">Track 1 of 15</div>
+    </div>
+    <a class="yt-link" id="yt-link" href="https://youtu.be/Rw_949ppz44" target="_blank" rel="noopener">
+      <div class="yt-dot"></div>
+      Watch on YouTube
+    </a>
+  </div>
+
+  <div class="playlist">
+    <div class="playlist-hdr">All Tracks · 15</div>
+    <div id="track-list"></div>
+  </div>
+</div>
+
+<footer>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="footer-logo">F1XL</div>
+    <div class="footer-text">The UK's longest running F1 league · Est. 2010</div>
+  </div>
+  <div class="footer-text">f1xl.co.uk</div>
+</footer>
+
+<script>
+const TRACKS = [
+  {title:'Pointless',          artist:'Limited 1',                  id:'Rw_949ppz44'},
+  {title:'Why Don\'t You Want Me', artist:'Alice Gainsborough',     id:'VTFkuJw0GN8'},
+  {title:'TPV',                artist:'Fastcat',                    id:'4JYqUvGQVaU'},
+  {title:'Echo Of You',        artist:'Daniel Mann',                id:'BLmXw0Hzo9Y'},
+  {title:'!Scotsman',          artist:'Buckie',                     id:'7LXT-_oqtKY'},
+  {title:'They Let Him Go',    artist:'Mark & Christie',            id:'X-2_rvDvh94'},
+  {title:'The Legend Of Qatar',artist:'Martin Frank Williams Jr',   id:'tobhp9LmaNI'},
+  {title:'Draft Night',        artist:'Livestream',                 id:'yZyLIKkkqeg'},
+  {title:'I\'ve Been Disqualified', artist:'Layne Pitt',           id:'LrvCnUSUnnc'},
+  {title:'Astrial',            artist:'Thee Saw Us',                id:'9gwc9puSpXk'},
+  {title:'Brexit Means Brexit',artist:'The Faragers',               id:'8xsdh9D189E'},
+  {title:'Move Me',            artist:'Wynn G',                     id:'fgpEClcd1lA'},
+  {title:'Racecrat',           artist:'Tick It',                    id:'lBdSA2T3bug'},
+  {title:'When It\'s Up',      artist:'Crack Vinyl',                id:'G1JMfXKGG3M'},
+  {title:'A.S.R',              artist:'Kers',                       id:'C8GSGoQqrtk'},
+];
+
+let current = 0;
+
+function selectTrack(idx){
+  current = idx;
+  const t = TRACKS[idx];
+  document.getElementById('yt-player').src = `https://www.youtube.com/embed/${t.id}?autoplay=1&rel=0`;
+  document.getElementById('np-title').textContent = t.title;
+  document.getElementById('np-artist').textContent = t.artist;
+  document.getElementById('np-num').textContent = `Track ${idx+1} of ${TRACKS.length}`;
+  document.getElementById('yt-link').href = `https://youtu.be/${t.id}`;
+  document.querySelectorAll('.track').forEach((el,i)=>{
+    el.classList.toggle('active', i===idx);
+  });
+}
+
+function buildPlaylist(){
+  const list = document.getElementById('track-list');
+  list.innerHTML = TRACKS.map((t,i)=>`
+    <div class="track${i===0?' active':''}" onclick="selectTrack(${i})">
+      <div class="track-num">${i+1}</div>
+      <div class="track-info">
+        <div class="track-title">${t.title}</div>
+        <div class="track-artist">${t.artist}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleMenu(){
+  document.getElementById('mobile-menu').classList.toggle('open');
+  document.getElementById('hamburger').classList.toggle('open');
+}
+
+buildPlaylist();
+</script>
+</body>
+</html>
