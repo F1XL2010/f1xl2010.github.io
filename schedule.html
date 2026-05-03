@@ -16,6 +16,7 @@
   *{box-sizing:border-box;margin:0;padding:0;}
   body{background-color:#111816;background-image:url('images/backgrounds/schedule_background.webp');background-size:cover;background-position:center;background-attachment:fixed;background-repeat:no-repeat;color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;}
   body::before{content:'';position:fixed;inset:0;background:rgba(17,24,22,0.80);z-index:0;pointer-events:none;}
+  body>*{position:relative;z-index:1;}
   nav{position:relative;z-index:200;background:rgba(9,9,9,0.97);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;}
   .nav-left{display:flex;align-items:center;gap:14px;flex-shrink:0;}
   .nav-logo{display:flex;align-items:center;height:40px;text-decoration:none;}
