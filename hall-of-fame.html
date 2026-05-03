@@ -9,9 +9,7 @@
 <style>
   :root{--green:#3DCC47;--teal:#5ECFCF;--gold:#E8B84B;--red:#E10600;--black:#0e1210;--dark:#131a17;--dark2:#161e1b;--dark3:#1a2420;--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.12);--text:#ffffff;--text-muted:rgba(255,255,255,0.60);--text-faint:rgba(255,255,255,0.28);}
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{background:var(--black);background-image:url('images/backgrounds/background_hof.webp');background-size:cover;background-position:center;background-attachment:fixed;color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;}
-  body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(17,24,22,0.5);z-index:0;pointer-events:none;}
-  body>*{position:relative;z-index:1;}
+  body{background:var(--black);color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;}
 
     nav{background:rgba(17,24,22,0.97);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;backdrop-filter:blur(8px);}
   .nav-left{display:flex;align-items:center;flex-shrink:0;}
@@ -129,7 +127,8 @@
 
   /* LEAGUE RECORDS */
   .lr-wrap{padding:0 28px 32px;}
-  #div-records-wrap{background:#161d1b;border:1px solid var(--border);border-radius:8px;margin:0 28px 32px;padding:16px 20px;}
+  #div-records-wrap{background:#161d1b;border:1px solid var(--border);border-radius:8px;margin:0 28px 32px;padding:16px 20px;overflow:hidden;}
+  .season-table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;}
   .lr-div-section{margin-bottom:28px;}
   .lr-div-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gold);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);}
   .lr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
@@ -227,9 +226,9 @@
 <!-- SECTION NAV -->
 <div class="section-nav">
   <button class="section-nav-btn active" onclick="scrollToSection('leaderboards',this)">Leaderboards</button>
-  <button class="section-nav-btn" onclick="scrollToSection('league-records',this)">League Records</button>
   <button class="section-nav-btn" onclick="scrollToSection('seasons',this)">Seasons</button>
   <button class="section-nav-btn" onclick="scrollToSection('division-records',this)">Division Records</button>
+  <button class="section-nav-btn" onclick="scrollToSection('league-records',this)">League Records</button>
 </div>
 
 <!-- LEADERBOARDS -->
@@ -241,15 +240,6 @@
 <div class="lb-wrap">
   <div class="lb-grid" id="lb-grid"><div class="loading-msg">Loading...</div></div>
 </div>
-
-<div class="section-div"></div>
-
-<div id="league-records"></div>
-<div class="chapter">
-  <div class="chapter-eyebrow">The Records</div>
-  <div class="chapter-title">League Records</div>
-</div>
-<div class="lr-wrap" id="lr-wrap"><div class="loading-msg">Loading...</div></div>
 
 <div class="section-div"></div>
 
@@ -273,6 +263,13 @@
   <div class="chapter-title">Division Records</div>
 </div>
 <div class="lr-wrap" id="div-records-wrap"><div class="loading-msg">Loading...</div></div>
+
+<div id="league-records"></div>
+<div class="chapter">
+  <div class="chapter-eyebrow">The Records</div>
+  <div class="chapter-title">League Records</div>
+</div>
+<div class="lr-wrap" id="lr-wrap"><div class="loading-msg">Loading...</div></div>
 
 <div class="section-div" style="margin-bottom:0;"></div>
 
@@ -332,11 +329,9 @@ async function fetchCSV(url){
 // Row 4+: data
 function parseDivTab(rows, divName){
   const seasons = [];
-  for(let i=1; i<rows.length; i++){
+  for(let i=4; i<rows.length; i++){
     const row = rows[i];
-    const raw = g(row,1);
-    if(!raw || raw.toLowerCase()==='season') continue;
-    const s = parseFloat(raw);
+    const s = parseFloat(g(row,1));
     if(isNaN(s)) continue;
     seasons.push({
       season: s,
@@ -354,11 +349,9 @@ function parseDivTab(rows, divName){
 // Same structure but cols: Season, Team Owner, Team, Points, blank, Runner Up, Team, Points
 function parseOverallTab(rows){
   const seasons = [];
-  for(let i=1; i<rows.length; i++){
+  for(let i=4; i<rows.length; i++){
     const row = rows[i];
-    const raw = g(row,1);
-    if(!raw || raw.toLowerCase()==='season') continue;
-    const s = parseFloat(raw);
+    const s = parseFloat(g(row,1));
     if(isNaN(s)) continue;
     seasons.push({
       season: s,
@@ -493,10 +486,10 @@ function renderDivisionRecords(){
       }).join('');
       return `<tr><td>${i+1}</td>${cells}</tr>`;
     }).join('');
-    return `<table class="acc-table">
+    return `<div class="season-table-scroll"><table class="acc-table">
       <thead><tr><th>#</th>${headers}</tr></thead>
       <tbody>${rows}</tbody>
-    </table>`;
+    </table></div>`;
   }
 
   const tabKeys = [];
@@ -510,7 +503,7 @@ function renderDivisionRecords(){
       {key:'owner',label:'Team Owner'},
       {key:'ownerTeam',label:'Team',muted:true},
       {key:'ownerPts',label:'Points'},
-      {key:'ru',label:'Runner Up (Team Owner)'},
+      {key:'ru',label:'Runner Up'},
       {key:'ruTeam',label:'Team',muted:true},
     ]);
   }
@@ -525,7 +518,6 @@ function renderDivisionRecords(){
       {key:'champTeam',label:'Team',muted:true},
       {key:'champPts',label:'Points'},
       {key:'ru',label:'Runner Up'},
-      {key:'ruTeam',label:'Team',muted:true},
       {key:'constructor',label:'Constructor',muted:true},
       {key:'consdrivers',label:'Drivers',muted:true},
     ]);
@@ -570,75 +562,69 @@ function scrollToSection(id, btn){
 // Then "Drivers"/"Team"/"No. Of Wins" headers
 // Then data rows: blank, blank, Name, Count
 function parseLeagueRecords(rows){
-  // Section 1: starts at row with col2='Champions', col6='Constructors'
-  // Data rows: col2=driver, col3=wins | col6=team, col7=wins
-  // Section 2: starts at row with col2='Runners Up', col6='Constructors drivers'
-  // Data rows: col2=driver, col3=wins | col6=driver, col7=wins
+  // Find the aggregated section — look for "Champions" label
+  let aggStart = -1;
+  for(let i=0; i<rows.length; i++){
+    if(g(rows[i],2).toLowerCase()==='champions'){ aggStart=i; break; }
+  }
+  if(aggStart<0) return null;
+
+  // Row aggStart = section headers (Champions | Runners Up | Constructors drivers)
+  // Row aggStart+1 = column headers (Drivers | No. Of Wins | | | Drivers | No. Of Wins...)
+  // Row aggStart+2+ = data until "Constructors" sub-header
 
   const champDrivers = [];
-  const consTeams = [];
   const ruDrivers = [];
   const consDrivers = [];
+  const consTeams = [];
 
-  let section = null; // 'champ' or 'ru'
-
-  for(let i=0; i<rows.length; i++){
+  // Data rows start at aggStart+2
+  let inConsTeams = false;
+  for(let i=aggStart+2; i<rows.length; i++){
     const row = rows[i];
-    const c2 = g(row,2).toLowerCase();
-    const c6 = g(row,6).toLowerCase();
+    const col2 = g(row,2);
+    const col3 = g(row,3);
+    const col6 = g(row,6);
+    const col7 = g(row,7);
+    const col10 = g(row,10);
+    const col11 = g(row,11);
 
-    // Detect section headers
-    if(c2==='champions'){ section='champ'; continue; }
-    if(c2==='runners up'){ section='ru'; continue; }
+    // Check for "Constructors" sub-header (team section)
+    if(col2.toLowerCase()==='constructors'){ inConsTeams=true; continue; }
+    if(col2.toLowerCase()==='team'&&col3.toLowerCase().includes('win')){ continue; }
 
-    // Skip column header rows
-    if(c2==='drivers'||c2==='driver') continue;
-    if(c2==='constructors') continue;
-
-    if(!section) continue;
-
-    const name2 = g(row,2), val3 = g(row,3);
-    const name6 = g(row,6), val7 = g(row,7);
-
-    if(section==='champ'){
-      if(name2 && val3 && !isNaN(parseFloat(val3))) champDrivers.push({name:name2, val:parseInt(val3)});
-      if(name6 && val7 && !isNaN(parseFloat(val7))) consTeams.push({name:name6, val:parseInt(val7)});
-    } else if(section==='ru'){
-      if(name2 && val3 && !isNaN(parseFloat(val3))) ruDrivers.push({name:name2, val:parseInt(val3)});
-      if(name6 && val7 && !isNaN(parseFloat(val7))) consDrivers.push({name:name6, val:parseInt(val7)});
+    if(!inConsTeams){
+      if(col2 && col3 && !isNaN(parseFloat(col3))) champDrivers.push({name:col2, val:parseInt(col3)});
+      if(col6 && col7 && !isNaN(parseFloat(col7))) ruDrivers.push({name:col6, val:parseInt(col7)});
+      if(col10 && col11 && !isNaN(parseFloat(col11))) consDrivers.push({name:col10, val:parseInt(col11)});
+    } else {
+      if(col2 && col3 && !isNaN(parseFloat(col3))) consTeams.push({name:col2, val:parseInt(col3)});
+      // Also keep checking ru and consDrivers columns
+      if(col6 && col7 && !isNaN(parseFloat(col7))) ruDrivers.push({name:col6, val:parseInt(col7)});
+      if(col10 && col11 && !isNaN(parseFloat(col11))) consDrivers.push({name:col10, val:parseInt(col11)});
     }
   }
 
-  return { champDrivers, ruDrivers, consTeams, consDrivers };
+  return { champDrivers, ruDrivers, consDrivers, consTeams };
 }
 
 function parseOverallLeagueRecords(rows){
-  const champions = [];
-  const consTeams = [];
-  const runners = [];
-  let section = null;
-
+  // Overall: "Team Owner" / "Total Wins" | "Team Owner" / "Total Runner Up"
+  let aggStart = -1;
   for(let i=0; i<rows.length; i++){
-    const row = rows[i];
-    const c2 = g(row,2).toLowerCase();
-    const c3 = g(row,3).toLowerCase();
-
-    // Detect section headers
-    if(c2==='team owner' && c3.includes('win')){ section='champ'; continue; }
-    if(c2==='team owner' && c3.includes('runner')){ section='ru'; continue; }
-    if(!section) continue;
-
-    const name2 = g(row,2), val3 = g(row,3);
-    const name6 = g(row,6), val7 = g(row,7);
-
-    if(section==='champ'){
-      if(name2 && val3 && !isNaN(parseFloat(val3))) champions.push({name:name2, val:parseInt(val3)});
-      if(name6 && val7 && !isNaN(parseFloat(val7))) consTeams.push({name:name6, val:parseInt(val7)});
-    } else if(section==='ru'){
-      if(name2 && val3 && !isNaN(parseFloat(val3))) runners.push({name:name2, val:parseInt(val3)});
-    }
+    if(g(rows[i],2).toLowerCase()==='team owner'){ aggStart=i+1; break; }
   }
-  return {champions, consTeams, runners};
+  if(aggStart<0) return null;
+
+  const champions = [];
+  const runners = [];
+  for(let i=aggStart; i<rows.length; i++){
+    const row = rows[i];
+    const c2=g(row,2), c3=g(row,3), c6=g(row,6), c7=g(row,7);
+    if(c2&&c3&&!isNaN(parseFloat(c3))) champions.push({name:c2,val:parseInt(c3)});
+    if(c6&&c7&&!isNaN(parseFloat(c7))) runners.push({name:c6,val:parseInt(c7)});
+  }
+  return {champions, runners};
 }
 
 function renderLeagueRecords(divDataRaw, overallDataRaw){
@@ -646,10 +632,9 @@ function renderLeagueRecords(divDataRaw, overallDataRaw){
 
   function lrTable(title, items){
     if(!items||!items.length) return '';
-    const top = items.sort((a,b)=>b.val-a.val).slice(0,10);
     return `<div class="lr-card">
       <div class="lr-card-title">${title}</div>
-      ${top.map((item,i)=>`
+      ${items.sort((a,b)=>b.val-a.val).map((item,i)=>`
         <div class="lr-row">
           <div class="lr-rank">${i+1}</div>
           <div class="lr-name">${item.name}</div>
@@ -669,7 +654,6 @@ function renderLeagueRecords(divDataRaw, overallDataRaw){
       tabKeys.push({key:'overall', label:'Overall'});
       tabPanels['overall'] = `<div class="lr-grid">
         ${lrTable('Team Owner Champions', rec.champions)}
-        ${lrTable('Constructor Teams', rec.consTeams)}
         ${lrTable('Team Owner Runners Up', rec.runners)}
       </div>`;
     }
@@ -683,9 +667,8 @@ function renderLeagueRecords(divDataRaw, overallDataRaw){
     tabKeys.push({key, label:div});
     tabPanels[key] = `<div class="lr-grid">
       ${lrTable('Driver Champions', rec.champDrivers)}
+      ${lrTable('Driver Runners Up', rec.ruDrivers)}
       ${lrTable('Constructor Teams', rec.consTeams)}
-      ${lrTable('Runners Up', rec.ruDrivers)}
-      ${lrTable('Constructor Drivers', rec.consDrivers)}
     </div>`;
   });
 
