@@ -707,14 +707,9 @@ async function loadDivContent(id, d, sc){
 
   let divHtml = '';
   if(driverRows){
-    // Detect format: if header row has 'Position' or 'Pos.' with no round columns → use S10 builder
-    const hdrRow = driverRows.find(r => {
-      const v = (r[1]||'').trim().toLowerCase();
-      return v==='position'||v==='pos'||v==='pos.';
-    });
-    const hasRounds = hdrRow && hdrRow.some((v,i)=>i>3 && (v||'').trim().match(/^R?\d+$/));
-    if(hasRounds){
-      divHtml += buildRaceGridDrivers(driverRows);
+    const attempt = buildRaceGridDrivers(driverRows);
+    if(attempt && !attempt.includes('div-loading')){
+      divHtml += attempt;
     } else {
       divHtml += buildS10Drivers(driverRows);
     }
