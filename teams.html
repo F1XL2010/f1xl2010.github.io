@@ -52,6 +52,7 @@
   .team-card{background:#1a2320;border:1px solid var(--border);border-radius:8px;overflow:hidden;transition:border-color 0.2s;}
   .team-card:hover{border-color:rgba(255,255,255,0.15);}
   .team-card.is-champion{border-color:rgba(232,184,75,0.35);}
+  .team-card.is-overall-champion{border-color:#E8B84B;border-width:2px;box-shadow:0 0 12px rgba(232,184,75,0.25);}
   .tc-header{border-bottom:1px solid var(--border);position:relative;z-index:1;}
   .tc-header-img{width:100%;height:100%;position:absolute;top:0;left:0;object-fit:cover;object-position:center;z-index:0;}
   .tc-header-content{position:relative;z-index:1;padding:12px 14px;display:flex;align-items:center;gap:10px;}
@@ -155,6 +156,12 @@
   <div class="page-meta" id="page-meta">Loading...</div>
 </div>
 <div class="season-bar" id="season-bar"><div class="loading-msg" style="padding:4px 0;">Loading seasons...</div></div>
+<div style="padding:8px 24px;display:flex;gap:16px;flex-wrap:wrap;align-items:center;background:#161d1b;border-bottom:1px solid var(--border);">
+  <span style="font-size:11px;color:rgba(255,255,255,0.4);font-family:'Barlow Condensed',sans-serif;letter-spacing:0.5px;text-transform:uppercase;margin-right:4px;">Key:</span>
+  <span style="font-size:12px;color:rgba(255,255,255,0.65);">👑 Overall Champion (Team Principal)</span>
+  <span style="font-size:12px;color:rgba(255,255,255,0.65);">🏆 Division Driver Champion</span>
+  <span style="font-size:12px;color:rgba(255,255,255,0.65);">🪙 Division Constructor Champion</span>
+</div>
 <div id="teams-content"><div class="loading-msg">Loading...</div></div>
 <footer>
   <div style="display:flex;align-items:center;gap:10px;">
@@ -167,10 +174,21 @@
 <script>
 const TEAMS_SHEET_ID='1f2ECx5qJxc18vFq62yUtdn_Hif6o0c-o_oibo6Pfwd8';
 const TEAMS_SHEET_GID='0';
-const CROWN=String.fromCodePoint(0x1F451);
+const CROWN = '👑';   // Team Principal champion
+const TROPHY = '🏆';  // Driver champion
+const COIN = '🪙';    // Constructor champion
+const ALL_BADGES = [CROWN, TROPHY, COIN];
 const teamColors={'alpine':'#0090FF','aston martin':'#006F62','ferrari':'#DC0000','haas':'#B6BABD','mclaren':'#FF8700','mercedes':'#00D2BE','rb':'#1434CB','red bull':'#0600EF','sauber':'#900000','williams':'#005AFF','alpha tauri':'#1434CB','alfa romeo':'#900000','alfa romero':'#900000','force india':'#FF80C7','toro rosso':'#1434CB','renault':'#FFD700','lotus':'#FFB800','manor':'#FF0000'};
 function getColor(n){return teamColors[(n||'').toLowerCase()]||'#555';}
-function clean(s){return (s||'').replace(new RegExp(CROWN,'g'),'').trim();}
+function clean(s){
+  let r = s||'';
+  ALL_BADGES.forEach(b=>{ r=r.split(b).join(''); });
+  return r.trim();
+}
+function hasBadge(s, badge){ return (s||'').includes(badge); }
+function hasCrown(s){ return hasBadge(s, CROWN); }
+function hasTrophy(s){ return hasBadge(s, TROPHY); }
+function hasCoin(s){ return hasBadge(s, COIN); }
 function hasCrown(s){return (s||'').includes(CROWN);}
 function toggleMenu(){
   document.getElementById('hamburger').classList.toggle('open');
@@ -206,7 +224,7 @@ function parseSheet(rows){
     let isDivRow=false;
     sd.teams.forEach(t=>{
       const lbl=(row[t.col]||'').trim();const dm=lbl.match(/^DIVISION\s+(\d+)/i);
-      if(dm){isDivRow=true;const dn=parseInt(dm[1]);const dc=hasCrown(lbl);const d1r=(row[t.col+1]||'').trim();const d1=clean(d1r);const d1c=hasCrown(d1r);t.divisions.push({div:dn,champion:dc,drivers:d1?[{name:d1,champion:d1c}]:[]});}
+      if(dm){isDivRow=true;const dn=parseInt(dm[1]);const dc=hasCoin(lbl);const d1r=(row[t.col+1]||'').trim();const d1=clean(d1r);const d1c=hasTrophy(d1r);t.divisions.push({div:dn,constructorChampion:dc,drivers:d1?[{name:d1,champion:d1c}]:[]});}
     });
     if(resCol>0){
       const resLbl=(row[resCol]||'').trim();const resDm=resLbl.match(/^DIVISION\s+(\d+)/i);
@@ -229,7 +247,7 @@ function parseSheet(rows){
       }
     }
     if(!isDivRow&&!(row[0]||'').trim()&&!(row[1]||'').trim()){
-      sd.teams.forEach(t=>{const r=(row[t.col+1]||'').trim();const d2=clean(r);if(d2&&t.divisions.length>0){const last=t.divisions[t.divisions.length-1];if(last.drivers.length<2)last.drivers.push({name:d2,champion:hasCrown(r)});}});
+      sd.teams.forEach(t=>{const r=(row[t.col+1]||'').trim();const d2=clean(r);if(d2&&t.divisions.length>0){const last=t.divisions[t.divisions.length-1];if(last.drivers.length<2)last.drivers.push({name:d2,champion:hasTrophy(r)});}});
       if(resCol>0&&!(row[resCol]||'').trim()){
         const resEnd=retCol>0?retCol:row.length;
         for(let c=resCol+1;c<resEnd;c++){const v=clean((row[c]||'').trim());if(v)sd.resdrivers.push(v);}
@@ -241,15 +259,16 @@ function parseSheet(rows){
 
 
 function renderCard(t){
-  const isC=t.ownerChampion||t.divisions.some(d=>d.champion||d.drivers.some(dr=>dr.champion));
+  const isOverallChamp = t.ownerChampion;
+  const isAnyChamp = t.ownerChampion||t.divisions.some(d=>d.constructorChampion||d.drivers.some(dr=>dr.champion));
   let divs='';
   t.divisions.forEach(d=>{
-    const drvs=d.drivers.map(dr=>dr.name+(dr.champion?' '+CROWN:'')).join(' &middot; ');
-    divs+='<div class="tc-div"><div class="tc-div-row"><span class="tc-div-lbl">Division '+d.div+'</span>'+(d.champion?'<span class="tc-crown">'+CROWN+'</span>':'')+'</div><div class="tc-drivers">'+(drvs||'&mdash;')+'</div></div>';
+    const drvs=d.drivers.map(dr=>dr.name+(dr.champion?' '+TROPHY:'')).join(' &middot; ');
+    divs+='<div class="tc-div"><div class="tc-div-row"><span class="tc-div-lbl">Division '+d.div+'</span>'+(d.constructorChampion?'<span class="tc-crown">'+COIN+'</span>':'')+'</div><div class="tc-drivers">'+(drvs||'&mdash;')+'</div></div>';
   });
   const imgSlug = 'images/teamlogos/squarelogo_' + t.name.toLowerCase().replace(/\s+/g,'').replace(/[^a-z0-9]/g,'') + '.webp';
   const imgTag = '<img class="tc-header-img" src="'+imgSlug+'" alt="" onerror="this.style.display=\'none\'">';
-  return '<div class="team-card'+(isC?' is-champion':'')+'">'+imgTag+'<div class="tc-header"><div class="tc-header-content"><div class="tc-bar" style="background:'+t.color+'"></div><div><div class="tc-name">'+t.name+'</div><div class="tc-owner-row"><span class="tc-owner-lbl">Owner</span><span class="tc-owner">'+(t.owner||'&mdash;')+'</span>'+(t.ownerChampion?'<span class="tc-crown">'+CROWN+'</span>':'')+'</div></div></div></div><div class="tc-body">'+(divs||'<div style="font-size:12px;color:var(--text-faint)">No division data</div>')+'</div></div>';
+  return '<div class="team-card'+(isOverallChamp?' is-overall-champion':(isAnyChamp?' is-champion':''))+'">'+imgTag+'<div class="tc-header"><div class="tc-header-content"><div class="tc-bar" style="background:'+t.color+'"></div><div><div class="tc-name">'+t.name+'</div><div class="tc-owner-row"><span class="tc-owner-lbl">Owner</span><span class="tc-owner">'+(t.owner||'&mdash;')+'</span>'+(t.ownerChampion?'<span class="tc-crown">'+CROWN+'</span>':'')+'</div></div></div></div><div class="tc-body">'+(divs||'<div style="font-size:12px;color:var(--text-faint)">No division data</div>')+'</div></div>';
 }
 function renderSeason(data,num){
   let html='';
