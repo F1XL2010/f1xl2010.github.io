@@ -129,8 +129,7 @@
 
   /* LEAGUE RECORDS */
   .lr-wrap{padding:0 28px 32px;}
-  #div-records-wrap{background:#161d1b;border:1px solid var(--border);border-radius:8px;margin:0 28px 32px;padding:16px 20px;overflow:hidden;}
-  .season-table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  #div-records-wrap{background:#161d1b;border:1px solid var(--border);border-radius:8px;margin:0 28px 32px;padding:16px 20px;}
   .lr-div-section{margin-bottom:28px;}
   .lr-div-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gold);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);}
   .lr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
@@ -344,6 +343,7 @@ function parseDivTab(rows, divName){
       champ: g(row,2), champTeam: g(row,3), champPts: g(row,4),
       ru: g(row,6), ruTeam: g(row,7), ruPts: g(row,8),
       constructor: g(row,10), consDriver1: g(row,11), consDriver2: g(row,12), consPts: g(row,13),
+      consRu: g(row,15), consRuDriver1: g(row,16), consRuDriver2: g(row,17), consRuPts: g(row,18),
       div: divName
     });
   }
@@ -369,6 +369,30 @@ function parseOverallTab(rows){
   }
   seasons.sort((a,b)=>b.season-a.season);
   return seasons;
+}
+
+// Cross-reference overall seasons with division data to find team members
+function enrichOverallWithDrivers(overallData, allDivData){
+  return overallData.map(s => {
+    const winningTeam = (s.ownerTeam||'').toLowerCase();
+    const ruTeam = (s.ruTeam||'').toLowerCase();
+    let driver1='', driver2='', ruDriver1='', ruDriver2='';
+    // Search all divisions for this season
+    Object.values(allDivData).forEach(divSeasons => {
+      const match = divSeasons.find(d => parseFloat(d.season) === s.season);
+      if(match){
+        if(match.constructor && match.constructor.toLowerCase() === winningTeam){
+          driver1 = match.consDriver1 || '';
+          driver2 = match.consDriver2 || '';
+        }
+        if(match.consRu && match.consRu.toLowerCase() === ruTeam){
+          ruDriver1 = match.consRuDriver1 || '';
+          ruDriver2 = match.consRuDriver2 || '';
+        }
+      }
+    });
+    return {...s, driver1, driver2, ruDriver1, ruDriver2};
+  });
 }
 
 // ── PARSE FULL STATS for leaderboards ────────────────────────────────────────
@@ -494,10 +518,10 @@ function renderDivisionRecords(){
       }).join('');
       return `<tr><td>${i+1}</td>${cells}</tr>`;
     }).join('');
-    return `<div class="season-table-scroll"><table class="acc-table">
+    return `<table class="acc-table">
       <thead><tr><th>#</th>${headers}</tr></thead>
       <tbody>${rows}</tbody>
-    </table></div>`;
+    </table>`;
   }
 
   const tabKeys = [];
@@ -510,9 +534,13 @@ function renderDivisionRecords(){
       {key:'season',label:'Season'},
       {key:'owner',label:'Team Owner'},
       {key:'ownerTeam',label:'Team',muted:true},
+      {key:'driver1',label:'Driver 1',muted:true},
+      {key:'driver2',label:'Driver 2',muted:true},
       {key:'ownerPts',label:'Points'},
       {key:'ru',label:'Runner Up (Team Owner)'},
       {key:'ruTeam',label:'Team',muted:true},
+      {key:'ruDriver1',label:'Driver 1',muted:true},
+      {key:'ruDriver2',label:'Driver 2',muted:true},
     ]);
   }
 
@@ -528,7 +556,11 @@ function renderDivisionRecords(){
       {key:'ru',label:'Runner Up'},
       {key:'ruTeam',label:'Team',muted:true},
       {key:'constructor',label:'Constructor',muted:true},
-      {key:'consdrivers',label:'Drivers',muted:true},
+      {key:'consDriver1',label:'Driver 1',muted:true},
+      {key:'consDriver2',label:'Driver 2',muted:true},
+      {key:'consRu',label:'Cons. Runner Up',muted:true},
+      {key:'consRuDriver1',label:'Driver 1',muted:true},
+      {key:'consRuDriver2',label:'Driver 2',muted:true},
     ]);
   });
 
@@ -757,6 +789,9 @@ async function init(){
         allDivData[divName] = parseDivTab(results[`d${d}`], divName);
       }
     }
+
+    // Enrich overall data with driver names from division data
+    if(overallData.length) overallData = enrichOverallWithDrivers(overallData, allDivData);
 
     // Render seasons
     renderSeasonStrip();
