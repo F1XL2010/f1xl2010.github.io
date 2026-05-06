@@ -544,15 +544,17 @@ async function init(){
       return idMatch ? { id: idMatch[1], gid: gidMatch ? gidMatch[1] : '0' } : null;
     }
 
-    async function fetchTab(url){
+    async function fetchTab(url, name){
       const p = parseSheetUrl(url);
-      if(!p) return null;
+      if(!p) { console.log(`${name}: no URL`); return null; }
       try{
+        console.log(`${name}: fetching...`);
         const res = await fetch(`https://docs.google.com/spreadsheets/d/${p.id}/export?format=csv&gid=${p.gid}`);
         const text = await res.text();
-        if(text.includes('<!DOCTYPE')) return null;
+        if(text.includes('<!DOCTYPE')) { console.log(`${name}: not published`); return null; }
+        console.log(`${name}: OK (${text.split('\n').length} rows)`);
         return parseCSV(text);
-      } catch(e){ return null; }
+      } catch(e){ console.log(`${name}: error - ${e.message}`); return null; }
     }
 
     const statsParsed = parseSheetUrl(statsUrl);
@@ -565,9 +567,9 @@ async function init(){
 
     // Fetch all division, overall and ASR tabs in parallel
     const [d1,d2,d3,d4,d5,d6,d7,d8,overall,asr] = await Promise.all([
-      fetchTab(d1Url), fetchTab(d2Url), fetchTab(d3Url), fetchTab(d4Url),
-      fetchTab(d5Url), fetchTab(d6Url), fetchTab(d7Url), fetchTab(d8Url),
-      fetchTab(overallUrl), fetchTab(asrUrl),
+      fetchTab(d1Url,'D1'), fetchTab(d2Url,'D2'), fetchTab(d3Url,'D3'), fetchTab(d4Url,'D4'),
+      fetchTab(d5Url,'D5'), fetchTab(d6Url,'D6'), fetchTab(d7Url,'D7'), fetchTab(d8Url,'D8'),
+      fetchTab(overallUrl,'Overall'), fetchTab(asrUrl,'ASR'),
     ]);
 
     const divTabs = {};
