@@ -298,35 +298,92 @@ function parseFullStats(rows){
 // Col 10 header = "overall constructors team"  → col 11 = Champions, col 12 = Runners Up
 // Data starts row 3 (index 2, after two header rows)
 
-function parseAccolades(rows){
+function parseAccoladesFromTabs(divTabs, overallTab, asrTab){
+  // divTabs: object { 'D1': rows, 'D2': rows, ... }
+  // overallTab: rows
+  // asrTab: rows
   const map = {}; // keyed by driver name (lowercase)
-  for(let i=2; i<rows.length; i++){
-    const row = rows[i];
-    const name = g(row,0);
-    if(!name || name.toLowerCase()==='driver') continue;
 
-    const accolades = [];
-
-    const ownerChamp = g(row,1);
-    const ownerRU    = g(row,2);
-    const driverChamp = g(row,4);
-    const driverRU    = g(row,5);
-    const consChamp  = g(row,7);
-    const consRU     = g(row,8);
-    const overallChamp = g(row,10);
-    const overallRU    = g(row,11);
-
-    if(driverChamp)  accolades.push({type:'champ', label:'Driver Champion',      seasons:driverChamp});
-    if(driverRU)     accolades.push({type:'ru',    label:'Driver Runner Up',      seasons:driverRU});
-    if(ownerChamp)   accolades.push({type:'gold',  label:'Team Owner Champion',   seasons:ownerChamp});
-    if(ownerRU)      accolades.push({type:'ru',    label:'Team Owner Runner Up',  seasons:ownerRU});
-    if(consChamp)    accolades.push({type:'champ', label:'Constructor Champion',  seasons:consChamp});
-    if(consRU)       accolades.push({type:'ru',    label:'Constructor Runner Up', seasons:consRU});
-    if(overallChamp) accolades.push({type:'gold',  label:'Overall Constructor Champion', seasons:overallChamp});
-    if(overallRU)    accolades.push({type:'ru',    label:'Overall Constructor Runner Up', seasons:overallRU});
-
-    map[name.toLowerCase()] = accolades;
+  function addAccolade(name, accolade){
+    if(!name) return;
+    const key = name.toLowerCase().trim();
+    if(!map[key]) map[key] = [];
+    // Check if same type+label already exists, append season
+    const existing = map[key].find(a => a.type===accolade.type && a.label===accolade.label);
+    if(existing){
+      existing.seasons += ', ' + accolade.seasons;
+    } else {
+      map[key].push(accolade);
+    }
   }
+
+  function fmtSeason(s, div){ return div ? `${div} S${s}` : `S${s}`; }
+
+  // Parse D1-D8 tabs
+  Object.entries(divTabs).forEach(([divName, rows]) => {
+    const divLabel = divName.replace('Division ','D');
+    for(let i=1; i<rows.length; i++){
+      const row = rows[i];
+      const raw = g(row,1);
+      if(!raw || raw.toLowerCase()==='season') continue;
+      const s = parseFloat(raw);
+      if(isNaN(s)) continue;
+      const season = Math.floor(s) === s ? String(Math.floor(s)) : String(s);
+
+      const champ = g(row,2);
+      const ru = g(row,6);
+      const cons = g(row,10);
+      const consD1 = g(row,11);
+      const consD2 = g(row,12);
+      const consRu = g(row,15);
+      const consRuD1 = g(row,16);
+      const consRuD2 = g(row,17);
+
+      if(champ) addAccolade(champ, {type:'champ', label:'Driver Champion', seasons:fmtSeason(season,divLabel)});
+      if(ru)    addAccolade(ru,    {type:'ru',    label:'Driver Runner Up', seasons:fmtSeason(season,divLabel)});
+      if(consD1) addAccolade(consD1, {type:'champ', label:'Constructor Champion', seasons:`${divLabel} S${season} (${cons})`});
+      if(consD2) addAccolade(consD2, {type:'champ', label:'Constructor Champion', seasons:`${divLabel} S${season} (${cons})`});
+      if(consRuD1) addAccolade(consRuD1, {type:'ru', label:'Constructor Runner Up', seasons:`${divLabel} S${season} (${consRu})`});
+      if(consRuD2) addAccolade(consRuD2, {type:'ru', label:'Constructor Runner Up', seasons:`${divLabel} S${season} (${consRu})`});
+    }
+  });
+
+  // Parse Overall tab
+  if(overallTab){
+    for(let i=1; i<overallTab.length; i++){
+      const row = overallTab[i];
+      const raw = g(row,1);
+      if(!raw || raw.toLowerCase()==='season') continue;
+      const s = parseFloat(raw);
+      if(isNaN(s)) continue;
+      const season = Math.floor(s) === s ? String(Math.floor(s)) : String(s);
+      const owner = g(row,2);
+      const ownerTeam = g(row,3);
+      const ru = g(row,6);
+      const ruTeam = g(row,7);
+      if(owner) addAccolade(owner, {type:'gold', label:'Overall Constructor Champion', seasons:`S${season} (${ownerTeam})`});
+      if(ru)    addAccolade(ru,    {type:'ru',   label:'Overall Constructor Runner Up', seasons:`S${season} (${ruTeam})`});
+    }
+  }
+
+  // Parse ASR tab
+  if(asrTab){
+    for(let i=1; i<asrTab.length; i++){
+      const row = asrTab[i];
+      const raw = g(row,1);
+      if(!raw || raw.toLowerCase()==='season') continue;
+      const s = parseFloat(raw);
+      if(isNaN(s)) continue;
+      const season = Math.floor(s) === s ? String(Math.floor(s)) : String(s);
+      const champ = g(row,2);
+      const consD1 = g(row,7);
+      const consD2 = g(row,8);
+      if(champ)  addAccolade(champ,  {type:'gold', label:'All Star Race Champion', seasons:`S${season}`});
+      if(consD1) addAccolade(consD1, {type:'champ', label:'ASR Constructor Champion', seasons:`S${season}`});
+      if(consD2) addAccolade(consD2, {type:'champ', label:'ASR Constructor Champion', seasons:`S${season}`});
+    }
+  }
+
   return map;
 }
 
@@ -464,51 +521,61 @@ function filterDrivers(q){
 // ── INIT ──────────────────────────────────────────────────────────────────────
 async function init(){
   try {
-    const [statsUrl, accoladesUrl] = await Promise.all([
+    const [statsUrl, d1Url, d2Url, d3Url, d4Url, d5Url, d6Url, d7Url, d8Url, overallUrl, asrUrl] = await Promise.all([
       getConfigValue('stats_url'),
-      getConfigValue('accolades_url')
+      getConfigValue('D1_winners_url'),
+      getConfigValue('D2_winners_url'),
+      getConfigValue('D3_winners_url'),
+      getConfigValue('D4_winners_url'),
+      getConfigValue('D5_winners_url'),
+      getConfigValue('D6_winners_url'),
+      getConfigValue('D7_winners_url'),
+      getConfigValue('D8_winners_url'),
+      getConfigValue('overall_winners_url'),
+      getConfigValue('asr_url'),
     ]);
 
     if(!statsUrl) throw new Error('stats_url not found in config');
-    if(!accoladesUrl) throw new Error('accolades_url not found in config');
 
-    // Extract sheet ID and GID from URL
     function parseSheetUrl(url){
+      if(!url) return null;
       const idMatch = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
       const gidMatch = url.match(/gid=(\d+)/);
-      return {
-        id: idMatch ? idMatch[1] : null,
-        gid: gidMatch ? gidMatch[1] : null
-      };
+      return idMatch ? { id: idMatch[1], gid: gidMatch ? gidMatch[1] : '0' } : null;
+    }
+
+    async function fetchTab(url){
+      const p = parseSheetUrl(url);
+      if(!p) return null;
+      try{
+        const res = await fetch(`https://docs.google.com/spreadsheets/d/${p.id}/export?format=csv&gid=${p.gid}`);
+        const text = await res.text();
+        if(text.includes('<!DOCTYPE')) return null;
+        return parseCSV(text);
+      } catch(e){ return null; }
     }
 
     const statsParsed = parseSheetUrl(statsUrl);
-    const accoladesParsed = parseSheetUrl(accoladesUrl);
+    if(!statsParsed) throw new Error('Invalid stats_url format');
 
-    if(!statsParsed.id || !statsParsed.gid) throw new Error('Invalid stats_url format');
-    if(!accoladesParsed.id || !accoladesParsed.gid) throw new Error('Invalid accolades_url format');
-
-    const [statsResp, accoladesResp] = await Promise.all([
-      fetch(`https://docs.google.com/spreadsheets/d/${statsParsed.id}/export?format=csv&gid=${statsParsed.gid}`),
-      fetch(`https://docs.google.com/spreadsheets/d/${accoladesParsed.id}/export?format=csv&gid=${accoladesParsed.gid}`)
-    ]);
-
-    if(!statsResp.ok) throw new Error(`Stats HTTP ${statsResp.status}`);
-    if(!accoladesResp.ok) throw new Error(`Accolades HTTP ${accoladesResp.status}`);
-
-    const [statsText, accoladesText] = await Promise.all([
-      statsResp.text(),
-      accoladesResp.text()
-    ]);
-
+    const statsResp = await fetch(`https://docs.google.com/spreadsheets/d/${statsParsed.id}/export?format=csv&gid=${statsParsed.gid}`);
+    const statsText = await statsResp.text();
     if(statsText.includes('<!DOCTYPE')) throw new Error('Stats sheet not published');
-    if(accoladesText.includes('<!DOCTYPE')) throw new Error('Accolades sheet not published');
-
     const statsRows = parseCSV(statsText);
-    const accoladesRows = parseCSV(accoladesText);
+
+    // Fetch all division, overall and ASR tabs in parallel
+    const [d1,d2,d3,d4,d5,d6,d7,d8,overall,asr] = await Promise.all([
+      fetchTab(d1Url), fetchTab(d2Url), fetchTab(d3Url), fetchTab(d4Url),
+      fetchTab(d5Url), fetchTab(d6Url), fetchTab(d7Url), fetchTab(d8Url),
+      fetchTab(overallUrl), fetchTab(asrUrl),
+    ]);
+
+    const divTabs = {};
+    const divNames = ['D1','D2','D3','D4','D5','D6','D7','D8'];
+    [d1,d2,d3,d4,d5,d6,d7,d8].forEach((rows,i)=>{ if(rows) divTabs[`Division ${i+1}`]=rows; });
 
     allDrivers = parseFullStats(statsRows);
-    const accoladesMap = parseAccolades(accoladesRows);
+    const accoladesMap = parseAccoladesFromTabs(divTabs, overall, asr);
     matchAccolades(allDrivers, accoladesMap);
 
     filteredDrivers = allDrivers;
@@ -526,6 +593,4 @@ async function init(){
 }
 
 init();
-</script>
-</body>
 </html>
