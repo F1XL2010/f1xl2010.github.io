@@ -520,7 +520,9 @@ function filterDrivers(q){
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 async function init(){
+  console.log('init started');
   try {
+    console.log('fetching config values...');
     const [statsUrl, d1Url, d2Url, d3Url, d4Url, d5Url, d6Url, d7Url, d8Url, overallUrl, asrUrl] = await Promise.all([
       getConfigValue('stats_url'),
       getConfigValue('D1_winners_url'),
@@ -536,6 +538,7 @@ async function init(){
     ]);
 
     if(!statsUrl) throw new Error('stats_url not found in config');
+    console.log('config values fetched, statsUrl:', statsUrl ? 'ok' : 'missing');
 
     function parseSheetUrl(url){
       if(!url) return null;
