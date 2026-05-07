@@ -442,20 +442,48 @@ function parseAccoladesFromTabs(divTabs, overallTab, asrTab, legacyTeamMembers){
 function matchAccolades(drivers, accoladesMap){
   drivers.forEach(driver => {
     const allNames = [driver.primary, ...driver.aliases];
-    for(const name of allNames){
-      const key = name.toLowerCase();
-      if(accoladesMap[key]){
-        driver.accolades = sortAccolades(accoladesMap[key]);
-        break;
-      }
-      for(const [mapKey, val] of Object.entries(accoladesMap)){
-        if(mapKey.includes(key) || key.includes(mapKey.split('/')[0].trim().toLowerCase())){
-          driver.accolades = sortAccolades(val);
-          break;
+    const merged = [];
+    const seen = new Set();
+
+    allNames.forEach(name => {
+      const key = name.toLowerCase().trim();
+      // Direct match
+      let found = accoladesMap[key];
+      // Partial match if no direct
+      if(!found){
+        for(const [mapKey, val] of Object.entries(accoladesMap)){
+          if(mapKey.includes(key) || key.includes(mapKey.split('/')[0].trim().toLowerCase())){
+            found = val;
+            break;
+          }
         }
       }
-      if(driver.accolades.length) break;
-    }
+      if(found){
+        found.forEach(a => {
+          const dedupKey = a.label+'|'+a.seasons;
+          if(!seen.has(dedupKey)){
+            seen.add(dedupKey);
+            merged.push(a);
+          }
+        });
+      }
+    });
+
+    // Also merge by combining seasons for same label
+    const combined = [];
+    merged.forEach(a => {
+      const existing = combined.find(c => c.label===a.label && c.type===a.type);
+      if(existing){
+        // Merge seasons - avoid duplicates
+        const existingSeasons = existing.seasons.split(', ');
+        const newSeasons = a.seasons.split(', ').filter(s => !existingSeasons.includes(s));
+        if(newSeasons.length) existing.seasons += ', ' + newSeasons.join(', ');
+      } else {
+        combined.push({...a});
+      }
+    });
+
+    driver.accolades = sortAccolades(combined);
   });
 }
 
