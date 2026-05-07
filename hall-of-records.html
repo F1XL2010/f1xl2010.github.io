@@ -657,53 +657,22 @@ async function init(){
     }
 
     // Build season+team -> drivers lookup from legacy teams sheet
-    // Structure: row with number in col0 = season header, teams in col1,4,7...
-    // TEAM OWNER row, DIVISION X rows with drivers
+    // Format: Season, Team, Team Owner, D1T1, D1T2, D2T1, D2T2, D3T1, D3T2... D8T1, D8T2
     const legacyTeamMembers = {}; // key: season|teamLower -> Set of drivers
-    if(legacyTeamRows){
-      let curSeason = null;
-      let teamCols = []; // [{name, col}]
-      for(let i=0;i<legacyTeamRows.length;i++){
+    if(legacyTeamRows && legacyTeamRows.length > 1){
+      const hdr = legacyTeamRows[0]; // header row
+      for(let i=1; i<legacyTeamRows.length; i++){
         const row = legacyTeamRows[i];
-        const f = (row[0]||'').trim();
-        // Season header row
-        if(f && /^\d+\.?\d*$/.test(f)){
-          curSeason = String(parseFloat(f));
-          if(Math.floor(parseFloat(f)) === parseFloat(f)) curSeason = String(Math.floor(parseFloat(f)));
-          teamCols = [];
-          for(let c=1;c<row.length;c+=3){
-            const n=(row[c]||'').trim();
-            if(n && n.toUpperCase()!=='RESERVES') teamCols.push({name:n, col:c});
-          }
-          continue;
+        const season = (row[0]||'').trim();
+        const team = (row[1]||'').trim().toLowerCase();
+        if(!season || !team) continue;
+        const k = season+'|'+team;
+        if(!legacyTeamMembers[k]) legacyTeamMembers[k] = new Set();
+        // Cols 3 onwards are drivers (D1T1, D1T2, D2T1, D2T2...)
+        for(let c=3; c<row.length; c++){
+          const driver = (row[c]||'').replace(/[👑🏆🪙]/g,'').trim();
+          if(driver) legacyTeamMembers[k].add(driver);
         }
-        if(!curSeason || !teamCols.length) continue;
-        // Driver rows - any row where col1 is blank (not team owner, not division label)
-        const col1 = (row[1]||'').trim();
-        if(col1.toUpperCase()==='TEAM OWNER:') continue; // skip owner row
-        // Division row or driver row
-        teamCols.forEach(t => {
-          const cellA = (row[t.col]||'').trim();
-          const cellB = (row[t.col+1]||'').trim();
-          // Division label cell - driver is in col+1
-          if(/^DIVISION\s+\d+/i.test(cellA) && cellB){
-            const driver = cellB.replace(/[👑🏆🪙]/g,'').trim();
-            if(driver){
-              const k = curSeason+'|'+t.name.toLowerCase().trim();
-              if(!legacyTeamMembers[k]) legacyTeamMembers[k] = new Set();
-              legacyTeamMembers[k].add(driver);
-            }
-          }
-          // Blank label cell - driver 2
-          if(!cellA && cellB && !/^DIVISION/i.test(cellB)){
-            const driver = cellB.replace(/[👑🏆🪙]/g,'').trim();
-            if(driver){
-              const k = curSeason+'|'+t.name.toLowerCase().trim();
-              if(!legacyTeamMembers[k]) legacyTeamMembers[k] = new Set();
-              legacyTeamMembers[k].add(driver);
-            }
-          }
-        });
       }
       console.log('Legacy team members built:', Object.keys(legacyTeamMembers).length, 'entries');
     }
