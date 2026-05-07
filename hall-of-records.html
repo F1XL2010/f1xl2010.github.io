@@ -369,6 +369,7 @@ function parseAccoladesFromTabs(divTabs, overallTab, asrTab){
         if(!overallTeamMembers[k]) overallTeamMembers[k] = new Set();
         if(consD1 && consD1 !== '--') overallTeamMembers[k].add(consD1);
         if(consD2 && consD2 !== '--') overallTeamMembers[k].add(consD2);
+        if(season==='26') console.log(`Building lookup: ${divName} S${season} cons="${cons}" -> ${consD1}, ${consD2}`);
       }
       if(consRu && consRu !== '--'){
         const k = season+'|'+consRu;
@@ -398,8 +399,12 @@ function parseAccoladesFromTabs(divTabs, overallTab, asrTab){
       if(ru)    addAccolade(ru,    {type:'ru',   label:'Team Principal Constructor Runner Up', seasons:`S${season}`});
 
       // Winning constructor team members
-      const winMembers = Array.from(overallTeamMembers[season+'|'+ownerTeam.toLowerCase()] || []);
-      const ruMembers  = Array.from(overallTeamMembers[season+'|'+ruTeam.toLowerCase()]    || []);
+      const winKey = season+'|'+ownerTeam.toLowerCase().trim();
+      const ruKey  = season+'|'+ruTeam.toLowerCase().trim();
+      console.log(`Overall S${season}: winKey="${winKey}", ruKey="${ruKey}"`);
+      console.log(`  winMembers:`, Array.from(overallTeamMembers[winKey]||[]));
+      const winMembers = Array.from(overallTeamMembers[winKey] || []);
+      const ruMembers  = Array.from(overallTeamMembers[ruKey]  || []);
       winMembers.forEach(driver => {
         if(driver) addAccolade(driver, {type:'gold', label:'Overall Winning Constructor Team', seasons:`S${season}`});
       });
