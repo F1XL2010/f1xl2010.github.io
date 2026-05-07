@@ -348,8 +348,8 @@ function parseAccoladesFromTabs(divTabs, overallTab, asrTab){
     }
   });
 
-  // Build a lookup: season -> { winTeam, winDrivers[], ruTeam, ruDrivers[] } from D1-D8
-  const overallTeamMembers = {};
+  // Build a lookup: season+team -> unique drivers[] from D1-D8
+  const overallTeamMembers = {}; // key: season+'|'+teamLower -> Set of drivers
   Object.entries(divTabs).forEach(([divName, rows]) => {
     for(let i=1; i<rows.length; i++){
       const row = rows[i];
@@ -358,22 +358,23 @@ function parseAccoladesFromTabs(divTabs, overallTab, asrTab){
       const s = parseFloat(raw);
       if(isNaN(s)) continue;
       const season = Math.floor(s)===s ? String(Math.floor(s)) : String(s);
-      const cons = g(row,10).toLowerCase();
+      const cons = g(row,10).toLowerCase().trim();
       const consD1 = g(row,11);
       const consD2 = g(row,12);
-      const consRu = g(row,15).toLowerCase();
+      const consRu = g(row,15).toLowerCase().trim();
       const consRuD1 = g(row,16);
       const consRuD2 = g(row,17);
-      if(!overallTeamMembers[season]) overallTeamMembers[season] = {};
-      if(cons){
-        if(!overallTeamMembers[season][cons]) overallTeamMembers[season][cons] = [];
-        if(consD1) overallTeamMembers[season][cons].push(consD1);
-        if(consD2) overallTeamMembers[season][cons].push(consD2);
+      if(cons && cons !== '--'){
+        const k = season+'|'+cons;
+        if(!overallTeamMembers[k]) overallTeamMembers[k] = new Set();
+        if(consD1 && consD1 !== '--') overallTeamMembers[k].add(consD1);
+        if(consD2 && consD2 !== '--') overallTeamMembers[k].add(consD2);
       }
-      if(consRu){
-        if(!overallTeamMembers[season][consRu]) overallTeamMembers[season][consRu] = [];
-        if(consRuD1) overallTeamMembers[season][consRu].push(consRuD1);
-        if(consRuD2) overallTeamMembers[season][consRu].push(consRuD2);
+      if(consRu && consRu !== '--'){
+        const k = season+'|'+consRu;
+        if(!overallTeamMembers[k]) overallTeamMembers[k] = new Set();
+        if(consRuD1 && consRuD1 !== '--') overallTeamMembers[k].add(consRuD1);
+        if(consRuD2 && consRuD2 !== '--') overallTeamMembers[k].add(consRuD2);
       }
     }
   });
@@ -397,13 +398,13 @@ function parseAccoladesFromTabs(divTabs, overallTab, asrTab){
       if(ru)    addAccolade(ru,    {type:'ru',   label:'Team Principal Constructor Runner Up', seasons:`S${season}`});
 
       // Winning constructor team members
-      const winMembers = (overallTeamMembers[season]||{})[ownerTeam.toLowerCase()] || [];
-      const ruMembers  = (overallTeamMembers[season]||{})[ruTeam.toLowerCase()]    || [];
+      const winMembers = Array.from(overallTeamMembers[season+'|'+ownerTeam.toLowerCase()] || []);
+      const ruMembers  = Array.from(overallTeamMembers[season+'|'+ruTeam.toLowerCase()]    || []);
       winMembers.forEach(driver => {
-        if(driver) addAccolade(driver, {type:'gold', label:'Overall Winning Constructor Team', seasons:`S${season} (${ownerTeam})`});
+        if(driver) addAccolade(driver, {type:'gold', label:'Overall Winning Constructor Team', seasons:`S${season}`});
       });
       ruMembers.forEach(driver => {
-        if(driver) addAccolade(driver, {type:'ru', label:'Overall Constructor Runner Up Team', seasons:`S${season} (${ruTeam})`});
+        if(driver) addAccolade(driver, {type:'ru', label:'Overall Constructor Team Runner Up', seasons:`S${season}`});
       });
     }
   }
@@ -432,23 +433,40 @@ function parseAccoladesFromTabs(divTabs, overallTab, asrTab){
 // ── MATCH ACCOLADES TO DRIVERS ────────────────────────────────────────────────
 function matchAccolades(drivers, accoladesMap){
   drivers.forEach(driver => {
-    // Try matching by any name variant
     const allNames = [driver.primary, ...driver.aliases];
     for(const name of allNames){
       const key = name.toLowerCase();
       if(accoladesMap[key]){
-        driver.accolades = accoladesMap[key];
+        driver.accolades = sortAccolades(accoladesMap[key]);
         break;
       }
-      // Try partial match — accolades may have combined name
       for(const [mapKey, val] of Object.entries(accoladesMap)){
         if(mapKey.includes(key) || key.includes(mapKey.split('/')[0].trim().toLowerCase())){
-          driver.accolades = val;
+          driver.accolades = sortAccolades(val);
           break;
         }
       }
       if(driver.accolades.length) break;
     }
+  });
+}
+
+// Sort accolades: pair each champion type with its runner up equivalent
+function sortAccolades(accolades){
+  const ORDER = [
+    'Driver Champion', 'Driver Runner Up',
+    'Constructor Champion', 'Constructor Runner Up',
+    'Team Principal Constructor Champion', 'Team Principal Constructor Runner Up',
+    'Overall Winning Constructor Team', 'Overall Constructor Team Runner Up',
+    'All Star Race Champion', 'ASR Constructor Champion',
+  ];
+  return [...accolades].sort((a, b) => {
+    const ai = ORDER.indexOf(a.label);
+    const bi = ORDER.indexOf(b.label);
+    if(ai === -1 && bi === -1) return 0;
+    if(ai === -1) return 1;
+    if(bi === -1) return -1;
+    return ai - bi;
   });
 }
 
@@ -519,7 +537,7 @@ function renderDrivers(drivers){
             <div class="sec-label">Accolades</div>
             <div class="accolade-list">
               ${d.accolades.length
-                ? d.accolades.map(a=>`<div class="accolade-item"><span class="badge badge-${a.type==='gold'?'gold':a.type==='champ'?'champ':'ru'}">${a.type==='ru'?'Runner Up':'Champion'}</span>${a.label} · ${a.seasons}</div>`).join('')
+                ? d.accolades.map(a=>`<div class="accolade-item"><span class="badge badge-${a.type==='gold'?'gold':a.type==='champ'?'champ':'ru'}">${a.type==='ru'?'Runner Up':'Champion'}</span>${a.label} · ${a.seasons.replace(/\s*\([^)]*\)/g,'')}</div>`).join('')
                 : '<div class="accolade-item none">No titles recorded</div>'
               }
             </div>
