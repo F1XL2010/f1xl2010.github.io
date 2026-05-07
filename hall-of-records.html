@@ -592,7 +592,7 @@ async function init(){
   console.log('init started');
   try {
     console.log('fetching config values...');
-    const [statsUrl, d1Url, d2Url, d3Url, d4Url, d5Url, d6Url, d7Url, d8Url, overallUrl, asrUrl, legacyTeamsSheetId, legacyTeamsGid] = await Promise.all([
+    const [statsUrl, d1Url, d2Url, d3Url, d4Url, d5Url, d6Url, d7Url, d8Url, overallUrl, asrUrl, legacyTeamsSheetId] = await Promise.all([
       getConfigValue('stats_url'),
       getConfigValue('D1_winners_url'),
       getConfigValue('D2_winners_url'),
@@ -605,7 +605,6 @@ async function init(){
       getConfigValue('overall_winners_url'),
       getConfigValue('asr_url'),
       getConfigValue('legacy_teams_sheet_id'),
-      getConfigValue('legacy_teams_gid'),
     ]);
 
     if(!statsUrl) throw new Error('stats_url not found in config');
@@ -648,31 +647,53 @@ async function init(){
 
     // Fetch legacy teams sheet
     let legacyTeamRows = null;
-    if(legacyTeamsSheetId && legacyTeamsGid){
+    if(legacyTeamsSheetId){
       try{
-        const r = await fetch(`https://docs.google.com/spreadsheets/d/${legacyTeamsSheetId}/export?format=csv&gid=${legacyTeamsGid}`);
+        const r = await fetch(`https://docs.google.com/spreadsheets/d/${legacyTeamsSheetId}/export?format=csv&gid=0`);
         const t = await r.text();
         if(!t.includes('<!DOCTYPE')) legacyTeamRows = parseCSV(t);
         console.log('Legacy teams:', legacyTeamRows ? legacyTeamRows.length + ' rows' : 'failed');
       } catch(e){ console.warn('Legacy teams fetch failed:', e.message); }
     }
 
-    // Build season+team -> drivers lookup from legacy teams sheet
-    // Format: Season, Team, Team Owner, D1T1, D1T2, D2T1, D2T2, D3T1, D3T2... D8T1, D8T2
-    legacyTeamMembers = {}; // reset
+    // Build season+team -> drivers lookup from legacy teams sheet (grid format)
+    // Season rows: col0=season number, cols 1,4,7...=team names
+    // TEAM OWNER row: col1="TEAM OWNER:", col2=owner name per team
+    // DIVISION rows: colN="DIVISION X:", colN+1=driver1, next blank row=driver2
+    legacyTeamMembers = {};
     if(legacyTeamRows && legacyTeamRows.length > 1){
-      const hdr = legacyTeamRows[0]; // header row
-      for(let i=1; i<legacyTeamRows.length; i++){
+      let curSeason = null;
+      let teamCols = []; // [{name, col}]
+      for(let i=0; i<legacyTeamRows.length; i++){
         const row = legacyTeamRows[i];
-        const season = (row[0]||'').trim();
-        const team = (row[1]||'').trim().toLowerCase();
-        if(!season || !team) continue;
-        const k = season+'|'+team;
-        if(!legacyTeamMembers[k]) legacyTeamMembers[k] = new Set();
-        // Cols 3 onwards are drivers (D1T1, D1T2, D2T1, D2T2...)
-        for(let c=3; c<row.length; c++){
-          const driver = (row[c]||'').replace(/[👑🏆🪙]/g,'').trim();
-          if(driver) legacyTeamMembers[k].add(driver);
+        const f = (row[0]||'').trim();
+        // Season header row - col0 has season number, teams in cols 1,4,7...
+        if(f && /^\d+\.?\d*$/.test(f) && row.slice(1).some(v=>v.trim())){
+          curSeason = String(parseFloat(f));
+          if(Math.floor(parseFloat(f))===parseFloat(f)) curSeason=String(Math.floor(parseFloat(f)));
+          teamCols = [];
+          for(let c=1;c<row.length;c+=3){
+            const n=(row[c]||'').trim();
+            if(n && n.toUpperCase()!=='RESERVES') teamCols.push({name:n.toLowerCase(), col:c});
+          }
+          continue;
+        }
+        if(!curSeason || !teamCols.length) continue;
+        // Skip TEAM OWNER row
+        if((row[1]||'').trim().toUpperCase()==='TEAM OWNER:') continue;
+        // Division row - driver in col+1
+        const isDivRow = teamCols.some(t => /^DIVISION\s+\d+/i.test((row[t.col]||'').trim()));
+        // Blank label row - driver 2
+        const isDriverRow = !isDivRow && !(row[0]||'').trim() && !(row[1]||'').trim();
+        if(isDivRow || isDriverRow){
+          teamCols.forEach(t => {
+            const driver = ((isDivRow ? row[t.col+1] : row[t.col+1])||'').replace(/[👑🏆🪙]/g,'').trim();
+            if(driver){
+              const k = curSeason+'|'+t.name;
+              if(!legacyTeamMembers[k]) legacyTeamMembers[k] = new Set();
+              legacyTeamMembers[k].add(driver);
+            }
+          });
         }
       }
       console.log('Legacy team members built:', Object.keys(legacyTeamMembers).length, 'entries');
