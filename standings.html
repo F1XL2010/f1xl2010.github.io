@@ -679,9 +679,8 @@ async function loadDrivers() {
       if (h==='F/L'){flCol=c;continue;}
       if (h==='Points'){ptsCol=c;continue;}
       if (h==='Gap'){gapCol=c;continue;}
-      // Stop processing once we've found Gap (or Points if no Gap) — anything after is hidden calc cols
-      if (gapCol>=0) break;
-      if (ptsCol>=0 && c>ptsCol+2) break;
+      // Stop processing once we've found Points — anything after is hidden calc cols
+      if (ptsCol>=0) break;
       const sprint = h.toLowerCase().includes('(s)') || h.toLowerCase().includes('(r)');
       const sprintRace = h.toLowerCase().includes('(r)');
       const circuitName = nameRow ? cs(nameRow,c) : '';
@@ -1558,8 +1557,8 @@ async function loadCoolStats() {
       const h = cs(drHdr,c);
       if (!h) continue;
       if (ptsColIdx>0 && c>=ptsColIdx) break;
-      const isSprint = h.toLowerCase().includes('(s)') || h.toLowerCase().includes('(r)');
-      if (!isSprint) raceCols.push({col:c, label:h});
+      const isSQ = h.toLowerCase().includes('(s)') && !h.toLowerCase().includes('(r)');
+      if (!isSQ) raceCols.push({col:c, label:h});
     }
 
     // Collect drivers
@@ -1606,10 +1605,9 @@ async function loadCoolStats() {
         const dots = last5.map(r => {
           const v = cs(drRows[d.row], r.col).trim();
           const n = parseInt(v);
-          const empty = !v || v===' ' || v==='0' || n===0;
-          const bg = empty?'rgba(255,255,255,0.05)':['DNF','DNS','DSQ'].includes(v.toUpperCase())?'#3a1010':n===1?'var(--p1-bg)':n===2?'var(--p2-bg)':n===3?'var(--p3-bg)':n<=6?'var(--p46-bg)':n<=10?'var(--p710-bg)':'rgba(255,255,255,0.08)';
-          const tc = empty?'rgba(255,255,255,0.2)':['DNF','DNS','DSQ'].includes(v.toUpperCase())?'#ff6b6b':n<=3?'#000':'#fff';
-          const disp = empty?'·':['DNF','DNS','DSQ'].includes(v.toUpperCase())?'X':v;
+          const bg = !v||v===' '?'rgba(255,255,255,0.05)':['DNF','DNS','DSQ'].includes(v.toUpperCase())?'#3a1010':n===1?'var(--p1-bg)':n===2?'var(--p2-bg)':n===3?'var(--p3-bg)':n<=6?'var(--p46-bg)':n<=10?'var(--p710-bg)':'rgba(255,255,255,0.08)';
+          const tc = !v||v===' '?'rgba(255,255,255,0.2)':['DNF','DNS','DSQ'].includes(v.toUpperCase())?'#ff6b6b':n<=3?'#000':'#fff';
+          const disp = !v||v===' '?'·':['DNF','DNS','DSQ'].includes(v.toUpperCase())?'X':v;
           return `<div class="cs-dot" style="background:${bg};color:${tc};">${disp}</div>`;
         }).join('');
         cardsHtml += `<div class="cs-row">
@@ -1730,8 +1728,12 @@ async function initStandings() {
         for (let c=4; c<hRow.c.length; c++) {
           if (cs(hRow,c)==='Points') { ptsCol=c; break; }
         }
-        // Get leader (first data row)
-        const leaderRow = rows[hIdx+1];
+        // Get leader - find row where Pos = 1
+        let leaderRow = null;
+        for(let r=hIdx+1; r<rows.length; r++){
+          if(cs(rows[r],0)==='1'){ leaderRow=rows[r]; break; }
+        }
+        if(!leaderRow) leaderRow = rows[hIdx+1]; // fallback to first row
         if (!leaderRow) return;
         divisions[i].leader = cs(leaderRow, 2) || '—';
         divisions[i].leaderTeam = cs(leaderRow, 3) || '';
