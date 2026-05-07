@@ -317,7 +317,7 @@ function parseAccoladesFromTabs(divTabs, overallTab, asrTab){
     }
   }
 
-  function fmtSeason(s, div){ return div ? `${div} S${s}` : `S${s}`; }
+  function fmtSeason(s, div){ return div ? `${div}-S${s}` : `S${s}`; }
 
   // Parse D1-D8 tabs
   Object.entries(divTabs).forEach(([divName, rows]) => {
@@ -341,10 +341,10 @@ function parseAccoladesFromTabs(divTabs, overallTab, asrTab){
 
       if(champ) addAccolade(champ, {type:'champ', label:'Driver Champion', seasons:fmtSeason(season,divLabel)});
       if(ru)    addAccolade(ru,    {type:'ru',    label:'Driver Runner Up', seasons:fmtSeason(season,divLabel)});
-      if(consD1) addAccolade(consD1, {type:'champ', label:'Constructor Champion', seasons:`${divLabel} S${season} (${cons})`});
-      if(consD2) addAccolade(consD2, {type:'champ', label:'Constructor Champion', seasons:`${divLabel} S${season} (${cons})`});
-      if(consRuD1) addAccolade(consRuD1, {type:'ru', label:'Constructor Runner Up', seasons:`${divLabel} S${season} (${consRu})`});
-      if(consRuD2) addAccolade(consRuD2, {type:'ru', label:'Constructor Runner Up', seasons:`${divLabel} S${season} (${consRu})`});
+      if(consD1) addAccolade(consD1, {type:'champ', label:'Constructor Champion', seasons:`${divLabel}-S${season}`});
+      if(consD2) addAccolade(consD2, {type:'champ', label:'Constructor Champion', seasons:`${divLabel}-S${season}`});
+      if(consRuD1) addAccolade(consRuD1, {type:'ru', label:'Constructor Runner Up', seasons:`${divLabel}-S${season}`});
+      if(consRuD2) addAccolade(consRuD2, {type:'ru', label:'Constructor Runner Up', seasons:`${divLabel}-S${season}`});
     }
   });
 
@@ -361,8 +361,8 @@ function parseAccoladesFromTabs(divTabs, overallTab, asrTab){
       const ownerTeam = g(row,3);
       const ru = g(row,6);
       const ruTeam = g(row,7);
-      if(owner) addAccolade(owner, {type:'gold', label:'Overall Constructor Champion', seasons:`S${season} (${ownerTeam})`});
-      if(ru)    addAccolade(ru,    {type:'ru',   label:'Overall Constructor Runner Up', seasons:`S${season} (${ruTeam})`});
+      if(owner) addAccolade(owner, {type:'gold', label:'Overall Constructor Champion', seasons:`S${season}`});
+      if(ru)    addAccolade(ru,    {type:'ru',   label:'Overall Constructor Runner Up', seasons:`S${season}`});
     }
   }
 
