@@ -348,6 +348,36 @@ function parseAccoladesFromTabs(divTabs, overallTab, asrTab){
     }
   });
 
+  // Build a lookup: season -> { winTeam, winDrivers[], ruTeam, ruDrivers[] } from D1-D8
+  const overallTeamMembers = {};
+  Object.entries(divTabs).forEach(([divName, rows]) => {
+    for(let i=1; i<rows.length; i++){
+      const row = rows[i];
+      const raw = g(row,1);
+      if(!raw || raw.toLowerCase()==='season') continue;
+      const s = parseFloat(raw);
+      if(isNaN(s)) continue;
+      const season = Math.floor(s)===s ? String(Math.floor(s)) : String(s);
+      const cons = g(row,10).toLowerCase();
+      const consD1 = g(row,11);
+      const consD2 = g(row,12);
+      const consRu = g(row,15).toLowerCase();
+      const consRuD1 = g(row,16);
+      const consRuD2 = g(row,17);
+      if(!overallTeamMembers[season]) overallTeamMembers[season] = {};
+      if(cons){
+        if(!overallTeamMembers[season][cons]) overallTeamMembers[season][cons] = [];
+        if(consD1) overallTeamMembers[season][cons].push(consD1);
+        if(consD2) overallTeamMembers[season][cons].push(consD2);
+      }
+      if(consRu){
+        if(!overallTeamMembers[season][consRu]) overallTeamMembers[season][consRu] = [];
+        if(consRuD1) overallTeamMembers[season][consRu].push(consRuD1);
+        if(consRuD2) overallTeamMembers[season][consRu].push(consRuD2);
+      }
+    }
+  });
+
   // Parse Overall tab
   if(overallTab){
     for(let i=1; i<overallTab.length; i++){
@@ -356,13 +386,25 @@ function parseAccoladesFromTabs(divTabs, overallTab, asrTab){
       if(!raw || raw.toLowerCase()==='season') continue;
       const s = parseFloat(raw);
       if(isNaN(s)) continue;
-      const season = Math.floor(s) === s ? String(Math.floor(s)) : String(s);
+      const season = Math.floor(s)===s ? String(Math.floor(s)) : String(s);
       const owner = g(row,2);
       const ownerTeam = g(row,3);
       const ru = g(row,6);
       const ruTeam = g(row,7);
-      if(owner) addAccolade(owner, {type:'gold', label:'Overall Constructor Champion', seasons:`S${season}`});
-      if(ru)    addAccolade(ru,    {type:'ru',   label:'Overall Constructor Runner Up', seasons:`S${season}`});
+
+      // Team Principal champion/RU
+      if(owner) addAccolade(owner, {type:'gold', label:'Team Principal Constructor Champion', seasons:`S${season}`});
+      if(ru)    addAccolade(ru,    {type:'ru',   label:'Team Principal Constructor Runner Up', seasons:`S${season}`});
+
+      // Winning constructor team members
+      const winMembers = (overallTeamMembers[season]||{})[ownerTeam.toLowerCase()] || [];
+      const ruMembers  = (overallTeamMembers[season]||{})[ruTeam.toLowerCase()]    || [];
+      winMembers.forEach(driver => {
+        if(driver) addAccolade(driver, {type:'gold', label:'Overall Winning Constructor Team', seasons:`S${season} (${ownerTeam})`});
+      });
+      ruMembers.forEach(driver => {
+        if(driver) addAccolade(driver, {type:'ru', label:'Overall Constructor Runner Up Team', seasons:`S${season} (${ruTeam})`});
+      });
     }
   }
 
