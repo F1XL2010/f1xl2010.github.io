@@ -298,7 +298,7 @@ function parseFullStats(rows){
 // Col 10 header = "overall constructors team"  → col 11 = Champions, col 12 = Runners Up
 // Data starts row 3 (index 2, after two header rows)
 
-function parseAccoladesFromTabs(divTabs, overallTab, asrTab){
+function parseAccoladesFromTabs(divTabs, overallTab, asrTab, legacyTeamMembers){
   // divTabs: object { 'D1': rows, 'D2': rows, ... }
   // overallTab: rows
   // asrTab: rows
@@ -403,8 +403,11 @@ function parseAccoladesFromTabs(divTabs, overallTab, asrTab){
       const ruKey  = season+'|'+ruTeam.toLowerCase().trim();
       console.log(`Overall S${season}: winKey="${winKey}", ruKey="${ruKey}"`);
       console.log(`  winMembers:`, Array.from(overallTeamMembers[winKey]||[]));
-      const winMembers = Array.from(overallTeamMembers[winKey] || []);
-      const ruMembers  = Array.from(overallTeamMembers[ruKey]  || []);
+      // Prefer legacy teams sheet for full roster, fall back to division tab data
+      const legacyWin = legacyTeamMembers ? Array.from(legacyTeamMembers[winKey]||[]) : [];
+      const legacyRu  = legacyTeamMembers ? Array.from(legacyTeamMembers[ruKey] ||[]) : [];
+      const winMembers = legacyWin.length ? legacyWin : Array.from(overallTeamMembers[winKey] || []);
+      const ruMembers  = legacyRu.length  ? legacyRu  : Array.from(overallTeamMembers[ruKey]  || []);
       winMembers.forEach(driver => {
         if(driver) addAccolade(driver, {type:'gold', label:'Overall Winning Constructor Team', seasons:`S${season}`});
       });
@@ -588,7 +591,7 @@ async function init(){
   console.log('init started');
   try {
     console.log('fetching config values...');
-    const [statsUrl, d1Url, d2Url, d3Url, d4Url, d5Url, d6Url, d7Url, d8Url, overallUrl, asrUrl] = await Promise.all([
+    const [statsUrl, d1Url, d2Url, d3Url, d4Url, d5Url, d6Url, d7Url, d8Url, overallUrl, asrUrl, legacyTeamsSheetId, legacyTeamsGid] = await Promise.all([
       getConfigValue('stats_url'),
       getConfigValue('D1_winners_url'),
       getConfigValue('D2_winners_url'),
@@ -600,6 +603,8 @@ async function init(){
       getConfigValue('D8_winners_url'),
       getConfigValue('overall_winners_url'),
       getConfigValue('asr_url'),
+      getConfigValue('legacy_teams_sheet_id'),
+      getConfigValue('legacy_teams_gid'),
     ]);
 
     if(!statsUrl) throw new Error('stats_url not found in config');
@@ -640,12 +645,75 @@ async function init(){
       fetchTab(overallUrl,'Overall'), fetchTab(asrUrl,'ASR'),
     ]);
 
+    // Fetch legacy teams sheet
+    let legacyTeamRows = null;
+    if(legacyTeamsSheetId && legacyTeamsGid){
+      try{
+        const r = await fetch(`https://docs.google.com/spreadsheets/d/${legacyTeamsSheetId}/export?format=csv&gid=${legacyTeamsGid}`);
+        const t = await r.text();
+        if(!t.includes('<!DOCTYPE')) legacyTeamRows = parseCSV(t);
+        console.log('Legacy teams:', legacyTeamRows ? legacyTeamRows.length + ' rows' : 'failed');
+      } catch(e){ console.warn('Legacy teams fetch failed:', e.message); }
+    }
+
+    // Build season+team -> drivers lookup from legacy teams sheet
+    // Structure: row with number in col0 = season header, teams in col1,4,7...
+    // TEAM OWNER row, DIVISION X rows with drivers
+    const legacyTeamMembers = {}; // key: season|teamLower -> Set of drivers
+    if(legacyTeamRows){
+      let curSeason = null;
+      let teamCols = []; // [{name, col}]
+      for(let i=0;i<legacyTeamRows.length;i++){
+        const row = legacyTeamRows[i];
+        const f = (row[0]||'').trim();
+        // Season header row
+        if(f && /^\d+\.?\d*$/.test(f)){
+          curSeason = String(parseFloat(f));
+          if(Math.floor(parseFloat(f)) === parseFloat(f)) curSeason = String(Math.floor(parseFloat(f)));
+          teamCols = [];
+          for(let c=1;c<row.length;c+=3){
+            const n=(row[c]||'').trim();
+            if(n && n.toUpperCase()!=='RESERVES') teamCols.push({name:n, col:c});
+          }
+          continue;
+        }
+        if(!curSeason || !teamCols.length) continue;
+        // Driver rows - any row where col1 is blank (not team owner, not division label)
+        const col1 = (row[1]||'').trim();
+        if(col1.toUpperCase()==='TEAM OWNER:') continue; // skip owner row
+        // Division row or driver row
+        teamCols.forEach(t => {
+          const cellA = (row[t.col]||'').trim();
+          const cellB = (row[t.col+1]||'').trim();
+          // Division label cell - driver is in col+1
+          if(/^DIVISION\s+\d+/i.test(cellA) && cellB){
+            const driver = cellB.replace(/[👑🏆🪙]/g,'').trim();
+            if(driver){
+              const k = curSeason+'|'+t.name.toLowerCase().trim();
+              if(!legacyTeamMembers[k]) legacyTeamMembers[k] = new Set();
+              legacyTeamMembers[k].add(driver);
+            }
+          }
+          // Blank label cell - driver 2
+          if(!cellA && cellB && !/^DIVISION/i.test(cellB)){
+            const driver = cellB.replace(/[👑🏆🪙]/g,'').trim();
+            if(driver){
+              const k = curSeason+'|'+t.name.toLowerCase().trim();
+              if(!legacyTeamMembers[k]) legacyTeamMembers[k] = new Set();
+              legacyTeamMembers[k].add(driver);
+            }
+          }
+        });
+      }
+      console.log('Legacy team members built:', Object.keys(legacyTeamMembers).length, 'entries');
+    }
+
     const divTabs = {};
     const divNames = ['D1','D2','D3','D4','D5','D6','D7','D8'];
     [d1,d2,d3,d4,d5,d6,d7,d8].forEach((rows,i)=>{ if(rows) divTabs[`Division ${i+1}`]=rows; });
 
     allDrivers = parseFullStats(statsRows);
-    const accoladesMap = parseAccoladesFromTabs(divTabs, overall, asr);
+    const accoladesMap = parseAccoladesFromTabs(divTabs, overall, asr, legacyTeamMembers);
     matchAccolades(allDrivers, accoladesMap);
 
     filteredDrivers = allDrivers;
