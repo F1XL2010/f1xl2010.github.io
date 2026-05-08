@@ -4,40 +4,40 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>F1XL · Video Generator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Permanent+Marker&family=Boogaloo&family=Barlow+Condensed:wght@400;700;900&family=Special+Elite&display=swap" rel="stylesheet">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Barlow+Condensed:wght@300;400;700;900&family=Special+Elite&family=Oswald:wght@400;700&display=swap');
 :root{--bg:#0a0806;--surface:#141210;--border:rgba(255,255,255,0.07);--accent:#cc1e1e;--text:#ede8e0;--muted:rgba(237,232,224,0.38);--yellow:#f5e642;}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-serif;min-height:100vh;padding:2rem 1.5rem 4rem;
-  background-image:repeating-linear-gradient(45deg,rgba(255,255,255,0.007) 0,rgba(255,255,255,0.007) 1px,transparent 1px,transparent 10px),
-  repeating-linear-gradient(-45deg,rgba(255,255,255,0.005) 0,rgba(255,255,255,0.005) 1px,transparent 1px,transparent 14px);}
+  background-image:repeating-linear-gradient(45deg,rgba(255,255,255,0.007) 0,rgba(255,255,255,0.007) 1px,transparent 1px,transparent 10px);}
 header{text-align:center;margin-bottom:3rem;padding-top:1rem;}
 .hdr-top{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:4px;}
 .hdr-a{font-family:'Permanent Marker',cursive;font-size:2rem;color:var(--accent);opacity:.7;display:inline-block;}
 .hdr-t{font-family:'Permanent Marker',cursive;font-size:3rem;color:var(--yellow);transform:rotate(-1deg);display:inline-block;text-shadow:3px 3px 0 rgba(0,0,0,.6);}
 .hdr-s{font-family:'Special Elite',cursive;font-size:.85rem;color:var(--muted);letter-spacing:.22em;}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.5rem;margin-bottom:1.4rem;max-width:900px;margin-left:auto;margin-right:auto;}
-.card-title{font-family:'Oswald',sans-serif;font-size:.72rem;letter-spacing:.28em;color:var(--accent);text-transform:uppercase;margin-bottom:1.1rem;padding-bottom:.5rem;border-bottom:1px solid var(--border);}
+.card-title{font-family:'Black Ops One',cursive;font-size:.72rem;letter-spacing:.18em;color:var(--accent);text-transform:uppercase;margin-bottom:1.1rem;padding-bottom:.5rem;border-bottom:1px solid var(--border);}
 .form-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.9rem;}
 .form-group{display:flex;flex-direction:column;gap:5px;}
-label{font-size:.68rem;letter-spacing:.15em;color:var(--muted);text-transform:uppercase;font-family:'Oswald',sans-serif;}
+label{font-size:.68rem;letter-spacing:.15em;color:var(--muted);text-transform:uppercase;font-family:'Black Ops One',cursive;}
 input,select{background:rgba(0,0,0,.35);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:1rem;padding:8px 10px;transition:border-color .2s;width:100%;}
 input:focus,select:focus{outline:none;border-color:var(--accent);}
 select option{background:#141210;}
 .div-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.1rem;}
 .count-ctrl{display:flex;align-items:center;gap:10px;}
-.count-btn{width:30px;height:30px;border-radius:4px;border:1px solid var(--border);background:rgba(0,0,0,.3);color:var(--text);font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:border-color .2s,background .2s;line-height:1;}
+.count-btn{width:30px;height:30px;border-radius:4px;border:1px solid var(--border);background:rgba(0,0,0,.3);color:var(--text);font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:border-color .2s;line-height:1;}
 .count-btn:hover{border-color:var(--accent);background:rgba(204,30,30,.1);}
 .count-num{font-family:'Permanent Marker',cursive;font-size:1.4rem;color:var(--yellow);min-width:24px;text-align:center;}
 .div-block{border:1px solid var(--border);border-radius:6px;padding:1.1rem;margin-bottom:.9rem;}
-.div-lbl{font-family:'Permanent Marker',cursive;font-size:1rem;margin-bottom:.9rem;display:flex;align-items:center;gap:9px;}
+.div-lbl{font-family:'Black Ops One',cursive;font-size:.95rem;margin-bottom:.9rem;display:flex;align-items:center;gap:9px;color:var(--text);}
 .div-sw{width:13px;height:13px;border-radius:3px;flex-shrink:0;}
 .podium-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;}
 .podium-slot{display:flex;flex-direction:column;gap:5px;}
 .pos-lbl{font-size:.63rem;font-weight:700;letter-spacing:.1em;padding:2px 7px;border-radius:3px;display:inline-block;margin-bottom:1px;}
 .p1l{background:#d4a000;color:#1a0d00;}.p2l{background:#888;color:#111;}.p3l{background:#7a3d1a;color:#ffd0a0;}
 .gen-btn{width:100%;max-width:900px;display:block;margin:0 auto;padding:1.15rem;background:var(--accent);border:none;border-radius:6px;color:#fff;font-family:'Permanent Marker',cursive;font-size:1.55rem;cursor:pointer;transform:rotate(-.4deg);transition:transform .15s,background .2s,box-shadow .2s;box-shadow:3px 3px 0 rgba(0,0,0,.45);}
-.gen-btn:hover{background:#e02020;transform:rotate(-.4deg) scale(1.01);box-shadow:5px 5px 0 rgba(0,0,0,.55);}
+.gen-btn:hover{background:#e02020;transform:rotate(-.4deg) scale(1.01);}
 .gen-btn:disabled{background:#3a3a3a;cursor:not-allowed;transform:none;box-shadow:none;}
 .prog-area{display:none;margin:1.4rem auto 0;max-width:900px;}
 .prog-label{font-family:'Special Elite',cursive;font-size:.84rem;color:var(--muted);margin-bottom:7px;text-align:center;}
@@ -64,7 +64,7 @@ select option{background:#141210;}
   <div class="card-title">Race Info</div>
   <div class="form-row">
     <div class="form-group"><label>Season</label><input type="number" id="season" value="28" min="1" max="99"></div>
-    <div class="form-group"><label>Race Number</label><input type="number" id="raceNum" value="1" min="1" max="30"></div>
+    <div class="form-group"><label>Race No.</label><input type="number" id="raceNum" value="1" min="1" max="30"></div>
     <div class="form-group"><label>Track</label><input type="text" id="track" value="Bahrain"></div>
     <div class="form-group"><label>Race Type</label>
       <select id="raceType">
@@ -95,7 +95,7 @@ select option{background:#141210;}
   <div class="prog-outer"><div class="prog-inner" id="progBar"></div></div>
 </div>
 
-<p class="note">Output: <span>.webm</span> — uploads directly to YouTube.<br>For Instagram/TikTok rename to <span>.mp4</span> or use free <span>HandBrake</span>.</p>
+<p class="note">Output: <span>.webm</span> — uploads directly to YouTube.<br>For Instagram/TikTok rename to <span>.mp4</span> or convert with free <span>HandBrake</span>.</p>
 
 <canvas id="renderCanvas" width="720" height="1280"></canvas>
 <video id="introVid" crossorigin="anonymous" playsinline muted></video>
@@ -105,9 +105,10 @@ select option{background:#141210;}
 'use strict';
 
 // ─── ASSETS ────────────────────────────────────────────────────────────────
-const ASSET_BASE = 'https://f1xl2010.github.io/video-gen/assets/';
-const INTRO_SRC  = ASSET_BASE + 'video/F1XL logoclip.mp4';
-const MUSIC_SRC  = ASSET_BASE + 'music/instrumental_backing1.mp3';
+const BASE = 'https://f1xl2010.github.io/video-gen/assets/';
+const INTRO_SRC = BASE + 'video/F1XL logoclip.mp4';
+const MUSIC_SRC = BASE + 'music/instrumental_backing1.mp3';
+const BG_SRC    = BASE + 'video/vid1background.png';
 
 const F1_TEAMS = ['Alpine','Aston Martin','Audi','Cadillac','Ferrari','Haas','McLaren','Mercedes','Racing Bull','Red Bull','Williams','Reserve'];
 
@@ -126,84 +127,26 @@ const TEAM_COL = {
   'Racing Bull':'#7091F8','Red Bull':'#4570C0','Williams':'#3267D4','Reserve':'#ffffff',
 };
 
-const DIV_COL = [null,
-  {main:'#D44444',dark:'#8B1A1A',bg:'#1a0404'},
-  {main:'#C8941A',dark:'#7A5A00',bg:'#18120a'},
-  {main:'#A0C020',dark:'#5A7A00',bg:'#0e1300'},
-  {main:'#20C060',dark:'#007A30',bg:'#031409'},
-  {main:'#20A8C0',dark:'#006A80',bg:'#031214'},
-  {main:'#3050D8',dark:'#1030A0',bg:'#030914'},
-  {main:'#8830CC',dark:'#5010A0',bg:'#0c0314'},
-  {main:'#CC2880',dark:'#900050',bg:'#140312'},
+// Division tint colours — overlaid on the background image
+const DIV_TINT = [null,
+  {r:180,g:20, b:20},   // D1 red
+  {r:180,g:130,b:10},   // D2 amber
+  {r:100,g:160,b:10},   // D3 green
+  {r:10, g:160,b:80},   // D4 emerald
+  {r:10, g:140,b:180},  // D5 teal
+  {r:40, g:60, b:200},  // D6 blue
+  {r:120,g:20, b:180},  // D7 purple
+  {r:180,g:20, b:110},  // D8 magenta
 ];
 
-// Timing (seconds)
 const FPS=30, W=720, H=1280;
-const T_TITLE=2.0, T_TRANS=3.0, T_RESULTS=4.0;
+// Timing
+const T_TITLE=2.5;   // title card (season/race/track fades in on bg)
+const T_RESULTS=7.0; // results per division
 
 // ─── STATE ─────────────────────────────────────────────────────────────────
 let divCount=4;
 const imgCache={};
-
-// ─── PARTICLES ─────────────────────────────────────────────────────────────
-// Each particle is a light streak
-const pPools={};
-
-function initParticles(divIdx, colour) {
-  const count=50;
-  pPools[divIdx]=Array.from({length:count},(_,i)=>({
-    x: Math.random()*W,
-    y: Math.random()*H, // pre-scatter on init
-    vx:(Math.random()-.5)*1.4,
-    vy:-(1.8+Math.random()*4),
-    len:30+Math.random()*140,
-    w:  0.4+Math.random()*2,
-    a:  0.3+Math.random()*0.55,
-    col:colour,
-  }));
-}
-
-function stepParticles(divIdx, colour) {
-  if(!pPools[divIdx]) initParticles(divIdx, colour);
-  const pool=pPools[divIdx];
-  pool.forEach(p=>{
-    p.x+=p.vx; p.y+=p.vy;
-    if(p.y+p.len<0){
-      // reset to bottom
-      p.x=Math.random()*W;
-      p.y=H+20;
-      p.vx=(Math.random()-.5)*1.4;
-      p.vy=-(1.8+Math.random()*4);
-      p.len=30+Math.random()*140;
-      p.w=0.4+Math.random()*2;
-      p.a=0.3+Math.random()*0.55;
-      p.col=colour;
-    }
-  });
-}
-
-function drawParticles(ctx, divIdx) {
-  const pool=pPools[divIdx];
-  if(!pool) return;
-  pool.forEach(p=>{
-    ctx.save();
-    ctx.globalAlpha=p.a;
-    ctx.strokeStyle=p.col;
-    ctx.lineWidth=p.w;
-    ctx.lineCap='round';
-    // gradient along streak
-    const grd=ctx.createLinearGradient(p.x,p.y,p.x+p.vx*15,p.y-p.len);
-    grd.addColorStop(0,'transparent');
-    grd.addColorStop(0.5,p.col);
-    grd.addColorStop(1,'transparent');
-    ctx.strokeStyle=grd;
-    ctx.beginPath();
-    ctx.moveTo(p.x,p.y);
-    ctx.lineTo(p.x+p.vx*15,p.y-p.len);
-    ctx.stroke();
-    ctx.restore();
-  });
-}
 
 // ─── UI ────────────────────────────────────────────────────────────────────
 function teamOpts(di){
@@ -214,10 +157,11 @@ function buildDivisions(){
   const c=document.getElementById('divsContainer');
   c.innerHTML='';
   for(let i=1;i<=divCount;i++){
-    const dc=DIV_COL[i]||DIV_COL[1];
+    const t=DIV_TINT[i]||DIV_TINT[1];
+    const hex=`#${t.r.toString(16).padStart(2,'0')}${t.g.toString(16).padStart(2,'0')}${t.b.toString(16).padStart(2,'0')}`;
     c.innerHTML+=`
-    <div class="div-block" style="border-color:${dc.main}44">
-      <div class="div-lbl"><div class="div-sw" style="background:${dc.main}"></div>Division ${i}</div>
+    <div class="div-block" style="border-color:${hex}55">
+      <div class="div-lbl"><div class="div-sw" style="background:${hex}"></div>Division ${i}</div>
       <div class="podium-grid">
         <div class="podium-slot"><span class="pos-lbl p1l">P1</span>
           <input type="text" id="d${i}p1n" placeholder="Driver name">
@@ -239,8 +183,9 @@ function changeDivs(d){divCount=Math.max(1,Math.min(8,divCount+d));buildDivision
 function getFormData(){
   const divs=[];
   for(let i=1;i<=divCount;i++){
-    const dc=DIV_COL[i]||DIV_COL[1];
-    divs.push({num:i,colour:dc.main,dark:dc.dark,bgColour:dc.bg,
+    divs.push({
+      num:i,
+      tint:DIV_TINT[i]||DIV_TINT[1],
       podium:[1,2,3].map(p=>({
         name:(document.getElementById(`d${i}p${p}n`).value.trim()||'TBC'),
         team:document.getElementById(`d${i}p${p}t`).value,
@@ -263,231 +208,160 @@ function loadImg(src){
     const img=new Image();
     img.crossOrigin='anonymous';
     img.onload=()=>{imgCache[src]=img;resolve(img);};
-    img.onerror=()=>{console.warn('Logo failed:',src);resolve(null);};
+    img.onerror=()=>{console.warn('Failed:',src);resolve(null);};
     img.src=src;
   });
 }
 
-async function preloadLogos(divs){
+async function preloadAll(divs){
   const teams=new Set();
   divs.forEach(d=>d.podium.forEach(p=>teams.add(p.team)));
-  await Promise.all([...teams].map(t=>{
-    const f=LOGO_FILES[t];
-    return f?loadImg(ASSET_BASE+'logos/'+f):Promise.resolve();
-  }));
-}
-
-// Load intro video — returns {el, duration} or null
-async function loadIntroVideo(){
-  return new Promise(resolve=>{
-    const vid=document.getElementById('introVid');
-    vid.src=INTRO_SRC;
-    vid.onloadedmetadata=()=>resolve({el:vid,duration:vid.duration});
-    vid.onerror=()=>{console.warn('Intro video not found');resolve(null);};
-    vid.load();
-  });
+  await Promise.all([
+    loadImg(BG_SRC),
+    ...[...teams].map(t=>{const f=LOGO_FILES[t];return f?loadImg(BASE+'logos/'+f):Promise.resolve();})
+  ]);
 }
 
 // ─── HELPERS ───────────────────────────────────────────────────────────────
-function hex2rgba(hex,a){
-  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
-  return `rgba(${r},${g},${b},${a})`;
-}
 function easeOut3(t){return 1-Math.pow(1-Math.min(t,1),3);}
 function easeOut5(t){return 1-Math.pow(1-Math.min(t,1),5);}
 function easeIO2(t){t=Math.min(t,1);return t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;}
 function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
 function srand(s){return Math.abs(Math.sin(s+1)*43758.5453)%1;}
 
-// ─── BACKGROUND ────────────────────────────────────────────────────────────
-function drawBg(ctx, colour, dark, bgColour, fi, divIdx){
-  // Rich dark base with colour tint
-  const r=parseInt(bgColour.slice(1,3),16),
-        g=parseInt(bgColour.slice(3,5),16),
-        b=parseInt(bgColour.slice(5,7),16);
-  ctx.fillStyle=bgColour;
-  ctx.fillRect(0,0,W,H);
-
-  // Large sweeping radials — much more aggressive colour
-  let grd=ctx.createRadialGradient(W*.85,H*.9,0,W*.85,H*.9,W*1.05);
-  grd.addColorStop(0,hex2rgba(colour,.7));
-  grd.addColorStop(0.35,hex2rgba(colour,.35));
-  grd.addColorStop(0.7,hex2rgba(dark,.15));
-  grd.addColorStop(1,'transparent');
-  ctx.fillStyle=grd;ctx.fillRect(0,0,W,H);
-
-  grd=ctx.createRadialGradient(W*.05,H*.05,0,W*.05,H*.05,W*.9);
-  grd.addColorStop(0,hex2rgba(colour,.45));
-  grd.addColorStop(0.5,hex2rgba(dark,.2));
-  grd.addColorStop(1,'transparent');
-  ctx.fillStyle=grd;ctx.fillRect(0,0,W,H);
-
-  // Mid diagonal sweep
-  grd=ctx.createRadialGradient(W*.5,H*.45,0,W*.5,H*.45,W*.65);
-  grd.addColorStop(0,hex2rgba(colour,.18));
-  grd.addColorStop(1,'transparent');
-  ctx.fillStyle=grd;ctx.fillRect(0,0,W,H);
-
-  // Animated particles
-  if(divIdx>=0){
-    stepParticles(divIdx,colour);
-    drawParticles(ctx,divIdx);
+// ─── DRAW BACKGROUND ───────────────────────────────────────────────────────
+function drawBg(ctx, tint, tintAlpha){
+  const bg=imgCache[BG_SRC];
+  if(bg){
+    // Scale to fill 720x1280
+    const scale=Math.max(W/bg.width, H/bg.height);
+    const dw=bg.width*scale, dh=bg.height*scale;
+    ctx.drawImage(bg,(W-dw)/2,(H-dh)/2,dw,dh);
+  } else {
+    ctx.fillStyle='#0d1210';
+    ctx.fillRect(0,0,W,H);
   }
-
-  // Vignette — darkens edges to keep text readable
-  const vig=ctx.createRadialGradient(W/2,H/2,H*.3,W/2,H/2,H*.85);
-  vig.addColorStop(0,'transparent');
-  vig.addColorStop(1,'rgba(0,0,0,0.55)');
-  ctx.fillStyle=vig;ctx.fillRect(0,0,W,H);
-
-  // Grid lines
-  ctx.strokeStyle='rgba(255,255,255,0.028)';ctx.lineWidth=1;
-  for(let x=0;x<=W;x+=48){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
-  for(let y=0;y<=H;y+=48){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
-
-  // Scanlines
-  ctx.fillStyle='rgba(0,0,0,0.04)';
-  for(let y=0;y<H;y+=4) ctx.fillRect(0,y+2,W,2);
-
-  // Film grain
-  const idata=ctx.createImageData(W,H),dd=idata.data;
-  for(let i=0;i<dd.length;i+=16){
-    const px=(i/4)%W,py=Math.floor((i/4)/W);
-    const n=srand(px*13+py*7+(fi%60)*7)*24;
-    dd[i]=n;dd[i+1]=n;dd[i+2]=n;dd[i+3]=26;
-  }
-  ctx.putImageData(idata,0,0);
-
-  // Top & bottom colour bars
-  const bar=ctx.createLinearGradient(0,0,W,0);
-  bar.addColorStop(0,'transparent');bar.addColorStop(.2,colour);
-  bar.addColorStop(.8,colour);bar.addColorStop(1,'transparent');
-  ctx.fillStyle=bar;
-  ctx.fillRect(0,0,W,10);
-  ctx.fillRect(0,H-7,W,7);
-}
-
-// ─── TITLE CARD ────────────────────────────────────────────────────────────
-function renderTitleCard(ctx,info,t,fi){
-  drawBg(ctx,'#888888','#444444','#111111',fi,-1);
-  const env=easeOut3(clamp(t/0.2,0,1))*(t>0.8?easeIO2(1-(t-0.8)/0.2):1);
-  const lines=[
-    {text:`SEASON ${info.season}`,font:`900 96px 'Barlow Condensed',sans-serif`,delay:0.03},
-    {text:`RACE ${info.raceNum}`, font:`700 66px 'Barlow Condensed',sans-serif`, delay:0.18},
-    {text:info.track.toUpperCase(),font:`300 76px 'Barlow Condensed',sans-serif`,delay:0.33},
-  ];
-  const startY=H*.3;
-  lines.forEach((l,i)=>{
-    const p=easeOut5(clamp((t*T_TITLE-l.delay)/0.35,0,1));
-    ctx.save();
-    ctx.globalAlpha=env*p;
-    ctx.translate(0,(1-p)*-70);
-    ctx.font=l.font;ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.shadowColor='rgba(0,0,0,0.95)';ctx.shadowBlur=22;ctx.shadowOffsetY=4;
-    ctx.fillStyle='#ffffff';
-    ctx.fillText(l.text,W/2,startY+i*108);
-    ctx.restore();
-  });
-  ctx.save();
-  ctx.globalAlpha=env*0.18;
-  ctx.strokeStyle='#ffffff';ctx.lineWidth=1;
-  ctx.beginPath();ctx.moveTo(80,startY+60);ctx.lineTo(W-80,startY+62);ctx.stroke();
-  ctx.restore();
-}
-
-// ─── TRANSITION CARD ───────────────────────────────────────────────────────
-function renderTransCard(ctx,div,info,t,fi){
-  drawBg(ctx,div.colour,div.dark,div.bgColour,fi,div.num-1);
-  const env=easeOut3(clamp(t/0.1,0,1))*(t>0.82?easeIO2(1-(t-0.82)/0.18):1);
-
-  ctx.save();ctx.globalAlpha=env;ctx.textAlign='center';ctx.textBaseline='middle';
-  const hLines=[
-    {text:`SEASON ${info.season}`,font:`900 72px 'Barlow Condensed',sans-serif`},
-    {text:`RACE ${info.raceNum}`, font:`700 52px 'Barlow Condensed',sans-serif`},
-    {text:info.track.toUpperCase(),font:`300 60px 'Barlow Condensed',sans-serif`},
-  ];
-  hLines.forEach((l,i)=>{
-    ctx.font=l.font;
-    ctx.shadowColor='rgba(0,0,0,0.95)';ctx.shadowBlur=18;ctx.shadowOffsetY=3;
-    ctx.fillStyle='#ffffff';
-    ctx.fillText(l.text,W/2,100+i*88);
-  });
-  ctx.restore();
-
-  // Horizontal rule
-  ctx.save();ctx.globalAlpha=env*0.22;
-  ctx.strokeStyle='#ffffff';ctx.lineWidth=1;
-  ctx.beginPath();ctx.moveTo(60,372);ctx.lineTo(W-60,374);ctx.stroke();
-  ctx.restore();
-
-  // Division number slams in
-  const dp=easeOut5(clamp((t*T_TRANS-0.2)/0.45,0,1));
-  const ds=(1-dp)*-160;
-  ctx.save();
-  ctx.globalAlpha=env*Math.min(dp*3,1);
-  ctx.translate(0,ds);
-  ctx.textAlign='center';ctx.textBaseline='middle';
-
-  ctx.font=`700 32px 'Oswald',sans-serif`;
-  ctx.fillStyle=div.colour;
-  ctx.shadowColor='rgba(0,0,0,0.8)';ctx.shadowBlur=12;
-  ctx.fillText('DIVISION',W/2,H*0.50);
-
-  ctx.font=`900 210px 'Barlow Condensed',sans-serif`;
-  ctx.fillStyle='#ffffff';
-  ctx.shadowColor='rgba(0,0,0,0.85)';ctx.shadowBlur=35;ctx.shadowOffsetY=10;
-  ctx.fillText(div.num,W/2,H*0.67);
-  ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetY=0;
-
-  // Underline bar
-  const ug=ctx.createLinearGradient(0,0,W,0);
-  ug.addColorStop(0,'transparent');ug.addColorStop(0.25,div.colour);
-  ug.addColorStop(0.75,div.colour);ug.addColorStop(1,'transparent');
-  ctx.fillStyle=ug;ctx.fillRect(0,H*.77,W,6);
-  ctx.restore();
-
-  if(t>0.8){
-    ctx.fillStyle=hex2rgba(div.bgColour,easeIO2((t-0.8)/0.2));
+  // Division colour tint overlay
+  if(tint && tintAlpha>0){
+    ctx.fillStyle=`rgba(${tint.r},${tint.g},${tint.b},${tintAlpha})`;
     ctx.fillRect(0,0,W,H);
   }
 }
 
-// ─── RESULTS CARD ──────────────────────────────────────────────────────────
-function drawPosBadge(ctx,pos,cx,cy,size,rot,alpha){
-  const cols=[{bg:'#D4A000',text:'#1a0d00'},{bg:'#787878',text:'#eee'},{bg:'#7A3D1A',text:'#FFD0A0'}];
-  const c=cols[pos-1];
-  ctx.save();ctx.globalAlpha=alpha;
-  ctx.translate(cx,cy);ctx.rotate(rot*Math.PI/180);
-  ctx.shadowColor='rgba(0,0,0,0.75)';ctx.shadowBlur=18;ctx.shadowOffsetX=3;ctx.shadowOffsetY=5;
-  ctx.fillStyle=c.bg;
-  ctx.beginPath();ctx.roundRect(-size/2,-size/2,size,size,size*.12);ctx.fill();
-  ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;
-  ctx.strokeStyle=c.bg;ctx.lineWidth=2.5;ctx.globalAlpha=alpha*.28;
-  ctx.setLineDash([7,5]);
-  ctx.beginPath();ctx.roundRect(-size/2-6,-size/2-6,size+12,size+12,size*.12+4);ctx.stroke();
-  ctx.setLineDash([]);ctx.globalAlpha=alpha;
-  ctx.fillStyle=c.text;
-  ctx.font=`900 ${size*.6}px 'Barlow Condensed',sans-serif`;
+// ─── SPRAY PAINT NUMBER ────────────────────────────────────────────────────
+// Draws a rough spray-paint style position number
+const SPRAY_COLS=[
+  {main:'#FF3AAA',shadow:'#8B0055'}, // P1 magenta/pink
+  {main:'#FFE600',shadow:'#7A6A00'}, // P2 yellow
+  {main:'#FF3AAA',shadow:'#8B0055'}, // P3 pink (same as P1 in mock)
+];
+
+function drawSprayNum(ctx, num, cx, cy, size, rot){
+  const c=SPRAY_COLS[num-1];
+  ctx.save();
+  ctx.translate(cx,cy);
+  ctx.rotate(rot*Math.PI/180);
+
+  // Spray splatter — dots around the number
+  ctx.fillStyle=c.main;
+  for(let i=0;i<30;i++){
+    const angle=srand(i*17)*Math.PI*2;
+    const dist=size*.45+srand(i*31)*size*.4;
+    const r=1+srand(i*7)*3;
+    ctx.globalAlpha=0.15+srand(i*13)*0.35;
+    ctx.beginPath();
+    ctx.arc(Math.cos(angle)*dist, Math.sin(angle)*dist, r, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  // Shadow/depth layer
+  ctx.globalAlpha=0.5;
+  ctx.fillStyle=c.shadow;
+  ctx.font=`900 ${size}px 'Black Ops One',cursive`;
   ctx.textAlign='center';ctx.textBaseline='middle';
-  ctx.fillText(pos,0,4);
+  ctx.fillText(num, 3, 5);
+
+  // Main number
+  ctx.globalAlpha=0.92;
+  ctx.fillStyle=c.main;
+  ctx.fillText(num, 0, 0);
+
+  // Roughen edges — horizontal spray lines
+  ctx.globalAlpha=0.12;
+  for(let i=0;i<8;i++){
+    const y=-size*.45+i*size*.13;
+    const x1=-size*.5+srand(i*23)*size*.2;
+    const x2=size*.5-srand(i*37)*size*.2;
+    ctx.fillStyle=c.main;
+    ctx.fillRect(x1,y,x2-x1,1.5);
+  }
+
+  ctx.globalAlpha=1;
   ctx.restore();
 }
 
-function drawLogo(ctx,team,cx,cy,size,rot,alpha){
+// ─── TAPE STRIP ────────────────────────────────────────────────────────────
+function drawTape(ctx, text, cx, cy, width, rot, alpha){
+  ctx.save();
+  ctx.globalAlpha=alpha;
+  ctx.translate(cx,cy);
+  ctx.rotate(rot*Math.PI/180);
+
+  const hw=width/2, hh=34;
+
+  // Tape body — slightly off-white/cream
+  ctx.fillStyle='#e8e0c8';
+  ctx.beginPath();
+  // Slightly irregular edges
+  ctx.moveTo(-hw+8,-hh);
+  ctx.lineTo(hw-5,-hh+2);
+  ctx.lineTo(hw,-hh+6);
+  ctx.lineTo(hw+3,hh-4);
+  ctx.lineTo(hw-8,hh+2);
+  ctx.lineTo(-hw+6,hh);
+  ctx.lineTo(-hw-2,hh-6);
+  ctx.lineTo(-hw-4,-hh+8);
+  ctx.closePath();
+  ctx.shadowColor='rgba(0,0,0,0.5)';ctx.shadowBlur=12;ctx.shadowOffsetY=4;
+  ctx.fill();
+  ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetY=0;
+
+  // Tape texture — subtle horizontal lines
+  ctx.strokeStyle='rgba(180,168,140,0.4)';ctx.lineWidth=1;
+  for(let l=-hh+8;l<hh;l+=7){
+    ctx.beginPath();ctx.moveTo(-hw+4,l);ctx.lineTo(hw-4,l);ctx.stroke();
+  }
+
+  // Driver name
+  let fs=32;
+  ctx.font=`${fs}px 'Permanent Marker',cursive`;
+  const maxW=width*.82;
+  while(ctx.measureText(text).width>maxW&&fs>16){
+    fs--;ctx.font=`${fs}px 'Permanent Marker',cursive`;
+  }
+  ctx.fillStyle='#1a1208';
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(text,0,2);
+
+  ctx.restore();
+}
+
+// ─── TEAM LOGO ─────────────────────────────────────────────────────────────
+function drawLogo(ctx, team, cx, cy, size, rot, alpha){
   const f=LOGO_FILES[team];
-  const img=f?imgCache[ASSET_BASE+'logos/'+f]:null;
+  const img=f?imgCache[BASE+'logos/'+f]:null;
   ctx.save();ctx.globalAlpha=alpha;
   ctx.translate(cx,cy);ctx.rotate(rot*Math.PI/180);
   if(img){
     const scale=Math.min(size/img.width,size/img.height)*.9;
     const dw=img.width*scale,dh=img.height*scale;
-    ctx.shadowColor='rgba(0,0,0,0.6)';ctx.shadowBlur=14;ctx.shadowOffsetX=2;ctx.shadowOffsetY=3;
+    ctx.shadowColor='rgba(0,0,0,0.7)';ctx.shadowBlur=16;ctx.shadowOffsetY=4;
     ctx.drawImage(img,-dw/2,-dh/2,dw,dh);
-    ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;
+    ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetY=0;
   } else {
     const tc=TEAM_COL[team]||'#888';
     ctx.beginPath();ctx.arc(0,0,size*.42,0,Math.PI*2);
-    ctx.fillStyle='rgba(0,0,0,0.45)';ctx.fill();
+    ctx.fillStyle='rgba(0,0,0,0.5)';ctx.fill();
     ctx.strokeStyle=tc;ctx.lineWidth=3;ctx.stroke();
     const init=team.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,3);
     ctx.fillStyle=tc;ctx.font=`900 ${size*.32}px 'Barlow Condensed',sans-serif`;
@@ -496,138 +370,152 @@ function drawLogo(ctx,team,cx,cy,size,rot,alpha){
   ctx.restore();
 }
 
-function drawChevron(ctx,text,cx,cy,bw,bh,bgCol,textCol,pointLeft,alpha){
-  const hw=bw/2,hh=bh/2,pt=hh*.8;
-  ctx.save();ctx.globalAlpha=alpha;ctx.translate(cx,cy);
-  ctx.shadowColor='rgba(0,0,0,0.6)';ctx.shadowBlur=14;ctx.shadowOffsetX=2;ctx.shadowOffsetY=4;
-  ctx.fillStyle=bgCol;ctx.beginPath();
-  if(pointLeft){
-    ctx.moveTo(-hw+pt,-hh);ctx.lineTo(hw,-hh);ctx.lineTo(hw,hh);
-    ctx.lineTo(-hw+pt,hh);ctx.lineTo(-hw,0);
-  } else {
-    ctx.moveTo(-hw,-hh);ctx.lineTo(hw-pt,-hh);ctx.lineTo(hw,0);
-    ctx.lineTo(hw-pt,hh);ctx.lineTo(-hw,hh);
+// ─── HEADER TEXT (Season/Race/Track/Division/RaceType) ─────────────────────
+function drawHeader(ctx, info, div, alpha){
+  ctx.save();ctx.globalAlpha=alpha;
+
+  // Season + Race — top right, stencil font
+  ctx.textAlign='right';ctx.textBaseline='top';
+  ctx.shadowColor='rgba(0,0,0,0.95)';ctx.shadowBlur=12;ctx.shadowOffsetY=2;
+
+  ctx.font=`64px 'Black Ops One',cursive`;
+  ctx.fillStyle='#d8d0b0';
+  ctx.fillText(`SEASON ${info.season}`, W-44, 44);
+
+  ctx.font=`50px 'Black Ops One',cursive`;
+  ctx.fillStyle='#c0b898';
+  ctx.fillText(`RACE ${info.raceNum}`, W-44, 118);
+
+  // Track name — big brushstroke centre
+  ctx.textAlign='center';ctx.textBaseline='top';
+  ctx.font=`130px 'Boogaloo',cursive`;
+  ctx.fillStyle='#ffffff';
+  ctx.shadowBlur=20;ctx.shadowColor='rgba(0,0,0,0.9)';
+  // Auto-shrink track name
+  let tfs=130;
+  ctx.font=`${tfs}px 'Boogaloo',cursive`;
+  while(ctx.measureText(info.track.toUpperCase()).width>W-80&&tfs>60){
+    tfs--;ctx.font=`${tfs}px 'Boogaloo',cursive`;
   }
-  ctx.closePath();ctx.fill();
-  ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;
-  let fs=Math.floor(bh*.55);
-  ctx.font=`900 ${fs}px 'Barlow Condensed',sans-serif`;
-  const maxW=bw*.68;
-  while(ctx.measureText(text).width>maxW&&fs>18){fs--;ctx.font=`900 ${fs}px 'Barlow Condensed',sans-serif`;}
-  ctx.fillStyle=textCol;ctx.textAlign='center';ctx.textBaseline='middle';
-  ctx.fillText(text,pointLeft?pt*.3:-pt*.3,1);
+  ctx.fillText(info.track.toUpperCase(), W/2, 188);
+
+  // Division + Race Type — stencil
+  ctx.shadowBlur=10;
+  if(div){
+    ctx.font=`46px 'Black Ops One',cursive`;
+    ctx.fillStyle='#c8c0a0';
+    ctx.fillText(`DIVISION ${div.num}`, W/2, 188+tfs+8);
+
+    ctx.font=`36px 'Black Ops One',cursive`;
+    ctx.fillStyle='#a09880';
+    ctx.fillText(info.raceType, W/2, 188+tfs+64);
+  }
+
+  ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetY=0;
   ctx.restore();
 }
 
-// Full driver entry: badge + logo side by side above chevron banner
-function drawEntry(ctx,pos,driver,cx,cy,prog,badgeRot,logoRot,bannerRot){
-  const BADGE=84, LOGO=84, BW=320, BH=64;
-  const alpha=Math.min(prog*2.5,1);
-  if(alpha<=0) return;
+// ─── RENDER: TITLE CARD ────────────────────────────────────────────────────
+function renderTitle(ctx, info, t, fi){
+  drawBg(ctx, null, 0);
 
-  const isRight=(pos!==2);
-  const slideX=(1-easeOut5(prog))*( isRight?480:-480 );
-
-  // vertical positions
-  const topY   = cy - BH*.7;    // badge + logo row
-  const bannerY= cy + BH*.6;    // chevron banner row
-
-  // Horizontal positions
-  // badge and logo sit side by side, chevron fills remaining width
-  const badgeX = isRight ? cx+BW*.5+14+BADGE*.5 : cx-BW*.5-14-BADGE*.5;
-  const logoX  = isRight ? badgeX-BADGE*.5-10-LOGO*.5 : badgeX+BADGE*.5+10+LOGO*.5;
-
-  ctx.save();
-  ctx.translate(slideX,0);
-
-  // Badge
-  drawPosBadge(ctx,pos,badgeX,topY,BADGE,badgeRot,alpha);
-
-  // Logo
-  drawLogo(ctx,driver.team,logoX,topY,LOGO,logoRot,alpha);
-
-  // Banner
-  const bannerCols=[
-    {bg:'#C8920A',text:'#1a0d00'},
-    {bg:'#555555',text:'#ffffff'},
-    {bg:'#6B3010',text:'#FFD0A0'},
+  const lines=[
+    {fn:()=>drawHeader(ctx,info,null,easeOut5(clamp(t*T_TITLE/1.2,0,1))), delay:0},
   ];
-  const bc=bannerCols[pos-1];
 
-  ctx.save();
-  ctx.translate(cx,bannerY);
-  ctx.rotate(bannerRot*Math.PI/180);
-  ctx.translate(-cx,-bannerY);
-  drawChevron(ctx,driver.name,cx,bannerY,BW,BH,bc.bg,bc.text,!isRight,alpha);
-  ctx.restore();
+  // Subtle fade in
+  const env=easeOut3(clamp(t/0.3,0,1));
+  drawHeader(ctx, info, null, env);
 
-  ctx.restore();
+  // Fade out at end
+  if(t>0.75){
+    ctx.fillStyle=`rgba(0,0,0,${easeIO2((t-0.75)/0.25)})`;
+    ctx.fillRect(0,0,W,H);
+  }
 }
 
-function renderResultsCard(ctx,div,info,t,fi){
-  drawBg(ctx,div.colour,div.dark,div.bgColour,fi,div.num-1);
-  const env=easeOut3(clamp(t/0.07,0,1))*(t>0.93?easeIO2(1-(t-0.93)/0.07):1);
+// ─── RENDER: RESULTS CARD ──────────────────────────────────────────────────
+function renderResults(ctx, div, info, t, fi){
+  // Apply division colour tint to background
+  const tintA=0.22;
+  drawBg(ctx, div.tint, tintA);
 
-  // Header
-  ctx.save();ctx.globalAlpha=env;ctx.textAlign='center';ctx.textBaseline='middle';
-  const hLines=[
-    {text:`SEASON ${info.season}`,font:`900 66px 'Barlow Condensed',sans-serif`},
-    {text:`RACE ${info.raceNum}`, font:`700 48px 'Barlow Condensed',sans-serif`},
-    {text:info.track.toUpperCase(),font:`300 54px 'Barlow Condensed',sans-serif`},
-  ];
-  hLines.forEach((l,i)=>{
-    ctx.font=l.font;
-    ctx.shadowColor='rgba(0,0,0,0.95)';ctx.shadowBlur=16;ctx.shadowOffsetY=3;
-    ctx.fillStyle='#ffffff';ctx.fillText(l.text,W/2,86+i*76);
-  });
-  // Div label
-  ctx.font=`700 22px 'Oswald',sans-serif`;
-  ctx.fillStyle=div.colour;ctx.textAlign='left';
-  ctx.fillText(`DIVISION ${div.num}`,W*.17,316);
-  ctx.strokeStyle=hex2rgba(div.colour,.45);ctx.lineWidth=1;
-  ctx.beginPath();ctx.moveTo(W*.51,302);ctx.lineTo(W*.51,330);ctx.stroke();
-  ctx.font=`italic 18px 'Special Elite',cursive`;
-  ctx.fillStyle='rgba(255,255,255,.4)';
-  ctx.fillText(info.raceType,W*.54,316);
-  // Rule
-  ctx.globalAlpha=env*.18;ctx.strokeStyle='#ffffff';ctx.lineWidth=1;
-  ctx.beginPath();ctx.moveTo(50,344);ctx.lineTo(W-50,346);ctx.stroke();
-  ctx.restore();
+  const dur=T_RESULTS;
+  const env=easeOut3(clamp(t/0.08,0,1))*(t>0.9?easeIO2(1-(t-0.9)/0.1):1);
 
-  // Driver entries — chaotic stagger with distinct rotations per position
+  // Header — always present
+  drawHeader(ctx, info, div, env);
+
+  // ── Driver entries ──
+  // Layout from the mockup:
+  // P1: spray num left (~x130), logo right of num (~x240), tape strip below spanning left-to-centre
+  // P2: logo left-centre (~x380), spray num right of logo (~x500), tape strip below spanning centre-right
+  // P3: spray num left (~x110), logo right of num (~x230), tape strip below spanning left
+
   const entries=[
-    {pos:1,cx:W*.58,cy:520, delay:0.08, badgeRot:-2.5, logoRot:5,  bannerRot:-1.8},
-    {pos:2,cx:W*.42,cy:730, delay:0.25, badgeRot:2.0,  logoRot:-4, bannerRot:1.4},
-    {pos:3,cx:W*.56,cy:940, delay:0.42, badgeRot:-3.0, logoRot:6,  bannerRot:-2.2},
+    {
+      pos:1,
+      numX:110, numY:620, numSize:115, numRot:-4,
+      logoX:255, logoY:600, logoSize:100, logoRot:5,
+      tapeX:270, tapeY:730, tapeW:420, tapeRot:-2.5,
+      delay:0.08,
+    },
+    {
+      pos:2,
+      numX:530, numY:860, numSize:105, numRot:3,
+      logoX:390, logoY:845, logoSize:95, logoRot:-4,
+      tapeX:430, tapeY:960, tapeW:400, tapeRot:1.8,
+      delay:0.28,
+    },
+    {
+      pos:3,
+      numX:105, numY:1070, numSize:100, numRot:-5,
+      logoX:240, logoY:1058, logoSize:90, logoRot:6,
+      tapeX:240, tapeY:1155, tapeW:400, tapeRot:-3,
+      delay:0.48,
+    },
   ];
 
   entries.forEach(e=>{
-    const rp=Math.max(0,(t*T_RESULTS-e.delay)/0.45);
-    ctx.save();ctx.globalAlpha=env;
-    drawEntry(ctx,e.pos,div.podium[e.pos-1],e.cx,e.cy,rp,e.badgeRot,e.logoRot,e.bannerRot);
+    const rp=Math.max(0,(t*dur-e.delay)/0.4);
+    const alpha=Math.min(rp*2.5,1)*env;
+    const slide=(1-easeOut5(Math.min(rp,1)))*( e.pos===2 ? 350 : -350 );
+    if(alpha<=0) return;
+
+    ctx.save();
+    ctx.translate(slide,0);
+
+    // Spray number
+    ctx.globalAlpha=alpha;
+    drawSprayNum(ctx, e.pos, e.numX, e.numY, e.numSize, e.numRot);
+
+    // Team logo
+    drawLogo(ctx, div.podium[e.pos-1].team, e.logoX, e.logoY, e.logoSize, e.logoRot, alpha);
+
+    // Tape with driver name
+    drawTape(ctx, div.podium[e.pos-1].name, e.tapeX, e.tapeY, e.tapeW, e.tapeRot, alpha);
+
     ctx.restore();
   });
-
-  // Footer
-  ctx.save();ctx.globalAlpha=env*.2;
-  ctx.font=`20px 'Permanent Marker',cursive`;ctx.fillStyle='#ffffff';
-  ctx.textAlign='right';ctx.textBaseline='bottom';
-  ctx.fillText('f1xl.co.uk',W-36,H-36);
-  ctx.textAlign='left';ctx.fillText('Ⓐ',36,H-36);
-  ctx.restore();
 }
 
 // ─── MASTER RENDERER ───────────────────────────────────────────────────────
-function renderFrame(ctx,info,gT,fi){
-  if(gT<T_TITLE){ renderTitleCard(ctx,info,gT/T_TITLE,fi); return; }
+function renderFrame(ctx, info, gT, fi){
+  if(gT<T_TITLE){
+    renderTitle(ctx, info, gT/T_TITLE, fi);
+    return;
+  }
   const divT=gT-T_TITLE;
-  const segDur=T_TRANS+T_RESULTS;
-  const divIdx=Math.floor(divT/segDur);
-  const segT=divT%segDur;
-  if(divIdx>=info.divs.length){ ctx.fillStyle='#0a0806';ctx.fillRect(0,0,W,H); return; }
-  const div=info.divs[divIdx];
-  if(segT<T_TRANS) renderTransCard(ctx,div,info,segT/T_TRANS,fi);
-  else renderResultsCard(ctx,div,info,(segT-T_TRANS)/T_RESULTS,fi);
+  const divIdx=Math.floor(divT/T_RESULTS);
+  const segT=(divT%T_RESULTS)/T_RESULTS;
+
+  if(divIdx>=info.divs.length){
+    // Hold last bg
+    drawBg(ctx, info.divs[info.divs.length-1].tint, 0.22);
+    ctx.fillStyle='rgba(0,0,0,0.5)';ctx.fillRect(0,0,W,H);
+    return;
+  }
+  renderResults(ctx, info.divs[divIdx], info, segT, fi);
 }
 
 // ─── GENERATE ──────────────────────────────────────────────────────────────
@@ -636,44 +524,53 @@ function setProgress(pct,label){
   document.getElementById('progLabel').textContent=label;
 }
 
+async function loadIntroVideo(){
+  return new Promise(resolve=>{
+    const vid=document.getElementById('introVid');
+    vid.src=INTRO_SRC;
+    vid.onloadedmetadata=()=>resolve({el:vid,duration:vid.duration});
+    vid.onerror=()=>{console.warn('No intro video');resolve(null);};
+    vid.load();
+  });
+}
+
 async function startGenerate(){
   const btn=document.getElementById('genBtn');
   const pa=document.getElementById('progArea');
-  btn.disabled=true; pa.style.display='block';
+  btn.disabled=true;pa.style.display='block';
   setProgress(2,'Loading assets...');
 
   const data=getFormData();
+  await preloadAll(data.divs);
+  setProgress(10,'Loading intro...');
 
-  // Load logos
-  await preloadLogos(data.divs);
-  setProgress(8,'Loading intro video...');
-
-  // Load intro video
   const intro=await loadIntroVideo();
   const introDur=intro?intro.duration:0;
-  setProgress(12,'Setting up audio...');
+  setProgress(15,'Setting up audio...');
 
-  // Setup audio context for music + canvas stream mixing
-  const audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-  let musicSource=null, musicBuffer=null;
+  // Audio context
+  const audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  let musicSource=null;
 
-  try {
+  try{
     const resp=await fetch(MUSIC_SRC);
-    const arrBuf=await resp.arrayBuffer();
-    musicBuffer=await audioCtx.decodeAudioData(arrBuf);
-  } catch(e){ console.warn('Music not loaded:',e); }
+    const buf=await resp.arrayBuffer();
+    const musicBuf=await audioCtx.decodeAudioData(buf);
+    musicSource=audioCtx.createBufferSource();
+    musicSource.buffer=musicBuf;
+    musicSource.loop=true;
+  }catch(e){console.warn('Music load failed:',e);}
 
-  setProgress(16,'Starting render...');
+  setProgress(20,'Starting render...');
 
   const canvas=document.getElementById('renderCanvas');
   const ctx=canvas.getContext('2d');
 
-  // Create stream — mix canvas video + audio destination
   const dest=audioCtx.createMediaStreamDestination();
-  const videoStream=canvas.captureStream(FPS);
+  if(musicSource){musicSource.connect(dest);musicSource.start(0);}
 
-  // Combine video tracks + audio track
-  const combinedStream=new MediaStream([
+  const videoStream=canvas.captureStream(FPS);
+  const combined=new MediaStream([
     ...videoStream.getVideoTracks(),
     ...dest.stream.getAudioTracks(),
   ]);
@@ -682,47 +579,38 @@ async function startGenerate(){
     .find(m=>MediaRecorder.isTypeSupported(m))||'video/webm';
 
   const chunks=[];
-  const recorder=new MediaRecorder(combinedStream,{mimeType:mime,videoBitsPerSecond:12_000_000});
+  const recorder=new MediaRecorder(combined,{mimeType:mime,videoBitsPerSecond:12_000_000});
   recorder.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data);};
   recorder.start(100);
 
-  // Start music playing into audio context destination
-  if(musicBuffer){
-    musicSource=audioCtx.createBufferSource();
-    musicSource.buffer=musicBuffer;
-    musicSource.loop=true;
-    musicSource.connect(dest);
-    musicSource.start(0);
-  }
-
-  // ── Phase 1: Render intro video frames ──
+  // ── Intro frames ──
   if(intro){
     const introFrames=Math.ceil(introDur*FPS);
     intro.el.currentTime=0;
-    await intro.el.play().catch(()=>{});
 
     await new Promise(resolve=>{
       let f=0;
-      function nextIntroFrame(){
+      function nextFrame(){
         if(f>=introFrames){resolve();return;}
-        // Draw video frame onto canvas (letterbox/fill to 720x1280)
-        const vw=intro.el.videoWidth, vh=intro.el.videoHeight;
-        const scale=Math.max(W/vw,H/vh);
-        const dw=vw*scale,dh=vh*scale;
-        ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
-        ctx.drawImage(intro.el,(W-dw)/2,(H-dh)/2,dw,dh);
-        f++;
-        intro.el.currentTime=f/FPS;
-        if(f%15===0) setProgress(16+Math.round((f/introFrames)*10),`Intro · Frame ${f}/${introFrames}`);
-        requestAnimationFrame(nextIntroFrame);
+        const targetT=f/FPS;
+        intro.el.currentTime=targetT;
+        intro.el.onseeked=()=>{
+          const vw=intro.el.videoWidth,vh=intro.el.videoHeight;
+          const scale=Math.max(W/vw,H/vh);
+          ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
+          ctx.drawImage(intro.el,(W-vw*scale)/2,(H-vh*scale)/2,vw*scale,vh*scale);
+          f++;
+          if(f%15===0) setProgress(20+Math.round((f/introFrames)*8),`Intro · ${f}/${introFrames}`);
+          requestAnimationFrame(nextFrame);
+        };
       }
-      nextIntroFrame();
+      nextFrame();
     });
     intro.el.pause();
   }
 
-  // ── Phase 2: Render generated content ──
-  const totalDur=T_TITLE+data.divs.length*(T_TRANS+T_RESULTS);
+  // ── Generated frames ──
+  const totalDur=T_TITLE+data.divs.length*T_RESULTS;
   const totalFrames=Math.ceil(totalDur*FPS);
   let frame=0;
 
@@ -732,12 +620,10 @@ async function startGenerate(){
       renderFrame(ctx,data,frame/FPS,frame);
       frame++;
       if(frame%20===0){
-        const pct=26+Math.round((frame/totalFrames)*68);
+        const pct=28+Math.round((frame/totalFrames)*66);
         const gT=frame/FPS;
-        const dIdx=Math.max(0,Math.floor((gT-T_TITLE)/(T_TRANS+T_RESULTS)));
-        const stage=gT<T_TITLE?'Title':
-          (gT-T_TITLE)%(T_TRANS+T_RESULTS)<T_TRANS?
-          `Div ${dIdx+1} · Transition`:`Div ${dIdx+1} · Results`;
+        const dIdx=Math.max(0,Math.floor((gT-T_TITLE)/T_RESULTS));
+        const stage=gT<T_TITLE?'Title card':`Division ${Math.min(dIdx+1,data.divs.length)} of ${data.divs.length}`;
         setProgress(pct,`${stage} · Frame ${frame}/${totalFrames}`);
       }
       requestAnimationFrame(next);
@@ -745,10 +631,8 @@ async function startGenerate(){
     next();
   });
 
-  // Stop music, close audio
-  if(musicSource) musicSource.stop();
+  if(musicSource) try{musicSource.stop();}catch(e){}
   audioCtx.close();
-
   recorder.stop();
   await new Promise(r=>recorder.onstop=r);
   setProgress(97,'Packaging...');
