@@ -5,114 +5,72 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>F1XL · Video Generator</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Barlow+Condensed:wght@400;700;900&family=Special+Elite&family=Oswald:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Barlow+Condensed:wght@300;400;700;900&family=Special+Elite&family=Oswald:wght@400;700&display=swap');
 
 :root {
-  --bg:      #0a0806;
-  --surface: #141210;
-  --surface2:#1c1916;
-  --border:  rgba(255,255,255,0.07);
-  --border2: rgba(255,255,255,0.12);
-  --accent:  #cc1e1e;
-  --text:    #ede8e0;
-  --muted:   rgba(237,232,224,0.38);
-  --yellow:  #f5e642;
+  --bg:#0a0806; --surface:#141210; --border:rgba(255,255,255,0.07);
+  --accent:#cc1e1e; --text:#ede8e0; --muted:rgba(237,232,224,0.38); --yellow:#f5e642;
 }
-
 *{box-sizing:border-box;margin:0;padding:0;}
-
-body{
-  background:var(--bg);
-  color:var(--text);
-  font-family:'Barlow Condensed',sans-serif;
-  min-height:100vh;
-  padding:2rem 1.5rem 4rem;
-  background-image:
-    repeating-linear-gradient(45deg,rgba(255,255,255,0.007) 0,rgba(255,255,255,0.007) 1px,transparent 1px,transparent 10px),
-    repeating-linear-gradient(-45deg,rgba(255,255,255,0.005) 0,rgba(255,255,255,0.005) 1px,transparent 1px,transparent 14px);
-}
-
-/* ── HEADER ── */
+body{background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-serif;min-height:100vh;padding:2rem 1.5rem 4rem;
+  background-image:repeating-linear-gradient(45deg,rgba(255,255,255,0.007) 0,rgba(255,255,255,0.007) 1px,transparent 1px,transparent 10px),
+  repeating-linear-gradient(-45deg,rgba(255,255,255,0.005) 0,rgba(255,255,255,0.005) 1px,transparent 1px,transparent 14px);}
 header{text-align:center;margin-bottom:3rem;padding-top:1rem;}
 .hdr-top{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:4px;}
-.hdr-anarchy{font-family:'Permanent Marker',cursive;font-size:2rem;color:var(--accent);opacity:.7;transform:rotate(-8deg);display:inline-block;}
-.hdr-title{font-family:'Permanent Marker',cursive;font-size:3rem;color:var(--yellow);transform:rotate(-1deg);display:inline-block;text-shadow:3px 3px 0 rgba(0,0,0,.6);}
-.hdr-sub{font-family:'Special Elite',cursive;font-size:.85rem;color:var(--muted);letter-spacing:.22em;}
-
-/* ── CARDS ── */
+.hdr-a{font-family:'Permanent Marker',cursive;font-size:2rem;color:var(--accent);opacity:.7;display:inline-block;}
+.hdr-t{font-family:'Permanent Marker',cursive;font-size:3rem;color:var(--yellow);transform:rotate(-1deg);display:inline-block;text-shadow:3px 3px 0 rgba(0,0,0,.6);}
+.hdr-s{font-family:'Special Elite',cursive;font-size:.85rem;color:var(--muted);letter-spacing:.22em;}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.5rem;margin-bottom:1.4rem;max-width:900px;margin-left:auto;margin-right:auto;}
 .card-title{font-family:'Oswald',sans-serif;font-size:.72rem;letter-spacing:.28em;color:var(--accent);text-transform:uppercase;margin-bottom:1.1rem;padding-bottom:.5rem;border-bottom:1px solid var(--border);}
-
-/* ── FORM ── */
 .form-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.9rem;}
 .form-group{display:flex;flex-direction:column;gap:5px;}
 label{font-size:.68rem;letter-spacing:.15em;color:var(--muted);text-transform:uppercase;font-family:'Oswald',sans-serif;}
 input,select{background:rgba(0,0,0,.35);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:1rem;padding:8px 10px;transition:border-color .2s;width:100%;}
 input:focus,select:focus{outline:none;border-color:var(--accent);}
 select option{background:#141210;}
-
-/* ── FILE DROP ── */
-.file-drop{border:2px dashed var(--border);border-radius:6px;padding:1.3rem;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;position:relative;}
-.file-drop:hover{border-color:var(--accent);background:rgba(204,30,30,.04);}
-.file-drop input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
-.file-drop-text{font-family:'Special Elite',cursive;color:var(--muted);font-size:.88rem;line-height:1.7;}
-.file-drop-text span{color:var(--yellow);}
-.file-name{font-family:'Permanent Marker',cursive;color:var(--yellow);margin-top:5px;font-size:.82rem;}
-
-/* ── DIVISIONS ── */
 .div-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.1rem;}
 .count-ctrl{display:flex;align-items:center;gap:10px;}
 .count-btn{width:30px;height:30px;border-radius:4px;border:1px solid var(--border);background:rgba(0,0,0,.3);color:var(--text);font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:border-color .2s,background .2s;line-height:1;}
 .count-btn:hover{border-color:var(--accent);background:rgba(204,30,30,.1);}
 .count-num{font-family:'Permanent Marker',cursive;font-size:1.4rem;color:var(--yellow);min-width:24px;text-align:center;}
-
 .div-block{border:1px solid var(--border);border-radius:6px;padding:1.1rem;margin-bottom:.9rem;}
 .div-lbl{font-family:'Permanent Marker',cursive;font-size:1rem;margin-bottom:.9rem;display:flex;align-items:center;gap:9px;}
-.div-swatch{width:13px;height:13px;border-radius:3px;flex-shrink:0;}
+.div-sw{width:13px;height:13px;border-radius:3px;flex-shrink:0;}
 .podium-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;}
 .podium-slot{display:flex;flex-direction:column;gap:5px;}
 .pos-lbl{font-size:.63rem;font-weight:700;letter-spacing:.1em;padding:2px 7px;border-radius:3px;display:inline-block;margin-bottom:1px;}
-.p1l{background:#d4a000;color:#1a0d00;}
-.p2l{background:#888;color:#111;}
-.p3l{background:#7a3d1a;color:#ffd0a0;}
-
-/* ── GENERATE BTN ── */
+.p1l{background:#d4a000;color:#1a0d00;} .p2l{background:#888;color:#111;} .p3l{background:#7a3d1a;color:#ffd0a0;}
 .gen-btn{width:100%;max-width:900px;display:block;margin:0 auto;padding:1.15rem;background:var(--accent);border:none;border-radius:6px;color:#fff;font-family:'Permanent Marker',cursive;font-size:1.55rem;cursor:pointer;transform:rotate(-.4deg);transition:transform .15s,background .2s,box-shadow .2s;box-shadow:3px 3px 0 rgba(0,0,0,.45);}
 .gen-btn:hover{background:#e02020;transform:rotate(-.4deg) scale(1.01);box-shadow:5px 5px 0 rgba(0,0,0,.55);}
 .gen-btn:disabled{background:#3a3a3a;cursor:not-allowed;transform:none;box-shadow:none;}
-
-/* ── PROGRESS ── */
 .prog-area{display:none;margin:1.4rem auto 0;max-width:900px;}
 .prog-label{font-family:'Special Elite',cursive;font-size:.84rem;color:var(--muted);margin-bottom:7px;text-align:center;}
 .prog-outer{height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;}
 .prog-inner{height:100%;background:linear-gradient(90deg,var(--accent),var(--yellow));border-radius:3px;width:0%;transition:width .25s;}
-
 .note{font-family:'Special Elite',cursive;font-size:.76rem;color:var(--muted);text-align:center;margin:1rem auto 0;max-width:900px;line-height:1.7;}
 .note span{color:var(--yellow);}
-
 #renderCanvas{display:none;}
+#introVid{display:none;}
 </style>
 </head>
 <body>
 
 <header>
   <div class="hdr-top">
-    <span class="hdr-anarchy">Ⓐ</span>
-    <span class="hdr-title">F1XL</span>
-    <span class="hdr-anarchy" style="transform:rotate(6deg)">Ⓐ</span>
+    <span class="hdr-a" style="transform:rotate(-8deg)">Ⓐ</span>
+    <span class="hdr-t">F1XL</span>
+    <span class="hdr-a" style="transform:rotate(6deg)">Ⓐ</span>
   </div>
-  <div class="hdr-sub">Race Results · Video Generator</div>
+  <div class="hdr-s">Race Results · Video Generator</div>
 </header>
 
-<!-- Race Info -->
 <div class="card">
   <div class="card-title">Race Info</div>
   <div class="form-row">
     <div class="form-group"><label>Season</label><input type="number" id="season" value="28" min="1" max="99"></div>
     <div class="form-group"><label>Race Number</label><input type="number" id="raceNum" value="1" min="1" max="30"></div>
-    <div class="form-group"><label>Track / Location</label><input type="text" id="track" value="Bahrain"></div>
-    <div class="form-group">
-      <label>Race Type</label>
+    <div class="form-group"><label>Track</label><input type="text" id="track" value="Bahrain"></div>
+    <div class="form-group"><label>Race Type</label>
       <select id="raceType">
         <option value="FEATURE RACE">Feature Race</option>
         <option value="SPRINT RACE">Sprint Race</option>
@@ -122,7 +80,6 @@ select option{background:#141210;}
   </div>
 </div>
 
-<!-- Divisions -->
 <div class="card">
   <div class="div-hdr">
     <div class="card-title" style="margin:0;border:none;padding:0;">Divisions</div>
@@ -142,712 +99,599 @@ select option{background:#141210;}
   <div class="prog-outer"><div class="prog-inner" id="progBar"></div></div>
 </div>
 
-<p class="note">
-  Outputs <span>.webm</span> — plays in all browsers, uploads to YouTube directly.<br>
-  For Instagram/TikTok: rename to <span>.mp4</span> or use free <span>HandBrake</span> to convert.
-</p>
+<p class="note">Output: <span>.webm</span> — upload directly to YouTube. Rename to <span>.mp4</span> for Instagram/TikTok or use free <span>HandBrake</span>.</p>
 
 <canvas id="renderCanvas" width="720" height="1280"></canvas>
+<video id="introVid" crossorigin="anonymous" muted></video>
 
 <script>
 'use strict';
 
-// ─── CONFIG ────────────────────────────────────────────────────────────────
-
-// Path prefix — when hosted on GitHub Pages under /video-gen/
+// ─── ASSETS ────────────────────────────────────────────────────────────────
 const ASSET_BASE = 'https://f1xl2010.github.io/video-gen/assets/';
 
-const F1_TEAMS = [
-  'Alpine','Aston Martin','Audi','Cadillac','Ferrari',
-  'Haas','McLaren','Mercedes','Racing Bull','Red Bull','Williams','Reserve'
-];
+const F1_TEAMS = ['Alpine','Aston Martin','Audi','Cadillac','Ferrari','Haas','McLaren','Mercedes','Racing Bull','Red Bull','Williams','Reserve'];
 
-// Maps team name → logo filename in assets/logos/
 const LOGO_FILES = {
-  'Alpine':       'logo_alpine.png',
-  'Aston Martin': 'logo_aston-martin.png',
-  'Audi':         'logo_audi.png',
-  'Cadillac':     'logo_cadillac.png',
-  'Ferrari':      'logo_ferrari.png',
-  'Haas':         'logo_haas.png',
-  'McLaren':      'logo_mclaren.png',
-  'Mercedes':     'logo_mercedes.png',
-  'Racing Bull':  'logo_racing-bulls.png',
-  'Red Bull':     'logo_red-bull.png',
-  'Williams':     'logo_williams.png',
-  'Reserve':      'logo_reserve.png',
+  'Alpine':'logo_alpine.png','Aston Martin':'logo_aston-martin.png',
+  'Audi':'logo_audi.png','Cadillac':'logo_cadillac.png',
+  'Ferrari':'logo_ferrari.png','Haas':'logo_haas.png',
+  'McLaren':'logo_mclaren.png','Mercedes':'logo_mercedes.png',
+  'Racing Bull':'logo_racing-bulls.png','Red Bull':'logo_red-bull.png',
+  'Williams':'logo_williams.png','Reserve':'logo_reserve.png',
 };
 
-const TEAM_COLOURS = {
-  'Alpine':       '#479FE2',
-  'Aston Martin': '#4B9774',
-  'Audi':         '#C0C0C0',
-  'Cadillac':     '#AAAADD',
-  'Ferrari':      '#D52E37',
-  'Haas':         '#CC1111',
-  'McLaren':      '#EF8733',
-  'Mercedes':     '#75F1D3',
-  'Racing Bull':  '#7091F8',
-  'Red Bull':     '#4570C0',
-  'Williams':     '#3267D4',
-  'Reserve':      '#ffffff',
+const TEAM_COL = {
+  'Alpine':'#479FE2','Aston Martin':'#4B9774','Audi':'#C0C0C0','Cadillac':'#AAAADD',
+  'Ferrari':'#D52E37','Haas':'#CC1111','McLaren':'#EF8733','Mercedes':'#75F1D3',
+  'Racing Bull':'#7091F8','Red Bull':'#4570C0','Williams':'#3267D4','Reserve':'#ffffff',
 };
 
-// Site division colours, boosted for video
-const DIV_COLOURS = [
-  null,
-  { main:'#D44444', bg:'#1a0404', ink:'#ff6666' },
-  { main:'#C8941A', bg:'#18120a', ink:'#ffcc44' },
-  { main:'#A0C020', bg:'#111500', ink:'#ccff44' },
-  { main:'#20C060', bg:'#031409', ink:'#44ff88' },
-  { main:'#20A8C0', bg:'#031214', ink:'#44ddff' },
-  { main:'#3050D8', bg:'#030914', ink:'#6688ff' },
-  { main:'#8830CC', bg:'#0c0314', ink:'#cc66ff' },
-  { main:'#CC2880', bg:'#140312', ink:'#ff66bb' },
+// Division colours - site palette boosted for video
+const DIV_COL = [null,
+  {main:'#D44444',bg:'#1a0404'},
+  {main:'#C8941A',bg:'#18120a'},
+  {main:'#A0C020',bg:'#0e1300'},
+  {main:'#20C060',bg:'#031409'},
+  {main:'#20A8C0',bg:'#031214'},
+  {main:'#3050D8',bg:'#030914'},
+  {main:'#8830CC',bg:'#0c0314'},
+  {main:'#CC2880',bg:'#140312'},
 ];
 
-// Video timing (seconds)
-const FPS         = 30;
-const TITLE_DUR   = 3.5;   // opening title card (Season/Race/Track)
-const TRANS_DUR   = 2.0;   // division transition (header only, div label animates in)
-const RESULTS_DUR = 6.5;   // full results card per division
-const W = 720, H = 1280;
+// Timing
+const FPS=30, W=720, H=1280;
+const T_TITLE=4.5, T_TRANS=3.0, T_RESULTS=9.0;
 
 // ─── STATE ─────────────────────────────────────────────────────────────────
+let divCount=4;
+const imgCache={};
 
-let divCount = 4;
-const logoCache = {};
+// Particles for animated background
+class Particle {
+  constructor(colour) {
+    this.reset(colour);
+    this.y = Math.random()*H; // start anywhere on first init
+  }
+  reset(colour) {
+    this.x  = Math.random()*W;
+    this.y  = H + 20;
+    this.vx = (Math.random()-0.5)*1.2;
+    this.vy = -(1.5+Math.random()*3.5);
+    this.len= 40+Math.random()*120;
+    this.w  = 0.5+Math.random()*1.5;
+    this.a  = 0.15+Math.random()*0.5;
+    this.colour=colour;
+  }
+  update() { this.x+=this.vx; this.y+=this.vy; }
+  dead()   { return this.y+this.len < 0; }
+  draw(ctx) {
+    const g=ctx.createLinearGradient(this.x,this.y,this.x+this.vx*20,this.y-this.len);
+    g.addColorStop(0,'transparent');
+    g.addColorStop(0.4,this.colour.replace(')',`,${this.a})`).replace('rgb','rgba'));
+    g.addColorStop(1,'transparent');
+    ctx.save();
+    ctx.strokeStyle=this.colour;
+    ctx.globalAlpha=this.a;
+    ctx.lineWidth=this.w;
+    ctx.beginPath();
+    ctx.moveTo(this.x,this.y);
+    ctx.lineTo(this.x+this.vx*8,this.y-this.len);
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
+// Per-division particle pools
+const particlePools={};
+function getParticles(divIdx, colour) {
+  if (!particlePools[divIdx]) {
+    particlePools[divIdx]=Array.from({length:35},()=>new Particle(colour));
+  }
+  return particlePools[divIdx];
+}
 
 // ─── UI ────────────────────────────────────────────────────────────────────
-
-function teamOptions(defIdx) {
-  return F1_TEAMS.map((t,i)=>`<option value="${t}"${i===defIdx?' selected':''}>${t}</option>`).join('');
+function teamOpts(di) {
+  return F1_TEAMS.map((t,i)=>`<option value="${t}"${i===di?' selected':''}>${t}</option>`).join('');
 }
 
 function buildDivisions() {
-  const c = document.getElementById('divsContainer');
-  c.innerHTML = '';
-  for (let i=1; i<=divCount; i++) {
-    const dc = DIV_COLOURS[i] || DIV_COLOURS[1];
-    c.innerHTML += `
+  const c=document.getElementById('divsContainer');
+  c.innerHTML='';
+  for(let i=1;i<=divCount;i++){
+    const dc=DIV_COL[i]||DIV_COL[1];
+    c.innerHTML+=`
     <div class="div-block" style="border-color:${dc.main}44">
-      <div class="div-lbl">
-        <div class="div-swatch" style="background:${dc.main}"></div>
-        Division ${i}
-      </div>
+      <div class="div-lbl"><div class="div-sw" style="background:${dc.main}"></div>Division ${i}</div>
       <div class="podium-grid">
-        <div class="podium-slot">
-          <span class="pos-lbl p1l">P1</span>
+        <div class="podium-slot"><span class="pos-lbl p1l">P1</span>
           <input type="text" id="d${i}p1n" placeholder="Driver name">
-          <select id="d${i}p1t">${teamOptions(9)}</select>
-        </div>
-        <div class="podium-slot">
-          <span class="pos-lbl p2l">P2</span>
+          <select id="d${i}p1t">${teamOpts(9)}</select></div>
+        <div class="podium-slot"><span class="pos-lbl p2l">P2</span>
           <input type="text" id="d${i}p2n" placeholder="Driver name">
-          <select id="d${i}p2t">${teamOptions(6)}</select>
-        </div>
-        <div class="podium-slot">
-          <span class="pos-lbl p3l">P3</span>
+          <select id="d${i}p2t">${teamOpts(6)}</select></div>
+        <div class="podium-slot"><span class="pos-lbl p3l">P3</span>
           <input type="text" id="d${i}p3n" placeholder="Driver name">
-          <select id="d${i}p3t">${teamOptions(4)}</select>
-        </div>
+          <select id="d${i}p3t">${teamOpts(4)}</select></div>
       </div>
     </div>`;
   }
-  document.getElementById('divNum').textContent = divCount;
+  document.getElementById('divNum').textContent=divCount;
 }
 
-function changeDivs(d) {
-  divCount = Math.max(1, Math.min(8, divCount+d));
-  buildDivisions();
-}
+function changeDivs(d){divCount=Math.max(1,Math.min(8,divCount+d));buildDivisions();}
 
-function getFormData() {
-  const divs = [];
-  for (let i=1; i<=divCount; i++) {
-    const dc = DIV_COLOURS[i] || DIV_COLOURS[1];
-    divs.push({
-      num: i, colour: dc.main, bgColour: dc.bg, ink: dc.ink,
-      podium: [1,2,3].map(p=>({
-        name: (document.getElementById(`d${i}p${p}n`).value.trim()||'TBC'),
-        team: document.getElementById(`d${i}p${p}t`).value,
+function getFormData(){
+  const divs=[];
+  for(let i=1;i<=divCount;i++){
+    const dc=DIV_COL[i]||DIV_COL[1];
+    divs.push({num:i,colour:dc.main,bgColour:dc.bg,
+      podium:[1,2,3].map(p=>({
+        name:(document.getElementById(`d${i}p${p}n`).value.trim()||'TBC'),
+        team:document.getElementById(`d${i}p${p}t`).value,
       }))
     });
   }
   return {
-    season:   document.getElementById('season').value,
-    raceNum:  document.getElementById('raceNum').value,
-    track:    document.getElementById('track').value.trim()||'TBC',
-    raceType: document.getElementById('raceType').value,
+    season:document.getElementById('season').value,
+    raceNum:document.getElementById('raceNum').value,
+    track:document.getElementById('track').value.trim()||'TBC',
+    raceType:document.getElementById('raceType').value,
     divs,
   };
 }
 
-// ─── ASSET LOADING ─────────────────────────────────────────────────────────
-
-function loadImage(src) {
-  if (logoCache[src]) return Promise.resolve(logoCache[src]);
-  return new Promise(resolve => {
-    const img = new Image();
-    img.onload  = () => { logoCache[src]=img; resolve(img); };
-    img.onerror = () => resolve(null);
-    img.src = src;
+// ─── IMAGE LOADING ─────────────────────────────────────────────────────────
+function loadImg(src){
+  if(imgCache[src]) return Promise.resolve(imgCache[src]);
+  return new Promise(resolve=>{
+    const img=new Image();
+    img.crossOrigin='anonymous';
+    img.onload=()=>{imgCache[src]=img;resolve(img);};
+    img.onerror=()=>resolve(null);
+    img.src=src;
   });
 }
-
-async function preloadLogos(divs) {
-  const teams = new Set();
-  divs.forEach(d => d.podium.forEach(p => teams.add(p.team)));
-  await Promise.all([...teams].map(t => {
-    const f = LOGO_FILES[t];
-    if (f) return loadImage(ASSET_BASE+'logos/'+f);
+async function preloadLogos(divs){
+  const teams=new Set();
+  divs.forEach(d=>d.podium.forEach(p=>teams.add(p.team)));
+  await Promise.all([...teams].map(t=>{
+    const f=LOGO_FILES[t];
+    return f?loadImg(ASSET_BASE+'logos/'+f):Promise.resolve();
   }));
 }
 
-// ─── CANVAS HELPERS ────────────────────────────────────────────────────────
-
-function hex2rgba(hex, a) {
-  const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+// ─── HELPERS ───────────────────────────────────────────────────────────────
+function hex2rgba(hex,a){
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
   return `rgba(${r},${g},${b},${a})`;
 }
-function easeOut3(t)  { return 1-Math.pow(1-Math.min(t,1),3); }
-function easeOut5(t)  { return 1-Math.pow(1-Math.min(t,1),5); }
-function easeIO2(t)   { t=Math.min(t,1); return t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2; }
-function srand(s)     { return Math.abs(Math.sin(s+1)*43758.5453)%1; }
-function clamp(v,a,b) { return Math.max(a,Math.min(b,v)); }
+function easeOut3(t){return 1-Math.pow(1-Math.min(t,1),3);}
+function easeOut5(t){return 1-Math.pow(1-Math.min(t,1),5);}
+function easeIO2(t){t=Math.min(t,1);return t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+function srand(s){return Math.abs(Math.sin(s+1)*43758.5453)%1;}
 
 // ─── BACKGROUND ────────────────────────────────────────────────────────────
-
-function drawBg(ctx, colour, bgColour, ink, fi) {
-  // Base
-  ctx.fillStyle = bgColour;
+function drawBg(ctx, colour, bgColour, fi, divIdx) {
+  // Base fill
+  ctx.fillStyle=bgColour;
   ctx.fillRect(0,0,W,H);
 
-  // Large ink radial — bottom right
-  let g = ctx.createRadialGradient(W*.82, H*.9, 0, W*.82, H*.9, W*1.1);
-  g.addColorStop(0, hex2rgba(colour,.45));
-  g.addColorStop(.5, hex2rgba(colour,.18));
-  g.addColorStop(1, 'transparent');
-  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
-
-  // Accent radial — top left
-  g = ctx.createRadialGradient(W*.08, H*.06, 0, W*.08, H*.06, W*.8);
-  g.addColorStop(0, hex2rgba(colour,.28));
+  // Strong ink radials
+  let g=ctx.createRadialGradient(W*.85,H*.85,0,W*.85,H*.85,W*1.1);
+  g.addColorStop(0,hex2rgba(colour,.5));
+  g.addColorStop(.45,hex2rgba(colour,.2));
   g.addColorStop(1,'transparent');
   ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
 
-  // Centre glow
-  g = ctx.createRadialGradient(W*.5, H*.5, 0, W*.5, H*.5, W*.9);
-  g.addColorStop(0, hex2rgba(colour,.1));
+  g=ctx.createRadialGradient(W*.1,H*.1,0,W*.1,H*.1,W*.85);
+  g.addColorStop(0,hex2rgba(colour,.3));
   g.addColorStop(1,'transparent');
   ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
 
-  // Diagonal light streak
-  ctx.save();
-  ctx.globalAlpha = .12;
-  ctx.translate(W*.6, 0);
-  ctx.rotate(15*Math.PI/180);
-  const streak = ctx.createLinearGradient(0,0,0,H*1.4);
-  streak.addColorStop(0,'transparent');
-  streak.addColorStop(.4, ink);
-  streak.addColorStop(.6, ink);
-  streak.addColorStop(1,'transparent');
-  ctx.fillStyle = streak;
-  ctx.fillRect(-40,0,80,H*1.4);
-  ctx.restore();
+  g=ctx.createRadialGradient(W*.5,H*.5,0,W*.5,H*.5,W*.7);
+  g.addColorStop(0,hex2rgba(colour,.08));
+  g.addColorStop(1,'transparent');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+
+  // Animated particles (light streaks)
+  if(divIdx>=0){
+    const particles=getParticles(divIdx,colour);
+    particles.forEach(p=>{
+      p.update();
+      if(p.dead()) p.reset(colour);
+      p.draw(ctx);
+    });
+  }
 
   // Grid
-  ctx.strokeStyle='rgba(255,255,255,0.02)'; ctx.lineWidth=1;
+  ctx.strokeStyle='rgba(255,255,255,0.025)'; ctx.lineWidth=1;
   for(let x=0;x<=W;x+=48){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
   for(let y=0;y<=H;y+=48){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
 
   // Scanlines
-  ctx.fillStyle='rgba(0,0,0,.05)';
+  ctx.fillStyle='rgba(0,0,0,0.045)';
   for(let y=0;y<H;y+=4) ctx.fillRect(0,y+2,W,2);
 
-  // Film grain
-  const img=ctx.createImageData(W,H), d=img.data;
-  const seed = fi*7;
+  // Grain
+  const img=ctx.createImageData(W,H),d=img.data;
   for(let i=0;i<d.length;i+=16){
-    const px=(i/4)%W, py=Math.floor((i/4)/W);
-    const n=srand(px*13+py*7+seed)*20;
+    const px=(i/4)%W,py=Math.floor((i/4)/W);
+    const n=srand(px*13+py*7+fi*7)*22;
     d[i]=n;d[i+1]=n;d[i+2]=n;d[i+3]=24;
   }
   ctx.putImageData(img,0,0);
 
-  // Top colour bar
+  // Top & bottom colour bars
   const tg=ctx.createLinearGradient(0,0,W,0);
-  tg.addColorStop(0,'transparent'); tg.addColorStop(.25,colour);
-  tg.addColorStop(.75,colour); tg.addColorStop(1,'transparent');
-  ctx.fillStyle=tg; ctx.fillRect(0,0,W,10);
-
-  // Bottom colour bar (thinner)
-  ctx.fillStyle=tg; ctx.fillRect(0,H-5,W,5);
-}
-
-// ─── TEXT HELPERS ──────────────────────────────────────────────────────────
-
-// Drop shadow helper
-function shadowText(ctx, text, x, y, font, fill) {
-  ctx.save();
-  ctx.font = font;
-  ctx.shadowColor = 'rgba(0,0,0,0.8)';
-  ctx.shadowBlur = 14;
-  ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 3;
-  ctx.fillStyle = fill;
-  ctx.fillText(text, x, y);
-  ctx.shadowColor = 'transparent';
-  ctx.restore();
+  tg.addColorStop(0,'transparent');tg.addColorStop(.25,colour);
+  tg.addColorStop(.75,colour);tg.addColorStop(1,'transparent');
+  ctx.fillStyle=tg;
+  ctx.fillRect(0,0,W,10);
+  ctx.fillRect(0,H-6,W,6);
 }
 
 // ─── TITLE CARD ────────────────────────────────────────────────────────────
-// Opening card: Season / Race N / Track
-// Lines animate in one by one
+function renderTitleCard(ctx, info, t, fi) {
+  drawBg(ctx,'#666666','#0a0806',fi,-1);
 
-function renderTitleCard(ctx, info, localT, fi) {
-  // Use neutral dark bg for title
-  drawBg(ctx, '#888888', '#0a0806', '#cccccc', fi);
+  // Fade in envelope
+  const env=easeOut3(clamp(t/0.15,0,1))*(t>0.85?easeIO2(1-(t-0.85)/0.15):1);
 
-  const dur = TITLE_DUR;
-  const lines = [
-    { text: `SEASON ${info.season}`, font: `900 88px 'Barlow Condensed',sans-serif`, delay: 0.1 },
-    { text: `RACE ${info.raceNum}`,  font: `700 62px 'Barlow Condensed',sans-serif`, delay: 0.5 },
-    { text: info.track.toUpperCase(), font: `300 72px 'Barlow Condensed',sans-serif`, delay: 0.9 },
+  const lines=[
+    {text:`SEASON ${info.season}`,font:`900 96px 'Barlow Condensed',sans-serif`,delay:0.05,col:'#ffffff'},
+    {text:`RACE ${info.raceNum}`,  font:`700 66px 'Barlow Condensed',sans-serif`, delay:0.25,col:'#dddddd'},
+    {text:info.track.toUpperCase(),font:`300 76px 'Barlow Condensed',sans-serif`, delay:0.45,col:'#ffffff'},
   ];
 
-  const centreY = H * 0.38;
-  const lineH = 110;
-  const totalLinesH = lines.length * lineH;
-  let startY = centreY - totalLinesH/2;
-
-  lines.forEach((line, i) => {
-    const progress = easeOut5(clamp((localT*dur - line.delay)/0.45, 0, 1));
-    const slideY   = (1-progress)*-60;
-    const alpha    = progress;
-
+  const startY=H*0.32;
+  lines.forEach((line,i)=>{
+    const p=easeOut5(clamp((t*T_TITLE-line.delay)/0.5,0,1));
     ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.translate(0, slideY);
-    ctx.font = line.font;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-
-    // Subtle colour line under SEASON
-    if (i === 0) {
-      ctx.fillStyle = 'rgba(255,255,255,0.06)';
-      ctx.fillRect(0, startY + i*lineH + 55, W, 1);
-    }
-
-    shadowText(ctx, line.text, W/2, startY + i*lineH, line.font, '#ffffff');
+    ctx.globalAlpha=env*p;
+    ctx.translate(0,(1-p)*-80);
+    ctx.font=line.font;
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.shadowColor='rgba(0,0,0,0.9)';ctx.shadowBlur=20;ctx.shadowOffsetY=4;
+    ctx.fillStyle=line.col;
+    ctx.fillText(line.text,W/2,startY+i*110);
     ctx.restore();
   });
 
-  // Fade out at end
-  if (localT > 0.8) {
-    ctx.fillStyle = `rgba(10,8,6,${easeIO2((localT-0.8)/0.2)})`;
-    ctx.fillRect(0,0,W,H);
-  }
+  // Subtle line under season
+  ctx.save();
+  ctx.globalAlpha=env*0.15;
+  ctx.strokeStyle='#ffffff';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(80,startY+55);ctx.lineTo(W-80,startY+57);ctx.stroke();
+  ctx.restore();
 }
 
-// ─── DIVISION TRANSITION CARD ──────────────────────────────────────────────
-// Shows Season/Race/Track header + Division N animating in
-// Division label stamps in from top
+// ─── TRANSITION CARD ───────────────────────────────────────────────────────
+function renderTransCard(ctx, div, info, t, fi) {
+  drawBg(ctx,div.colour,div.bgColour,fi,div.num-1);
 
-function renderTransCard(ctx, div, info, localT, fi) {
-  drawBg(ctx, div.colour, div.bgColour, div.ink, fi);
+  const env=easeOut3(clamp(t/0.12,0,1))*(t>0.8?easeIO2(1-(t-0.8)/0.2):1);
 
-  const dur = TRANS_DUR;
-
-  // Fade in
-  const env = easeOut3(clamp(localT/0.15, 0, 1));
-
-  // Header block (top third)
-  const headerLines = [
-    { text: `SEASON ${info.season}`, font: `900 72px 'Barlow Condensed',sans-serif` },
-    { text: `RACE ${info.raceNum}`,  font: `700 52px 'Barlow Condensed',sans-serif` },
-    { text: info.track.toUpperCase(), font: `300 60px 'Barlow Condensed',sans-serif` },
-  ];
-
+  // Header
   ctx.save();
-  ctx.globalAlpha = env;
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  const hStartY = 110;
-  headerLines.forEach((line, i) => {
-    shadowText(ctx, line.text, W/2, hStartY + i*90, line.font, '#ffffff');
+  ctx.globalAlpha=env;
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  const hLines=[
+    {text:`SEASON ${info.season}`,font:`900 72px 'Barlow Condensed',sans-serif`},
+    {text:`RACE ${info.raceNum}`, font:`700 52px 'Barlow Condensed',sans-serif`},
+    {text:info.track.toUpperCase(),font:`300 60px 'Barlow Condensed',sans-serif`},
+  ];
+  hLines.forEach((l,i)=>{
+    ctx.font=l.font;
+    ctx.shadowColor='rgba(0,0,0,0.9)';ctx.shadowBlur=18;ctx.shadowOffsetY=3;
+    ctx.fillStyle='#ffffff';
+    ctx.fillText(l.text,W/2,100+i*88);
+    ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetY=0;
   });
   ctx.restore();
 
   // Horizontal rule
   ctx.save();
-  ctx.globalAlpha = env * 0.2;
-  ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(60, 390); ctx.lineTo(W-60, 392); ctx.stroke();
+  ctx.globalAlpha=env*0.2;
+  ctx.strokeStyle='#ffffff';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(60,372);ctx.lineTo(W-60,374);ctx.stroke();
   ctx.restore();
 
-  // Division label — drops in from above with overshoot
-  const divProgress = easeOut5(clamp((localT*dur - 0.3)/0.5, 0, 1));
-  const divSlide = (1-divProgress) * -120;
-  const divAlpha = env * Math.min(divProgress*3, 1);
+  // Big division number — slams down
+  const divP=easeOut5(clamp((t*T_TRANS-0.35)/0.55,0,1));
+  const divSlide=(1-divP)*-150;
 
   ctx.save();
-  ctx.globalAlpha = divAlpha;
-  ctx.translate(0, divSlide);
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.globalAlpha=env*Math.min(divP*3,1);
+  ctx.translate(0,divSlide);
+  ctx.textAlign='center';ctx.textBaseline='middle';
 
-  // "DIVISION" small label
-  ctx.font = `700 28px 'Oswald',sans-serif`;
-  ctx.fillStyle = div.colour;
-  ctx.letterSpacing = '0.3em';
-  ctx.fillText('DIVISION', W/2, H*0.52);
+  // "DIVISION" label
+  ctx.font=`700 30px 'Oswald',sans-serif`;
+  ctx.fillStyle=div.colour;
+  ctx.shadowColor='rgba(0,0,0,0.8)';ctx.shadowBlur=10;
+  ctx.fillText('DIVISION',W/2,H*0.51);
 
-  // Division number — big stamp
-  const numFont = `900 160px 'Barlow Condensed',sans-serif`;
-  ctx.font = numFont;
-  ctx.fillStyle = '#ffffff';
-  ctx.shadowColor = 'rgba(0,0,0,0.7)';
-  ctx.shadowBlur = 20; ctx.shadowOffsetX=4; ctx.shadowOffsetY=6;
-  ctx.fillText(div.num, W/2, H*0.65);
-  ctx.shadowColor='transparent'; ctx.shadowBlur=0; ctx.shadowOffsetX=0; ctx.shadowOffsetY=0;
+  // Number
+  ctx.font=`900 200px 'Barlow Condensed',sans-serif`;
+  ctx.fillStyle='#ffffff';
+  ctx.shadowColor='rgba(0,0,0,0.8)';ctx.shadowBlur=30;ctx.shadowOffsetY=8;
+  ctx.fillText(div.num,W/2,H*0.67);
+  ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetY=0;
 
   // Colour underline
-  const ug = ctx.createLinearGradient(0,0,W,0);
-  ug.addColorStop(0,'transparent'); ug.addColorStop(.3,div.colour);
-  ug.addColorStop(.7,div.colour); ug.addColorStop(1,'transparent');
-  ctx.fillStyle=ug; ctx.fillRect(0, H*.73, W, 4);
+  const ug=ctx.createLinearGradient(0,0,W,0);
+  ug.addColorStop(0,'transparent');ug.addColorStop(0.3,div.colour);
+  ug.addColorStop(0.7,div.colour);ug.addColorStop(1,'transparent');
+  ctx.fillStyle=ug;
+  ctx.fillRect(0,H*0.77,W,5);
   ctx.restore();
 
-  // Fade out at end
-  if (localT > 0.75) {
-    ctx.fillStyle = hex2rgba(div.bgColour, easeIO2((localT-0.75)/0.25));
+  // Fade to division bg colour at end
+  if(t>0.78){
+    ctx.fillStyle=hex2rgba(div.bgColour,easeIO2((t-0.78)/0.22));
     ctx.fillRect(0,0,W,H);
   }
 }
 
 // ─── RESULTS CARD ──────────────────────────────────────────────────────────
 
-function drawChevronBanner(ctx, text, cx, cy, width, height, fillColour, textColour, pointLeft, alpha) {
-  // Arrow/chevron banner shape
-  const hw = width/2, hh = height/2;
-  const point = hh * 0.8; // how far the point sticks out
-
+function drawPosBadge(ctx,pos,cx,cy,size,rot,alpha){
+  const cols=[{bg:'#D4A000',text:'#1a0d00'},{bg:'#787878',text:'#111'},{bg:'#7A3D1A',text:'#FFD0A0'}];
+  const c=cols[pos-1];
   ctx.save();
-  ctx.globalAlpha = alpha;
-  ctx.translate(cx, cy);
+  ctx.globalAlpha=alpha;
+  ctx.translate(cx,cy);ctx.rotate(rot*Math.PI/180);
+  ctx.shadowColor='rgba(0,0,0,0.7)';ctx.shadowBlur=18;ctx.shadowOffsetX=3;ctx.shadowOffsetY=5;
+  ctx.fillStyle=c.bg;
+  ctx.beginPath();ctx.roundRect(-size/2,-size/2,size,size,size*.12);ctx.fill();
+  ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;
+  // dashed outline
+  ctx.strokeStyle=c.bg;ctx.lineWidth=2.5;ctx.globalAlpha=alpha*.3;
+  ctx.setLineDash([7,5]);
+  ctx.beginPath();ctx.roundRect(-size/2-6,-size/2-6,size+12,size+12,size*.12+4);ctx.stroke();
+  ctx.setLineDash([]);ctx.globalAlpha=alpha;
+  // number
+  ctx.fillStyle=c.text;
+  ctx.font=`900 ${size*.6}px 'Barlow Condensed',sans-serif`;
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(pos,0,4);
+  ctx.restore();
+}
 
-  // Shadow
-  ctx.shadowColor = 'rgba(0,0,0,0.5)';
-  ctx.shadowBlur = 10; ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 3;
-
-  ctx.beginPath();
-  if (pointLeft) {
-    // Point on left, flat on right
-    ctx.moveTo(-hw + point, -hh);
-    ctx.lineTo(hw, -hh);
-    ctx.lineTo(hw, hh);
-    ctx.lineTo(-hw + point, hh);
-    ctx.lineTo(-hw, 0);
+function drawLogo(ctx,team,cx,cy,size,rot,alpha){
+  const f=LOGO_FILES[team];
+  const img=f?imgCache[ASSET_BASE+'logos/'+f]:null;
+  ctx.save();
+  ctx.globalAlpha=alpha;
+  ctx.translate(cx,cy);ctx.rotate(rot*Math.PI/180);
+  if(img){
+    const scale=Math.min(size/img.width,size/img.height)*.88;
+    const dw=img.width*scale,dh=img.height*scale;
+    ctx.shadowColor='rgba(0,0,0,0.6)';ctx.shadowBlur=14;ctx.shadowOffsetX=2;ctx.shadowOffsetY=3;
+    ctx.drawImage(img,-dw/2,-dh/2,dw,dh);
+    ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;
   } else {
-    // Flat on left, point on right
-    ctx.moveTo(-hw, -hh);
-    ctx.lineTo(hw - point, -hh);
-    ctx.lineTo(hw, 0);
-    ctx.lineTo(hw - point, hh);
-    ctx.lineTo(-hw, hh);
+    const tc=TEAM_COL[team]||'#888';
+    ctx.beginPath();ctx.arc(0,0,size*.42,0,Math.PI*2);
+    ctx.fillStyle='rgba(0,0,0,0.4)';ctx.fill();
+    ctx.strokeStyle=tc;ctx.lineWidth=3;ctx.stroke();
+    const init=team.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,3);
+    ctx.fillStyle=tc;ctx.font=`900 ${size*.32}px 'Barlow Condensed',sans-serif`;
+    ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(init,0,1);
   }
-  ctx.closePath();
-  ctx.fillStyle = fillColour;
-  ctx.fill();
+  ctx.restore();
+}
 
-  ctx.shadowColor='transparent'; ctx.shadowBlur=0; ctx.shadowOffsetX=0; ctx.shadowOffsetY=0;
+function drawChevron(ctx,text,cx,cy,bw,bh,bgCol,textCol,pointLeft,alpha){
+  const hw=bw/2,hh=bh/2,pt=hh*.75;
+  ctx.save();
+  ctx.globalAlpha=alpha;
+  ctx.translate(cx,cy);
+  ctx.shadowColor='rgba(0,0,0,0.55)';ctx.shadowBlur=12;ctx.shadowOffsetX=2;ctx.shadowOffsetY=4;
+  ctx.fillStyle=bgCol;
+  ctx.beginPath();
+  if(pointLeft){
+    ctx.moveTo(-hw+pt,-hh);ctx.lineTo(hw,-hh);ctx.lineTo(hw,hh);
+    ctx.lineTo(-hw+pt,hh);ctx.lineTo(-hw,0);
+  } else {
+    ctx.moveTo(-hw,-hh);ctx.lineTo(hw-pt,-hh);ctx.lineTo(hw,0);
+    ctx.lineTo(hw-pt,hh);ctx.lineTo(-hw,hh);
+  }
+  ctx.closePath();ctx.fill();
+  ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;
 
   // Text
-  let fs = Math.floor(height * 0.58);
-  ctx.font = `900 ${fs}px 'Barlow Condensed',sans-serif`;
-  const maxW = width * 0.75;
-  while (ctx.measureText(text).width > maxW && fs > 20) {
-    fs--;
-    ctx.font = `900 ${fs}px 'Barlow Condensed',sans-serif`;
-  }
-  ctx.fillStyle = textColour;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  const tOffset = pointLeft ? point*0.3 : -point*0.3;
-  ctx.fillText(text, tOffset, 0);
-
+  let fs=Math.floor(bh*.55);
+  ctx.font=`900 ${fs}px 'Barlow Condensed',sans-serif`;
+  const maxW=bw*.68;
+  while(ctx.measureText(text).width>maxW&&fs>18){fs--;ctx.font=`900 ${fs}px 'Barlow Condensed',sans-serif`;}
+  ctx.fillStyle=textCol;ctx.textAlign='center';ctx.textBaseline='middle';
+  const tOff=pointLeft?pt*.3:-pt*.3;
+  ctx.fillText(text,tOff,1);
   ctx.restore();
 }
 
-function drawPosBadge(ctx, pos, cx, cy, size, rot, alpha) {
-  const cols = [
-    {bg:'#D4A000', text:'#1a0d00'},
-    {bg:'#808080', text:'#111'},
-    {bg:'#7A3D1A', text:'#FFD0A0'},
-  ];
-  const c = cols[pos-1];
-  ctx.save();
-  ctx.globalAlpha = alpha;
-  ctx.translate(cx, cy);
-  ctx.rotate(rot*Math.PI/180);
+// Draw one driver entry: logo+badge above, name banner below
+// Each position has its own chaotic offset and rotation
+function drawDriverEntry(ctx, pos, driver, baseX, baseY, progress, rot) {
+  const BADGE=86, LOGO=88, BW=310, BH=66;
+  const alpha=Math.min(progress*2.2,1);
+  if(alpha<=0) return;
 
-  // Shadow
-  ctx.shadowColor='rgba(0,0,0,0.6)'; ctx.shadowBlur=16; ctx.shadowOffsetX=3; ctx.shadowOffsetY=4;
-  ctx.fillStyle = c.bg;
-  ctx.beginPath(); ctx.roundRect(-size/2,-size/2,size,size,size*.12); ctx.fill();
-  ctx.shadowColor='transparent'; ctx.shadowBlur=0; ctx.shadowOffsetX=0; ctx.shadowOffsetY=0;
+  const isRight=(pos!==2);
+  const slideDir=isRight?1:-1;
+  const slideX=(1-easeOut5(progress))*slideDir*500;
 
-  // Dashed outline
-  ctx.strokeStyle=c.bg; ctx.lineWidth=2.5; ctx.globalAlpha=alpha*.35;
-  ctx.setLineDash([7,5]);
-  ctx.beginPath(); ctx.roundRect(-size/2-6,-size/2-6,size+12,size+12,size*.12+4); ctx.stroke();
-  ctx.setLineDash([]); ctx.globalAlpha=alpha;
-
-  // Number
-  ctx.fillStyle=c.text;
-  ctx.font=`900 ${size*.62}px 'Barlow Condensed',sans-serif`;
-  ctx.textAlign='center'; ctx.textBaseline='middle';
-  ctx.fillText(pos, 0, 3);
-
-  ctx.restore();
-}
-
-function drawTeamLogo(ctx, team, cx, cy, size, rot, alpha) {
-  const f = LOGO_FILES[team];
-  const img = f ? logoCache[ASSET_BASE+'logos/'+f] : null;
+  // Vertical stagger between badge/logo and banner
+  const topY=baseY-BH*.6;   // badge & logo centre
+  const bannerY=baseY+BH*.55; // chevron banner centre
 
   ctx.save();
-  ctx.globalAlpha = alpha;
-  ctx.translate(cx, cy);
-  ctx.rotate(rot*Math.PI/180);
+  ctx.translate(slideX,0);
 
-  if (img) {
-    // Fit logo into size×size box
-    const scale = Math.min(size/img.width, size/img.height) * 0.9;
-    const dw = img.width*scale, dh = img.height*scale;
-    ctx.shadowColor='rgba(0,0,0,0.5)'; ctx.shadowBlur=12; ctx.shadowOffsetX=2; ctx.shadowOffsetY=3;
-    ctx.drawImage(img, -dw/2, -dh/2, dw, dh);
-    ctx.shadowColor='transparent'; ctx.shadowBlur=0; ctx.shadowOffsetX=0; ctx.shadowOffsetY=0;
+  if(isRight){
+    // Right side: badge right, logo left of badge
+    const bx=baseX+BW*.5+BADGE*.5+12;
+    const lx=bx-BADGE*.5-14-LOGO*.5;
+    const cx=baseX; // chevron centre
+
+    drawPosBadge(ctx,pos,bx,topY,BADGE,rot,alpha);
+    drawLogo(ctx,driver.team,lx,topY,LOGO,rot*-.5,alpha);
+    // chevron points right (flat left, point right) for right-side entries
+    drawChevron(ctx,driver.name,cx,bannerY,BW,BH,
+      pos===1?'#C8920A':pos===3?'#6B3010':'#585858',
+      pos===1?'#1a0d00':'#ffffff',false,alpha);
   } else {
-    // Fallback circle
-    const tc = TEAM_COLOURS[team]||'#888';
-    ctx.beginPath(); ctx.arc(0,0,size*.45,0,Math.PI*2);
-    ctx.fillStyle='rgba(0,0,0,0.4)'; ctx.fill();
-    ctx.strokeStyle=tc; ctx.lineWidth=3; ctx.stroke();
-    const init=team.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,3);
-    ctx.fillStyle=tc; ctx.font=`900 ${size*.35}px 'Barlow Condensed',sans-serif`;
-    ctx.textAlign='center'; ctx.textBaseline='middle';
-    ctx.fillText(init,0,1);
+    // Left side: badge left, logo right of badge
+    const bx=baseX-BW*.5-BADGE*.5-12;
+    const lx=bx+BADGE*.5+14+LOGO*.5;
+    const cx=baseX;
+
+    drawPosBadge(ctx,pos,bx,topY,BADGE,rot,alpha);
+    drawLogo(ctx,driver.team,lx,topY,LOGO,rot*-.5,alpha);
+    // chevron points left for left-side entries
+    drawChevron(ctx,driver.name,cx,bannerY,BW,BH,'#585858','#ffffff',true,alpha);
   }
 
   ctx.restore();
 }
 
-// One driver entry: badge + logo + chevron banner
-// P1 → right side (badge right, banner sweeps from right)
-// P2 → left side
-// P3 → right side (lower)
-function drawDriverEntry(ctx, pos, driver, targetY, progress, divColour) {
-  const BADGE = 88;
-  const LOGO  = 90;
-  const BANNER_W = 340;
-  const BANNER_H = 68;
-  const GAP = 14;
-  const MARGIN = 44;
+function renderResultsCard(ctx, div, info, t, fi) {
+  drawBg(ctx,div.colour,div.bgColour,fi,div.num-1);
 
-  // P2 is left-aligned, P1/P3 right-aligned
-  const isRight = pos !== 2;
+  const env=easeOut3(clamp(t/0.08,0,1))*(t>0.92?easeIO2(1-(t-0.92)/0.08):1);
 
-  // Slide in from off-screen
-  const slideDir = isRight ? 1 : -1;
-  const slideX   = (1-easeOut5(progress)) * slideDir * 480;
-  const alpha    = Math.min(progress*2.5, 1);
-
-  if (alpha <= 0) return;
-
+  // ── Header ──
   ctx.save();
-  ctx.translate(slideX, 0);
-
-  if (isRight) {
-    // Badge at right, logo left of badge, banner left of logo
-    const badgeX  = W - MARGIN - BADGE/2;
-    const logoX   = badgeX - BADGE/2 - GAP - LOGO/2;
-    const bannerX = logoX - LOGO/2 - GAP - BANNER_W/2;
-
-    drawPosBadge(ctx, pos, badgeX, targetY, BADGE, pos===1?-2:-1, alpha);
-    drawTeamLogo(ctx, driver.team, logoX, targetY, LOGO, pos===1?6:-4, alpha);
-    const bannerColours = [
-      {bg:'#D4A000',text:'#1a0d00'},
-      {bg:'#606060',text:'#ffffff'},
-      {bg:'#8B4513',text:'#FFD0A0'},
-    ];
-    const bc = bannerColours[pos-1];
-    drawChevronBanner(ctx, driver.name, bannerX, targetY, BANNER_W, BANNER_H, bc.bg, bc.text, false, alpha);
-
-  } else {
-    // Badge at left, logo right of badge, banner right of logo
-    const badgeX  = MARGIN + BADGE/2;
-    const logoX   = badgeX + BADGE/2 + GAP + LOGO/2;
-    const bannerX = logoX + LOGO/2 + GAP + BANNER_W/2;
-
-    drawPosBadge(ctx, pos, badgeX, targetY, BADGE, 1.5, alpha);
-    drawTeamLogo(ctx, driver.team, logoX, targetY, LOGO, -5, alpha);
-    const bc = {bg:'#606060', text:'#ffffff'};
-    drawChevronBanner(ctx, driver.name, bannerX, targetY, BANNER_W, BANNER_H, bc.bg, bc.text, true, alpha);
-  }
-
-  ctx.restore();
-}
-
-function renderResultsCard(ctx, div, info, localT, fi) {
-  drawBg(ctx, div.colour, div.bgColour, div.ink, fi);
-
-  const dur = RESULTS_DUR;
-  const env = easeOut3(clamp(localT/0.1, 0, 1)) *
-              (localT > 0.9 ? easeIO2(1-(localT-0.9)/0.1) : 1);
-
-  // ── Header (same as transition card) ──
-  ctx.save();
-  ctx.globalAlpha = env;
-  ctx.textAlign='center'; ctx.textBaseline='middle';
-
-  const hLines = [
-    {text:`SEASON ${info.season}`, font:`900 64px 'Barlow Condensed',sans-serif`},
-    {text:`RACE ${info.raceNum}`,  font:`700 46px 'Barlow Condensed',sans-serif`},
-    {text:info.track.toUpperCase(), font:`300 52px 'Barlow Condensed',sans-serif`},
+  ctx.globalAlpha=env;
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  const hLines=[
+    {text:`SEASON ${info.season}`,font:`900 66px 'Barlow Condensed',sans-serif`},
+    {text:`RACE ${info.raceNum}`, font:`700 48px 'Barlow Condensed',sans-serif`},
+    {text:info.track.toUpperCase(),font:`300 54px 'Barlow Condensed',sans-serif`},
   ];
-  hLines.forEach((line,i) => {
-    shadowText(ctx, line.text, W/2, 90+i*78, line.font, '#ffffff');
+  hLines.forEach((l,i)=>{
+    ctx.font=l.font;
+    ctx.shadowColor='rgba(0,0,0,0.9)';ctx.shadowBlur=16;ctx.shadowOffsetY=3;
+    ctx.fillStyle='#ffffff';
+    ctx.fillText(l.text,W/2,90+i*78);
+    ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetY=0;
   });
 
-  // Division label row
-  const divLabelY = 340;
+  // Div label row
   ctx.font=`700 22px 'Oswald',sans-serif`;
-  ctx.fillStyle = div.colour;
-  ctx.fillText(`DIVISION ${div.num}`, W*0.35, divLabelY);
-
-  // Vertical divider
-  ctx.strokeStyle=hex2rgba(div.colour,.4); ctx.lineWidth=1;
-  ctx.beginPath(); ctx.moveTo(W*.55, divLabelY-14); ctx.lineTo(W*.55, divLabelY+14); ctx.stroke();
-
-  // Race type
-  ctx.font=`italic 20px 'Special Elite',cursive`;
-  ctx.fillStyle='rgba(255,255,255,.5)';
+  ctx.fillStyle=div.colour;
   ctx.textAlign='left';
-  ctx.fillText(info.raceType, W*.58, divLabelY);
+  ctx.fillText(`DIVISION ${div.num}`,W*.18,325);
+  ctx.strokeStyle=hex2rgba(div.colour,.5);ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(W*.52,310);ctx.lineTo(W*.52,338);ctx.stroke();
+  ctx.font=`italic 19px 'Special Elite',cursive`;
+  ctx.fillStyle='rgba(255,255,255,.45)';
+  ctx.fillText(info.raceType,W*.55,325);
 
-  // Horizontal rule
-  ctx.globalAlpha = env*.18;
-  ctx.strokeStyle='#ffffff'; ctx.lineWidth=1;
-  ctx.beginPath(); ctx.moveTo(50, 368); ctx.lineTo(W-50, 370); ctx.stroke();
-
+  // Rule
+  ctx.globalAlpha=env*.18;
+  ctx.strokeStyle='#ffffff';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(50,352);ctx.lineTo(W-50,354);ctx.stroke();
   ctx.restore();
 
-  // ── Driver rows ──
-  // Staggered positions matching original video layout
-  // P1 top-right area, P2 left-middle, P3 bottom-right
-  const rowY = [530, 740, 940];
-  const delays = [0.12, 0.35, 0.55];
+  // ── Driver entries — chaotic stagger ──
+  // Each position has its own timing, position, and slight rotation
+  const entries=[
+    // pos, baseX (chevron centre), baseY, delay, rotation
+    {pos:1, bx:W*.62, by:510,  delay:0.10, rot:-1.8},
+    {pos:2, bx:W*.38, by:720,  delay:0.30, rot:1.2},
+    {pos:3, bx:W*.60, by:930,  delay:0.50, rot:-2.2},
+  ];
 
-  [0,1,2].forEach(idx => {
-    const rp = Math.max(0, (localT*dur - delays[idx])/0.5);
-    ctx.save();
-    ctx.globalAlpha = env;
-    drawDriverEntry(ctx, idx+1, div.podium[idx], rowY[idx], rp, div.colour);
+  entries.forEach(e=>{
+    const rp=Math.max(0,(t*T_RESULTS-e.delay)/0.55);
+    ctx.save();ctx.globalAlpha=env;
+    drawDriverEntry(ctx,e.pos,div.podium[e.pos-1],e.bx,e.by,rp,e.rot);
     ctx.restore();
   });
 
   // ── Footer ──
-  ctx.save();
-  ctx.globalAlpha = env * .2;
-  ctx.font=`18px 'Permanent Marker',cursive`;
-  ctx.fillStyle='#ffffff';
-  ctx.textAlign='right'; ctx.textBaseline='bottom';
-  ctx.fillText('f1xl.co.uk', W-36, H-32);
-  ctx.textAlign='left';
-  ctx.fillText('Ⓐ', 36, H-32);
+  ctx.save();ctx.globalAlpha=env*.22;
+  ctx.font=`20px 'Permanent Marker',cursive`;ctx.fillStyle='#ffffff';
+  ctx.textAlign='right';ctx.textBaseline='bottom';
+  ctx.fillText('f1xl.co.uk',W-36,H-36);
+  ctx.textAlign='left';ctx.fillText('Ⓐ',36,H-36);
   ctx.restore();
 }
 
-// ─── MASTER FRAME RENDERER ─────────────────────────────────────────────────
-
-function renderFrame(ctx, info, globalT, fi) {
-  const titleEnd   = TITLE_DUR;
-  const divTotal   = TRANS_DUR + RESULTS_DUR;
-
-  if (globalT < titleEnd) {
-    // Opening title card
-    renderTitleCard(ctx, info, globalT/TITLE_DUR, fi);
+// ─── MASTER RENDERER ───────────────────────────────────────────────────────
+function renderFrame(ctx, info, gT, fi) {
+  if(gT<T_TITLE){
+    renderTitleCard(ctx,info,gT/T_TITLE,fi);
     return;
   }
+  const divT=gT-T_TITLE;
+  const segDur=T_TRANS+T_RESULTS;
+  const divIdx=Math.floor(divT/segDur);
+  const segT=divT%segDur;
 
-  // Division segments
-  const divT = globalT - titleEnd;
-  const divIdx = Math.floor(divT / divTotal);
-  const localT = (divT % divTotal) / divTotal; // 0-1 across full div segment
-  const segT   = divT % divTotal;              // seconds within this div segment
-
-  if (divIdx >= info.divs.length) {
-    // Past end — hold last frame dark
-    ctx.fillStyle='#0a0806'; ctx.fillRect(0,0,W,H);
+  if(divIdx>=info.divs.length){
+    ctx.fillStyle='#0a0806';ctx.fillRect(0,0,W,H);
     return;
   }
-
-  const div = info.divs[divIdx];
-
-  if (segT < TRANS_DUR) {
-    renderTransCard(ctx, div, info, segT/TRANS_DUR, fi);
+  const div=info.divs[divIdx];
+  if(segT<T_TRANS){
+    renderTransCard(ctx,div,info,segT/T_TRANS,fi);
   } else {
-    renderResultsCard(ctx, div, info, (segT-TRANS_DUR)/RESULTS_DUR, fi);
+    renderResultsCard(ctx,div,info,(segT-T_TRANS)/T_RESULTS,fi);
   }
 }
 
 // ─── GENERATE ──────────────────────────────────────────────────────────────
-
-function setProgress(pct, label) {
-  document.getElementById('progBar').style.width = pct+'%';
-  document.getElementById('progLabel').textContent = label;
+function setProgress(pct,label){
+  document.getElementById('progBar').style.width=pct+'%';
+  document.getElementById('progLabel').textContent=label;
 }
 
-async function startGenerate() {
-  const btn = document.getElementById('genBtn');
-  const pa  = document.getElementById('progArea');
-  btn.disabled = true;
-  pa.style.display = 'block';
-  setProgress(2, 'Loading logos...');
+async function startGenerate(){
+  const btn=document.getElementById('genBtn');
+  const pa=document.getElementById('progArea');
+  btn.disabled=true;pa.style.display='block';
+  setProgress(2,'Loading logos...');
 
-  const data = getFormData();
-
-  // Preload logos
+  const data=getFormData();
   await preloadLogos(data.divs);
-  setProgress(8, 'Starting render...');
+  setProgress(8,'Starting render...');
 
-  const canvas = document.getElementById('renderCanvas');
-  const ctx    = canvas.getContext('2d');
+  const canvas=document.getElementById('renderCanvas');
+  const ctx=canvas.getContext('2d');
 
-  const mime = ['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm']
+  const mime=['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm']
     .find(m=>MediaRecorder.isTypeSupported(m))||'video/webm';
 
-  const stream   = canvas.captureStream(FPS);
-  const chunks   = [];
-  const recorder = new MediaRecorder(stream, {mimeType:mime, videoBitsPerSecond:12_000_000});
-  recorder.ondataavailable = e => { if(e.data.size>0) chunks.push(e.data); };
+  const stream=canvas.captureStream(FPS);
+  const chunks=[];
+  const recorder=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:12_000_000});
+  recorder.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data);};
   recorder.start(100);
 
-  const totalDur    = TITLE_DUR + data.divs.length * (TRANS_DUR + RESULTS_DUR);
-  const totalFrames = Math.ceil(totalDur * FPS);
-  let frame = 0;
+  const totalDur=T_TITLE+data.divs.length*(T_TRANS+T_RESULTS);
+  const totalFrames=Math.ceil(totalDur*FPS);
+  let frame=0;
 
-  await new Promise(resolve => {
-    function next() {
-      if (frame >= totalFrames) { resolve(); return; }
-      const gT = frame / FPS;
-      renderFrame(ctx, data, gT, frame);
+  await new Promise(resolve=>{
+    function next(){
+      if(frame>=totalFrames){resolve();return;}
+      renderFrame(ctx,data,frame/FPS,frame);
       frame++;
-      if (frame%20===0) {
-        const pct = 8 + Math.round((frame/totalFrames)*85);
-        const divIdx = Math.max(0, Math.floor((gT-TITLE_DUR)/(TRANS_DUR+RESULTS_DUR)));
-        const stage  = gT < TITLE_DUR ? 'Title card' :
-                       (gT-TITLE_DUR)%(TRANS_DUR+RESULTS_DUR) < TRANS_DUR ? `Division ${divIdx+1} — transition` : `Division ${divIdx+1} — results`;
-        setProgress(pct, `${stage} · Frame ${frame}/${totalFrames}`);
+      if(frame%20===0){
+        const pct=8+Math.round((frame/totalFrames)*86);
+        const gT=frame/FPS;
+        const divIdx=Math.max(0,Math.floor((gT-T_TITLE)/(T_TRANS+T_RESULTS)));
+        const stage=gT<T_TITLE?'Title card':
+          (gT-T_TITLE)%(T_TRANS+T_RESULTS)<T_TRANS?
+          `Div ${divIdx+1}/${data.divs.length} · Transition`:
+          `Div ${divIdx+1}/${data.divs.length} · Results`;
+        setProgress(pct,`${stage} · Frame ${frame}/${totalFrames}`);
       }
       requestAnimationFrame(next);
     }
@@ -855,23 +699,21 @@ async function startGenerate() {
   });
 
   recorder.stop();
-  await new Promise(r => recorder.onstop = r);
-  setProgress(97, 'Packaging video...');
+  await new Promise(r=>recorder.onstop=r);
+  setProgress(97,'Packaging...');
 
-  const blob  = new Blob(chunks, {type:mime});
-  const fname = `F1XL_S${data.season}_R${data.raceNum}_${data.track.replace(/\s+/g,'_')}_Results.webm`;
-  setProgress(100, 'Done — downloading!');
+  const blob=new Blob(chunks,{type:mime});
+  const fname=`F1XL_S${data.season}_R${data.raceNum}_${data.track.replace(/\s+/g,'_')}_Results.webm`;
+  setProgress(100,'Done — downloading!');
 
-  const url = URL.createObjectURL(blob);
-  const a   = document.createElement('a');
-  a.href=url; a.download=fname;
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  setTimeout(()=>URL.revokeObjectURL(url), 5000);
-
-  setTimeout(()=>{ btn.disabled=false; pa.style.display='none'; setProgress(0,''); }, 2500);
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=fname;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),5000);
+  setTimeout(()=>{btn.disabled=false;pa.style.display='none';setProgress(0,'');},2500);
 }
 
-// ─── INIT ──────────────────────────────────────────────────────────────────
 buildDivisions();
 </script>
 </body>
