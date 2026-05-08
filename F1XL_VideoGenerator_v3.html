@@ -155,7 +155,7 @@ select option{background:#141210;}
 // ─── CONFIG ────────────────────────────────────────────────────────────────
 
 // Path prefix — when hosted on GitHub Pages under /video-gen/
-const ASSET_BASE = 'video-gen/assets/';
+const ASSET_BASE = 'https://f1xl2010.github.io/video-gen/assets/';
 
 const F1_TEAMS = [
   'Alpine','Aston Martin','Audi','Cadillac','Ferrari',
@@ -561,20 +561,18 @@ function drawChevronBanner(ctx, text, cx, cy, width, height, fillColour, textCol
   ctx.shadowColor='transparent'; ctx.shadowBlur=0; ctx.shadowOffsetX=0; ctx.shadowOffsetY=0;
 
   // Text
-  let fs = Math.floor(height * 0.52);
-  ctx.font = `bold ${fs}px 'Permanent Marker','Barlow Condensed',sans-serif`;
-  // Auto-shrink
-  const maxW = width * 0.72;
-  while (ctx.measureText(text).width > maxW && fs > 18) {
+  let fs = Math.floor(height * 0.58);
+  ctx.font = `900 ${fs}px 'Barlow Condensed',sans-serif`;
+  const maxW = width * 0.75;
+  while (ctx.measureText(text).width > maxW && fs > 20) {
     fs--;
-    ctx.font = `bold ${fs}px 'Permanent Marker','Barlow Condensed',sans-serif`;
+    ctx.font = `900 ${fs}px 'Barlow Condensed',sans-serif`;
   }
   ctx.fillStyle = textColour;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  // Offset text away from point
-  const tOffset = pointLeft ? point*0.25 : -point*0.25;
-  ctx.fillText(text, tOffset, 1);
+  const tOffset = pointLeft ? point*0.3 : -point*0.3;
+  ctx.fillText(text, tOffset, 0);
 
   ctx.restore();
 }
