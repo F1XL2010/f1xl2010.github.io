@@ -46,7 +46,7 @@ select option{background:#141210;}
 .note{font-family:'Special Elite',cursive;font-size:.76rem;color:var(--muted);text-align:center;margin:1rem auto 0;max-width:900px;line-height:1.7;}
 .note span{color:var(--yellow);}
 #renderCanvas{display:none;}
-#introVid,#musicAud{display:none;}
+#musicAud{display:none;}
 </style>
 </head>
 <body>
@@ -95,20 +95,19 @@ select option{background:#141210;}
   <div class="prog-outer"><div class="prog-inner" id="progBar"></div></div>
 </div>
 
-<p class="note">Output: <span>.webm</span> — uploads directly to YouTube.<br>For Instagram/TikTok rename to <span>.mp4</span> or convert with free <span>HandBrake</span>.</p>
+<p class="note">Output: <span>.webm</span> — uploads directly to YouTube.<br>For Instagram/TikTok rename to <span>.mp4</span> or convert with free <span>HandBrake</span>.<br>Also saves a <span>.png</span> thumbnail automatically.</p>
 
 <canvas id="renderCanvas" width="720" height="1280"></canvas>
-<video id="introVid" crossorigin="anonymous" playsinline muted></video>
 <audio id="musicAud" crossorigin="anonymous"></audio>
 
 <script>
 'use strict';
 
 // ─── ASSETS ────────────────────────────────────────────────────────────────
-const BASE = 'https://f1xl2010.github.io/video-gen/assets/';
-const INTRO_SRC = BASE + 'video/F1XL logoclip.mp4';
-const MUSIC_SRC = BASE + 'music/instrumental_backing1.mp3';
-const BG_SRC    = BASE + 'video/vid1background.png';
+const BASE       = 'https://f1xl2010.github.io/video-gen/assets/';
+const MUSIC_SRC  = BASE + 'music/instrumental_backing1.mp3';
+const BG_SRC     = BASE + 'video/vid1background.png';
+const PAPER_SRC  = BASE + 'paperlogo.png';
 
 const F1_TEAMS = ['Alpine','Aston Martin','Audi','Cadillac','Ferrari','Haas','McLaren','Mercedes','Racing Bull','Red Bull','Williams','Reserve'];
 
@@ -127,22 +126,20 @@ const TEAM_COL = {
   'Racing Bull':'#7091F8','Red Bull':'#4570C0','Williams':'#3267D4','Reserve':'#ffffff',
 };
 
-// Division tint colours — overlaid on the background image
-const DIV_TINT = [null,
-  {r:180,g:20, b:20},   // D1 red
-  {r:180,g:130,b:10},   // D2 amber
-  {r:100,g:160,b:10},   // D3 green
-  {r:10, g:160,b:80},   // D4 emerald
-  {r:10, g:140,b:180},  // D5 teal
-  {r:40, g:60, b:200},  // D6 blue
-  {r:120,g:20, b:180},  // D7 purple
-  {r:180,g:20, b:110},  // D8 magenta
+const DIV_TINT=[null,
+  {r:180,g:20, b:20},
+  {r:180,g:130,b:10},
+  {r:100,g:160,b:10},
+  {r:10, g:160,b:80},
+  {r:10, g:140,b:180},
+  {r:40, g:60, b:200},
+  {r:120,g:20, b:180},
+  {r:180,g:20, b:110},
 ];
 
 const FPS=30, W=720, H=1280;
-// Timing
-const T_TITLE=2.5;   // title card (season/race/track fades in on bg)
-const T_RESULTS=7.0; // results per division
+const T_THUMB=3.0;   // thumbnail/title card hold
+const T_RESULTS=7.0; // per division
 
 // ─── STATE ─────────────────────────────────────────────────────────────────
 let divCount=4;
@@ -158,9 +155,9 @@ function buildDivisions(){
   c.innerHTML='';
   for(let i=1;i<=divCount;i++){
     const t=DIV_TINT[i]||DIV_TINT[1];
-    const hex=`#${t.r.toString(16).padStart(2,'0')}${t.g.toString(16).padStart(2,'0')}${t.b.toString(16).padStart(2,'0')}`;
+    const hex=`rgb(${t.r},${t.g},${t.b})`;
     c.innerHTML+=`
-    <div class="div-block" style="border-color:${hex}55">
+    <div class="div-block" style="border-color:rgba(${t.r},${t.g},${t.b},0.4)">
       <div class="div-lbl"><div class="div-sw" style="background:${hex}"></div>Division ${i}</div>
       <div class="podium-grid">
         <div class="podium-slot"><span class="pos-lbl p1l">P1</span>
@@ -184,8 +181,7 @@ function getFormData(){
   const divs=[];
   for(let i=1;i<=divCount;i++){
     divs.push({
-      num:i,
-      tint:DIV_TINT[i]||DIV_TINT[1],
+      num:i, tint:DIV_TINT[i]||DIV_TINT[1],
       podium:[1,2,3].map(p=>({
         name:(document.getElementById(`d${i}p${p}n`).value.trim()||'TBC'),
         team:document.getElementById(`d${i}p${p}t`).value,
@@ -218,6 +214,7 @@ async function preloadAll(divs){
   divs.forEach(d=>d.podium.forEach(p=>teams.add(p.team)));
   await Promise.all([
     loadImg(BG_SRC),
+    loadImg(PAPER_SRC),
     ...[...teams].map(t=>{const f=LOGO_FILES[t];return f?loadImg(BASE+'logos/'+f):Promise.resolve();})
   ]);
 }
@@ -233,67 +230,82 @@ function srand(s){return Math.abs(Math.sin(s+1)*43758.5453)%1;}
 function drawBg(ctx, tint, tintAlpha){
   const bg=imgCache[BG_SRC];
   if(bg){
-    // Scale to fill 720x1280
-    const scale=Math.max(W/bg.width, H/bg.height);
-    const dw=bg.width*scale, dh=bg.height*scale;
+    const scale=Math.max(W/bg.width,H/bg.height);
+    const dw=bg.width*scale,dh=bg.height*scale;
     ctx.drawImage(bg,(W-dw)/2,(H-dh)/2,dw,dh);
   } else {
-    ctx.fillStyle='#0d1210';
-    ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#0d1210';ctx.fillRect(0,0,W,H);
   }
-  // Division colour tint overlay
-  if(tint && tintAlpha>0){
+  if(tint&&tintAlpha>0){
     ctx.fillStyle=`rgba(${tint.r},${tint.g},${tint.b},${tintAlpha})`;
     ctx.fillRect(0,0,W,H);
   }
 }
 
+// ─── DRAW PAPER LOGO ───────────────────────────────────────────────────────
+function drawPaperLogo(ctx, alpha){
+  const img=imgCache[PAPER_SRC];
+  if(!img) return;
+  ctx.save();
+  ctx.globalAlpha=alpha;
+  // Position: top of frame, slightly left, slight rotation like pinned paper
+  const targetW=W*0.75;
+  const scale=targetW/img.width;
+  const dw=img.width*scale, dh=img.height*scale;
+  ctx.translate(W*0.02, -dh*0.05);
+  ctx.rotate(-1.5*Math.PI/180);
+  ctx.shadowColor='rgba(0,0,0,0.6)';ctx.shadowBlur=20;ctx.shadowOffsetY=8;
+  ctx.drawImage(img, 0, 0, dw, dh);
+  ctx.restore();
+}
+
 // ─── SPRAY PAINT NUMBER ────────────────────────────────────────────────────
-// Draws a rough spray-paint style position number
+// P1 = pink/magenta, P2 = yellow, P3 = pink
 const SPRAY_COLS=[
-  {main:'#FF3AAA',shadow:'#8B0055'}, // P1 magenta/pink
-  {main:'#FFE600',shadow:'#7A6A00'}, // P2 yellow
-  {main:'#FF3AAA',shadow:'#8B0055'}, // P3 pink (same as P1 in mock)
+  {main:'#FF2D9B',dark:'#8B0050'},
+  {main:'#FFE600',dark:'#807200'},
+  {main:'#FF2D9B',dark:'#8B0050'},
 ];
 
-function drawSprayNum(ctx, num, cx, cy, size, rot){
-  const c=SPRAY_COLS[num-1];
+function drawSprayNum(ctx, pos, cx, cy, size, rot){
+  const c=SPRAY_COLS[pos-1];
   ctx.save();
   ctx.translate(cx,cy);
   ctx.rotate(rot*Math.PI/180);
 
-  // Spray splatter — dots around the number
-  ctx.fillStyle=c.main;
-  for(let i=0;i<30;i++){
-    const angle=srand(i*17)*Math.PI*2;
-    const dist=size*.45+srand(i*31)*size*.4;
-    const r=1+srand(i*7)*3;
-    ctx.globalAlpha=0.15+srand(i*13)*0.35;
+  // Outer splatter dots
+  for(let i=0;i<35;i++){
+    const angle=srand(i*17+pos)*Math.PI*2;
+    const dist=size*.48+srand(i*31+pos)*size*.5;
+    const r=0.8+srand(i*7+pos)*3.5;
+    ctx.globalAlpha=0.1+srand(i*13+pos)*0.3;
+    ctx.fillStyle=c.main;
     ctx.beginPath();
-    ctx.arc(Math.cos(angle)*dist, Math.sin(angle)*dist, r, 0, Math.PI*2);
+    ctx.arc(Math.cos(angle)*dist,Math.sin(angle)*dist,r,0,Math.PI*2);
     ctx.fill();
   }
 
-  // Shadow/depth layer
-  ctx.globalAlpha=0.5;
-  ctx.fillStyle=c.shadow;
   ctx.font=`900 ${size}px 'Black Ops One',cursive`;
   ctx.textAlign='center';ctx.textBaseline='middle';
-  ctx.fillText(num, 3, 5);
 
-  // Main number
-  ctx.globalAlpha=0.92;
+  // Dark shadow
+  ctx.globalAlpha=0.55;
+  ctx.fillStyle=c.dark;
+  ctx.fillText(pos,4,7);
+
+  // Main colour
+  ctx.globalAlpha=0.9;
   ctx.fillStyle=c.main;
-  ctx.fillText(num, 0, 0);
+  ctx.fillText(pos,0,0);
 
-  // Roughen edges — horizontal spray lines
-  ctx.globalAlpha=0.12;
-  for(let i=0;i<8;i++){
-    const y=-size*.45+i*size*.13;
-    const x1=-size*.5+srand(i*23)*size*.2;
-    const x2=size*.5-srand(i*37)*size*.2;
-    ctx.fillStyle=c.main;
-    ctx.fillRect(x1,y,x2-x1,1.5);
+  // Horizontal spray texture lines
+  ctx.globalAlpha=0.08;
+  ctx.fillStyle=c.main;
+  for(let i=0;i<10;i++){
+    const y=-size*.5+i*size*.11;
+    const x1=-size*.55+srand(i*19+pos)*size*.2;
+    const x2=size*.55-srand(i*37+pos)*size*.2;
+    ctx.fillRect(x1,y,Math.max(0,x2-x1),1.5);
   }
 
   ctx.globalAlpha=1;
@@ -307,35 +319,43 @@ function drawTape(ctx, text, cx, cy, width, rot, alpha){
   ctx.translate(cx,cy);
   ctx.rotate(rot*Math.PI/180);
 
-  const hw=width/2, hh=34;
+  const hw=width/2, hh=36;
 
-  // Tape body — slightly off-white/cream
-  ctx.fillStyle='#e8e0c8';
+  // Torn irregular tape shape
+  ctx.shadowColor='rgba(0,0,0,0.55)';ctx.shadowBlur=14;ctx.shadowOffsetY=5;
+  ctx.fillStyle='#e2d9be';
   ctx.beginPath();
-  // Slightly irregular edges
-  ctx.moveTo(-hw+8,-hh);
-  ctx.lineTo(hw-5,-hh+2);
-  ctx.lineTo(hw,-hh+6);
-  ctx.lineTo(hw+3,hh-4);
-  ctx.lineTo(hw-8,hh+2);
-  ctx.lineTo(-hw+6,hh);
-  ctx.lineTo(-hw-2,hh-6);
-  ctx.lineTo(-hw-4,-hh+8);
+  // Top edge — torn
+  ctx.moveTo(-hw,  -hh+srand(1)*8);
+  ctx.lineTo(-hw*.6,-hh-srand(2)*6);
+  ctx.lineTo(-hw*.2,-hh+srand(3)*10);
+  ctx.lineTo( hw*.2,-hh-srand(4)*6);
+  ctx.lineTo( hw*.6,-hh+srand(5)*8);
+  ctx.lineTo( hw,   -hh+srand(6)*6);
+  // Right edge
+  ctx.lineTo(hw+srand(7)*6, hh-srand(8)*4);
+  // Bottom edge — torn
+  ctx.lineTo( hw*.6, hh+srand(9)*6);
+  ctx.lineTo( hw*.2, hh-srand(10)*8);
+  ctx.lineTo(-hw*.2, hh+srand(11)*6);
+  ctx.lineTo(-hw*.6, hh-srand(12)*6);
+  ctx.lineTo(-hw,    hh+srand(13)*4);
+  // Left edge
+  ctx.lineTo(-hw-srand(14)*5,-hh+srand(15)*8);
   ctx.closePath();
-  ctx.shadowColor='rgba(0,0,0,0.5)';ctx.shadowBlur=12;ctx.shadowOffsetY=4;
   ctx.fill();
   ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetY=0;
 
-  // Tape texture — subtle horizontal lines
-  ctx.strokeStyle='rgba(180,168,140,0.4)';ctx.lineWidth=1;
-  for(let l=-hh+8;l<hh;l+=7){
-    ctx.beginPath();ctx.moveTo(-hw+4,l);ctx.lineTo(hw-4,l);ctx.stroke();
+  // Texture lines
+  ctx.strokeStyle='rgba(160,148,120,0.35)';ctx.lineWidth=1;
+  for(let l=-hh+10;l<hh;l+=8){
+    ctx.beginPath();ctx.moveTo(-hw+6,l);ctx.lineTo(hw-6,l);ctx.stroke();
   }
 
   // Driver name
-  let fs=32;
+  let fs=34;
   ctx.font=`${fs}px 'Permanent Marker',cursive`;
-  const maxW=width*.82;
+  const maxW=width*.8;
   while(ctx.measureText(text).width>maxW&&fs>16){
     fs--;ctx.font=`${fs}px 'Permanent Marker',cursive`;
   }
@@ -370,168 +390,197 @@ function drawLogo(ctx, team, cx, cy, size, rot, alpha){
   ctx.restore();
 }
 
-// ─── HEADER TEXT (Season/Race/Track/Division/RaceType) ─────────────────────
-function drawHeader(ctx, info, div, alpha){
-  ctx.save();ctx.globalAlpha=alpha;
+// ─── THUMBNAIL CARD ────────────────────────────────────────────────────────
+function renderThumb(ctx, info, t){
+  // t: 0 = static thumbnail, 0→1 = elements animating off at end
+  drawBg(ctx, null, 0);
 
-  // Season + Race — top right, stencil font
-  ctx.textAlign='right';ctx.textBaseline='top';
-  ctx.shadowColor='rgba(0,0,0,0.95)';ctx.shadowBlur=12;ctx.shadowOffsetY=2;
+  // Paper logo — slides in from top
+  const paperP=easeOut5(clamp(t*T_THUMB/0.4,0,1));
+  const paperOut=t>0.75?easeIO2((t-0.75)/0.25):0;
+  drawPaperLogo(ctx, paperP*(1-paperOut));
 
-  ctx.font=`64px 'Black Ops One',cursive`;
-  ctx.fillStyle='#d8d0b0';
-  ctx.fillText(`SEASON ${info.season}`, W-44, 44);
+  // Season + Race — stencil, centred
+  const textP=easeOut3(clamp((t*T_THUMB-0.15)/0.4,0,1));
+  const textOut=t>0.75?easeIO2((t-0.75)/0.25):0;
+  const textAlpha=textP*(1-textOut);
 
-  ctx.font=`50px 'Black Ops One',cursive`;
-  ctx.fillStyle='#c0b898';
-  ctx.fillText(`RACE ${info.raceNum}`, W-44, 118);
-
-  // Track name — big brushstroke centre
+  ctx.save();
+  ctx.globalAlpha=textAlpha;
   ctx.textAlign='center';ctx.textBaseline='top';
-  ctx.font=`130px 'Boogaloo',cursive`;
-  ctx.fillStyle='#ffffff';
-  ctx.shadowBlur=20;ctx.shadowColor='rgba(0,0,0,0.9)';
-  // Auto-shrink track name
-  let tfs=130;
+  ctx.shadowColor='rgba(0,0,0,0.95)';ctx.shadowBlur=14;ctx.shadowOffsetY=3;
+
+  ctx.font=`110px 'Black Ops One',cursive`;
+  ctx.fillStyle='#ccc8a8';
+  ctx.fillText(`SEASON ${info.season}`, W/2, 310);
+
+  ctx.font=`96px 'Black Ops One',cursive`;
+  ctx.fillStyle='#b8b498';
+  ctx.fillText(`RACE ${info.raceNum}`, W/2, 435);
+
+  // Track name — big Boogaloo, white, lower section
+  const trackP=easeOut5(clamp((t*T_THUMB-0.35)/0.45,0,1));
+  const trackOut=t>0.75?easeIO2((t-0.75)/0.25):0;
+  ctx.globalAlpha=trackP*(1-trackOut);
+  ctx.shadowBlur=22;
+
+  let tfs=150;
   ctx.font=`${tfs}px 'Boogaloo',cursive`;
-  while(ctx.measureText(info.track.toUpperCase()).width>W-80&&tfs>60){
+  while(ctx.measureText(info.track.toUpperCase()).width>W+80&&tfs>70){
     tfs--;ctx.font=`${tfs}px 'Boogaloo',cursive`;
   }
-  ctx.fillText(info.track.toUpperCase(), W/2, 188);
+  ctx.fillStyle='#ffffff';
+  ctx.textBaseline='middle';
+  ctx.fillText(info.track.toUpperCase(), W/2, 730);
 
-  // Division + Race Type — stencil
-  ctx.shadowBlur=10;
-  if(div){
-    ctx.font=`46px 'Black Ops One',cursive`;
-    ctx.fillStyle='#c8c0a0';
-    ctx.fillText(`DIVISION ${div.num}`, W/2, 188+tfs+8);
-
-    ctx.font=`36px 'Black Ops One',cursive`;
-    ctx.fillStyle='#a09880';
-    ctx.fillText(info.raceType, W/2, 188+tfs+64);
-  }
+  // Race Results — bottom stencil
+  const rrP=easeOut3(clamp((t*T_THUMB-0.55)/0.35,0,1));
+  const rrOut=t>0.75?easeIO2((t-0.75)/0.25):0;
+  ctx.globalAlpha=rrP*(1-rrOut);
+  ctx.font=`72px 'Black Ops One',cursive`;
+  ctx.fillStyle='#ccc8a8';
+  ctx.textBaseline='bottom';
+  ctx.shadowBlur=14;
+  ctx.fillText('RACE RESULTS', W/2, H-100);
 
   ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetY=0;
   ctx.restore();
 }
 
-// ─── RENDER: TITLE CARD ────────────────────────────────────────────────────
-function renderTitle(ctx, info, t, fi){
-  drawBg(ctx, null, 0);
-
-  const lines=[
-    {fn:()=>drawHeader(ctx,info,null,easeOut5(clamp(t*T_TITLE/1.2,0,1))), delay:0},
-  ];
-
-  // Subtle fade in
-  const env=easeOut3(clamp(t/0.3,0,1));
-  drawHeader(ctx, info, null, env);
-
-  // Fade out at end
-  if(t>0.75){
-    ctx.fillStyle=`rgba(0,0,0,${easeIO2((t-0.75)/0.25)})`;
-    ctx.fillRect(0,0,W,H);
-  }
-}
-
-// ─── RENDER: RESULTS CARD ──────────────────────────────────────────────────
-function renderResults(ctx, div, info, t, fi){
-  // Apply division colour tint to background
-  const tintA=0.22;
-  drawBg(ctx, div.tint, tintA);
+// ─── RESULTS CARD ──────────────────────────────────────────────────────────
+function renderResults(ctx, div, info, t){
+  drawBg(ctx, div.tint, 0.2);
 
   const dur=T_RESULTS;
-  const env=easeOut3(clamp(t/0.08,0,1))*(t>0.9?easeIO2(1-(t-0.9)/0.1):1);
+  const env=easeOut3(clamp(t/0.06,0,1))*(t>0.9?easeIO2(1-(t-0.9)/0.1):1);
 
-  // Header — always present
-  drawHeader(ctx, info, div, env);
+  // Paper logo — always present, static
+  drawPaperLogo(ctx, env*0.9);
+
+  // Season + Race header (smaller, top right)
+  ctx.save();
+  ctx.globalAlpha=env;
+  ctx.textAlign='right';ctx.textBaseline='top';
+  ctx.shadowColor='rgba(0,0,0,0.95)';ctx.shadowBlur=12;ctx.shadowOffsetY=2;
+
+  ctx.font=`58px 'Black Ops One',cursive`;
+  ctx.fillStyle='#ccc8a8';
+  ctx.fillText(`SEASON ${info.season}`, W-40, 50);
+
+  ctx.font=`46px 'Black Ops One',cursive`;
+  ctx.fillStyle='#b0ac8c';
+  ctx.fillText(`RACE ${info.raceNum}`, W-40, 120);
+
+  // Track name
+  ctx.textAlign='center';ctx.textBaseline='top';
+  ctx.shadowBlur=18;
+  let tfs=110;
+  ctx.font=`${tfs}px 'Boogaloo',cursive`;
+  while(ctx.measureText(info.track.toUpperCase()).width>W+60&&tfs>55){
+    tfs--;ctx.font=`${tfs}px 'Boogaloo',cursive`;
+  }
+  ctx.fillStyle='#ffffff';
+  ctx.fillText(info.track.toUpperCase(), W/2, 200);
+
+  // Division + Race type
+  ctx.font=`42px 'Black Ops One',cursive`;
+  ctx.fillStyle='#b0ac8c';
+  ctx.shadowBlur=10;
+  ctx.fillText(`DIVISION ${div.num}`, W/2, 200+tfs+10);
+
+  ctx.font=`32px 'Black Ops One',cursive`;
+  ctx.fillStyle='#908c70';
+  ctx.fillText(info.raceType, W/2, 200+tfs+62);
+
+  ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetY=0;
+  ctx.restore();
 
   // ── Driver entries ──
-  // Layout from the mockup:
-  // P1: spray num left (~x130), logo right of num (~x240), tape strip below spanning left-to-centre
-  // P2: logo left-centre (~x380), spray num right of logo (~x500), tape strip below spanning centre-right
-  // P3: spray num left (~x110), logo right of num (~x230), tape strip below spanning left
+  // Matching the mockup layout:
+  // P1: num left, logo right of num, tape below — left side
+  // P2: logo left-centre, num right of logo, tape below — right side  
+  // P3: num left, logo right, tape below — left side
+
+  const hdrBottom = 200+tfs+110; // where header ends
 
   const entries=[
     {
       pos:1,
-      numX:110, numY:620, numSize:115, numRot:-4,
-      logoX:255, logoY:600, logoSize:100, logoRot:5,
-      tapeX:270, tapeY:730, tapeW:420, tapeRot:-2.5,
-      delay:0.08,
+      numX:105,  numY:hdrBottom+100, numSize:110, numRot:-4,
+      logoX:250, logoY:hdrBottom+85,  logoSize:100, logoRot:4,
+      tapeX:300, tapeY:hdrBottom+185, tapeW:430,   tapeRot:-2.5,
+      delay:0.06, slideDir:-1,
     },
     {
       pos:2,
-      numX:530, numY:860, numSize:105, numRot:3,
-      logoX:390, logoY:845, logoSize:95, logoRot:-4,
-      tapeX:430, tapeY:960, tapeW:400, tapeRot:1.8,
-      delay:0.28,
+      numX:590,  numY:hdrBottom+290, numSize:100, numRot:3,
+      logoX:450, logoY:hdrBottom+278, logoSize:95,  logoRot:-5,
+      tapeX:390, tapeY:hdrBottom+370, tapeW:410,   tapeRot:2,
+      delay:0.24, slideDir:1,
     },
     {
       pos:3,
-      numX:105, numY:1070, numSize:100, numRot:-5,
-      logoX:240, logoY:1058, logoSize:90, logoRot:6,
-      tapeX:240, tapeY:1155, tapeW:400, tapeRot:-3,
-      delay:0.48,
+      numX:100,  numY:hdrBottom+480, numSize:95,  numRot:-5,
+      logoX:235, logoY:hdrBottom+468, logoSize:88,  logoRot:5,
+      tapeX:285, tapeY:hdrBottom+550, tapeW:400,   tapeRot:-3,
+      delay:0.42, slideDir:-1,
     },
   ];
 
   entries.forEach(e=>{
-    const rp=Math.max(0,(t*dur-e.delay)/0.4);
-    const alpha=Math.min(rp*2.5,1)*env;
-    const slide=(1-easeOut5(Math.min(rp,1)))*( e.pos===2 ? 350 : -350 );
-    if(alpha<=0) return;
+    const rp=Math.max(0,(t*dur-e.delay)/0.38);
+    const slideAlpha=Math.min(rp*2.5,1)*env;
+    const slideX=(1-easeOut5(Math.min(rp,1)))*e.slideDir*420;
+    if(slideAlpha<=0) return;
 
     ctx.save();
-    ctx.translate(slide,0);
+    ctx.translate(slideX,0);
+    ctx.globalAlpha=slideAlpha;
 
-    // Spray number
-    ctx.globalAlpha=alpha;
     drawSprayNum(ctx, e.pos, e.numX, e.numY, e.numSize, e.numRot);
-
-    // Team logo
-    drawLogo(ctx, div.podium[e.pos-1].team, e.logoX, e.logoY, e.logoSize, e.logoRot, alpha);
-
-    // Tape with driver name
-    drawTape(ctx, div.podium[e.pos-1].name, e.tapeX, e.tapeY, e.tapeW, e.tapeRot, alpha);
+    drawLogo(ctx, div.podium[e.pos-1].team, e.logoX, e.logoY, e.logoSize, e.logoRot, 1);
+    drawTape(ctx, div.podium[e.pos-1].name, e.tapeX, e.tapeY, e.tapeW, e.tapeRot, 1);
 
     ctx.restore();
   });
 }
 
 // ─── MASTER RENDERER ───────────────────────────────────────────────────────
-function renderFrame(ctx, info, gT, fi){
-  if(gT<T_TITLE){
-    renderTitle(ctx, info, gT/T_TITLE, fi);
+function renderFrame(ctx, info, gT){
+  if(gT<T_THUMB){
+    renderThumb(ctx, info, gT/T_THUMB);
     return;
   }
-  const divT=gT-T_TITLE;
+  const divT=gT-T_THUMB;
   const divIdx=Math.floor(divT/T_RESULTS);
   const segT=(divT%T_RESULTS)/T_RESULTS;
 
   if(divIdx>=info.divs.length){
-    // Hold last bg
-    drawBg(ctx, info.divs[info.divs.length-1].tint, 0.22);
-    ctx.fillStyle='rgba(0,0,0,0.5)';ctx.fillRect(0,0,W,H);
+    drawBg(ctx, info.divs[info.divs.length-1].tint, 0.2);
     return;
   }
-  renderResults(ctx, info.divs[divIdx], info, segT, fi);
+  renderResults(ctx, info.divs[divIdx], info, segT);
+}
+
+// ─── THUMBNAIL EXPORT ──────────────────────────────────────────────────────
+function saveThumbnail(canvas, info){
+  // Render static thumbnail frame
+  const ctx=canvas.getContext('2d');
+  renderThumb(ctx, info, 0.5); // midpoint = fully loaded static frame
+  canvas.toBlob(blob=>{
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download=`F1XL_S${info.season}_R${info.raceNum}_${info.track.replace(/\s+/g,'_')}_Thumbnail.png`;
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url),3000);
+  },'image/png');
 }
 
 // ─── GENERATE ──────────────────────────────────────────────────────────────
 function setProgress(pct,label){
   document.getElementById('progBar').style.width=pct+'%';
   document.getElementById('progLabel').textContent=label;
-}
-
-async function loadIntroVideo(){
-  return new Promise(resolve=>{
-    const vid=document.getElementById('introVid');
-    vid.src=INTRO_SRC;
-    vid.onloadedmetadata=()=>resolve({el:vid,duration:vid.duration});
-    vid.onerror=()=>{console.warn('No intro video');resolve(null);};
-    vid.load();
-  });
 }
 
 async function startGenerate(){
@@ -542,13 +591,8 @@ async function startGenerate(){
 
   const data=getFormData();
   await preloadAll(data.divs);
-  setProgress(10,'Loading intro...');
+  setProgress(12,'Setting up audio...');
 
-  const intro=await loadIntroVideo();
-  const introDur=intro?intro.duration:0;
-  setProgress(15,'Setting up audio...');
-
-  // Audio context
   const audioCtx=new(window.AudioContext||window.webkitAudioContext)();
   let musicSource=null;
 
@@ -559,12 +603,15 @@ async function startGenerate(){
     musicSource=audioCtx.createBufferSource();
     musicSource.buffer=musicBuf;
     musicSource.loop=true;
-  }catch(e){console.warn('Music load failed:',e);}
+  }catch(e){console.warn('Music:',e);}
 
-  setProgress(20,'Starting render...');
+  setProgress(18,'Starting render...');
 
   const canvas=document.getElementById('renderCanvas');
   const ctx=canvas.getContext('2d');
+
+  // Save thumbnail first
+  saveThumbnail(canvas, data);
 
   const dest=audioCtx.createMediaStreamDestination();
   if(musicSource){musicSource.connect(dest);musicSource.start(0);}
@@ -583,47 +630,20 @@ async function startGenerate(){
   recorder.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data);};
   recorder.start(100);
 
-  // ── Intro frames ──
-  if(intro){
-    const introFrames=Math.ceil(introDur*FPS);
-    intro.el.currentTime=0;
-
-    await new Promise(resolve=>{
-      let f=0;
-      function nextFrame(){
-        if(f>=introFrames){resolve();return;}
-        const targetT=f/FPS;
-        intro.el.currentTime=targetT;
-        intro.el.onseeked=()=>{
-          const vw=intro.el.videoWidth,vh=intro.el.videoHeight;
-          const scale=Math.max(W/vw,H/vh);
-          ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
-          ctx.drawImage(intro.el,(W-vw*scale)/2,(H-vh*scale)/2,vw*scale,vh*scale);
-          f++;
-          if(f%15===0) setProgress(20+Math.round((f/introFrames)*8),`Intro · ${f}/${introFrames}`);
-          requestAnimationFrame(nextFrame);
-        };
-      }
-      nextFrame();
-    });
-    intro.el.pause();
-  }
-
-  // ── Generated frames ──
-  const totalDur=T_TITLE+data.divs.length*T_RESULTS;
+  const totalDur=T_THUMB+data.divs.length*T_RESULTS;
   const totalFrames=Math.ceil(totalDur*FPS);
   let frame=0;
 
   await new Promise(resolve=>{
     function next(){
       if(frame>=totalFrames){resolve();return;}
-      renderFrame(ctx,data,frame/FPS,frame);
+      renderFrame(ctx,data,frame/FPS);
       frame++;
       if(frame%20===0){
-        const pct=28+Math.round((frame/totalFrames)*66);
+        const pct=18+Math.round((frame/totalFrames)*76);
         const gT=frame/FPS;
-        const dIdx=Math.max(0,Math.floor((gT-T_TITLE)/T_RESULTS));
-        const stage=gT<T_TITLE?'Title card':`Division ${Math.min(dIdx+1,data.divs.length)} of ${data.divs.length}`;
+        const stage=gT<T_THUMB?'Thumbnail card':
+          `Division ${Math.min(Math.floor((gT-T_THUMB)/T_RESULTS)+1,data.divs.length)} of ${data.divs.length}`;
         setProgress(pct,`${stage} · Frame ${frame}/${totalFrames}`);
       }
       requestAnimationFrame(next);
@@ -635,11 +655,11 @@ async function startGenerate(){
   audioCtx.close();
   recorder.stop();
   await new Promise(r=>recorder.onstop=r);
-  setProgress(97,'Packaging...');
+  setProgress(96,'Packaging...');
 
   const blob=new Blob(chunks,{type:mime});
   const fname=`F1XL_S${data.season}_R${data.raceNum}_${data.track.replace(/\s+/g,'_')}_Results.webm`;
-  setProgress(100,'Done — downloading!');
+  setProgress(100,'Done — downloading both files!');
 
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
