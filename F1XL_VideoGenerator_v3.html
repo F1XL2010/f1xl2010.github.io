@@ -5,8 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>F1XL · Video Generator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Permanent+Marker&family=Boogaloo&family=Barlow+Condensed:wght@400;700;900&family=Special+Elite&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Barlow+Condensed:wght@400;700;900&family=Special+Elite&display=swap" rel="stylesheet">
 <style>
+@font-face {
+  font-family: 'PunkKid';
+  src: url('https://f1xl2010.github.io/video-gen/assets/fonts/punk kid.ttf') format('truetype');
+  font-weight: normal;
+}
+@font-face {
+  font-family: 'PaintRough';
+  src: url('https://f1xl2010.github.io/video-gen/assets/fonts/Paint Rough.otf') format('opentype'),
+       url('https://f1xl2010.github.io/video-gen/assets/fonts/Paint Rough.ttf') format('truetype');
+  font-weight: normal;
+}
 :root{--bg:#0a0806;--surface:#141210;--border:rgba(255,255,255,0.07);--accent:#cc1e1e;--text:#ede8e0;--muted:rgba(237,232,224,0.38);--yellow:#f5e642;}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-serif;min-height:100vh;padding:2rem 1.5rem 4rem;
@@ -17,10 +28,10 @@ header{text-align:center;margin-bottom:3rem;padding-top:1rem;}
 .hdr-t{font-family:'Permanent Marker',cursive;font-size:3rem;color:var(--yellow);transform:rotate(-1deg);display:inline-block;text-shadow:3px 3px 0 rgba(0,0,0,.6);}
 .hdr-s{font-family:'Special Elite',cursive;font-size:.85rem;color:var(--muted);letter-spacing:.22em;}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.5rem;margin-bottom:1.4rem;max-width:900px;margin-left:auto;margin-right:auto;}
-.card-title{font-family:'Black Ops One',cursive;font-size:.72rem;letter-spacing:.18em;color:var(--accent);text-transform:uppercase;margin-bottom:1.1rem;padding-bottom:.5rem;border-bottom:1px solid var(--border);}
+.card-title{font-family:'PunkKid',cursive;font-size:.8rem;letter-spacing:.18em;color:var(--accent);text-transform:uppercase;margin-bottom:1.1rem;padding-bottom:.5rem;border-bottom:1px solid var(--border);}
 .form-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.9rem;}
 .form-group{display:flex;flex-direction:column;gap:5px;}
-label{font-size:.68rem;letter-spacing:.15em;color:var(--muted);text-transform:uppercase;font-family:'Black Ops One',cursive;}
+label{font-size:.68rem;letter-spacing:.15em;color:var(--muted);text-transform:uppercase;font-family:'PunkKid',cursive;}
 input,select{background:rgba(0,0,0,.35);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:1rem;padding:8px 10px;transition:border-color .2s;width:100%;}
 input:focus,select:focus{outline:none;border-color:var(--accent);}
 select option{background:#141210;}
@@ -30,7 +41,7 @@ select option{background:#141210;}
 .count-btn:hover{border-color:var(--accent);background:rgba(204,30,30,.1);}
 .count-num{font-family:'Permanent Marker',cursive;font-size:1.4rem;color:var(--yellow);min-width:24px;text-align:center;}
 .div-block{border:1px solid var(--border);border-radius:6px;padding:1.1rem;margin-bottom:.9rem;}
-.div-lbl{font-family:'Black Ops One',cursive;font-size:.95rem;margin-bottom:.9rem;display:flex;align-items:center;gap:9px;color:var(--text);}
+.div-lbl{font-family:'PunkKid',cursive;font-size:.95rem;margin-bottom:.9rem;display:flex;align-items:center;gap:9px;color:var(--text);}
 .div-sw{width:13px;height:13px;border-radius:3px;flex-shrink:0;}
 .podium-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;}
 .podium-slot{display:flex;flex-direction:column;gap:5px;}
@@ -95,7 +106,7 @@ select option{background:#141210;}
   <div class="prog-outer"><div class="prog-inner" id="progBar"></div></div>
 </div>
 
-<p class="note">Output: <span>.webm</span> — uploads directly to YouTube.<br>For Instagram/TikTok rename to <span>.mp4</span> or convert with free <span>HandBrake</span>.<br>Also saves a <span>.png</span> thumbnail automatically.</p>
+<p class="note">Generates a <span>.webm</span> video + <span>.png</span> thumbnail.<br>Upload webm to YouTube directly, or convert with <span>HandBrake</span> for Instagram/TikTok.</p>
 
 <canvas id="renderCanvas" width="720" height="1280"></canvas>
 <audio id="musicAud" crossorigin="anonymous"></audio>
@@ -104,10 +115,10 @@ select option{background:#141210;}
 'use strict';
 
 // ─── ASSETS ────────────────────────────────────────────────────────────────
-const BASE       = 'https://f1xl2010.github.io/video-gen/assets/';
-const MUSIC_SRC  = BASE + 'music/instrumental_backing1.mp3';
-const BG_SRC     = BASE + 'video/vid1background.png';
-const PAPER_SRC  = BASE + 'paperlogo.png';
+const BASE      = 'https://f1xl2010.github.io/video-gen/assets/';
+const MUSIC_SRC = BASE + 'music/instrumental_backing1.mp3';
+const BG_SRC    = BASE + 'video/vid1background.png';
+const PAPER_SRC = BASE + 'paperlogo.png';
 
 const F1_TEAMS = ['Alpine','Aston Martin','Audi','Cadillac','Ferrari','Haas','McLaren','Mercedes','Racing Bull','Red Bull','Williams','Reserve'];
 
@@ -127,23 +138,47 @@ const TEAM_COL = {
 };
 
 const DIV_TINT=[null,
-  {r:180,g:20, b:20},
-  {r:180,g:130,b:10},
-  {r:100,g:160,b:10},
-  {r:10, g:160,b:80},
+  {r:180,g:20, b:20 },
+  {r:180,g:130,b:10 },
+  {r:100,g:160,b:10 },
+  {r:10, g:160,b:80 },
   {r:10, g:140,b:180},
   {r:40, g:60, b:200},
   {r:120,g:20, b:180},
   {r:180,g:20, b:110},
 ];
 
-const FPS=30, W=720, H=1280;
-const T_THUMB=3.0;   // thumbnail/title card hold
-const T_RESULTS=7.0; // per division
+// Animation style per division (cycles for >4 divs)
+const DIV_ANIM = ['stomp','pop','tumble','succession'];
+
+const FPS = 30;
+const W = 720, H = 1280;
+
+// ── Timing constants (seconds) ──
+// Each division segment starts at T=0 locally
+const TM = {
+  BREATH:    1.5,   // background + paper only
+  SEASON:    1.5,   // season fades in
+  RACE:      2.0,   // race number fades in
+  LOCATION:  2.5,   // location fades in
+  DIV:       3.5,   // division + race type fade in
+  NUM1:      4.0,   // P1 number
+  NUM2:      4.3,   // P2 number
+  NUM3:      4.6,   // P3 number
+  LOGO1:     4.9,   // P1 logo
+  LOGO2:     5.1,   // P2 logo
+  LOGO3:     5.3,   // P3 logo
+  TAPE1:     5.8,   // P1 name tape
+  TAPE2:     6.3,   // P2 name tape
+  TAPE3:     6.8,   // P3 name tape
+  EXIT:      10.0,  // placements + div exit
+  NEXT_DIV:  11.3,  // next division label fades in
+  SEG_DUR:   11.3,  // total segment length
+};
 
 // ─── STATE ─────────────────────────────────────────────────────────────────
-let divCount=4;
-const imgCache={};
+let divCount = 4;
+const imgCache = {};
 
 // ─── UI ────────────────────────────────────────────────────────────────────
 function teamOpts(di){
@@ -155,10 +190,11 @@ function buildDivisions(){
   c.innerHTML='';
   for(let i=1;i<=divCount;i++){
     const t=DIV_TINT[i]||DIV_TINT[1];
-    const hex=`rgb(${t.r},${t.g},${t.b})`;
+    const animName=DIV_ANIM[(i-1)%4];
     c.innerHTML+=`
     <div class="div-block" style="border-color:rgba(${t.r},${t.g},${t.b},0.4)">
-      <div class="div-lbl"><div class="div-sw" style="background:${hex}"></div>Division ${i}</div>
+      <div class="div-lbl"><div class="div-sw" style="background:rgb(${t.r},${t.g},${t.b})"></div>
+        Division ${i} <span style="opacity:.45;font-size:.75rem;margin-left:6px">(${animName})</span></div>
       <div class="podium-grid">
         <div class="podium-slot"><span class="pos-lbl p1l">P1</span>
           <input type="text" id="d${i}p1n" placeholder="Driver name">
@@ -181,7 +217,9 @@ function getFormData(){
   const divs=[];
   for(let i=1;i<=divCount;i++){
     divs.push({
-      num:i, tint:DIV_TINT[i]||DIV_TINT[1],
+      num:i,
+      tint:DIV_TINT[i]||DIV_TINT[1],
+      anim:DIV_ANIM[(i-1)%4],
       podium:[1,2,3].map(p=>({
         name:(document.getElementById(`d${i}p${p}n`).value.trim()||'TBC'),
         team:document.getElementById(`d${i}p${p}t`).value,
@@ -223,355 +261,373 @@ async function preloadAll(divs){
 function easeOut3(t){return 1-Math.pow(1-Math.min(t,1),3);}
 function easeOut5(t){return 1-Math.pow(1-Math.min(t,1),5);}
 function easeIO2(t){t=Math.min(t,1);return t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;}
+function easeOutBack(t){const c=1.70158;t=Math.min(t,1);return 1+(c+1)*Math.pow(t-1,3)+c*Math.pow(t-1,2);}
 function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
 function srand(s){return Math.abs(Math.sin(s+1)*43758.5453)%1;}
+function progress(t,start,dur){return clamp((t-start)/dur,0,1);}
 
-// ─── DRAW BACKGROUND ───────────────────────────────────────────────────────
-function drawBg(ctx, tint, tintAlpha){
+// ─── BACKGROUND ────────────────────────────────────────────────────────────
+function drawBg(ctx,tint,tintA){
   const bg=imgCache[BG_SRC];
   if(bg){
-    const scale=Math.max(W/bg.width,H/bg.height);
-    const dw=bg.width*scale,dh=bg.height*scale;
-    ctx.drawImage(bg,(W-dw)/2,(H-dh)/2,dw,dh);
+    const sc=Math.max(W/bg.width,H/bg.height);
+    ctx.drawImage(bg,(W-bg.width*sc)/2,(H-bg.height*sc)/2,bg.width*sc,bg.height*sc);
   } else {
     ctx.fillStyle='#0d1210';ctx.fillRect(0,0,W,H);
   }
-  if(tint&&tintAlpha>0){
-    ctx.fillStyle=`rgba(${tint.r},${tint.g},${tint.b},${tintAlpha})`;
+  if(tint&&tintA>0){
+    ctx.fillStyle=`rgba(${tint.r},${tint.g},${tint.b},${tintA})`;
     ctx.fillRect(0,0,W,H);
   }
 }
 
-// ─── DRAW PAPER LOGO ───────────────────────────────────────────────────────
-function drawPaperLogo(ctx, alpha){
+// ─── PAPER LOGO ────────────────────────────────────────────────────────────
+function drawPaperLogo(ctx,alpha){
   const img=imgCache[PAPER_SRC];
-  if(!img) return;
+  if(!img||alpha<=0) return;
   ctx.save();
   ctx.globalAlpha=alpha;
-  // Position: top of frame, slightly left, slight rotation like pinned paper
-  const targetW=W*0.75;
-  const scale=targetW/img.width;
-  const dw=img.width*scale, dh=img.height*scale;
-  ctx.translate(W*0.02, -dh*0.05);
+  const tw=W*0.72;
+  const sc=tw/img.width;
+  ctx.translate(W*0.01,-img.height*sc*0.04);
   ctx.rotate(-1.5*Math.PI/180);
-  ctx.shadowColor='rgba(0,0,0,0.6)';ctx.shadowBlur=20;ctx.shadowOffsetY=8;
-  ctx.drawImage(img, 0, 0, dw, dh);
+  ctx.shadowColor='rgba(0,0,0,0.65)';ctx.shadowBlur=22;ctx.shadowOffsetY=9;
+  ctx.drawImage(img,0,0,img.width*sc,img.height*sc);
+  ctx.restore();
+}
+
+// ─── MERGE TEXT (slide+fade, alternating direction) ────────────────────────
+// dir: 1=from left, -1=from right
+function drawMergeText(ctx,text,x,y,font,colour,p,dir){
+  if(p<=0) return;
+  const slide=(1-easeOut3(p))*dir*-160;
+  ctx.save();
+  ctx.globalAlpha=p;
+  ctx.translate(slide,0);
+  ctx.font=font;
+  ctx.fillStyle=colour;
+  ctx.shadowColor='rgba(0,0,0,0.9)';ctx.shadowBlur=14;ctx.shadowOffsetY=3;
+  ctx.fillText(text,x,y);
+  ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetY=0;
   ctx.restore();
 }
 
 // ─── SPRAY PAINT NUMBER ────────────────────────────────────────────────────
-// P1 = pink/magenta, P2 = yellow, P3 = pink
-const SPRAY_COLS=[
-  {main:'#FF2D9B',dark:'#8B0050'},
-  {main:'#FFE600',dark:'#807200'},
-  {main:'#FF2D9B',dark:'#8B0050'},
+const SPRAY=[
+  {main:'#FF2D9B',dark:'#8B0050'}, // P1 pink
+  {main:'#FFE600',dark:'#807200'}, // P2 yellow
+  {main:'#FF2D9B',dark:'#8B0050'}, // P3 pink
 ];
 
-function drawSprayNum(ctx, pos, cx, cy, size, rot){
-  const c=SPRAY_COLS[pos-1];
+function drawSprayNum(ctx,pos,cx,cy,size,rot){
+  const c=SPRAY[pos-1];
   ctx.save();
-  ctx.translate(cx,cy);
-  ctx.rotate(rot*Math.PI/180);
-
-  // Outer splatter dots
-  for(let i=0;i<35;i++){
-    const angle=srand(i*17+pos)*Math.PI*2;
-    const dist=size*.48+srand(i*31+pos)*size*.5;
+  ctx.translate(cx,cy);ctx.rotate(rot*Math.PI/180);
+  for(let i=0;i<40;i++){
+    const a=srand(i*17+pos)*Math.PI*2;
+    const d=size*.5+srand(i*31+pos)*size*.55;
     const r=0.8+srand(i*7+pos)*3.5;
-    ctx.globalAlpha=0.1+srand(i*13+pos)*0.3;
+    ctx.globalAlpha=0.08+srand(i*13+pos)*0.28;
     ctx.fillStyle=c.main;
-    ctx.beginPath();
-    ctx.arc(Math.cos(angle)*dist,Math.sin(angle)*dist,r,0,Math.PI*2);
-    ctx.fill();
+    ctx.beginPath();ctx.arc(Math.cos(a)*d,Math.sin(a)*d,r,0,Math.PI*2);ctx.fill();
   }
-
-  ctx.font=`900 ${size}px 'Black Ops One',cursive`;
+  ctx.font=`900 ${size}px 'PunkKid',cursive`;
   ctx.textAlign='center';ctx.textBaseline='middle';
-
-  // Dark shadow
-  ctx.globalAlpha=0.55;
-  ctx.fillStyle=c.dark;
-  ctx.fillText(pos,4,7);
-
-  // Main colour
-  ctx.globalAlpha=0.9;
-  ctx.fillStyle=c.main;
-  ctx.fillText(pos,0,0);
-
-  // Horizontal spray texture lines
-  ctx.globalAlpha=0.08;
-  ctx.fillStyle=c.main;
-  for(let i=0;i<10;i++){
-    const y=-size*.5+i*size*.11;
-    const x1=-size*.55+srand(i*19+pos)*size*.2;
-    const x2=size*.55-srand(i*37+pos)*size*.2;
-    ctx.fillRect(x1,y,Math.max(0,x2-x1),1.5);
+  ctx.globalAlpha=0.55;ctx.fillStyle=c.dark;ctx.fillText(pos,5,8);
+  ctx.globalAlpha=0.92;ctx.fillStyle=c.main;ctx.fillText(pos,0,0);
+  ctx.globalAlpha=0.07;ctx.fillStyle=c.main;
+  for(let i=0;i<12;i++){
+    const y=-size*.5+i*size*.09;
+    ctx.fillRect(-size*.6+srand(i*19+pos)*size*.25,y,size*1.2-srand(i*37+pos)*size*.35,1.5);
   }
-
-  ctx.globalAlpha=1;
-  ctx.restore();
+  ctx.globalAlpha=1;ctx.restore();
 }
 
 // ─── TAPE STRIP ────────────────────────────────────────────────────────────
-function drawTape(ctx, text, cx, cy, width, rot, alpha){
+function drawTape(ctx,text,cx,cy,width,rot){
   ctx.save();
-  ctx.globalAlpha=alpha;
-  ctx.translate(cx,cy);
-  ctx.rotate(rot*Math.PI/180);
-
-  const hw=width/2, hh=36;
-
-  // Torn irregular tape shape
-  ctx.shadowColor='rgba(0,0,0,0.55)';ctx.shadowBlur=14;ctx.shadowOffsetY=5;
+  ctx.translate(cx,cy);ctx.rotate(rot*Math.PI/180);
+  const hw=width/2,hh=38;
+  ctx.shadowColor='rgba(0,0,0,0.6)';ctx.shadowBlur=14;ctx.shadowOffsetY=6;
   ctx.fillStyle='#e2d9be';
   ctx.beginPath();
-  // Top edge — torn
-  ctx.moveTo(-hw,  -hh+srand(1)*8);
-  ctx.lineTo(-hw*.6,-hh-srand(2)*6);
-  ctx.lineTo(-hw*.2,-hh+srand(3)*10);
-  ctx.lineTo( hw*.2,-hh-srand(4)*6);
-  ctx.lineTo( hw*.6,-hh+srand(5)*8);
-  ctx.lineTo( hw,   -hh+srand(6)*6);
-  // Right edge
-  ctx.lineTo(hw+srand(7)*6, hh-srand(8)*4);
-  // Bottom edge — torn
-  ctx.lineTo( hw*.6, hh+srand(9)*6);
-  ctx.lineTo( hw*.2, hh-srand(10)*8);
-  ctx.lineTo(-hw*.2, hh+srand(11)*6);
-  ctx.lineTo(-hw*.6, hh-srand(12)*6);
-  ctx.lineTo(-hw,    hh+srand(13)*4);
-  // Left edge
-  ctx.lineTo(-hw-srand(14)*5,-hh+srand(15)*8);
-  ctx.closePath();
-  ctx.fill();
+  ctx.moveTo(-hw,   -hh+srand(1)*8);
+  ctx.lineTo(-hw*.5,-hh-srand(2)*7);
+  ctx.lineTo(0,     -hh+srand(3)*10);
+  ctx.lineTo( hw*.5,-hh-srand(4)*6);
+  ctx.lineTo( hw,   -hh+srand(5)*7);
+  ctx.lineTo( hw+srand(6)*6, hh-srand(7)*4);
+  ctx.lineTo( hw*.5, hh+srand(8)*7);
+  ctx.lineTo(0,      hh-srand(9)*9);
+  ctx.lineTo(-hw*.5, hh+srand(10)*6);
+  ctx.lineTo(-hw,    hh-srand(11)*5);
+  ctx.lineTo(-hw-srand(12)*5,-hh+srand(13)*8);
+  ctx.closePath();ctx.fill();
   ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetY=0;
-
-  // Texture lines
-  ctx.strokeStyle='rgba(160,148,120,0.35)';ctx.lineWidth=1;
-  for(let l=-hh+10;l<hh;l+=8){
+  ctx.strokeStyle='rgba(155,143,115,0.35)';ctx.lineWidth=1;
+  for(let l=-hh+11;l<hh;l+=9){
     ctx.beginPath();ctx.moveTo(-hw+6,l);ctx.lineTo(hw-6,l);ctx.stroke();
   }
-
-  // Driver name
-  let fs=34;
+  let fs=36;
   ctx.font=`${fs}px 'Permanent Marker',cursive`;
   const maxW=width*.8;
-  while(ctx.measureText(text).width>maxW&&fs>16){
-    fs--;ctx.font=`${fs}px 'Permanent Marker',cursive`;
-  }
-  ctx.fillStyle='#1a1208';
-  ctx.textAlign='center';ctx.textBaseline='middle';
+  while(ctx.measureText(text).width>maxW&&fs>16){fs--;ctx.font=`${fs}px 'Permanent Marker',cursive`;}
+  ctx.fillStyle='#1a1208';ctx.textAlign='center';ctx.textBaseline='middle';
   ctx.fillText(text,0,2);
-
   ctx.restore();
 }
 
 // ─── TEAM LOGO ─────────────────────────────────────────────────────────────
-function drawLogo(ctx, team, cx, cy, size, rot, alpha){
+function drawLogo(ctx,team,cx,cy,size,rot){
   const f=LOGO_FILES[team];
   const img=f?imgCache[BASE+'logos/'+f]:null;
-  ctx.save();ctx.globalAlpha=alpha;
+  ctx.save();
   ctx.translate(cx,cy);ctx.rotate(rot*Math.PI/180);
   if(img){
-    const scale=Math.min(size/img.width,size/img.height)*.9;
-    const dw=img.width*scale,dh=img.height*scale;
-    ctx.shadowColor='rgba(0,0,0,0.7)';ctx.shadowBlur=16;ctx.shadowOffsetY=4;
-    ctx.drawImage(img,-dw/2,-dh/2,dw,dh);
+    const sc=Math.min(size/img.width,size/img.height)*.92;
+    ctx.shadowColor='rgba(0,0,0,0.75)';ctx.shadowBlur=18;ctx.shadowOffsetY=5;
+    ctx.drawImage(img,-img.width*sc/2,-img.height*sc/2,img.width*sc,img.height*sc);
     ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetY=0;
   } else {
     const tc=TEAM_COL[team]||'#888';
-    ctx.beginPath();ctx.arc(0,0,size*.42,0,Math.PI*2);
+    ctx.beginPath();ctx.arc(0,0,size*.44,0,Math.PI*2);
     ctx.fillStyle='rgba(0,0,0,0.5)';ctx.fill();
     ctx.strokeStyle=tc;ctx.lineWidth=3;ctx.stroke();
-    const init=team.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,3);
     ctx.fillStyle=tc;ctx.font=`900 ${size*.32}px 'Barlow Condensed',sans-serif`;
-    ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(init,0,1);
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(team.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,3),0,1);
   }
   ctx.restore();
 }
 
-// ─── THUMBNAIL CARD ────────────────────────────────────────────────────────
-function renderThumb(ctx, info, t){
-  // t: 0 = static thumbnail, 0→1 = elements animating off at end
-  drawBg(ctx, null, 0);
+// ─── ANIMATION TRANSFORMS ──────────────────────────────────────────────────
+// Returns {tx,ty,rot,sx,sy,alpha} for a given animation style and progress p (0→1 in, reversed for out)
+function getAnimTransform(style, p, idx){
+  // p=0 = not yet visible, p=1 = fully in place
+  switch(style){
 
-  // Paper logo — slides in from top
-  const paperP=easeOut5(clamp(t*T_THUMB/0.4,0,1));
-  const paperOut=t>0.75?easeIO2((t-0.75)/0.25):0;
-  drawPaperLogo(ctx, paperP*(1-paperOut));
+    case 'stomp': {
+      // Drops from above, squashes on landing
+      const ep=easeOut5(p);
+      const squash=p<0.85?1:1+(Math.sin((p-0.85)/0.15*Math.PI)*0.18); // slight squash at landing
+      return {tx:0, ty:(1-ep)*-220, rot:0, sx:squash>1?1/squash:1, sy:squash, alpha:Math.min(p*3,1)};
+    }
 
-  // Season + Race — stencil, centred
-  const textP=easeOut3(clamp((t*T_THUMB-0.15)/0.4,0,1));
-  const textOut=t>0.75?easeIO2((t-0.75)/0.25):0;
-  const textAlpha=textP*(1-textOut);
+    case 'pop': {
+      // Scale from 0 with overshoot bounce
+      const ep=easeOutBack(p);
+      return {tx:0, ty:0, rot:0, sx:ep, sy:ep, alpha:Math.min(p*4,1)};
+    }
 
-  ctx.save();
-  ctx.globalAlpha=textAlpha;
-  ctx.textAlign='center';ctx.textBaseline='top';
-  ctx.shadowColor='rgba(0,0,0,0.95)';ctx.shadowBlur=14;ctx.shadowOffsetY=3;
+    case 'tumble': {
+      // Spins and falls into place
+      const ep=easeOut3(p);
+      const startRot=[25,-30,20][idx]||20;
+      return {tx:(1-ep)*[180,-180,140][idx]||0, ty:(1-ep)*-80, rot:(1-ep)*startRot, sx:1, sy:1, alpha:Math.min(p*2.5,1)};
+    }
 
-  ctx.font=`110px 'Black Ops One',cursive`;
-  ctx.fillStyle='#ccc8a8';
-  ctx.fillText(`SEASON ${info.season}`, W/2, 310);
+    case 'succession': {
+      // Elastic slide from left, each triggered by previous
+      const ep=easeOutBack(p);
+      return {tx:(1-ep)*-300, ty:0, rot:0, sx:1, sy:1, alpha:Math.min(p*3,1)};
+    }
 
-  ctx.font=`96px 'Black Ops One',cursive`;
-  ctx.fillStyle='#b8b498';
-  ctx.fillText(`RACE ${info.raceNum}`, W/2, 435);
-
-  // Track name — big Boogaloo, white, lower section
-  const trackP=easeOut5(clamp((t*T_THUMB-0.35)/0.45,0,1));
-  const trackOut=t>0.75?easeIO2((t-0.75)/0.25):0;
-  ctx.globalAlpha=trackP*(1-trackOut);
-  ctx.shadowBlur=22;
-
-  let tfs=150;
-  ctx.font=`${tfs}px 'Boogaloo',cursive`;
-  while(ctx.measureText(info.track.toUpperCase()).width>W+80&&tfs>70){
-    tfs--;ctx.font=`${tfs}px 'Boogaloo',cursive`;
+    default:
+      return {tx:0,ty:0,rot:0,sx:1,sy:1,alpha:p};
   }
-  ctx.fillStyle='#ffffff';
-  ctx.textBaseline='middle';
-  ctx.fillText(info.track.toUpperCase(), W/2, 730);
-
-  // Race Results — bottom stencil
-  const rrP=easeOut3(clamp((t*T_THUMB-0.55)/0.35,0,1));
-  const rrOut=t>0.75?easeIO2((t-0.75)/0.25):0;
-  ctx.globalAlpha=rrP*(1-rrOut);
-  ctx.font=`72px 'Black Ops One',cursive`;
-  ctx.fillStyle='#ccc8a8';
-  ctx.textBaseline='bottom';
-  ctx.shadowBlur=14;
-  ctx.fillText('RACE RESULTS', W/2, H-100);
-
-  ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetY=0;
-  ctx.restore();
 }
 
-// ─── RESULTS CARD ──────────────────────────────────────────────────────────
-function renderResults(ctx, div, info, t){
-  drawBg(ctx, div.tint, 0.2);
-
-  const dur=T_RESULTS;
-  const env=easeOut3(clamp(t/0.06,0,1))*(t>0.9?easeIO2(1-(t-0.9)/0.1):1);
-
-  // Paper logo — always present, static
-  drawPaperLogo(ctx, env*0.9);
-
-  // Season + Race header (smaller, top right)
+function applyTransform(ctx,cx,cy,tr){
   ctx.save();
-  ctx.globalAlpha=env;
-  ctx.textAlign='right';ctx.textBaseline='top';
-  ctx.shadowColor='rgba(0,0,0,0.95)';ctx.shadowBlur=12;ctx.shadowOffsetY=2;
+  ctx.globalAlpha=clamp(tr.alpha,0,1);
+  ctx.translate(cx+tr.tx, cy+tr.ty);
+  if(tr.rot) ctx.rotate(tr.rot*Math.PI/180);
+  if(tr.sx!==1||tr.sy!==1) ctx.scale(tr.sx,tr.sy);
+  ctx.translate(-cx,-cy);
+}
 
-  ctx.font=`58px 'Black Ops One',cursive`;
-  ctx.fillStyle='#ccc8a8';
-  ctx.fillText(`SEASON ${info.season}`, W-40, 50);
+// ─── PLACEMENT POSITIONS ───────────────────────────────────────────────────
+// Fixed canvas positions for each placement element
+const POS_DATA=[
+  { // P1 — left side
+    numX:115,  numY:680, numSz:120, numRot:-5,
+    logoX:270, logoY:660, logoSz:110, logoRot:5,
+    tapeX:310, tapeY:775, tapeW:450, tapeRot:-3,
+  },
+  { // P2 — right side
+    numX:610,  numY:890, numSz:110, numRot:4,
+    logoX:465, logoY:872, logoSz:102, logoRot:-6,
+    tapeX:390, tapeY:980, tapeW:430, tapeRot:2.5,
+  },
+  { // P3 — left side
+    numX:110,  numY:1080, numSz:104, numRot:-6,
+    logoX:255, logoY:1064, logoSz:96,  logoRot:6,
+    tapeX:295, tapeY:1162, tapeW:415, tapeRot:-3.5,
+  },
+];
 
-  ctx.font=`46px 'Black Ops One',cursive`;
-  ctx.fillStyle='#b0ac8c';
-  ctx.fillText(`RACE ${info.raceNum}`, W-40, 120);
+// ─── RENDER DIVISION SEGMENT ───────────────────────────────────────────────
+function renderDivSeg(ctx, div, info, t, isFirstDiv){
+  // t is absolute time within this division's segment
 
-  // Track name
+  drawBg(ctx, div.tint, 0.18);
+  drawPaperLogo(ctx, 1);
+
+  const anim=div.anim;
+  const FADE_DUR=0.35; // duration of merge fade transitions
+
+  // ── Permanent text: Season, Race, Location ──
+  // These slide in once and stay for the entire video
+  // For first div they animate in, subsequent divs they're already present
+  const seasonP  = isFirstDiv ? easeOut3(progress(t, TM.SEASON,   FADE_DUR)) : 1;
+  const raceP    = isFirstDiv ? easeOut3(progress(t, TM.RACE,     FADE_DUR)) : 1;
+  const locationP= isFirstDiv ? easeOut3(progress(t, TM.LOCATION, FADE_DUR)) : 1;
+
   ctx.textAlign='center';ctx.textBaseline='top';
-  ctx.shadowBlur=18;
-  let tfs=110;
-  ctx.font=`${tfs}px 'Boogaloo',cursive`;
-  while(ctx.measureText(info.track.toUpperCase()).width>W+60&&tfs>55){
-    tfs--;ctx.font=`${tfs}px 'Boogaloo',cursive`;
+
+  // Season — from left
+  drawMergeText(ctx,`SEASON ${info.season}`, W/2, 50,
+    `68px 'PunkKid',cursive`, '#ccc8a8', seasonP, 1);
+
+  // Race — from right
+  drawMergeText(ctx,`RACE ${info.raceNum}`, W/2, 132,
+    `58px 'PunkKid',cursive`, '#b8b498', raceP, -1);
+
+  // Location — from left, angled, Paint Rough font
+  ctx.save();
+  ctx.globalAlpha=locationP;
+  const slideX=(1-easeOut3(locationP))*-160;
+  ctx.translate(slideX,0);
+  ctx.translate(W/2, 218);
+  ctx.rotate(-4*Math.PI/180); // angled like in mockup
+  let tfs=130;
+  ctx.font=`${tfs}px 'PaintRough',cursive`;
+  while(ctx.measureText(info.track.toUpperCase()).width>W-30&&tfs>55){
+    tfs--;ctx.font=`${tfs}px 'PaintRough',cursive`;
   }
+  ctx.shadowColor='rgba(0,0,0,0.95)';ctx.shadowBlur=20;ctx.shadowOffsetY=4;
   ctx.fillStyle='#ffffff';
-  ctx.fillText(info.track.toUpperCase(), W/2, 200);
-
-  // Division + Race type
-  ctx.font=`42px 'Black Ops One',cursive`;
-  ctx.fillStyle='#b0ac8c';
-  ctx.shadowBlur=10;
-  ctx.fillText(`DIVISION ${div.num}`, W/2, 200+tfs+10);
-
-  ctx.font=`32px 'Black Ops One',cursive`;
-  ctx.fillStyle='#908c70';
-  ctx.fillText(info.raceType, W/2, 200+tfs+62);
-
-  ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetY=0;
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(info.track.toUpperCase(),0,0);
   ctx.restore();
 
-  // ── Driver entries ──
-  // Matching the mockup layout:
-  // P1: num left, logo right of num, tape below — left side
-  // P2: logo left-centre, num right of logo, tape below — right side  
-  // P3: num left, logo right, tape below — left side
+  // ── Division label + race type — merge in at 3.5s, exit at 10s ──
+  // Merge in
+  const divInP  = easeOut3(progress(t, TM.DIV,  FADE_DUR));
+  // Exit progress (10s → 10.35s)
+  const divOutP = easeIO2(progress(t, TM.EXIT, FADE_DUR));
+  const divAlpha= clamp(divInP - divOutP, 0, 1);
 
-  const hdrBottom = 200+tfs+110; // where header ends
+  const divY = 218 + tfs*0.6 + 50;
 
-  const entries=[
-    {
-      pos:1,
-      numX:105,  numY:hdrBottom+100, numSize:110, numRot:-4,
-      logoX:250, logoY:hdrBottom+85,  logoSize:100, logoRot:4,
-      tapeX:300, tapeY:hdrBottom+185, tapeW:430,   tapeRot:-2.5,
-      delay:0.06, slideDir:-1,
-    },
-    {
-      pos:2,
-      numX:590,  numY:hdrBottom+290, numSize:100, numRot:3,
-      logoX:450, logoY:hdrBottom+278, logoSize:95,  logoRot:-5,
-      tapeX:390, tapeY:hdrBottom+370, tapeW:410,   tapeRot:2,
-      delay:0.24, slideDir:1,
-    },
-    {
-      pos:3,
-      numX:100,  numY:hdrBottom+480, numSize:95,  numRot:-5,
-      logoX:235, logoY:hdrBottom+468, logoSize:88,  logoRot:5,
-      tapeX:285, tapeY:hdrBottom+550, tapeW:400,   tapeRot:-3,
-      delay:0.42, slideDir:-1,
-    },
-  ];
+  // Division — from right
+  drawMergeText(ctx,`DIVISION ${div.num}`, W/2, divY,
+    `48px 'PunkKid',cursive`, '#b0ac8c', divAlpha, -1);
 
-  entries.forEach(e=>{
-    const rp=Math.max(0,(t*dur-e.delay)/0.38);
-    const slideAlpha=Math.min(rp*2.5,1)*env;
-    const slideX=(1-easeOut5(Math.min(rp,1)))*e.slideDir*420;
-    if(slideAlpha<=0) return;
+  // Race type — from left
+  drawMergeText(ctx, info.raceType, W/2, divY+62,
+    `36px 'PunkKid',cursive`, '#908c70', divAlpha, 1);
 
-    ctx.save();
-    ctx.translate(slideX,0);
-    ctx.globalAlpha=slideAlpha;
+  // ── Placement elements — animated in/out ──
+  // Exit: all together at TM.EXIT, over FADE_DUR
+  const exitP=easeIO2(progress(t, TM.EXIT, FADE_DUR));
 
-    drawSprayNum(ctx, e.pos, e.numX, e.numY, e.numSize, e.numRot);
-    drawLogo(ctx, div.podium[e.pos-1].team, e.logoX, e.logoY, e.logoSize, e.logoRot, 1);
-    drawTape(ctx, div.podium[e.pos-1].name, e.tapeX, e.tapeY, e.tapeW, e.tapeRot, 1);
+  const numTimes  =[TM.NUM1,  TM.NUM2,  TM.NUM3 ];
+  const logoTimes =[TM.LOGO1, TM.LOGO2, TM.LOGO3];
+  const tapeTimes =[TM.TAPE1, TM.TAPE2, TM.TAPE3];
 
-    ctx.restore();
+  [0,1,2].forEach(idx=>{
+    const pd=POS_DATA[idx];
+    const pos=idx+1;
+
+    // Numbers
+    const numP=easeOut5(progress(t,numTimes[idx],0.3));
+    const numFinal=clamp(numP-exitP,0,1);
+    if(numFinal>0){
+      const tr=getAnimTransform(anim,numP>0?clamp(numP,0,1):0,idx);
+      // For exit, reverse the transform
+      const trFinal=exitP>0
+        ? getAnimTransform(anim,clamp(1-exitP,0,1),idx)
+        : tr;
+      applyTransform(ctx,pd.numX,pd.numY,{...trFinal,alpha:numFinal});
+      drawSprayNum(ctx,pos,pd.numX,pd.numY,pd.numSz,pd.numRot);
+      ctx.restore();
+    }
+
+    // Logos
+    const logoP=easeOut5(progress(t,logoTimes[idx],0.3));
+    const logoFinal=clamp(logoP-exitP,0,1);
+    if(logoFinal>0){
+      const trFinal=exitP>0
+        ? getAnimTransform(anim,clamp(1-exitP,0,1),idx)
+        : getAnimTransform(anim,clamp(logoP,0,1),idx);
+      applyTransform(ctx,pd.logoX,pd.logoY,{...trFinal,alpha:logoFinal});
+      drawLogo(ctx,div.podium[idx].team,pd.logoX,pd.logoY,pd.logoSz,pd.logoRot);
+      ctx.restore();
+    }
+
+    // Tapes
+    const tapeP=easeOut5(progress(t,tapeTimes[idx],0.4));
+    const tapeFinal=clamp(tapeP-exitP,0,1);
+    if(tapeFinal>0){
+      const trFinal=exitP>0
+        ? getAnimTransform(anim,clamp(1-exitP,0,1),idx)
+        : getAnimTransform(anim,clamp(tapeP,0,1),idx);
+      applyTransform(ctx,pd.tapeX,pd.tapeY,{...trFinal,alpha:tapeFinal});
+      drawTape(ctx,div.podium[idx].name,pd.tapeX,pd.tapeY,pd.tapeW,pd.tapeRot);
+      ctx.restore();
+    }
   });
 }
 
 // ─── MASTER RENDERER ───────────────────────────────────────────────────────
+// Total structure:
+// 0 → TM.BREATH: background + paper logo only (first div)
+// Then divs play back to back, each TM.SEG_DUR long
+// BUT: season/race/location only animate in on the first div segment
+
 function renderFrame(ctx, info, gT){
-  if(gT<T_THUMB){
-    renderThumb(ctx, info, gT/T_THUMB);
-    return;
-  }
-  const divT=gT-T_THUMB;
-  const divIdx=Math.floor(divT/T_RESULTS);
-  const segT=(divT%T_RESULTS)/T_RESULTS;
+  // Which div segment are we in?
+  // First segment starts at 0
+  const divIdx=Math.floor(gT/TM.SEG_DUR);
+  const segT=gT%TM.SEG_DUR;
 
   if(divIdx>=info.divs.length){
-    drawBg(ctx, info.divs[info.divs.length-1].tint, 0.2);
+    // Past last div — hold bg
+    drawBg(ctx,info.divs[info.divs.length-1].tint,0.18);
+    drawPaperLogo(ctx,1);
     return;
   }
-  renderResults(ctx, info.divs[divIdx], info, segT);
+
+  renderDivSeg(ctx, info.divs[divIdx], info, segT, divIdx===0);
 }
 
-// ─── THUMBNAIL EXPORT ──────────────────────────────────────────────────────
-function saveThumbnail(canvas, info){
-  // Render static thumbnail frame
+// ─── THUMBNAIL ─────────────────────────────────────────────────────────────
+function saveThumbnail(canvas,info){
   const ctx=canvas.getContext('2d');
-  renderThumb(ctx, info, 0.5); // midpoint = fully loaded static frame
+  // Draw a fully static thumbnail — background, paper, all text fully in
+  drawBg(ctx,null,0);
+  drawPaperLogo(ctx,1);
+  ctx.textAlign='center';ctx.textBaseline='top';
+  drawMergeText(ctx,`SEASON ${info.season}`,W/2,50,`68px 'PunkKid',cursive`,'#ccc8a8',1,1);
+  drawMergeText(ctx,`RACE ${info.raceNum}`,W/2,132,`58px 'PunkKid',cursive`,'#b8b498',1,-1);
+  // Location angled
+  ctx.save();
+  ctx.translate(W/2,240);ctx.rotate(-4*Math.PI/180);
+  ctx.font=`130px 'PaintRough',cursive`;
+  let tfs=130;
+  while(ctx.measureText(info.track.toUpperCase()).width>W-30&&tfs>55){tfs--;ctx.font=`${tfs}px 'PaintRough',cursive`;}
+  ctx.shadowColor='rgba(0,0,0,0.95)';ctx.shadowBlur=20;ctx.shadowOffsetY=4;
+  ctx.fillStyle='#ffffff';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(info.track.toUpperCase(),0,0);
+  ctx.restore();
+  drawMergeText(ctx,'RACE RESULTS',W/2,H-110,`68px 'PunkKid',cursive`,'#ccc8a8',1,1);
+
   canvas.toBlob(blob=>{
     const url=URL.createObjectURL(blob);
     const a=document.createElement('a');
     a.href=url;
-    a.download=`F1XL_S${info.season}_R${info.raceNum}_${info.track.replace(/\s+/g,'_')}_Thumbnail.png`;
+    a.download=`F1XL_S${info.season}_R${info.raceNum}_${info.track.replace(/\s+/g,'_')}_Thumb.png`;
     document.body.appendChild(a);a.click();document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(url),3000);
   },'image/png');
@@ -591,6 +647,10 @@ async function startGenerate(){
 
   const data=getFormData();
   await preloadAll(data.divs);
+
+  // Wait for custom fonts to load
+  await document.fonts.ready;
+
   setProgress(12,'Setting up audio...');
 
   const audioCtx=new(window.AudioContext||window.webkitAudioContext)();
@@ -599,19 +659,19 @@ async function startGenerate(){
   try{
     const resp=await fetch(MUSIC_SRC);
     const buf=await resp.arrayBuffer();
-    const musicBuf=await audioCtx.decodeAudioData(buf);
+    const mbuf=await audioCtx.decodeAudioData(buf);
     musicSource=audioCtx.createBufferSource();
-    musicSource.buffer=musicBuf;
+    musicSource.buffer=mbuf;
     musicSource.loop=true;
   }catch(e){console.warn('Music:',e);}
 
-  setProgress(18,'Starting render...');
+  setProgress(18,'Saving thumbnail...');
+  saveThumbnail(document.getElementById('renderCanvas'),data);
+
+  setProgress(22,'Starting render...');
 
   const canvas=document.getElementById('renderCanvas');
   const ctx=canvas.getContext('2d');
-
-  // Save thumbnail first
-  saveThumbnail(canvas, data);
 
   const dest=audioCtx.createMediaStreamDestination();
   if(musicSource){musicSource.connect(dest);musicSource.start(0);}
@@ -630,7 +690,7 @@ async function startGenerate(){
   recorder.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data);};
   recorder.start(100);
 
-  const totalDur=T_THUMB+data.divs.length*T_RESULTS;
+  const totalDur=data.divs.length*TM.SEG_DUR;
   const totalFrames=Math.ceil(totalDur*FPS);
   let frame=0;
 
@@ -640,11 +700,9 @@ async function startGenerate(){
       renderFrame(ctx,data,frame/FPS);
       frame++;
       if(frame%20===0){
-        const pct=18+Math.round((frame/totalFrames)*76);
-        const gT=frame/FPS;
-        const stage=gT<T_THUMB?'Thumbnail card':
-          `Division ${Math.min(Math.floor((gT-T_THUMB)/T_RESULTS)+1,data.divs.length)} of ${data.divs.length}`;
-        setProgress(pct,`${stage} · Frame ${frame}/${totalFrames}`);
+        const pct=22+Math.round((frame/totalFrames)*72);
+        const divIdx=Math.min(Math.floor((frame/FPS)/TM.SEG_DUR),data.divs.length-1);
+        setProgress(pct,`Division ${divIdx+1} of ${data.divs.length} · Frame ${frame}/${totalFrames}`);
       }
       requestAnimationFrame(next);
     }
@@ -659,7 +717,7 @@ async function startGenerate(){
 
   const blob=new Blob(chunks,{type:mime});
   const fname=`F1XL_S${data.season}_R${data.raceNum}_${data.track.replace(/\s+/g,'_')}_Results.webm`;
-  setProgress(100,'Done — downloading both files!');
+  setProgress(100,'Done — video + thumbnail downloaded!');
 
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
