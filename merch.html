@@ -1,161 +1,167 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Merch | F1XL</title>
-  <link rel="stylesheet" href="style.css">
-  <style>
-    /* ── Merch page specific ── */
-    .merch-hero {
-      text-align: center;
-      padding: 3rem 1rem 2rem;
-      position: relative;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Merch | F1XL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --green:#3DCC47;--teal:#5ECFCF;--red:#E10600;
+    --black:#111816;--dark:#161d1b;--dark2:#1a2320;--dark3:#1e2a27;
+    --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+    --text:#ffffff;--text-muted:rgba(255,255,255,0.60);--text-faint:rgba(255,255,255,0.30);
+    --gold:#E8B84B;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--black);color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;}
+  nav{background:rgba(17,24,22,0.97);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;backdrop-filter:blur(8px);}
+  .nav-left{display:flex;align-items:center;flex-shrink:0;}
+  .nav-logo{display:flex;align-items:center;height:40px;text-decoration:none;}
+  .nav-logo img{height:34px;width:auto;display:block;}
+  .nav-links{display:flex;align-items:stretch;height:56px;}
+  .nav-item{position:relative;display:flex;align-items:stretch;}
+  .nav-item>a,.nav-item>button{color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:500;letter-spacing:0.5px;padding:0 13px;display:flex;align-items:center;gap:4px;border-bottom:2px solid transparent;border-top:none;border-left:none;border-right:none;background:none;cursor:pointer;font-family:'Barlow',sans-serif;text-transform:uppercase;transition:color 0.2s;white-space:nowrap;}
+  .nav-item>a:hover,.nav-item>button:hover{color:var(--text);}
+  .nav-item>a.active{color:var(--text);border-bottom-color:var(--green);}
+  .nav-chevron{font-size:8px;opacity:0.5;transition:transform 0.2s;}
+  .nav-item:hover .nav-chevron{transform:rotate(180deg);}
+  .nav-dropdown{display:none;position:absolute;top:100%;left:0;background:#141a18;border:1px solid var(--border2);border-top:2px solid var(--green);border-radius:0 0 6px 6px;min-width:180px;padding:6px 0;z-index:300;}
+  .nav-item:hover .nav-dropdown{display:block;}
+  .nav-dropdown a{display:block;padding:9px 16px;color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;transition:color 0.15s,background 0.15s;white-space:nowrap;}
+  .nav-dropdown a:hover{color:var(--text);background:rgba(255,255,255,0.05);}
+  .nav-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:8px;background:none;border:none;}
+  .nav-hamburger span{display:block;width:22px;height:2px;background:var(--text-muted);border-radius:2px;transition:all 0.25s;}
+  .nav-hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+  .nav-hamburger.open span:nth-child(2){opacity:0;}
+  .nav-hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+  .mobile-menu{display:none;position:fixed;top:56px;left:0;right:0;background:#141a18;border-bottom:1px solid var(--border2);z-index:199;padding:12px 0;max-height:calc(100vh - 56px);overflow-y:auto;}
+  .mobile-menu.open{display:block;}
+  .mob-section{font-size:10px;letter-spacing:2px;color:var(--text-faint);padding:12px 24px 4px;text-transform:uppercase;}
+  .mobile-menu a{display:block;padding:10px 24px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;}
+  .mobile-menu a:hover{color:var(--text);}
+  @media(max-width:900px){.nav-links{display:none;}.nav-hamburger{display:flex;}}
 
-    .merch-hero h1 {
-      font-size: 2.8rem;
-      font-weight: 900;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--text, #f0ebe4);
-      margin-bottom: 0.5rem;
-    }
+  /* PAGE */
+  .page-header{padding:36px 24px 28px;border-bottom:1px solid var(--border);}
+  .page-label{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--text-faint);margin-bottom:10px;}
+  .page-title{font-family:'Barlow Condensed',sans-serif;font-size:clamp(32px,5vw,52px);font-weight:900;text-transform:uppercase;letter-spacing:1px;line-height:1;margin-bottom:8px;}
+  .page-title em{color:var(--green);font-style:normal;}
+  .page-subtitle{font-size:14px;color:var(--text-muted);max-width:500px;line-height:1.6;}
 
-    .merch-hero p {
-      font-size: 1rem;
-      color: var(--muted, rgba(240,235,228,0.5));
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      margin-bottom: 0;
-    }
+  .shop-wrap{padding:32px 24px 80px;}
 
-    .merch-divider {
-      width: 60px;
-      height: 3px;
-      background: var(--accent, #cc1e1e);
-      margin: 1rem auto 0;
-      border-radius: 2px;
-    }
+  .shop-loading{text-align:center;padding:80px 24px;color:var(--text-faint);font-size:12px;letter-spacing:2px;text-transform:uppercase;}
+  .shop-loading::after{content:'';display:block;width:32px;height:2px;background:var(--green);margin:16px auto 0;animation:ld 1.2s ease-in-out infinite;}
+  @keyframes ld{0%,100%{transform:scaleX(0.3);opacity:0.3;}50%{transform:scaleX(1);opacity:1;}}
 
-    /* Spreadshop container */
-    #f1xl-spreadshop {
-      min-height: 600px;
-      padding: 1rem 0 3rem;
-    }
+  #f1xl-shop{min-height:500px;font-family:'Barlow',sans-serif;}
 
-    /* Loading state */
-    .shop-loading {
-      text-align: center;
-      padding: 4rem 1rem;
-      color: var(--muted, rgba(240,235,228,0.4));
-      font-size: 0.85rem;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-    }
-
-    /* Override Spreadshop fonts to match site */
-    #f1xl-spreadshop * {
-      font-family: inherit !important;
-    }
-
-    @media (max-width: 900px) {
-      .merch-hero h1 { font-size: 2rem; }
-    }
-  </style>
+  footer{border-top:1px solid var(--border);padding:20px 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;}
+  .footer-logo{background:var(--green);color:#000;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;padding:4px 9px;border-radius:3px;}
+  .footer-text{font-size:11px;color:var(--text-faint);}
+</style>
 </head>
 <body>
 
-  <!-- ── NAV (matching site structure) ── -->
-  <nav class="navbar">
-    <a href="index.html" class="nav-logo">
-      <img src="TRANSPARENT.png" alt="F1XL" height="34">
-    </a>
-    <div class="nav-links">
-      <a href="index.html">Home</a>
+<nav>
+  <div class="nav-left">
+    <a href="index.html" class="nav-logo"><img src="TRANSPARENT.png" alt="F1XL"></a>
+  </div>
+  <div class="nav-links">
+    <div class="nav-item"><a href="index.html">Home</a></div>
+    <div class="nav-item">
+      <button>Standings <span class="nav-chevron">▼</span></button>
       <div class="nav-dropdown">
-        <a href="#">Standings ▾</a>
-        <div class="dropdown-menu">
-          <a href="standings.html">Current</a>
-          <a href="results.html">Results</a>
-          <a href="past-seasons.html">Past Seasons</a>
-          <a href="asr.html">ASR</a>
-        </div>
+        <a href="standings.html">Current Season</a>
+        <a href="results.html">Results</a>
+        <a href="past-seasons.html">Past Seasons</a>
+        <a href="asr.html">All Star Race</a>
       </div>
-      <a href="teams.html">Teams</a>
-      <div class="nav-dropdown">
-        <a href="#">Race Tickets ▾</a>
-        <div class="dropdown-menu">
-          <a href="submit-ticket.html">Submit</a>
-          <a href="ticket-outcomes.html">Outcomes</a>
-          <a href="drivers-licence.html">Licence</a>
-        </div>
-      </div>
-      <a href="schedule.html">Schedule</a>
-      <div class="nav-dropdown">
-        <a href="#">History ▾</a>
-        <div class="dropdown-menu">
-          <a href="hall-of-fame.html">Hall of Fame</a>
-          <a href="hall-of-records.html">Hall of Records</a>
-          <a href="track-records.html">Track Records</a>
-        </div>
-      </div>
-      <a href="applications.html">Applications</a>
-      <a href="league-rules.html">League Rules</a>
-      <a href="merch.html" class="nav-active">Merch</a>
     </div>
-    <!-- Mobile -->
-    <div class="mob-section">
-      <button class="mob-menu-btn" onclick="toggleMobileMenu()">☰</button>
+    <div class="nav-item"><a href="teams.html">Teams</a></div>
+    <div class="nav-item">
+      <button>Race Tickets <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown">
+        <a href="submit-ticket.html">Submit Ticket</a>
+        <a href="ticket-outcomes.html">Ticket Outcomes</a>
+        <a href="drivers-licence.html">Drivers Licence</a>
+      </div>
     </div>
-  </nav>
-
-  <div class="mob-menu" id="mobMenu">
-    <a href="index.html">Home</a>
-    <a href="standings.html">Standings</a>
-    <a href="results.html">Results</a>
-    <a href="past-seasons.html">Past Seasons</a>
-    <a href="teams.html">Teams</a>
-    <a href="submit-ticket.html">Submit Ticket</a>
-    <a href="ticket-outcomes.html">Ticket Outcomes</a>
-    <a href="drivers-licence.html">Drivers Licence</a>
-    <a href="schedule.html">Schedule</a>
-    <a href="hall-of-fame.html">Hall of Fame</a>
-    <a href="hall-of-records.html">Hall of Records</a>
-    <a href="applications.html">Applications</a>
-    <a href="league-rules.html">League Rules</a>
-    <a href="merch.html">Merch</a>
+    <div class="nav-item"><a href="schedule.html">Schedule</a></div>
+    <div class="nav-item">
+      <button>History <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown">
+        <a href="hall-of-fame.html">Hall of Fame</a>
+        <a href="hall-of-records.html">Hall of Records</a>
+        <a href="track-records.html">Track Records</a>
+      </div>
+    </div>
+    <div class="nav-item"><a href="applications.html">Applications</a></div>
+    <div class="nav-item"><a href="league-rules.html">League Rules</a></div>
+    <div class="nav-item"><a href="merch.html" class="active">Merch</a></div>
+    <a href="music.html" style="display:none"></a>
   </div>
+  <button class="nav-hamburger" id="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></button>
+</nav>
 
-  <!-- ── HERO ── -->
-  <div class="merch-hero">
-    <h1>F1XL Merch</h1>
-    <p>Rep the league</p>
-    <div class="merch-divider"></div>
+<div class="mobile-menu" id="mobile-menu">
+  <a href="index.html">Home</a>
+  <div class="mob-section">Standings</div>
+  <a href="standings.html">Current Season</a>
+  <a href="results.html">Results</a>
+  <a href="past-seasons.html">Past Seasons</a>
+  <a href="asr.html">All Star Race</a>
+  <a href="teams.html">Teams</a>
+  <div class="mob-section">Race Tickets</div>
+  <a href="submit-ticket.html">Submit Ticket</a>
+  <a href="ticket-outcomes.html">Ticket Outcomes</a>
+  <a href="drivers-licence.html">Drivers Licence</a>
+  <a href="schedule.html">Schedule</a>
+  <div class="mob-section">History</div>
+  <a href="hall-of-fame.html">Hall of Fame</a>
+  <a href="hall-of-records.html">Hall of Records</a>
+  <a href="track-records.html">Track Records</a>
+  <a href="applications.html">Applications</a>
+  <a href="league-rules.html">League Rules</a>
+  <a href="merch.html">Merch</a>
+</div>
+
+<div class="page-header">
+  <div class="page-label">F1XL Store</div>
+  <h1 class="page-title">Official <em>Merch</em></h1>
+  <p class="page-subtitle">Rep the league. All products printed and shipped on demand.</p>
+</div>
+
+<div class="shop-wrap">
+  <div id="f1xl-shop">
+    <div class="shop-loading">Loading shop</div>
   </div>
+</div>
 
-  <!-- ── SPREADSHOP EMBED ── -->
-  <div id="f1xl-spreadshop">
-    <div class="shop-loading">Loading shop...</div>
+<footer>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="footer-logo">F1XL</div>
+    <div class="footer-text">The UK's longest running F1 league · Est. 2010</div>
   </div>
+  <div class="footer-text">f1xl.co.uk</div>
+</footer>
 
-  <script>
-    var spread_shop_config = {
-      shopName: 'f1xlmerch',
-      prefix: 'https://f1xlmerch.myspreadshop.co.uk',
-      baseId: 'f1xl-spreadshop',
-      startToken: 'shop',
-    };
-  </script>
-  <script type="text/javascript" src="https://f1xlmerch.myspreadshop.co.uk/js/shopclient.nocache.js"></script>
-
-  <!-- Mobile menu toggle -->
-  <script>
-    function toggleMobileMenu(){
-      const m=document.getElementById('mobMenu');
-      m.style.display=m.style.display==='block'?'none':'block';
-    }
-  </script>
+<script>
+function toggleMenu(){
+  document.getElementById('hamburger').classList.toggle('open');
+  document.getElementById('mobile-menu').classList.toggle('open');
+}
+</script>
+<script>
+var spread_shop_config = {
+  shopName: 'f1xlmerch',
+  prefix: 'https://f1xlmerch.myspreadshop.co.uk',
+  baseId: 'f1xl-shop',
+};
+</script>
+<script type="text/javascript" src="https://f1xlmerch.myspreadshop.co.uk/js/shopclient.nocache.js"></script>
 
 </body>
 </html>
