@@ -391,19 +391,22 @@ function ccGenerate() {
 // TABLE VIDEO GENERATOR
 // ═══════════════════════════════════════════════════════════════════
 
-const TB_NUM_ROWS = 10;
+const TB_MAX_ROWS = 12; // maximum supported
+const TB_NUM_ROWS = 12; // build 12 form rows
 
 const TB_DEFAULT = [
-  {team:'Red Bull',    driver:'Driver 1',  pts:0},
-  {team:'Ferrari',     driver:'Driver 2',  pts:0},
-  {team:'Williams',    driver:'Driver 3',  pts:0},
-  {team:'Aston Martin',driver:'Driver 4',  pts:0},
-  {team:'McLaren',     driver:'Driver 5',  pts:0},
-  {team:'Racing Bull', driver:'Driver 6',  pts:0},
-  {team:'Mercedes',    driver:'Driver 7',  pts:0},
-  {team:'Haas',        driver:'Driver 8',  pts:0},
-  {team:'Alpine',      driver:'Driver 9',  pts:0},
-  {team:'Reserve',     driver:'Driver 10', pts:0},
+  {team:'Red Bull',    driver:'', pts:0},
+  {team:'Ferrari',     driver:'', pts:0},
+  {team:'Williams',    driver:'', pts:0},
+  {team:'Aston Martin',driver:'', pts:0},
+  {team:'McLaren',     driver:'', pts:0},
+  {team:'Racing Bull', driver:'', pts:0},
+  {team:'Mercedes',    driver:'', pts:0},
+  {team:'Haas',        driver:'', pts:0},
+  {team:'Alpine',      driver:'', pts:0},
+  {team:'Audi',        driver:'', pts:0},
+  {team:'Cadillac',    driver:'', pts:0},
+  {team:'Reserve',     driver:'', pts:0},
 ];
 
 function tbBuildRows(data) {
@@ -424,10 +427,14 @@ function tbBuildRows(data) {
 function tbGetData() {
   const rows = [];
   for (let i=0; i<TB_NUM_ROWS; i++) {
+    const driver = document.getElementById(`tb-r${i}driver`).value.trim();
+    const pts    = parseInt(document.getElementById(`tb-r${i}pts`).value) || 0;
+    // Only include rows that have a driver name OR points entered
+    if (!driver && pts === 0) continue;
     rows.push({
       team:   document.getElementById(`tb-r${i}team`).value,
-      driver: document.getElementById(`tb-r${i}driver`).value.trim() || 'TBC',
-      pts:    parseInt(document.getElementById(`tb-r${i}pts`).value) || 0,
+      driver: driver || 'TBC',
+      pts,
     });
   }
   return {
@@ -488,7 +495,7 @@ async function tbPopulate() {
     });
 
     // Find header row
-    let hIdx=-1, posCol=-1, teamCol=-1, ptsCol=-1, driverCol=-1;
+    let hIdx=-1, posCol=-1, teamCol=-1, ptsCol=-1, tpCol=-1;
     for(let i=0;i<rows.length;i++){
       const r=rows[i];
       const pi=r.findIndex(v=>(v||'').toLowerCase().startsWith('pos'));
@@ -497,8 +504,16 @@ async function tbPopulate() {
         teamCol=r.findIndex(v=>(v||'').toLowerCase()==='team');
         if(teamCol<0) teamCol=pi+1;
         ptsCol=r.findIndex(v=>(v||'').toLowerCase()==='points');
-        // Try to find a driver/tp column
-        driverCol=r.findIndex(v=>/(driver|principal|tp)/i.test(v||''));
+        // Look for Team Principal column — try common names
+        tpCol=r.findIndex(v=>/(team\s*principal|principal|tp\b)/i.test(v||''));
+        // If not found by name, take the last non-empty header column
+        if(tpCol<0){
+          for(let c=r.length-1;c>ptsCol;c--){
+            if((r[c]||'').trim() && isNaN(parseFloat((r[c]||'').trim()))){
+              tpCol=c; break;
+            }
+          }
+        }
         hIdx=i; break;
       }
     }
@@ -512,17 +527,19 @@ async function tbPopulate() {
       const ptsRaw=(r[ptsCol]||'').trim().replace(/,/g,'');
       if(!team||!ptsRaw) continue;
       const pts=Math.floor(parseFloat(ptsRaw))||0;
-      const driver=driverCol>=0?(r[driverCol]||'').trim():'';
-      data.push({team, driver, pts});
+      // Get TP name — ignore if it looks like a number (points bleed)
+      const tpRaw=tpCol>=0?(r[tpCol]||'').trim():'';
+      const tp=(!tpRaw||!isNaN(parseFloat(tpRaw)))?'':tpRaw;
+      data.push({team, driver:tp, pts});
     }
     data.sort((a,b)=>b.pts-a.pts);
 
     if(!data.length) throw new Error('No data found in sheet');
 
-    // Fill up to TB_NUM_ROWS
+    // Fill up to TB_MAX_ROWS, leave extras blank
     const filled=[];
-    for(let i=0;i<TB_NUM_ROWS;i++){
-      filled.push(data[i] || {team:'Reserve', driver:'—', pts:0});
+    for(let i=0;i<TB_MAX_ROWS;i++){
+      filled.push(data[i] || {team:TB_DEFAULT[i]?.team||'Reserve', driver:'', pts:0});
     }
 
     // Rebuild rows with populated data
@@ -574,9 +591,9 @@ async function tbPreloadLogos(rows) {
 }
 
 // ── Render ────────────────────────────────────────────────────────
-const FPS=30, W=1440, H=2560; // 2x resolution
-const T_HEADER=1.2, T_ROW_START=1.8, T_ROW_GAP=0.18, T_HOLD=2.5;
-const TOTAL_DUR = T_ROW_START + (TB_NUM_ROWS * T_ROW_GAP) + 0.6 + T_HOLD;
+const FPS=30, W=1440, H=2560;
+const T_HEADER=1.2, T_ROW_START=1.8, T_ROW_GAP=0.18, T_HOLD=10.0; // 10s hold
+const TOTAL_DUR = T_ROW_START + (12 * T_ROW_GAP) + 0.6 + T_HOLD;
 
 function easeOut3(t){return 1-Math.pow(1-Math.min(t,1),3);}
 function easeOut5(t){return 1-Math.pow(1-Math.min(t,1),5);}
@@ -593,17 +610,18 @@ function tbRenderFrame(ctx, data, t) {
   const CW=RW-ML-MR;
   const F1=f1FontLoaded?"'Formula1',sans-serif":"'Barlow Condensed',sans-serif";
 
-  // Available row space
-  const headerBottom = MT + 175*S;
-  const contentBottom = RH - MB;
-  const availForRows = contentBottom - headerBottom - 40*S;
-  const ROW_SPACING = Math.floor(availForRows / TB_NUM_ROWS);
-  const ROW_START_Y = headerBottom + 40*S;
+  const numRows = data.rows.length;
 
-  // Logo box: height = 70% of row content, max width = 2x height
+  // Available row space — table starts lower
+  const headerBottom = MT + 195*S;
+  const contentBottom = RH - MB;
+  const availForRows = contentBottom - headerBottom - 50*S;
+  const ROW_SPACING = Math.floor(availForRows / Math.max(numRows, 1));
+  const ROW_START_Y = headerBottom + 50*S + 40*S; // extra offset to push table down
+
   const LOGO_H = Math.floor(ROW_SPACING * 0.68);
   const LOGO_MAX_W = LOGO_H * 2;
-  const LOGO_COL_W = LOGO_MAX_W + 16*S; // column width reserved for logo
+  const LOGO_COL_W = LOGO_MAX_W + 16*S;
 
   ctx.fillStyle='#0d1117';
   ctx.fillRect(0,0,RW,RH);
@@ -616,56 +634,47 @@ function tbRenderFrame(ctx, data, t) {
   ctx.fillStyle='#e10600';
   ctx.fillRect(0,0,RW,4*S);
 
-  // ── Header ──
-  const hP=easeOut5(clamp(t/0.5,0,1));
-  const hSlide=(1-hP)*-50*S;
-  ctx.save();
-  ctx.globalAlpha=hP;
-  ctx.translate(0,hSlide);
+  // ── Header — staggered animation ──
+  // Each line has its own delay and slides in from alternating sides
+  const headerLines = [
+    { text:`SEASON ${data.season}`,             size:48*S, dir:1,  delay:0.05, color:'#ffffff' },
+    { text:`${data.gp.toUpperCase()} GRAND PRIX`, size:28*S, dir:-1, delay:0.35, color:'rgba(255,255,255,0.55)' },
+    { text:`ROUND ${data.round} / ${data.totalRounds}  |  ${data.date}  |  ${data.time}`, size:16*S, dir:1, delay:0.65, color:'rgba(255,255,255,0.35)' },
+  ];
 
-  ctx.font=`400 ${13*S}px ${F1}`;
-  ctx.fillStyle='#e10600';
-  ctx.textAlign='left';ctx.textBaseline='top';
-  ctx.fillText('F1XL  ·  OVERALL STANDINGS', ML, MT);
+  let lineY = MT + 22*S;
+  headerLines.forEach((line, i) => {
+    const p = easeOut5(clamp((t - line.delay) / 0.45, 0, 1));
+    if(p <= 0) return;
+    const slideX = (1-p) * line.dir * -180*S;
+    ctx.save();
+    ctx.globalAlpha = Math.min(p*2, 1);
+    ctx.translate(slideX, 0);
+    ctx.font=`400 ${line.size}px ${F1}`;
+    ctx.fillStyle = line.color;
+    ctx.textAlign='left'; ctx.textBaseline='top';
+    ctx.fillText(line.text, ML, lineY);
+    ctx.restore();
+    lineY += line.size + 10*S;
+  });
 
-  ctx.font=`400 ${48*S}px ${F1}`;
-  ctx.fillStyle='#ffffff';
-  ctx.fillText(`SEASON ${data.season}`, ML, MT+22*S);
-
-  ctx.font=`400 ${28*S}px ${F1}`;
-  ctx.fillStyle='rgba(255,255,255,0.55)';
-  ctx.fillText(`${data.gp.toUpperCase()} GRAND PRIX`, ML, MT+82*S);
-
-  ctx.font=`400 ${16*S}px ${F1}`;
-  ctx.fillStyle='rgba(255,255,255,0.35)';
-  ctx.fillText(`ROUND ${data.round} / ${data.totalRounds}`, ML, MT+126*S);
-  ctx.fillStyle='#e10600';
-  ctx.fillText('|', ML+152*S, MT+126*S);
-  ctx.fillStyle='rgba(255,255,255,0.35)';
-  ctx.fillText(data.date, ML+168*S, MT+126*S);
-  ctx.fillStyle='#e10600';
-  ctx.fillText('|', ML+310*S, MT+126*S);
-  ctx.fillStyle='rgba(255,255,255,0.35)';
-  ctx.fillText(data.time, ML+326*S, MT+126*S);
-  ctx.restore();
-
-  // Divider
-  const divP=easeOut3(clamp((t-0.4)/0.4,0,1));
-  if(divP>0){
-    ctx.save();ctx.globalAlpha=divP*0.2;
-    ctx.strokeStyle='#ffffff';ctx.lineWidth=S;
-    ctx.beginPath();ctx.moveTo(ML,MT+158*S);ctx.lineTo(RW-MR,MT+158*S);ctx.stroke();
+  // Divider — appears after header settles
+  const divP = easeOut3(clamp((t - 0.85) / 0.4, 0, 1));
+  if(divP > 0){
+    ctx.save(); ctx.globalAlpha=divP*0.2;
+    ctx.strokeStyle='#ffffff'; ctx.lineWidth=S;
+    ctx.beginPath(); ctx.moveTo(ML, MT+170*S); ctx.lineTo(RW-MR, MT+170*S); ctx.stroke();
     ctx.restore();
   }
 
-  // Col headers
-  const colHP=easeOut3(clamp((t-0.6)/0.35,0,1));
-  if(colHP>0){
-    ctx.save();ctx.globalAlpha=colHP*0.38;
+  // Col headers — appear just before rows
+  const colHP = easeOut3(clamp((t - (T_ROW_START-0.3)) / 0.35, 0, 1));
+  if(colHP > 0){
+    ctx.save(); ctx.globalAlpha=colHP*0.38;
     ctx.font=`400 ${12*S}px ${F1}`;
     ctx.fillStyle='#ffffff';
-    ctx.textAlign='left';ctx.textBaseline='middle';
-    const colY=ROW_START_Y-22*S;
+    ctx.textAlign='left'; ctx.textBaseline='middle';
+    const colY = ROW_START_Y - 22*S;
     const posColW = 56*S;
     ctx.fillText('POS', ML+8*S, colY);
     ctx.fillText('TEAM', ML+posColW+8*S, colY);
@@ -676,43 +685,43 @@ function tbRenderFrame(ctx, data, t) {
   }
 
   // ── Table rows ──
-  const maxPts=Math.max(...data.rows.map(r=>r.pts),1);
+  const maxPts = Math.max(...data.rows.map(r=>r.pts), 1);
   const posColW = 56*S;
 
-  data.rows.forEach((row,idx)=>{
-    const rowDelay=T_ROW_START+idx*T_ROW_GAP;
-    const rP=easeOut5(clamp((t-rowDelay)/0.4,0,1));
-    if(rP<=0) return;
+  data.rows.forEach((row, idx) => {
+    const rowDelay = T_ROW_START + idx * T_ROW_GAP;
+    const rP = easeOut5(clamp((t - rowDelay) / 0.45, 0, 1));
+    if(rP <= 0) return;
 
-    const rowY=ROW_START_Y+idx*ROW_SPACING;
-    const rowH=ROW_SPACING-4*S;
-    const slideX=(1-rP)*-320*S;
-    const alpha=Math.min(rP*2,1);
+    const rowY = ROW_START_Y + idx * ROW_SPACING;
+    const rowH = ROW_SPACING - 4*S;
+    const slideX = (1-rP) * -320*S;
+    const alpha = Math.min(rP*2, 1);
 
-    const color=TEAM_COL[row.team]||'#555';
+    const color = TEAM_COL[row.team] || '#555';
     const r2=parseInt(color.slice(1,3),16)||85,
           g2=parseInt(color.slice(3,5),16)||85,
           b2=parseInt(color.slice(5,7),16)||85;
-    const pos=idx+1;
-    const posColor=pos===1?'#FFD700':pos===2?'#C0C0C0':pos===3?'#CD7F32':'rgba(255,255,255,0.45)';
+    const pos = idx+1;
+    const posColor = pos===1?'#FFD700':pos===2?'#C0C0C0':pos===3?'#CD7F32':'rgba(255,255,255,0.45)';
 
     ctx.save();
     ctx.globalAlpha=alpha;
-    ctx.translate(slideX,0);
+    ctx.translate(slideX, 0);
 
     // Row bg
     ctx.fillStyle=`rgba(${r2},${g2},${b2},0.08)`;
     ctx.fillRect(ML, rowY, CW, rowH);
 
     // Separator
-    ctx.strokeStyle='rgba(255,255,255,0.05)';ctx.lineWidth=S;
-    ctx.beginPath();ctx.moveTo(ML,rowY+rowH);ctx.lineTo(RW-MR,rowY+rowH);ctx.stroke();
+    ctx.strokeStyle='rgba(255,255,255,0.05)'; ctx.lineWidth=S;
+    ctx.beginPath(); ctx.moveTo(ML,rowY+rowH); ctx.lineTo(RW-MR,rowY+rowH); ctx.stroke();
 
-    const midY=rowY+rowH/2;
+    const midY = rowY+rowH/2;
 
     // Position number
     ctx.font=`400 ${24*S}px ${F1}`;
-    ctx.fillStyle=posColor;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillStyle=posColor; ctx.textAlign='center'; ctx.textBaseline='middle';
     ctx.fillText(pos, ML+posColW/2, midY);
 
     // Team logo
@@ -721,62 +730,56 @@ function tbRenderFrame(ctx, data, t) {
     const f = LOGO_FILES[row.team];
     const img = f ? tbImgCache[LOGO_BASE+f] : null;
     if(img){
-      // Fit into LOGO_H x LOGO_MAX_W box, centred vertically
       const scale = Math.min(LOGO_H/img.height, LOGO_MAX_W/img.width);
-      const dw = img.width*scale, dh = img.height*scale;
-      const dx = logoX + (logoAreaW-dw)/2;
-      const dy = midY - dh/2;
-      ctx.shadowColor='rgba(0,0,0,0.5)';ctx.shadowBlur=8*S;
+      const dw=img.width*scale, dh=img.height*scale;
+      const dx=logoX+(logoAreaW-dw)/2;
+      const dy=midY-dh/2;
+      ctx.shadowColor='rgba(0,0,0,0.5)'; ctx.shadowBlur=8*S;
       ctx.drawImage(img, dx, dy, dw, dh);
-      ctx.shadowColor='transparent';ctx.shadowBlur=0;
+      ctx.shadowColor='transparent'; ctx.shadowBlur=0;
     }
 
     // Driver/TP name
     const nameX = ML+posColW+LOGO_COL_W;
-    const nameW = RW-MR-nameX-180*S; // leave room for pts
-
-    // Auto-shrink driver name to fit
+    const ptsAreaW = 180*S; // reserved for points on right
+    const nameW = RW-MR-nameX-ptsAreaW;
     let fs = 20*S;
     ctx.font=`400 ${fs}px ${F1}`;
     while(ctx.measureText(row.driver).width > nameW && fs > 12*S){
       fs -= S;
       ctx.font=`400 ${fs}px ${F1}`;
     }
-    ctx.fillStyle='#ffffff';ctx.textAlign='left';ctx.textBaseline='middle';
+    ctx.fillStyle='#ffffff'; ctx.textAlign='left'; ctx.textBaseline='middle';
     ctx.fillText(row.driver, nameX+8*S, midY);
+
+    // Points bar — drawn from just before pts column, can slightly exceed right margin (visual only)
+    const barMaxW = 120*S;
+    const barW = maxPts>0 ? (row.pts/maxPts)*barMaxW : 0;
+    const barX = RW-MR-barMaxW-160*S;
+    ctx.fillStyle=`rgba(${r2},${g2},${b2},0.15)`;
+    ctx.fillRect(barX, rowY+12*S, barMaxW, rowH-24*S);
+    ctx.fillStyle=`rgba(${r2},${g2},${b2},0.4)`;
+    ctx.fillRect(barX, rowY+12*S, barW, rowH-24*S);
 
     // Points value
     ctx.font=`400 ${24*S}px ${F1}`;
-    ctx.fillStyle='#ffffff';ctx.textAlign='right';
-    ctx.fillText(row.pts, RW-MR-8*S, midY-6*S);
+    ctx.fillStyle='#ffffff'; ctx.textAlign='right';
+    ctx.fillText(row.pts, RW-MR+80*S, midY-6*S); // slightly beyond safe margin — visual, not text
     ctx.font=`400 ${11*S}px ${F1}`;
     ctx.fillStyle='rgba(255,255,255,0.3)';
-    ctx.fillText('PTS', RW-MR-8*S, midY+14*S);
+    ctx.fillText('PTS', RW-MR+80*S, midY+14*S);
 
     // Gap
-    if(idx>0){
-      const gap=data.rows[0].pts-row.pts;
+    if(idx > 0){
+      const gap = data.rows[0].pts - row.pts;
       ctx.font=`400 ${11*S}px ${F1}`;
-      ctx.fillStyle='rgba(255,255,255,0.22)';ctx.textAlign='right';
-      ctx.fillText(`-${gap}`, RW-MR-8*S, midY+28*S);
+      ctx.fillStyle='rgba(255,255,255,0.22)'; ctx.textAlign='right';
+      ctx.fillText(`-${gap}`, RW-MR+80*S, midY+28*S);
     }
     ctx.restore();
   });
 
-  // Footer
-  const footP=easeOut3(clamp((t-(T_ROW_START+TB_NUM_ROWS*T_ROW_GAP+0.3))/0.4,0,1));
-  if(footP>0){
-    ctx.save();ctx.globalAlpha=footP*0.28;
-    ctx.font=`400 ${12*S}px ${F1}`;
-    ctx.fillStyle='#ffffff';
-    ctx.textAlign='left';ctx.textBaseline='bottom';
-    ctx.fillText('F1XL', ML, RH-MB-10*S);
-    ctx.textAlign='right';
-    ctx.fillText('f1xl.co.uk', RW-MR, RH-MB-10*S);
-    ctx.restore();
-  }
-
-  // Bottom bar
+  // Bottom bar only — decorative, full width
   ctx.fillStyle='#e10600';
   ctx.fillRect(0,RH-4*S,RW,4*S);
 }
