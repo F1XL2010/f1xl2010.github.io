@@ -537,6 +537,42 @@ async function tbPopulate() {
   }
 }
 
+// ── Font ─────────────────────────────────────────────────────────
+const F1_FONT_URL = 'https://f1xl2010.github.io/video-gen/assets/fonts/Formula1-Regular_web_0.ttf';
+let f1FontLoaded = false;
+
+async function loadF1Font() {
+  if (f1FontLoaded) return;
+  try {
+    const font = new FontFace('Formula1', `url(${F1_FONT_URL})`);
+    await font.load();
+    document.fonts.add(font);
+    f1FontLoaded = true;
+  } catch(e) { console.warn('Formula1 font failed, using fallback:', e); }
+}
+
+// ── Logo image cache ─────────────────────────────────────────────
+const tbImgCache = {};
+
+function tbLoadImg(src) {
+  if (tbImgCache[src]) return Promise.resolve(tbImgCache[src]);
+  return new Promise(resolve => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload  = () => { tbImgCache[src] = img; resolve(img); };
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
+
+async function tbPreloadLogos(rows) {
+  const teams = [...new Set(rows.map(r => r.team))];
+  await Promise.all(teams.map(t => {
+    const f = LOGO_FILES[t];
+    return f ? tbLoadImg(LOGO_BASE + f) : Promise.resolve();
+  }));
+}
+
 // ── Render ────────────────────────────────────────────────────────
 const FPS=30, W=1440, H=2560; // 2x resolution
 const T_HEADER=1.2, T_ROW_START=1.8, T_ROW_GAP=0.18, T_HOLD=2.5;
@@ -551,29 +587,23 @@ function tbSetProgress(pct,label){
 }
 
 function tbRenderFrame(ctx, data, t) {
-  const S=2; // scale factor (1440x2560 = 720x1280 * 2)
+  const S=2;
   const RW=720*S, RH=1280*S;
+  const ML=130, MR=300, MT=220, MB=760;
+  const CW=RW-ML-MR;
+  const F1=f1FontLoaded?"'Formula1',sans-serif":"'Barlow Condensed',sans-serif";
 
-  // ── YouTube Shorts safe zone margins (at 2x) ──
-  // Left: 65px → 130px at 2x
-  // Right: keep 150px from edge → content ends at RW-300
-  // Top: 110px → 220px at 2x
-  // Bottom: 380px → 760px at 2x → content ends at RH-760
-  const ML=130,  // left margin
-        MR=300,  // right margin (from RW)
-        MT=220,  // top margin
-        MB=760;  // bottom margin (from RH)
-  const CW=RW-ML-MR; // usable content width
-
-  const ROW_H=72*S;
-  const BAR_W=5*S;
-
-  // Available vertical space for rows
-  const headerBottom = MT + 175*S; // where header section ends
-  const contentBottom = RH - MB;   // where content must end
-  const availForRows = contentBottom - headerBottom - 40*S; // minus col header row
-  const ROW_SPACING = Math.min(ROW_H, Math.floor(availForRows / TB_NUM_ROWS));
+  // Available row space
+  const headerBottom = MT + 175*S;
+  const contentBottom = RH - MB;
+  const availForRows = contentBottom - headerBottom - 40*S;
+  const ROW_SPACING = Math.floor(availForRows / TB_NUM_ROWS);
   const ROW_START_Y = headerBottom + 40*S;
+
+  // Logo box: height = 70% of row content, max width = 2x height
+  const LOGO_H = Math.floor(ROW_SPACING * 0.68);
+  const LOGO_MAX_W = LOGO_H * 2;
+  const LOGO_COL_W = LOGO_MAX_W + 16*S; // column width reserved for logo
 
   ctx.fillStyle='#0d1117';
   ctx.fillRect(0,0,RW,RH);
@@ -582,41 +612,41 @@ function tbRenderFrame(ctx, data, t) {
   ctx.fillStyle='rgba(255,255,255,0.012)';
   for(let y=0;y<RH;y+=3*S) ctx.fillRect(0,y,RW,S);
 
-  // Top bar — full width is fine, it's decorative
+  // Top bar
   ctx.fillStyle='#e10600';
   ctx.fillRect(0,0,RW,4*S);
 
-  // ── Header — starts at safe top margin ──
+  // ── Header ──
   const hP=easeOut5(clamp(t/0.5,0,1));
   const hSlide=(1-hP)*-50*S;
   ctx.save();
   ctx.globalAlpha=hP;
   ctx.translate(0,hSlide);
 
-  ctx.font=`600 ${11*S}px 'Barlow Condensed',sans-serif`;
+  ctx.font=`400 ${13*S}px ${F1}`;
   ctx.fillStyle='#e10600';
   ctx.textAlign='left';ctx.textBaseline='top';
   ctx.fillText('F1XL  ·  OVERALL STANDINGS', ML, MT);
 
-  ctx.font=`900 ${52*S}px 'Barlow Condensed',sans-serif`;
+  ctx.font=`400 ${48*S}px ${F1}`;
   ctx.fillStyle='#ffffff';
-  ctx.fillText(`SEASON ${data.season}`, ML, MT+18*S);
+  ctx.fillText(`SEASON ${data.season}`, ML, MT+22*S);
 
-  ctx.font=`300 ${30*S}px 'Barlow Condensed',sans-serif`;
+  ctx.font=`400 ${28*S}px ${F1}`;
   ctx.fillStyle='rgba(255,255,255,0.55)';
-  ctx.fillText(`${data.gp.toUpperCase()} GRAND PRIX`, ML, MT+80*S);
+  ctx.fillText(`${data.gp.toUpperCase()} GRAND PRIX`, ML, MT+82*S);
 
-  ctx.font=`600 ${12*S}px 'Barlow Condensed',sans-serif`;
+  ctx.font=`400 ${16*S}px ${F1}`;
   ctx.fillStyle='rgba(255,255,255,0.35)';
-  ctx.fillText(`ROUND ${data.round} / ${data.totalRounds}`, ML, MT+122*S);
+  ctx.fillText(`ROUND ${data.round} / ${data.totalRounds}`, ML, MT+126*S);
   ctx.fillStyle='#e10600';
-  ctx.fillText('|', ML+130*S, MT+122*S);
+  ctx.fillText('|', ML+152*S, MT+126*S);
   ctx.fillStyle='rgba(255,255,255,0.35)';
-  ctx.fillText(data.date, ML+148*S, MT+122*S);
+  ctx.fillText(data.date, ML+168*S, MT+126*S);
   ctx.fillStyle='#e10600';
-  ctx.fillText('|', ML+268*S, MT+122*S);
+  ctx.fillText('|', ML+310*S, MT+126*S);
   ctx.fillStyle='rgba(255,255,255,0.35)';
-  ctx.fillText(data.time, ML+286*S, MT+122*S);
+  ctx.fillText(data.time, ML+326*S, MT+126*S);
   ctx.restore();
 
   // Divider
@@ -624,21 +654,22 @@ function tbRenderFrame(ctx, data, t) {
   if(divP>0){
     ctx.save();ctx.globalAlpha=divP*0.2;
     ctx.strokeStyle='#ffffff';ctx.lineWidth=S;
-    ctx.beginPath();ctx.moveTo(ML, MT+152*S);ctx.lineTo(RW-MR, MT+152*S);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(ML,MT+158*S);ctx.lineTo(RW-MR,MT+158*S);ctx.stroke();
     ctx.restore();
   }
 
   // Col headers
   const colHP=easeOut3(clamp((t-0.6)/0.35,0,1));
   if(colHP>0){
-    ctx.save();ctx.globalAlpha=colHP*0.4;
-    ctx.font=`700 ${10*S}px 'Barlow Condensed',sans-serif`;
+    ctx.save();ctx.globalAlpha=colHP*0.38;
+    ctx.font=`400 ${12*S}px ${F1}`;
     ctx.fillStyle='#ffffff';
     ctx.textAlign='left';ctx.textBaseline='middle';
-    const colY=ROW_START_Y-20*S;
-    ctx.fillText('POS', ML+5*S, colY);
-    ctx.fillText('TEAM', ML+52*S, colY);
-    ctx.fillText('DRIVER', ML+270*S, colY);
+    const colY=ROW_START_Y-22*S;
+    const posColW = 56*S;
+    ctx.fillText('POS', ML+8*S, colY);
+    ctx.fillText('TEAM', ML+posColW+8*S, colY);
+    ctx.fillText('DRIVER', ML+posColW+LOGO_COL_W+8*S, colY);
     ctx.textAlign='right';
     ctx.fillText('PTS', RW-MR, colY);
     ctx.restore();
@@ -646,6 +677,8 @@ function tbRenderFrame(ctx, data, t) {
 
   // ── Table rows ──
   const maxPts=Math.max(...data.rows.map(r=>r.pts),1);
+  const posColW = 56*S;
+
   data.rows.forEach((row,idx)=>{
     const rowDelay=T_ROW_START+idx*T_ROW_GAP;
     const rP=easeOut5(clamp((t-rowDelay)/0.4,0,1));
@@ -667,13 +700,9 @@ function tbRenderFrame(ctx, data, t) {
     ctx.globalAlpha=alpha;
     ctx.translate(slideX,0);
 
-    // Row bg — from left edge to right safe margin
+    // Row bg
     ctx.fillStyle=`rgba(${r2},${g2},${b2},0.08)`;
     ctx.fillRect(ML, rowY, CW, rowH);
-
-    // Left colour bar
-    ctx.fillStyle=color;
-    ctx.fillRect(ML, rowY, BAR_W, rowH);
 
     // Separator
     ctx.strokeStyle='rgba(255,255,255,0.05)';ctx.lineWidth=S;
@@ -682,53 +711,63 @@ function tbRenderFrame(ctx, data, t) {
     const midY=rowY+rowH/2;
 
     // Position number
-    ctx.font=`700 ${20*S}px 'Barlow Condensed',sans-serif`;
+    ctx.font=`400 ${24*S}px ${F1}`;
     ctx.fillStyle=posColor;ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillText(pos, ML+32*S, midY);
+    ctx.fillText(pos, ML+posColW/2, midY);
 
-    // Team name
-    ctx.font=`600 ${10*S}px 'Barlow Condensed',sans-serif`;
-    ctx.fillStyle=`rgba(${r2},${g2},${b2},1)`;
-    ctx.textAlign='left';
-    ctx.fillText(row.team.toUpperCase(), ML+58*S, midY-11*S);
+    // Team logo
+    const logoX = ML+posColW+8*S;
+    const logoAreaW = LOGO_COL_W - 16*S;
+    const f = LOGO_FILES[row.team];
+    const img = f ? tbImgCache[LOGO_BASE+f] : null;
+    if(img){
+      // Fit into LOGO_H x LOGO_MAX_W box, centred vertically
+      const scale = Math.min(LOGO_H/img.height, LOGO_MAX_W/img.width);
+      const dw = img.width*scale, dh = img.height*scale;
+      const dx = logoX + (logoAreaW-dw)/2;
+      const dy = midY - dh/2;
+      ctx.shadowColor='rgba(0,0,0,0.5)';ctx.shadowBlur=8*S;
+      ctx.drawImage(img, dx, dy, dw, dh);
+      ctx.shadowColor='transparent';ctx.shadowBlur=0;
+    }
 
-    // Driver name
-    ctx.font=`600 ${17*S}px 'Barlow Condensed',sans-serif`;
-    ctx.fillStyle='#ffffff';
-    ctx.fillText(row.driver, ML+58*S, midY+8*S);
+    // Driver/TP name
+    const nameX = ML+posColW+LOGO_COL_W;
+    const nameW = RW-MR-nameX-180*S; // leave room for pts
 
-    // Points bar
-    const barMaxW=140*S;
-    const barW=maxPts>0?(row.pts/maxPts)*barMaxW:0;
-    const barX=RW-MR-barMaxW-60*S;
-    ctx.fillStyle=`rgba(${r2},${g2},${b2},0.15)`;
-    ctx.fillRect(barX, rowY+8*S, barMaxW, rowH-16*S);
-    ctx.fillStyle=`rgba(${r2},${g2},${b2},0.35)`;
-    ctx.fillRect(barX, rowY+8*S, barW, rowH-16*S);
+    // Auto-shrink driver name to fit
+    let fs = 20*S;
+    ctx.font=`400 ${fs}px ${F1}`;
+    while(ctx.measureText(row.driver).width > nameW && fs > 12*S){
+      fs -= S;
+      ctx.font=`400 ${fs}px ${F1}`;
+    }
+    ctx.fillStyle='#ffffff';ctx.textAlign='left';ctx.textBaseline='middle';
+    ctx.fillText(row.driver, nameX+8*S, midY);
 
     // Points value
-    ctx.font=`700 ${20*S}px 'Barlow Condensed',sans-serif`;
+    ctx.font=`400 ${24*S}px ${F1}`;
     ctx.fillStyle='#ffffff';ctx.textAlign='right';
-    ctx.fillText(row.pts, RW-MR-4*S, midY-4*S);
-    ctx.font=`500 ${9*S}px 'Barlow Condensed',sans-serif`;
+    ctx.fillText(row.pts, RW-MR-8*S, midY-6*S);
+    ctx.font=`400 ${11*S}px ${F1}`;
     ctx.fillStyle='rgba(255,255,255,0.3)';
-    ctx.fillText('PTS', RW-MR-4*S, midY+11*S);
+    ctx.fillText('PTS', RW-MR-8*S, midY+14*S);
 
     // Gap
     if(idx>0){
       const gap=data.rows[0].pts-row.pts;
-      ctx.font=`500 ${9*S}px 'Barlow Condensed',sans-serif`;
+      ctx.font=`400 ${11*S}px ${F1}`;
       ctx.fillStyle='rgba(255,255,255,0.22)';ctx.textAlign='right';
-      ctx.fillText(`-${gap}`, barX-8*S, midY);
+      ctx.fillText(`-${gap}`, RW-MR-8*S, midY+28*S);
     }
     ctx.restore();
   });
 
-  // Footer — sits just above bottom safe margin
+  // Footer
   const footP=easeOut3(clamp((t-(T_ROW_START+TB_NUM_ROWS*T_ROW_GAP+0.3))/0.4,0,1));
   if(footP>0){
     ctx.save();ctx.globalAlpha=footP*0.28;
-    ctx.font=`600 ${10*S}px 'Barlow Condensed',sans-serif`;
+    ctx.font=`400 ${12*S}px ${F1}`;
     ctx.fillStyle='#ffffff';
     ctx.textAlign='left';ctx.textBaseline='bottom';
     ctx.fillText('F1XL', ML, RH-MB-10*S);
@@ -737,7 +776,7 @@ function tbRenderFrame(ctx, data, t) {
     ctx.restore();
   }
 
-  // Bottom bar — full width, decorative
+  // Bottom bar
   ctx.fillStyle='#e10600';
   ctx.fillRect(0,RH-4*S,RW,4*S);
 }
@@ -746,9 +785,14 @@ async function tbGenerate() {
   const btn=document.getElementById('tb-genBtn');
   const pa=document.getElementById('tb-progArea');
   btn.disabled=true;pa.style.display='block';
-  tbSetProgress(2,'Starting...');
+  tbSetProgress(2,'Loading font & logos...');
 
   const data=tbGetData();
+
+  // Preload font and logos before rendering
+  await Promise.all([loadF1Font(), tbPreloadLogos(data.rows)]);
+
+  tbSetProgress(8,'Starting render...');
   const canvas=document.getElementById('renderCanvas2');
   const ctx=canvas.getContext('2d');
 
