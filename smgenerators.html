@@ -752,30 +752,30 @@ function tbRenderFrame(ctx, data, t) {
     ctx.fillStyle='#ffffff'; ctx.textAlign='left'; ctx.textBaseline='middle';
     ctx.fillText(row.driver, nameX+8*S, midY);
 
-    // Points bar — drawn from just before pts column, can slightly exceed right margin (visual only)
-    const barMaxW = 120*S;
-    const barW = maxPts>0 ? (row.pts/maxPts)*barMaxW : 0;
-    const barX = RW-MR-barMaxW-160*S;
-    ctx.fillStyle=`rgba(${r2},${g2},${b2},0.15)`;
-    ctx.fillRect(barX, rowY+12*S, barMaxW, rowH-24*S);
-    ctx.fillStyle=`rgba(${r2},${g2},${b2},0.4)`;
-    ctx.fillRect(barX, rowY+12*S, barW, rowH-24*S);
-
-    // Points value
+    // Points value — sits within safe margin
     ctx.font=`400 ${24*S}px ${F1}`;
     ctx.fillStyle='#ffffff'; ctx.textAlign='right';
-    ctx.fillText(row.pts, RW-MR+80*S, midY-6*S); // slightly beyond safe margin — visual, not text
+    ctx.fillText(row.pts, RW-MR, midY-6*S);
     ctx.font=`400 ${11*S}px ${F1}`;
     ctx.fillStyle='rgba(255,255,255,0.3)';
-    ctx.fillText('PTS', RW-MR+80*S, midY+14*S);
+    ctx.fillText('PTS', RW-MR, midY+14*S);
 
     // Gap
     if(idx > 0){
       const gap = data.rows[0].pts - row.pts;
       ctx.font=`400 ${11*S}px ${F1}`;
       ctx.fillStyle='rgba(255,255,255,0.22)'; ctx.textAlign='right';
-      ctx.fillText(`-${gap}`, RW-MR+80*S, midY+28*S);
+      ctx.fillText(`-${gap}`, RW-MR, midY+28*S);
     }
+
+    // Points bar — starts after safe margin, extends to right edge (visual only, no text)
+    const barStart = RW-MR+16*S;
+    const barMaxW  = RW - barStart - 8*S; // fills remaining space to edge
+    const barW     = maxPts>0 ? (row.pts/maxPts)*barMaxW : 0;
+    ctx.fillStyle=`rgba(${r2},${g2},${b2},0.15)`;
+    ctx.fillRect(barStart, rowY+14*S, barMaxW, rowH-28*S);
+    ctx.fillStyle=`rgba(${r2},${g2},${b2},0.45)`;
+    ctx.fillRect(barStart, rowY+14*S, barW, rowH-28*S);
     ctx.restore();
   });
 
