@@ -667,18 +667,21 @@ function tbRenderFrame(ctx, data, t) {
     ctx.restore();
   }
 
-  // Col headers — appear just before rows
+  // Col headers — solid red bar
   const colHP = easeOut3(clamp((t - (T_ROW_START-0.3)) / 0.35, 0, 1));
   if(colHP > 0){
-    ctx.save(); ctx.globalAlpha=colHP*0.38;
-    ctx.font=`400 ${12*S}px ${F1}`;
+    const colY = ROW_START_Y - 22*S;
+    const colH = 36*S;
+    ctx.save(); ctx.globalAlpha=colHP;
+    ctx.fillStyle='#e10600';
+    ctx.fillRect(ML, colY-colH/2, CW, colH);
+    ctx.font=`400 ${11*S}px ${F1}`;
     ctx.fillStyle='#ffffff';
     ctx.textAlign='left'; ctx.textBaseline='middle';
-    const colY = ROW_START_Y - 22*S;
-    const posColW = 56*S;
+    const posColW2 = 56*S;
     ctx.fillText('POS', ML+8*S, colY);
-    ctx.fillText('TEAM', ML+posColW+8*S, colY);
-    ctx.fillText('DRIVER', ML+posColW+LOGO_COL_W+8*S, colY);
+    ctx.fillText('TEAM', ML+posColW2+8*S, colY);
+    ctx.fillText('DRIVER', ML+posColW2+LOGO_COL_W+8*S, colY);
     ctx.textAlign='right';
     ctx.fillText('PTS', RW-MR, colY);
     ctx.restore();
@@ -756,26 +759,23 @@ function tbRenderFrame(ctx, data, t) {
     ctx.font=`400 ${24*S}px ${F1}`;
     ctx.fillStyle='#ffffff'; ctx.textAlign='right';
     ctx.fillText(row.pts, RW-MR, midY-6*S);
-    ctx.font=`400 ${11*S}px ${F1}`;
-    ctx.fillStyle='rgba(255,255,255,0.3)';
-    ctx.fillText('PTS', RW-MR, midY+14*S);
 
-    // Gap
-    if(idx > 0){
-      const gap = data.rows[0].pts - row.pts;
-      ctx.font=`400 ${11*S}px ${F1}`;
-      ctx.fillStyle='rgba(255,255,255,0.22)'; ctx.textAlign='right';
-      ctx.fillText(`-${gap}`, RW-MR, midY+28*S);
-    }
-
-    // Points bar — starts after safe margin, extends to right edge (visual only, no text)
+    // Points bar — starts after safe margin, extends to right edge (visual only)
     const barStart = RW-MR+16*S;
-    const barMaxW  = RW - barStart - 8*S; // fills remaining space to edge
+    const barMaxW  = RW - barStart - 8*S;
     const barW     = maxPts>0 ? (row.pts/maxPts)*barMaxW : 0;
     ctx.fillStyle=`rgba(${r2},${g2},${b2},0.15)`;
     ctx.fillRect(barStart, rowY+14*S, barMaxW, rowH-28*S);
     ctx.fillStyle=`rgba(${r2},${g2},${b2},0.45)`;
     ctx.fillRect(barStart, rowY+14*S, barW, rowH-28*S);
+    // Gap superimposed on bar
+    if(idx > 0){
+      const gap = data.rows[0].pts - row.pts;
+      ctx.font=`400 ${11*S}px ${F1}`;
+      ctx.fillStyle='rgba(255,255,255,0.75)'; ctx.textAlign='left';
+      ctx.textBaseline='middle';
+      ctx.fillText(`-${gap}`, barStart+8*S, midY);
+    }
     ctx.restore();
   });
 
