@@ -594,9 +594,55 @@ async function tbPopulate() {
       }
     } catch(e){ console.warn('TP fetch failed:', e); }
 
+    // Fetch division leaders (P1 from each division's driver results)
+    const divLeaders = [];
+    const divCount = 4; // fetch D1-D4
+    for(let d=1;d<=divCount;d++){
+      try{
+        const dSheetId  = seasonConfig[`d${d}_sheet_id`];
+        const dResGid   = seasonConfig[`d${d}_driver_results_gid`];
+        if(!dSheetId||!dResGid){ divLeaders.push(null); continue; }
+        const dUrl = `https://docs.google.com/spreadsheets/d/${dSheetId}/export?format=csv&gid=${dResGid}`;
+        const dRes = await fetch(dUrl);
+        const dText = await dRes.text();
+        if(dText.includes('<!DOCTYPE')){ divLeaders.push(null); continue; }
+        const dRows = dText.split(/
+?
+/).map(l=>{
+          const cells=[]; let cur='',inQ=false;
+          for(let i=0;i<l.length;i++){
+            const c=l[i];
+            if(c==='"'&&!inQ){inQ=true;}
+            else if(c==='"'&&inQ){if(l[i+1]==='"'){cur+='"';i++;}else{inQ=false;}}
+            else if(c===','&&!inQ){cells.push(cur.trim());cur='';}
+            else cur+=c;
+          }
+          cells.push(cur.trim());
+          return cells;
+        });
+        // Find header row (Pos, Nat, Driver, Team...)
+        let hRow=-1;
+        for(let i=0;i<dRows.length;i++){
+          if((dRows[i][0]||'').toLowerCase()==='pos'){ hRow=i; break; }
+        }
+        if(hRow<0){ divLeaders.push(null); continue; }
+        const p1Row = dRows[hRow+1];
+        if(!p1Row){ divLeaders.push(null); continue; }
+        divLeaders.push({
+          driver: (p1Row[2]||'').trim(),
+          team:   (p1Row[3]||'').trim(),
+          pts:    parseInt((p1Row[4]||'0').replace(/,/g,''))||0,
+          div:    d,
+        });
+      } catch(e){ divLeaders.push(null); }
+    }
+
+    // Store on window so generate can access it
+    window._tbDivLeaders = divLeaders;
+
     // Rebuild rows with populated data
     tbBuildRows(filled);
-    showStatus('tb-popStatus', `✓ Populated ${data.length} rows from Season ${currentSeason}`, 'ok');
+    showStatus('tb-popStatus', `✓ Populated ${data.length} rows + division leaders`, 'ok');
 
   } catch(e) {
     showStatus('tb-popStatus', 'Error: ' + e.message, 'err');
@@ -607,6 +653,34 @@ async function tbPopulate() {
 }
 
 // ── Font ─────────────────────────────────────────────────────────
+
+// ─── GP TO FLAG MAPPING ──────────────────────────────────────────────────────
+const GP_FLAG = {
+  'bahrain':'bh','saudi arabia':'sa','australia':'au','japan':'jp','china':'cn',
+  'miami':'us','emilia romagna':'it','monaco':'mc','canada':'ca','spain':'es',
+  'austria':'at','great britain':'gb','hungary':'hu','belgium':'be','netherlands':'nl',
+  'italy':'it','azerbaijan':'az','singapore':'sg','united states':'us','mexico':'mx',
+  'brazil':'br','las vegas':'us','qatar':'qa','abu dhabi':'ae','britain':'gb',
+  'usa':'us','mexico city':'mx','são paulo':'br','sao paulo':'br','belgium':'be',
+};
+function getFlag(gpName){
+  const key=(gpName||'').toLowerCase().replace(' grand prix','').trim();
+  const code=GP_FLAG[key]||'';
+  return code?`https://f1xl2010.github.io/images/smallflags/${code}.svg`:'';
+}
+const flagCache={};
+function loadFlag(src){
+  if(!src) return Promise.resolve(null);
+  if(flagCache[src]) return Promise.resolve(flagCache[src]);
+  return new Promise(resolve=>{
+    const img=new Image();
+    img.crossOrigin='anonymous';
+    img.onload=()=>{flagCache[src]=img;resolve(img);};
+    img.onerror=()=>resolve(null);
+    img.src=src;
+  });
+}
+
 const F1_FONT_URL = 'https://f1xl2010.github.io/video-gen/assets/fonts/Formula1-Regular_web_0.ttf';
 let f1FontLoaded = false;
 
@@ -652,7 +726,10 @@ const T_FLIP_OFFSET = 1.2;
 const T_FLIP_DUR  = 1.4;
 const T_FLIP_GAP  = 0.45;
 const T_HOLD_END  = 6.0;  // generous buffer
-const TOTAL_DUR = T_EXIT_START_OFFSET + (14 * T_EXIT_GAP) + T_EXIT_DUR + T_FLIP_OFFSET + T_FLIP_GAP + T_FLIP_DUR + T_HOLD_END;
+const T_BOX_OFFSET = 1.0; // boxes start appearing after flip settles
+const T_BOX_DUR    = 0.7; // each box reveal duration
+const T_BOX_GAP    = 0.2; // stagger between boxes
+const TOTAL_DUR = T_EXIT_START_OFFSET + (14 * T_EXIT_GAP) + T_EXIT_DUR + T_FLIP_OFFSET + T_FLIP_GAP + T_FLIP_DUR + T_BOX_OFFSET + (4 * T_BOX_GAP) + T_BOX_DUR + T_HOLD_END;
 
 function easeOut3(t){return 1-Math.pow(1-Math.min(t,1),3);}
 function easeOut5(t){return 1-Math.pow(1-Math.min(t,1),5);}
@@ -895,6 +972,145 @@ function tbRenderFrame(ctx, data, t) {
     ctx.restore(); ctx.globalAlpha=1;
   }
 
+  // ── BOX PHASE — 2x2 grid appears after flip ──
+  const boxPhaseStart = flipPhaseStart + T_FLIP_GAP + T_FLIP_DUR + T_BOX_OFFSET;
+
+  if(hasNextRace && t > boxPhaseStart - T_BOX_DUR) {
+    // Box layout — fills from below the header to bottom safe margin
+    const boxAreaTop    = MT + 200*S;
+    const boxAreaBottom = RH - MB;
+    const boxAreaH      = boxAreaBottom - boxAreaTop;
+    const boxAreaLeft   = ML;
+    const boxAreaRight  = RW - MR;
+    const boxAreaW      = boxAreaRight - boxAreaLeft;
+    const GAP           = 16*S;
+    const boxW          = (boxAreaW - GAP) / 2;
+    const boxH          = (boxAreaH - GAP) / 2;
+
+    const boxes = [
+      { idx:0, x:boxAreaLeft,       y:boxAreaTop,          label:'NEXT RACE',       type:'nextrace' },
+      { idx:1, x:boxAreaLeft+boxW+GAP, y:boxAreaTop,       label:'',                type:'empty' },
+      { idx:2, x:boxAreaLeft,       y:boxAreaTop+boxH+GAP, label:'DIVISION LEADERS',type:'divleaders' },
+      { idx:3, x:boxAreaLeft+boxW+GAP, y:boxAreaTop+boxH+GAP, label:'',             type:'empty' },
+    ];
+
+    const DIV_COLS = ['#8B3A3A','#8B6B2E','#7A8B2E','#2E8B57'];
+
+    boxes.forEach(box => {
+      const boxDelay = boxPhaseStart + box.idx * T_BOX_GAP;
+      const bP = easeOut5(clamp((t - boxDelay) / T_BOX_DUR, 0, 1));
+      if(bP <= 0) return;
+
+      // Reveal wipe — clip from top edge downward
+      const revealH = bP * boxH;
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(box.x, box.y, boxW, revealH);
+      ctx.clip();
+
+      // Box background
+      ctx.fillStyle = '#161b22';
+      ctx.fillRect(box.x, box.y, boxW, boxH);
+
+      // Red top border
+      ctx.fillStyle = '#e10600';
+      ctx.fillRect(box.x, box.y, boxW, 4*S);
+
+      // Box label
+      if(box.label){
+        ctx.font=`400 ${10*S}px ${F1}`;
+        ctx.fillStyle='#e10600';
+        ctx.textAlign='left';ctx.textBaseline='top';
+        ctx.fillText(box.label, box.x+14*S, box.y+14*S);
+      }
+
+      if(box.type === 'nextrace') {
+        // Flag background
+        const flagSrc2 = getFlag(data.nextGP || '');
+        const flagImg  = flagCache[flagSrc2];
+        if(flagImg){
+          const fScale = Math.max(boxW/flagImg.width, boxH/flagImg.height);
+          const fdw=flagImg.width*fScale, fdh=flagImg.height*fScale;
+          ctx.globalAlpha=0.12;
+          ctx.drawImage(flagImg, box.x+(boxW-fdw)/2, box.y+(boxH-fdh)/2, fdw, fdh);
+          ctx.globalAlpha=1;
+        }
+        // Content
+        const cx = box.x + boxW/2;
+        const midY2 = box.y + boxH/2 + 10*S;
+        ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.font=`400 ${36*S}px ${F1}`;
+        ctx.fillStyle='#ffffff';
+        ctx.shadowColor='rgba(0,0,0,0.8)';ctx.shadowBlur=10*S;
+        ctx.fillText((data.nextGP||'').toUpperCase(), cx, midY2-38*S);
+        ctx.shadowColor='transparent';ctx.shadowBlur=0;
+        ctx.font=`400 ${14*S}px ${F1}`;
+        ctx.fillStyle='rgba(255,255,255,0.5)';
+        ctx.fillText(`ROUND ${data.nextRound}`, cx, midY2+4*S);
+        ctx.font=`400 ${18*S}px ${F1}`;
+        ctx.fillStyle='#ffffff';
+        ctx.fillText(data.nextDate||'', cx, midY2+30*S);
+        ctx.fillStyle='#e10600';
+        ctx.fillText(data.nextTime||'', cx, midY2+56*S);
+      }
+
+      if(box.type === 'divleaders') {
+        const leaders = data.divLeaders || [];
+        const rowH2 = (boxH - 40*S) / 4;
+        for(let d=0;d<4;d++){
+          const leader = leaders[d];
+          const ry = box.y + 36*S + d * rowH2;
+          const rm = ry + rowH2/2;
+          const divCol = DIV_COLS[d] || '#555';
+          // Division colour bar
+          ctx.fillStyle=divCol;
+          ctx.fillRect(box.x, ry, 6*S, rowH2-2*S);
+          // Div label
+          ctx.font=`400 ${10*S}px ${F1}`;
+          ctx.fillStyle=divCol;
+          ctx.textAlign='left';ctx.textBaseline='middle';
+          ctx.fillText(`D${d+1}`, box.x+14*S, rm);
+          // Driver name
+          ctx.font=`400 ${14*S}px ${F1}`;
+          ctx.fillStyle='#ffffff';
+          ctx.fillText(leader?.driver||'—', box.x+46*S, rm-8*S);
+          // Team
+          ctx.font=`400 ${10*S}px ${F1}`;
+          ctx.fillStyle='rgba(255,255,255,0.45)';
+          ctx.fillText(leader?.team||'', box.x+46*S, rm+10*S);
+          // Points
+          ctx.font=`400 ${16*S}px ${F1}`;
+          ctx.fillStyle='#ffffff';
+          ctx.textAlign='right';
+          ctx.fillText(leader?.pts||'', box.x+boxW-14*S, rm);
+          // Separator
+          if(d<3){
+            ctx.strokeStyle='rgba(255,255,255,0.07)';ctx.lineWidth=S;
+            ctx.beginPath();ctx.moveTo(box.x,ry+rowH2-S);ctx.lineTo(box.x+boxW,ry+rowH2-S);ctx.stroke();
+          }
+        }
+      }
+
+      if(box.type === 'empty'){
+        // Styled placeholder
+        ctx.font=`400 ${11*S}px ${F1}`;
+        ctx.fillStyle='rgba(255,255,255,0.12)';
+        ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillText('COMING SOON', box.x+boxW/2, box.y+boxH/2);
+      }
+
+      ctx.restore();
+
+      // Box border
+      ctx.save();
+      ctx.globalAlpha=bP;
+      ctx.strokeStyle='rgba(255,255,255,0.1)';ctx.lineWidth=S;
+      ctx.strokeRect(box.x, box.y, boxW, boxH);
+      ctx.restore();
+    });
+  }
+
   // Bottom + top bars always on top
   ctx.fillStyle='#e10600';
   ctx.fillRect(0,0,RW,4*S);
@@ -910,7 +1126,9 @@ async function tbGenerate() {
   const data=tbGetData();
 
   // Preload font and logos before rendering
-  await Promise.all([loadF1Font(), tbPreloadLogos(data.rows)]);
+  // Preload flag for next race
+  const flagSrc = getFlag(data.nextGP || '');
+  await Promise.all([loadF1Font(), tbPreloadLogos(data.rows), loadFlag(flagSrc)]);
 
   tbSetProgress(8,'Starting render...');
   const canvas=document.getElementById('renderCanvas2');
