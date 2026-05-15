@@ -531,21 +531,6 @@ async function tbPopulate() {
     }
     if(hIdx<0||teamCol<0||ptsCol<0) throw new Error('Could not find standings columns in sheet');
 
-    // Parse Team Principal lookup — col J(9)=TP name, col K(10)=team name
-    const teamOwners={};
-    let tpStart=-1;
-    for(let i=0;i<rows.length;i++){
-      if((rows[i][9]||'').trim().toLowerCase()==='team principal'){ tpStart=i+2; break; }
-    }
-    if(tpStart>=0){
-      for(let i=tpStart;i<rows.length;i++){
-        const tp=(rows[i][9]||'').trim();
-        const team=(rows[i][10]||'').trim().toLowerCase();
-        if(!tp||!team) continue;
-        teamOwners[team]=tp;
-      }
-    }
-
     // Extract data rows, sort by points desc
     const data=[];
     for(let i=hIdx+1;i<rows.length;i++){
@@ -554,9 +539,7 @@ async function tbPopulate() {
       const ptsRaw=(r[ptsCol]||'').trim().replace(/,/g,'');
       if(!team||!ptsRaw) continue;
       const pts=Math.floor(parseFloat(ptsRaw))||0;
-      // Get TP from lookup table
-      const tp=teamOwners[team.toLowerCase()]||'';
-      data.push({team, driver:tp, pts});
+      data.push({team, driver:'', pts});
     }
     data.sort((a,b)=>b.pts-a.pts);
 
@@ -567,6 +550,49 @@ async function tbPopulate() {
     for(let i=0;i<TB_MAX_ROWS;i++){
       filled.push(data[i] || {team:TB_DEFAULT[i]?.team||'Reserve', driver:'', pts:0});
     }
+
+    // Now fetch TP names from D1 data sheet
+    try {
+      const d1SheetId  = seasonConfig['d1_sheet_id'];
+      const d1InfoGid  = seasonConfig['d1_team_info_gid'];
+      if(d1SheetId && d1InfoGid){
+        const infoUrl = `https://docs.google.com/spreadsheets/d/${d1SheetId}/export?format=csv&gid=${d1InfoGid}`;
+        const infoRes = await fetch(infoUrl);
+        const infoText = await infoRes.text();
+        if(!infoText.includes('<!DOCTYPE')){
+          const infoRows = infoText.split(/\r?\n/).map(l => {
+            const cells=[]; let cur='',inQ=false;
+            for(let i=0;i<l.length;i++){
+              const c=l[i];
+              if(c==='"'&&!inQ){inQ=true;}
+              else if(c==='"'&&inQ){if(l[i+1]==='"'){cur+='"';i++;}else{inQ=false;}}
+              else if(c===','&&!inQ){cells.push(cur.trim());cur='';}
+              else cur+=c;
+            }
+            cells.push(cur.trim());
+            return cells;
+          });
+          // Find "Team Principal" header in col J (index 9)
+          const teamOwners={};
+          let tpStart=-1;
+          for(let i=0;i<infoRows.length;i++){
+            if((infoRows[i][9]||'').trim().toLowerCase()==='team principal'){ tpStart=i+2; break; }
+          }
+          if(tpStart>=0){
+            for(let i=tpStart;i<infoRows.length;i++){
+              const tp=(infoRows[i][9]||'').trim();
+              const team=(infoRows[i][10]||'').trim().toLowerCase();
+              if(!tp||!team) continue;
+              teamOwners[team]=tp;
+            }
+          }
+          // Apply TP names to filled rows
+          filled.forEach(row=>{
+            if(!row.driver) row.driver = teamOwners[row.team.toLowerCase()]||'';
+          });
+        }
+      }
+    } catch(e){ console.warn('TP fetch failed:', e); }
 
     // Rebuild rows with populated data
     tbBuildRows(filled);
