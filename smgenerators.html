@@ -705,19 +705,59 @@ function tbRenderFrame(ctx, data, t) {
     ctx.restore();
   }
 
-  // ── Table rows ──
+  // ── Table rows + exit — single draw per row ──
   const maxPts = Math.max(...data.rows.map(r=>r.pts), 1);
   const posColW = 56*S;
+  const exitPhaseStart = T_EXIT_START_OFFSET;
+
+  // Col header — drawn here so it participates in same logic
+  const colY2 = ROW_START_Y - ROW_SPACING/2;
+  const colH2 = ROW_SPACING - 4*S;
+  const colExitDelay = exitPhaseStart + data.rows.length * T_EXIT_GAP;
+  const colExitP = easeOut3(clamp((t - colExitDelay) / T_EXIT_DUR, 0, 1));
+  const colEntryP = easeOut3(clamp((t - (T_ROW_START-0.3)) / 0.35, 0, 1));
+  if(colEntryP > 0) {
+    const colSlideX = colExitP > 0 ? -colExitP * (RW + 200*S) : 0;
+    const colAlpha = colExitP > 0 ? 1 - Math.min(colExitP * 1.5, 1) : colEntryP;
+    ctx.save();
+    ctx.globalAlpha = colAlpha;
+    ctx.translate(colSlideX, 0);
+    ctx.fillStyle='#e10600';
+    ctx.fillRect(ML, colY2-colH2/2, CW, colH2);
+    ctx.font=`400 ${11*S}px ${F1}`;
+    ctx.fillStyle='#ffffff';
+    ctx.textAlign='left'; ctx.textBaseline='middle';
+    ctx.fillText('POS', ML+8*S, colY2);
+    ctx.fillText('TEAM', ML+posColW+8*S, colY2);
+    ctx.fillText('DRIVER', ML+posColW+LOGO_COL_W+8*S, colY2);
+    ctx.textAlign='right';
+    ctx.fillText('PTS', RW-MR, colY2);
+    ctx.restore();
+  }
 
   data.rows.forEach((row, idx) => {
     const rowDelay = T_ROW_START + idx * T_ROW_GAP;
-    const rP = easeOut5(clamp((t - rowDelay) / 1.35, 0, 1));
-    if(rP <= 0) return;
+    const entryP = easeOut5(clamp((t - rowDelay) / 1.35, 0, 1));
+    if(entryP <= 0) return; // not yet visible at all
+
+    // Exit — bottom rows exit first
+    const exitIdx = data.rows.length - 1 - idx;
+    const exitDelay = exitPhaseStart + exitIdx * T_EXIT_GAP;
+    const exitP = easeOut3(clamp((t - exitDelay) / T_EXIT_DUR, 0, 1));
 
     const rowY = ROW_START_Y + idx * ROW_SPACING;
     const rowH = ROW_SPACING - 4*S;
-    const slideX = (1-rP) * -320*S;
-    const alpha = Math.min(rP*2, 1);
+    const midY = rowY + rowH/2;
+
+    // Single translation — exit takes priority over entry once it starts
+    const slideX = exitP > 0
+      ? -exitP * (RW + 200*S)
+      : (1-entryP) * -320*S;
+    const alpha = exitP > 0
+      ? 1 - Math.min(exitP * 1.5, 1)
+      : Math.min(entryP * 2, 1);
+
+    if(alpha <= 0) return;
 
     const color = TEAM_COL[row.team] || '#555';
     const r2=parseInt(color.slice(1,3),16)||85,
@@ -727,25 +767,18 @@ function tbRenderFrame(ctx, data, t) {
     const posColor = pos===1?'#FFD700':pos===2?'#C0C0C0':pos===3?'#CD7F32':'rgba(255,255,255,0.45)';
 
     ctx.save();
-    ctx.globalAlpha=alpha;
+    ctx.globalAlpha = alpha;
     ctx.translate(slideX, 0);
 
-    // Row bg
     ctx.fillStyle=`rgba(${r2},${g2},${b2},0.08)`;
     ctx.fillRect(ML, rowY, CW, rowH);
-
-    // Separator
     ctx.strokeStyle='rgba(255,255,255,0.05)'; ctx.lineWidth=S;
     ctx.beginPath(); ctx.moveTo(ML,rowY+rowH); ctx.lineTo(RW-MR,rowY+rowH); ctx.stroke();
 
-    const midY = rowY+rowH/2;
-
-    // Position number
     ctx.font=`400 ${24*S}px ${F1}`;
     ctx.fillStyle=posColor; ctx.textAlign='center'; ctx.textBaseline='middle';
     ctx.fillText(pos, ML+posColW/2, midY);
 
-    // Team logo
     const logoX = ML+posColW+8*S;
     const logoAreaW = LOGO_COL_W - 16*S;
     const f = LOGO_FILES[row.team];
@@ -753,32 +786,23 @@ function tbRenderFrame(ctx, data, t) {
     if(img){
       const scale = Math.min(LOGO_H/img.height, LOGO_MAX_W/img.width);
       const dw=img.width*scale, dh=img.height*scale;
-      const dx=logoX+(logoAreaW-dw)/2;
-      const dy=midY-dh/2;
       ctx.shadowColor='rgba(0,0,0,0.5)'; ctx.shadowBlur=8*S;
-      ctx.drawImage(img, dx, dy, dw, dh);
+      ctx.drawImage(img, logoX+(logoAreaW-dw)/2, midY-dh/2, dw, dh);
       ctx.shadowColor='transparent'; ctx.shadowBlur=0;
     }
 
-    // Driver/TP name
     const nameX = ML+posColW+LOGO_COL_W;
-    const ptsAreaW = 180*S; // reserved for points on right
-    const nameW = RW-MR-nameX-ptsAreaW;
+    const nameW = RW-MR-nameX-180*S;
     let fs = 20*S;
     ctx.font=`400 ${fs}px ${F1}`;
-    while(ctx.measureText(row.driver).width > nameW && fs > 12*S){
-      fs -= S;
-      ctx.font=`400 ${fs}px ${F1}`;
-    }
+    while(ctx.measureText(row.driver).width > nameW && fs > 12*S){ fs-=S; ctx.font=`400 ${fs}px ${F1}`; }
     ctx.fillStyle='#ffffff'; ctx.textAlign='left'; ctx.textBaseline='middle';
     ctx.fillText(row.driver, nameX+8*S, midY);
 
-    // Points value — sits within safe margin
     ctx.font=`400 ${24*S}px ${F1}`;
     ctx.fillStyle='#ffffff'; ctx.textAlign='right';
     ctx.fillText(row.pts, RW-MR, midY-6*S);
 
-    // Points bar — starts after safe margin, extends to right edge (visual only)
     const barStart = RW-MR+16*S;
     const barMaxW  = RW - barStart - 8*S;
     const barW     = maxPts>0 ? (row.pts/maxPts)*barMaxW : 0;
@@ -786,107 +810,14 @@ function tbRenderFrame(ctx, data, t) {
     ctx.fillRect(barStart, rowY, barMaxW, ROW_SPACING);
     ctx.fillStyle=`rgba(${r2},${g2},${b2},0.45)`;
     ctx.fillRect(barStart, rowY, barW, ROW_SPACING);
-    // Gap superimposed on bar
     if(idx > 0){
       const gap = data.rows[0].pts - row.pts;
       ctx.font=`400 ${11*S}px ${F1}`;
-      ctx.fillStyle='rgba(255,255,255,0.75)'; ctx.textAlign='left';
-      ctx.textBaseline='middle';
+      ctx.fillStyle='rgba(255,255,255,0.75)'; ctx.textAlign='left'; ctx.textBaseline='middle';
       ctx.fillText(`-${gap}`, barStart+8*S, midY);
     }
     ctx.restore();
   });
-
-  // ── EXIT PHASE — col header + rows slide out bottom-to-top ──
-  const exitPhaseStart = T_EXIT_START_OFFSET;
-
-  // Col header exits last (after all rows)
-  const colExitDelay = exitPhaseStart + numRows * T_EXIT_GAP;
-  const colExitP = easeOut3(clamp((t - colExitDelay) / T_EXIT_DUR, 0, 1));
-  if(colExitP > 0) {
-    // overdraw col header with slide-left exit
-    const colY2 = ROW_START_Y - ROW_SPACING/2;
-    const colH2 = ROW_SPACING - 4*S;
-    const colSlide = -colExitP * (RW + 200*S);
-    ctx.save();
-    ctx.translate(colSlide, 0);
-    ctx.fillStyle='#e10600';
-    ctx.fillRect(ML, colY2-colH2/2, CW, colH2);
-    ctx.restore();
-  }
-
-  // Rows exit bottom-to-top
-  if(t > exitPhaseStart) {
-    data.rows.forEach((row, idx) => {
-      const exitIdx = data.rows.length - 1 - idx; // bottom rows first
-      const exitDelay = exitPhaseStart + exitIdx * T_EXIT_GAP;
-      const exitP = easeOut3(clamp((t - exitDelay) / T_EXIT_DUR, 0, 1));
-      if(exitP <= 0) return;
-
-      const rowY = ROW_START_Y + idx * ROW_SPACING;
-      const rowH = ROW_SPACING - 4*S;
-      const slideX = -exitP * (RW + 200*S);
-      const alpha = 1 - Math.min(exitP * 1.5, 1);
-
-      const color = TEAM_COL[row.team] || '#555';
-      const r2=parseInt(color.slice(1,3),16)||85,
-            g2=parseInt(color.slice(3,5),16)||85,
-            b2=parseInt(color.slice(5,7),16)||85;
-      const pos = idx+1;
-      const posColor = pos===1?'#FFD700':pos===2?'#C0C0C0':pos===3?'#CD7F32':'rgba(255,255,255,0.45)';
-      const midY = rowY+rowH/2;
-
-      ctx.save();
-      ctx.globalAlpha = alpha;
-      ctx.translate(slideX, 0);
-
-      // Redraw row on top to show exit
-      ctx.fillStyle=`rgba(${r2},${g2},${b2},0.08)`;
-      ctx.fillRect(ML, rowY, CW, rowH);
-      ctx.strokeStyle='rgba(255,255,255,0.05)'; ctx.lineWidth=S;
-      ctx.beginPath(); ctx.moveTo(ML,rowY+rowH); ctx.lineTo(RW-MR,rowY+rowH); ctx.stroke();
-
-      ctx.font=`400 ${24*S}px ${F1}`;
-      ctx.fillStyle=posColor; ctx.textAlign='center'; ctx.textBaseline='middle';
-      ctx.fillText(pos, ML+posColW/2, midY);
-
-      const f2 = LOGO_FILES[row.team];
-      const img2 = f2 ? tbImgCache[LOGO_BASE+f2] : null;
-      if(img2){
-        const scale = Math.min(LOGO_H/img2.height, LOGO_MAX_W/img2.width);
-        const dw=img2.width*scale, dh=img2.height*scale;
-        ctx.drawImage(img2, ML+posColW+8*S+(LOGO_COL_W-16*S-dw)/2, midY-dh/2, dw, dh);
-      }
-
-      let fs2 = 20*S;
-      const nameX2 = ML+posColW+LOGO_COL_W;
-      const nameW2 = RW-MR-nameX2-180*S;
-      ctx.font=`400 ${fs2}px ${F1}`;
-      while(ctx.measureText(row.driver).width > nameW2 && fs2 > 12*S){ fs2-=S; ctx.font=`400 ${fs2}px ${F1}`; }
-      ctx.fillStyle='#ffffff'; ctx.textAlign='left'; ctx.textBaseline='middle';
-      ctx.fillText(row.driver, nameX2+8*S, midY);
-
-      ctx.font=`400 ${24*S}px ${F1}`;
-      ctx.fillStyle='#ffffff'; ctx.textAlign='right';
-      ctx.fillText(row.pts, RW-MR, midY);
-
-      const barStart2 = RW-MR+16*S;
-      const barMaxW2  = RW - barStart2 - 8*S;
-      const barW2     = maxPts>0 ? (row.pts/maxPts)*barMaxW2 : 0;
-      ctx.fillStyle=`rgba(${r2},${g2},${b2},0.15)`;
-      ctx.fillRect(barStart2, rowY, barMaxW2, ROW_SPACING);
-      ctx.fillStyle=`rgba(${r2},${g2},${b2},0.45)`;
-      ctx.fillRect(barStart2, rowY, barW2, ROW_SPACING);
-
-      if(idx > 0){
-        const gap = data.rows[0].pts - row.pts;
-        ctx.font=`400 ${11*S}px ${F1}`;
-        ctx.fillStyle='rgba(255,255,255,0.75)'; ctx.textAlign='left'; ctx.textBaseline='middle';
-        ctx.fillText(`-${gap}`, barStart2+8*S, midY);
-      }
-      ctx.restore();
-    });
-  }
 
   // ── FLIP PHASE — GP name and Round/Date/Time flip to next race ──
   const flipPhaseStart = T_EXIT_START_OFFSET + (data.rows.length + 1) * T_EXIT_GAP + T_EXIT_DUR + T_FLIP_OFFSET;
