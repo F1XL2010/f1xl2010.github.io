@@ -637,13 +637,13 @@ function tbRenderFrame(ctx, data, t) {
   // ── Header — staggered animation, slower slide ──
   const headerLines = [
     { text:`SEASON ${data.season}`,             size:48*S, dir:1,  delay:0.05, color:'#e10600' },
-    { text:`${data.gp.toUpperCase()} GRAND PRIX`, size:28*S, dir:-1, delay:0.55, color:'#ffffff' },
-    { text:`ROUND ${data.round} / ${data.totalRounds}  |  ${data.date}  |  ${data.time}`, size:16*S, dir:1, delay:1.05, color:'#e10600' },
+    { text:`${data.gp.toUpperCase()} GRAND PRIX`, size:28*S, dir:-1, delay:0.30, color:'#ffffff' },
+    { text:`ROUND ${data.round} / ${data.totalRounds}  |  ${data.date}  |  ${data.time}`, size:16*S, dir:1, delay:0.55, color:'#e10600' },
   ];
 
   let lineY = MT + 22*S;
   headerLines.forEach((line, i) => {
-    const p = easeOut5(clamp((t - line.delay) / 0.9, 0, 1)); // 0.45 → 0.9 (50% slower)
+    const p = easeOut5(clamp((t - line.delay) / 1.8, 0, 1)); // 100% slower
     if(p <= 0) return;
     const slideX = (1-p) * line.dir * -180*S;
     ctx.save();
@@ -692,7 +692,7 @@ function tbRenderFrame(ctx, data, t) {
 
   data.rows.forEach((row, idx) => {
     const rowDelay = T_ROW_START + idx * T_ROW_GAP;
-    const rP = easeOut5(clamp((t - rowDelay) / 0.45, 0, 1));
+    const rP = easeOut5(clamp((t - rowDelay) / 0.9, 0, 1));
     if(rP <= 0) return;
 
     const rowY = ROW_START_Y + idx * ROW_SPACING;
@@ -764,9 +764,9 @@ function tbRenderFrame(ctx, data, t) {
     const barMaxW  = RW - barStart - 8*S;
     const barW     = maxPts>0 ? (row.pts/maxPts)*barMaxW : 0;
     ctx.fillStyle=`rgba(${r2},${g2},${b2},0.15)`;
-    ctx.fillRect(barStart, rowY+14*S, barMaxW, rowH-28*S);
+    ctx.fillRect(barStart, rowY, barMaxW, ROW_SPACING);
     ctx.fillStyle=`rgba(${r2},${g2},${b2},0.45)`;
-    ctx.fillRect(barStart, rowY+14*S, barW, rowH-28*S);
+    ctx.fillRect(barStart, rowY, barW, ROW_SPACING);
     // Gap superimposed on bar
     if(idx > 0){
       const gap = data.rows[0].pts - row.pts;
