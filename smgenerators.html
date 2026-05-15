@@ -426,7 +426,7 @@ function tbBuildRows(data) {
     <div class="row-entry">
       <div class="row-pos">${i+1}</div>
       <select class="field" id="tb-r${i}team">${teamOpts(r.team)}</select>
-      <input type="text" id="tb-r${i}driver" value="${r.driver}" placeholder="Driver">
+      <input type="text" id="tb-r${i}driver" value="${r.driver}" placeholder="Team Principal">
       <input type="number" id="tb-r${i}pts" value="${r.pts}" placeholder="Pts" min="0">
     </div>`;
   });
@@ -716,7 +716,7 @@ function tbRenderFrame(ctx, data, t) {
     ctx.textAlign='left'; ctx.textBaseline='middle';
     ctx.fillText('POS', ML+8*S, colY2);
     ctx.fillText('TEAM', ML+posColW+8*S, colY2);
-    ctx.fillText('DRIVER', ML+posColW+LOGO_COL_W+8*S, colY2);
+    ctx.fillText('TEAM PRINCIPAL', ML+posColW+LOGO_COL_W+8*S, colY2);
     ctx.textAlign='right';
     ctx.fillText('PTS', RW-MR, colY2);
     ctx.restore();
