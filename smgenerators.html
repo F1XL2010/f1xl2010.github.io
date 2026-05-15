@@ -849,6 +849,10 @@ async function tbGenerate() {
   a.href=url;a.download=fname;
   document.body.appendChild(a);a.click();document.body.removeChild(a);
   setTimeout(()=>URL.revokeObjectURL(url),5000);
+
+  // Export last frame as PNG
+  setTimeout(()=>tbExportLastFrame(canvas,data,fname),500);
+
   setTimeout(()=>{btn.disabled=false;pa.style.display='none';tbSetProgress(0,'');},2500);
 }
 
