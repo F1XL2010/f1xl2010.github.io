@@ -634,17 +634,16 @@ function tbRenderFrame(ctx, data, t) {
   ctx.fillStyle='#e10600';
   ctx.fillRect(0,0,RW,4*S);
 
-  // ── Header — staggered animation ──
-  // Each line has its own delay and slides in from alternating sides
+  // ── Header — staggered animation, slower slide ──
   const headerLines = [
-    { text:`SEASON ${data.season}`,             size:48*S, dir:1,  delay:0.05, color:'#ffffff' },
-    { text:`${data.gp.toUpperCase()} GRAND PRIX`, size:28*S, dir:-1, delay:0.35, color:'rgba(255,255,255,0.55)' },
-    { text:`ROUND ${data.round} / ${data.totalRounds}  |  ${data.date}  |  ${data.time}`, size:16*S, dir:1, delay:0.65, color:'rgba(255,255,255,0.35)' },
+    { text:`SEASON ${data.season}`,             size:48*S, dir:1,  delay:0.05, color:'#e10600' },
+    { text:`${data.gp.toUpperCase()} GRAND PRIX`, size:28*S, dir:-1, delay:0.55, color:'#ffffff' },
+    { text:`ROUND ${data.round} / ${data.totalRounds}  |  ${data.date}  |  ${data.time}`, size:16*S, dir:1, delay:1.05, color:'#e10600' },
   ];
 
   let lineY = MT + 22*S;
   headerLines.forEach((line, i) => {
-    const p = easeOut5(clamp((t - line.delay) / 0.45, 0, 1));
+    const p = easeOut5(clamp((t - line.delay) / 0.9, 0, 1)); // 0.45 → 0.9 (50% slower)
     if(p <= 0) return;
     const slideX = (1-p) * line.dir * -180*S;
     ctx.save();
@@ -670,8 +669,8 @@ function tbRenderFrame(ctx, data, t) {
   // Col headers — solid red bar
   const colHP = easeOut3(clamp((t - (T_ROW_START-0.3)) / 0.35, 0, 1));
   if(colHP > 0){
-    const colY = ROW_START_Y - 22*S;
-    const colH = 36*S;
+    const colY = ROW_START_Y - ROW_SPACING/2;
+    const colH = ROW_SPACING - 4*S;
     ctx.save(); ctx.globalAlpha=colHP;
     ctx.fillStyle='#e10600';
     ctx.fillRect(ML, colY-colH/2, CW, colH);
