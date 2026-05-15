@@ -531,6 +531,21 @@ async function tbPopulate() {
     }
     if(hIdx<0||teamCol<0||ptsCol<0) throw new Error('Could not find standings columns in sheet');
 
+    // Parse Team Principal lookup — col J(9)=TP name, col K(10)=team name
+    const teamOwners={};
+    let tpStart=-1;
+    for(let i=0;i<rows.length;i++){
+      if((rows[i][9]||'').trim().toLowerCase()==='team principal'){ tpStart=i+2; break; }
+    }
+    if(tpStart>=0){
+      for(let i=tpStart;i<rows.length;i++){
+        const tp=(rows[i][9]||'').trim();
+        const team=(rows[i][10]||'').trim().toLowerCase();
+        if(!tp||!team) continue;
+        teamOwners[team]=tp;
+      }
+    }
+
     // Extract data rows, sort by points desc
     const data=[];
     for(let i=hIdx+1;i<rows.length;i++){
@@ -539,9 +554,8 @@ async function tbPopulate() {
       const ptsRaw=(r[ptsCol]||'').trim().replace(/,/g,'');
       if(!team||!ptsRaw) continue;
       const pts=Math.floor(parseFloat(ptsRaw))||0;
-      // Get TP name — ignore if it looks like a number (points bleed)
-      const tpRaw=tpCol>=0?(r[tpCol]||'').trim():'';
-      const tp=(!tpRaw||!isNaN(parseFloat(tpRaw)))?'':tpRaw;
+      // Get TP from lookup table
+      const tp=teamOwners[team.toLowerCase()]||'';
       data.push({team, driver:tp, pts});
     }
     data.sort((a,b)=>b.pts-a.pts);
