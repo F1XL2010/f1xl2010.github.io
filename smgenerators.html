@@ -1143,15 +1143,19 @@ async function tbGenerate() {
 
   const totalFrames=Math.ceil(TOTAL_DUR*FPS);
   let frame=0;
+  const msPerFrame = 1000/FPS; // ~33.3ms per frame at 30fps
 
   await new Promise(resolve=>{
     function next(){
       if(frame>=totalFrames){resolve();return;}
+      const frameStart=performance.now();
       tbRenderFrame(ctx,data,frame/FPS);
       frame++;
       if(frame%15===0) tbSetProgress(8+Math.round((frame/totalFrames)*86),`Frame ${frame}/${totalFrames}`);
-      // Use setTimeout(0) instead of rAF — gives browser breathing room and prevents stutter
-      setTimeout(next,0);
+      // Schedule next frame at correct interval so recorder captures at right rate
+      const elapsed=performance.now()-frameStart;
+      const delay=Math.max(0, msPerFrame-elapsed);
+      setTimeout(next, delay);
     }
     next();
   });
