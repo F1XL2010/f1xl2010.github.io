@@ -606,9 +606,7 @@ async function tbPopulate() {
         const dRes = await fetch(dUrl);
         const dText = await dRes.text();
         if(dText.includes('<!DOCTYPE')){ divLeaders.push(null); continue; }
-        const dRows = dText.split(/
-?
-/).map(l=>{
+        const dRows = dText.split(/\r?\n/).map(l=>{
           const cells=[]; let cur='',inQ=false;
           for(let i=0;i<l.length;i++){
             const c=l[i];
