@@ -643,7 +643,7 @@ function tbRenderFrame(ctx, data, t) {
 
   let lineY = MT + 22*S;
   headerLines.forEach((line, i) => {
-    const p = easeOut5(clamp((t - line.delay) / 1.8, 0, 1)); // 100% slower
+    const p = easeOut5(clamp((t - line.delay) / 2.7, 0, 1)); // 150% slower
     if(p <= 0) return;
     const slideX = (1-p) * line.dir * -180*S;
     ctx.save();
@@ -692,7 +692,7 @@ function tbRenderFrame(ctx, data, t) {
 
   data.rows.forEach((row, idx) => {
     const rowDelay = T_ROW_START + idx * T_ROW_GAP;
-    const rP = easeOut5(clamp((t - rowDelay) / 0.9, 0, 1));
+    const rP = easeOut5(clamp((t - rowDelay) / 1.35, 0, 1));
     if(rP <= 0) return;
 
     const rowY = ROW_START_Y + idx * ROW_SPACING;
