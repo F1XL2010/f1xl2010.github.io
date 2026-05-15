@@ -654,19 +654,25 @@ function tbRenderFrame(ctx, data, t) {
   ctx.fillRect(0,0,RW,4*S);
 
   // ── Header — staggered animation, slower slide ──
+  // Lines 2+3 fade out when flip phase starts (flip takes over rendering them)
+  const flipPhaseStart2 = T_EXIT_START_OFFSET + (data.rows.length + 1) * T_EXIT_GAP + T_EXIT_DUR + T_FLIP_OFFSET;
   const headerLines = [
-    { text:`SEASON ${data.season}`,             size:48*S, dir:1,  delay:0.05, color:'#e10600' },
-    { text:`${data.gp.toUpperCase()} GRAND PRIX`, size:28*S, dir:-1, delay:0.30, color:'#ffffff' },
-    { text:`ROUND ${data.round} / ${data.totalRounds}  |  ${data.date}  |  ${data.time}`, size:16*S, dir:1, delay:0.55, color:'#e10600' },
+    { text:`SEASON ${data.season}`,             size:48*S, dir:1,  delay:0.05, color:'#e10600', permanent:true },
+    { text:`${data.gp.toUpperCase()} GRAND PRIX`, size:28*S, dir:-1, delay:0.30, color:'#ffffff', permanent:false },
+    { text:`ROUND ${data.round} / ${data.totalRounds}  |  ${data.date}  |  ${data.time}`, size:16*S, dir:1, delay:0.55, color:'#e10600', permanent:false },
   ];
 
   let lineY = MT + 22*S;
   headerLines.forEach((line, i) => {
-    const p = easeOut5(clamp((t - line.delay) / 2.7, 0, 1)); // 150% slower
-    if(p <= 0) return;
+    const p = easeOut5(clamp((t - line.delay) / 2.7, 0, 1));
+    if(p <= 0){ lineY += line.size + 10*S; return; }
+    // Non-permanent lines fade out as flip phase approaches
+    const fadeOut = line.permanent ? 0 : easeIO2(clamp((t - (flipPhaseStart2 - 0.3)) / 0.5, 0, 1));
+    const alpha = Math.min(p*2, 1) * (1 - fadeOut);
+    if(alpha <= 0){ lineY += line.size + 10*S; return; }
     const slideX = (1-p) * line.dir * -180*S;
     ctx.save();
-    ctx.globalAlpha = Math.min(p*2, 1);
+    ctx.globalAlpha = alpha;
     ctx.translate(slideX, 0);
     ctx.font=`400 ${line.size}px ${F1}`;
     ctx.fillStyle = line.color;
@@ -682,26 +688,6 @@ function tbRenderFrame(ctx, data, t) {
     ctx.save(); ctx.globalAlpha=divP*0.2;
     ctx.strokeStyle='#ffffff'; ctx.lineWidth=S;
     ctx.beginPath(); ctx.moveTo(ML, MT+170*S); ctx.lineTo(RW-MR, MT+170*S); ctx.stroke();
-    ctx.restore();
-  }
-
-  // Col headers — solid red bar
-  const colHP = easeOut3(clamp((t - (T_ROW_START-0.3)) / 0.35, 0, 1));
-  if(colHP > 0){
-    const colY = ROW_START_Y - ROW_SPACING/2;
-    const colH = ROW_SPACING - 4*S;
-    ctx.save(); ctx.globalAlpha=colHP;
-    ctx.fillStyle='#e10600';
-    ctx.fillRect(ML, colY-colH/2, CW, colH);
-    ctx.font=`400 ${11*S}px ${F1}`;
-    ctx.fillStyle='#ffffff';
-    ctx.textAlign='left'; ctx.textBaseline='middle';
-    const posColW2 = 56*S;
-    ctx.fillText('POS', ML+8*S, colY);
-    ctx.fillText('TEAM', ML+posColW2+8*S, colY);
-    ctx.fillText('DRIVER', ML+posColW2+LOGO_COL_W+8*S, colY);
-    ctx.textAlign='right';
-    ctx.fillText('PTS', RW-MR, colY);
     ctx.restore();
   }
 
