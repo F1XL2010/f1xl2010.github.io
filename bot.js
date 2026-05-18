@@ -151,7 +151,7 @@ async function getDivisionTeams(sheetId, dataGid) {
     }
     if (hdrIdx < 0) return [];
 
-    // Col A=Driver, Col C=Abbreviation, Col D=Team, Col E=Tier
+    // Col A=Driver, Col D=Team, Col E=Tier
     const teams = {};
     for (let i = hdrIdx + 1; i < rows.length; i++) {
       const r = rows[i];
@@ -159,9 +159,24 @@ async function getDivisionTeams(sheetId, dataGid) {
       const team   = (r[3] || '').trim();
       const tier   = (r[4] || '').trim();
       if (!driver || !team) continue;
-      if (!teams[team]) teams[team] = { drivers: [], tier };
+      if (!teams[team]) teams[team] = { drivers: [], tier, tp: '' };
       teams[team].drivers.push(driver);
     }
+
+    // Pull TP names from col J(9)=TP, col K(10)=team — lower section of same sheet
+    let tpStart = -1;
+    for (let i = 0; i < rows.length; i++) {
+      if ((rows[i][9] || '').trim().toLowerCase() === 'team principal') { tpStart = i + 2; break; }
+    }
+    if (tpStart >= 0) {
+      for (let i = tpStart; i < rows.length; i++) {
+        const tp   = (rows[i][9] || '').trim();
+        const team = (rows[i][10] || '').trim();
+        if (!tp || !team) continue;
+        if (teams[team]) teams[team].tp = tp;
+      }
+    }
+
     return Object.entries(teams).map(([team, data]) => ({ team, ...data }));
   } catch (e) {
     console.warn('Failed to load division data:', e.message);
@@ -182,40 +197,16 @@ function buildEmbed(divNum, season, teams) {
     };
   }
 
-  // Group by tier if tiers exist
-  const hasTiers = teams.some(t => t.tier);
-  let fields = [];
-
-  if (hasTiers) {
-    const byTier = {};
-    teams.forEach(t => {
-      const tier = t.tier || 'Other';
-      if (!byTier[tier]) byTier[tier] = [];
-      byTier[tier].push(t);
-    });
-    for (const [tier, tierTeams] of Object.entries(byTier)) {
-      const value = tierTeams.map(t =>
-        `**${t.team}**\n${t.drivers.join(' · ')}`
-      ).join('\n\n');
-      fields.push({ name: tier, value: value || '—', inline: false });
-    }
-  } else {
-    // All teams in one field
-    const value = teams.map(t =>
-      `**${t.team}**\n${t.drivers.join(' · ')}`
-    ).join('\n\n');
-    // Discord field value limit is 1024 chars — split if needed
-    if (value.length <= 1024) {
-      fields.push({ name: 'Teams', value, inline: false });
-    } else {
-      // Split into two columns
-      const half = Math.ceil(teams.length / 2);
-      const left  = teams.slice(0, half).map(t => `**${t.team}**\n${t.drivers.join(' · ')}`).join('\n\n');
-      const right = teams.slice(half).map(t => `**${t.team}**\n${t.drivers.join(' · ')}`).join('\n\n');
-      fields.push({ name: '\u200b', value: left || '—', inline: true });
-      fields.push({ name: '\u200b', value: right || '—', inline: true });
-    }
-  }
+  // Build fields — one per team
+  const fields = teams.map(t => ({
+    name: t.team,
+    value: [
+      t.tp ? `*${t.tp}*` : '',
+      `Div ${divNum}`,
+      t.drivers.length ? t.drivers.join('\n') : '—',
+    ].filter(Boolean).join('\n'),
+    inline: true,
+  }));
 
   return {
     title: `Division ${divNum}`,
