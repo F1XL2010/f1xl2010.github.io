@@ -144,36 +144,36 @@ async function getCurrentSeasonConfig(config) {
 async function getDivisionTeams(sheetId, dataGid) {
   try {
     const rows = await fetchCSV(sheetId, dataGid);
-    // Find header row — look for 'Driver' in col A
-    let hdrIdx = -1;
-    for (let i = 0; i < rows.length; i++) {
-      if ((rows[i][0] || '').trim().toLowerCase() === 'driver') { hdrIdx = i; break; }
-    }
-    if (hdrIdx < 0) return [];
-
-    // Col A=Driver, Col D=Team, Col E=Tier
     const teams = {};
-    for (let i = hdrIdx + 1; i < rows.length; i++) {
-      const r = rows[i];
-      const driver = (r[0] || '').trim();
-      const team   = (r[3] || '').trim();
-      const tier   = (r[4] || '').trim();
+
+    // Main drivers — col J (index 9) = driver, col M (index 12) = team, rows 2-23 (index 1-22)
+    for (let i = 1; i <= 22; i++) {
+      if (!rows[i]) continue;
+      const driver = (rows[i][9] || '').trim();
+      const team   = (rows[i][12] || '').trim();
       if (!driver || !team) continue;
-      if (!teams[team]) teams[team] = { drivers: [], tier, tp: '' };
+      if (!teams[team]) teams[team] = { drivers: [], tp: '' };
       teams[team].drivers.push(driver);
     }
 
-    // Pull TP names — col J(9)=TP name, col K(10)=team, header at row 25, data from row 27
+    // Reserve drivers — col P (index 15), rows 3-24 (index 2-23)
+    for (let i = 2; i <= 23; i++) {
+      if (!rows[i]) continue;
+      const driver = (rows[i][15] || '').trim();
+      if (!driver) continue;
+      if (!teams['Reserve']) teams['Reserve'] = { drivers: [], tp: '' };
+      teams['Reserve'].drivers.push(driver);
+    }
+
+    // Pull TP names — col J(9)=TP name, col K(10)=team, header at row 25
     let tpStart = -1;
     for (let i = 0; i < rows.length; i++) {
       if ((rows[i][9] || '').trim().toLowerCase() === 'team principal') {
         tpStart = i + 2;
-        console.log(`TP header found at row ${i}, data starts at ${tpStart}`);
         break;
       }
     }
     if (tpStart >= 0) {
-      // Build lowercase lookup of teams for case-insensitive matching
       const teamLower = {};
       for (const t of Object.keys(teams)) teamLower[t.toLowerCase()] = t;
       for (let i = tpStart; i < rows.length; i++) {
@@ -198,7 +198,7 @@ async function getDivisionTeams(sheetId, dataGid) {
 function buildTeamEmbed(team, season) {
   const colour = DIV_COLOURS[team.div] || 0x3DCC47;
   const lines = [];
-  if (team.tp) lines.push(`*${team.tp}*`);
+  if (team.tp) lines.push(`Team Principal: *${team.tp}*`);
   lines.push(`Division ${team.div}`);
   if (team.drivers.length) lines.push(team.drivers.join('\n'));
   return {
