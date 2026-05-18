@@ -163,20 +163,25 @@ async function getDivisionTeams(sheetId, dataGid) {
       teams[team].drivers.push(driver);
     }
 
-    // Pull TP names from col J(9)=TP, col K(10)=team — lower section of same sheet
+    // Pull TP names — col J(9)=TP name, col K(10)=team, header at row 25, data from row 27
     let tpStart = -1;
     for (let i = 0; i < rows.length; i++) {
-      if ((rows[i][9] || '').trim().toLowerCase() === 'team principal') { tpStart = i + 2; break; }
+      if ((rows[i][9] || '').trim().toLowerCase() === 'team principal') {
+        tpStart = i + 2;
+        console.log(`TP header found at row ${i}, data starts at ${tpStart}`);
+        break;
+      }
     }
-    console.log(`TP section starts at row: ${tpStart}`);
     if (tpStart >= 0) {
       for (let i = tpStart; i < rows.length; i++) {
         const tp   = (rows[i][9] || '').trim();
         const team = (rows[i][10] || '').trim();
-        console.log(`TP row ${i}: tp="${tp}" team="${team}"`);
         if (!tp || !team) continue;
+        console.log(`TP: "${tp}" → "${team}"`);
         if (teams[team]) teams[team].tp = tp;
       }
+    } else {
+      console.log(`TP header not found. Row 24 col 9: "${(rows[24]||[])[9]||''}"`);
     }
 
     return Object.entries(teams).map(([team, data]) => ({ team, ...data }));
