@@ -373,24 +373,23 @@ function parseOverallTab(rows){
 
 // Cross-reference overall seasons with division data to find team members
 function enrichOverallWithDrivers(overallData, allDivData){
+  // Overall championship drivers come from Division 1 only
+  const div1Seasons = allDivData['Division 1'] || allDivData['Div 1'] || Object.values(allDivData)[0] || [];
   return overallData.map(s => {
     const winningTeam = (s.ownerTeam||'').toLowerCase();
     const ruTeam = (s.ruTeam||'').toLowerCase();
     let driver1='', driver2='', ruDriver1='', ruDriver2='';
-    // Search all divisions for this season
-    Object.values(allDivData).forEach(divSeasons => {
-      const match = divSeasons.find(d => parseFloat(d.season) === s.season);
-      if(match){
-        if(match.constructor && match.constructor.toLowerCase() === winningTeam){
-          driver1 = match.consDriver1 || '';
-          driver2 = match.consDriver2 || '';
-        }
-        if(match.consRu && match.consRu.toLowerCase() === ruTeam){
-          ruDriver1 = match.consRuDriver1 || '';
-          ruDriver2 = match.consRuDriver2 || '';
-        }
+    const match = div1Seasons.find(d => parseFloat(d.season) === s.season);
+    if(match){
+      if(match.constructor && match.constructor.toLowerCase() === winningTeam){
+        driver1 = match.consDriver1 || '';
+        driver2 = match.consDriver2 || '';
       }
-    });
+      if(match.consRu && match.consRu.toLowerCase() === ruTeam){
+        ruDriver1 = match.consRuDriver1 || '';
+        ruDriver2 = match.consRuDriver2 || '';
+      }
+    }
     return {...s, driver1, driver2, ruDriver1, ruDriver2};
   });
 }
