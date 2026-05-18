@@ -173,15 +173,16 @@ async function getDivisionTeams(sheetId, dataGid) {
       }
     }
     if (tpStart >= 0) {
+      // Build lowercase lookup of teams for case-insensitive matching
+      const teamLower = {};
+      for (const t of Object.keys(teams)) teamLower[t.toLowerCase()] = t;
       for (let i = tpStart; i < rows.length; i++) {
         const tp   = (rows[i][9] || '').trim();
-        const team = (rows[i][10] || '').trim();
+        const team = (rows[i][10] || '').trim().toLowerCase();
         if (!tp || !team) continue;
-        console.log(`TP: "${tp}" → "${team}"`);
-        if (teams[team]) teams[team].tp = tp;
+        const teamKey = teamLower[team];
+        if (teamKey) teams[teamKey].tp = tp;
       }
-    } else {
-      console.log(`TP header not found. Row 24 col 9: "${(rows[24]||[])[9]||''}"`);
     }
 
     return Object.entries(teams).map(([team, data]) => ({ team, ...data }));
