@@ -184,35 +184,20 @@ async function getDivisionTeams(sheetId, dataGid) {
   }
 }
 
-// ─── BUILD EMBED ───────────────────────────────────────────────────────────
-function buildEmbed(divNum, season, teams) {
-  const colour = DIV_COLOURS[divNum] || 0x3DCC47;
 
-  if (!teams.length) {
-    return {
-      title: `Division ${divNum}`,
-      description: '*No team data available yet.*',
-      color: colour,
-      footer: { text: `F1XL Season ${season} · Division ${divNum}` },
-    };
-  }
 
-  // Build fields — one per team
-  const fields = teams.map(t => ({
-    name: t.team,
-    value: [
-      t.tp ? `*${t.tp}*` : '',
-      `Div ${divNum}`,
-      t.drivers.length ? t.drivers.join('\n') : '—',
-    ].filter(Boolean).join('\n'),
-    inline: true,
-  }));
-
+// ─── BUILD TEAM EMBED ──────────────────────────────────────────────────────
+function buildTeamEmbed(team, season) {
+  const colour = DIV_COLOURS[team.div] || 0x3DCC47;
+  const lines = [];
+  if (team.tp) lines.push(`*${team.tp}*`);
+  lines.push(`Division ${team.div}`);
+  if (team.drivers.length) lines.push(team.drivers.join('\n'));
   return {
-    title: `Division ${divNum}`,
+    title: team.team,
+    description: lines.join('\n'),
     color: colour,
-    fields,
-    footer: { text: `F1XL Season ${season} · Last updated` },
+    footer: { text: `F1XL Season ${season}` },
     timestamp: new Date().toISOString(),
   };
 }
@@ -232,48 +217,48 @@ async function main() {
   const { season, sc } = await getCurrentSeasonConfig(config);
   console.log(`Current season: ${season}`);
 
-  // Find active divisions
   const divisions = parseInt(sc['divisions']) || 1;
   console.log(`Divisions: ${divisions}`);
 
-  // Get existing bot messages in channel (to edit rather than repost)
-  console.log('Fetching existing channel messages...');
-  const existing = await getChannelMessages();
-
-  // Filter to messages from our bot that have embeds with division titles
-  const botMessages = existing.filter(m => m.author?.bot && m.embeds?.length > 0);
-
-  // Map division number → existing message ID
-  const existingByDiv = {};
-  for (const msg of botMessages) {
-    const title = msg.embeds[0]?.title || '';
-    const match = title.match(/Division (\d+)/i);
-    if (match) existingByDiv[parseInt(match[1])] = msg.id;
-  }
-
-  // Process each division
+  // Collect all teams from all divisions
+  const allTeams = [];
   for (let d = 1; d <= divisions; d++) {
     const sheetId = sc[`d${d}_sheet_id`];
     const dataGid = sc[`d${d}_team_info_gid`];
+    if (!sheetId || dataGid === undefined || dataGid === '') continue;
+    const teams = await getDivisionTeams(sheetId, dataGid);
+    teams.forEach(t => allTeams.push({ ...t, div: d }));
+    await new Promise(r => setTimeout(r, 300));
+  }
 
-    console.log(`Division ${d}: sheet=${sheetId}, gid=${dataGid}`);
+  // Sort alphabetically by team name
+  allTeams.sort((a, b) => a.team.localeCompare(b.team));
+  console.log(`Total teams: ${allTeams.length}`);
 
-    let teams = [];
-    if (sheetId && dataGid !== undefined && dataGid !== '') {
-      teams = await getDivisionTeams(sheetId, dataGid);
-    }
+  // Get existing bot messages
+  console.log('Fetching existing channel messages...');
+  const existing = await getChannelMessages();
+  const botMessages = existing
+    .filter(m => m.author?.bot && m.embeds?.length > 0)
+    .reverse(); // oldest first to match posting order
 
-    const embed = buildEmbed(d, season, teams);
+  // Match existing messages to teams by title
+  const existingByTeam = {};
+  for (const msg of botMessages) {
+    const title = msg.embeds[0]?.title || '';
+    if (title) existingByTeam[title] = msg.id;
+  }
 
-    if (existingByDiv[d]) {
-      console.log(`Editing existing message for Division ${d}`);
-      await editMessage(existingByDiv[d], embed);
+  // Post or update one message per team
+  for (const team of allTeams) {
+    const embed = buildTeamEmbed(team, season);
+    if (existingByTeam[team.team]) {
+      console.log(`Editing: ${team.team}`);
+      await editMessage(existingByTeam[team.team], embed);
     } else {
-      console.log(`Posting new message for Division ${d}`);
+      console.log(`Posting: ${team.team}`);
       await sendMessage(embed);
     }
-
-    // Small delay to avoid rate limiting
     await new Promise(r => setTimeout(r, 500));
   }
 
