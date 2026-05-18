@@ -200,7 +200,8 @@ async function getDivisionTeams(sheetId, dataGid) {
 
 // ─── SNAPSHOT ──────────────────────────────────────────────────────────────
 const fs = require('fs');
-const SNAPSHOT_FILE = '/tmp/f1xl_roster_snapshot.json';
+const { execSync } = require('child_process');
+const SNAPSHOT_FILE = 'roster_snapshot.json';
 
 function loadSnapshot() {
   try {
@@ -212,7 +213,23 @@ function loadSnapshot() {
 }
 
 function saveSnapshot(data) {
-  try { fs.writeFileSync(SNAPSHOT_FILE, JSON.stringify(data)); } catch(e) {}
+  try {
+    fs.writeFileSync(SNAPSHOT_FILE, JSON.stringify(data, null, 2));
+    // Commit back to repo so it persists between runs
+    execSync('git config user.email "bot@f1xl.co.uk"');
+    execSync('git config user.name "F1XL Bot"');
+    execSync(`git add ${SNAPSHOT_FILE}`);
+    const status = execSync('git status --porcelain').toString().trim();
+    if (status) {
+      execSync(`git commit -m "chore: update roster snapshot"`);
+      execSync('git push');
+      console.log('Snapshot committed to repo');
+    } else {
+      console.log('No snapshot changes to commit');
+    }
+  } catch(e) {
+    console.warn('Failed to save snapshot:', e.message);
+  }
 }
 
 // ─── CHANGE DETECTION ──────────────────────────────────────────────────────
