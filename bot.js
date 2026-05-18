@@ -1,8 +1,9 @@
 const https = require('https');
 
 // ─── CONFIG ────────────────────────────────────────────────────────────────
-const DISCORD_TOKEN     = process.env.DISCORD_TOKEN;
-const CHANNEL_ID        = process.env.DISCORD_CHANNEL_ID;
+const DISCORD_TOKEN       = process.env.DISCORD_TOKEN;
+const CHANNEL_ID          = process.env.DISCORD_CHANNEL_ID;
+const NOTIFY_CHANNEL_ID   = process.env.DISCORD_NOTIFY_CHANNEL_ID;
 const CONFIG_SHEET_ID   = '1ThIh7aKlGOuv83v9IJVSGpuspZLl0c9ajE0GJBpuCtk';
 const CONFIG_GID        = '0';
 
@@ -146,23 +147,25 @@ async function getDivisionTeams(sheetId, dataGid) {
     const rows = await fetchCSV(sheetId, dataGid);
     const teams = {};
 
-    // Main drivers — col J (index 9) = driver, col M (index 12) = team, rows 2-23 (index 1-22)
+    // Main drivers — col J(9)=driver, col M(12)=team, col N(13)=tier, rows 2-23 (index 1-22)
     for (let i = 1; i <= 22; i++) {
       if (!rows[i]) continue;
-      const driver = (rows[i][9] || '').trim();
+      const driver = (rows[i][9]  || '').trim();
       const team   = (rows[i][12] || '').trim();
+      const tier   = (rows[i][13] || '').trim();
       if (!driver || !team) continue;
       if (!teams[team]) teams[team] = { drivers: [], tp: '' };
-      teams[team].drivers.push(driver);
+      teams[team].drivers.push({ name: driver, tier });
     }
 
-    // Reserve drivers — col P (index 15), rows 3-24 (index 2-23)
+    // Reserve drivers — col P(15)=driver, col S(18)=tier, rows 3-24 (index 2-23)
     for (let i = 2; i <= 23; i++) {
       if (!rows[i]) continue;
       const driver = (rows[i][15] || '').trim();
+      const tier   = (rows[i][18] || '').trim();
       if (!driver) continue;
       if (!teams['Reserve']) teams['Reserve'] = { drivers: [], tp: '' };
-      teams['Reserve'].drivers.push(driver);
+      teams['Reserve'].drivers.push({ name: driver, tier });
     }
 
     // Pull TP names — col J(9)=TP name, col K(10)=team, header at row 25
@@ -193,6 +196,111 @@ async function getDivisionTeams(sheetId, dataGid) {
 }
 
 
+
+
+// ─── SNAPSHOT ──────────────────────────────────────────────────────────────
+const fs = require('fs');
+const SNAPSHOT_FILE = '/tmp/f1xl_roster_snapshot.json';
+
+function loadSnapshot() {
+  try {
+    if (fs.existsSync(SNAPSHOT_FILE)) {
+      return JSON.parse(fs.readFileSync(SNAPSHOT_FILE, 'utf8'));
+    }
+  } catch(e) {}
+  return null;
+}
+
+function saveSnapshot(data) {
+  try { fs.writeFileSync(SNAPSHOT_FILE, JSON.stringify(data)); } catch(e) {}
+}
+
+// ─── CHANGE DETECTION ──────────────────────────────────────────────────────
+function detectChanges(prev, curr) {
+  const changes = [];
+  if (!prev) return changes; // first run — no notifications
+
+  // Build flat driver→{team,tier,div} maps for prev and curr
+  function flatten(snapshot) {
+    const map = {};
+    for (const [divKey, teams] of Object.entries(snapshot)) {
+      const div = divKey.replace('div','');
+      for (const t of teams) {
+        for (const d of t.drivers) {
+          const name = typeof d === 'object' ? d.name : d;
+          const tier = typeof d === 'object' ? d.tier : '';
+          map[name.toLowerCase()] = { name, team: t.team, tier, div };
+        }
+      }
+    }
+    return map;
+  }
+
+  const prevMap = flatten(prev);
+  const currMap = flatten(curr);
+
+  // Check for new drivers and team changes
+  for (const [key, curr_d] of Object.entries(currMap)) {
+    if (!prevMap[key]) {
+      // New driver
+      if (curr_d.team === 'Reserve') {
+        changes.push({ type: 'new_reserve', driver: curr_d.name, tier: curr_d.tier, div: curr_d.div });
+      } else {
+        changes.push({ type: 'signed', driver: curr_d.name, team: curr_d.team, tier: curr_d.tier, div: curr_d.div });
+      }
+    } else {
+      const prev_d = prevMap[key];
+      if (prev_d.team !== curr_d.team) {
+        if (prev_d.team === 'Reserve' && curr_d.team !== 'Reserve') {
+          // Promoted from reserve
+          changes.push({ type: 'signed', driver: curr_d.name, team: curr_d.team, tier: curr_d.tier, div: curr_d.div });
+        } else if (curr_d.team !== 'Reserve') {
+          // Team change
+          changes.push({ type: 'signed', driver: curr_d.name, team: curr_d.team, tier: curr_d.tier, div: curr_d.div });
+        }
+      }
+    }
+  }
+
+  // Check for removed drivers
+  for (const [key, prev_d] of Object.entries(prevMap)) {
+    if (!currMap[key] && prev_d.team !== 'Reserve') {
+      changes.push({ type: 'departed', driver: prev_d.name, team: prev_d.team, div: prev_d.div });
+    }
+  }
+
+  return changes;
+}
+
+// ─── NOTIFICATION MESSAGES ─────────────────────────────────────────────────
+// Message templates — edit these to change wording
+const TEMPLATES = {
+  new_reserve: (c) => ({
+    title: `🆕 RESERVE SIGNING`,
+    description: `**${c.driver}** joins the F1XL reserve pool\nTier ${c.tier||'?'}`,
+    color: 0x3DCC47,
+  }),
+  signed: (c) => ({
+    title: `✍️ SIGNED`,
+    description: `**${c.driver}** joins **${c.team}**\nDivision ${c.div} · Tier ${c.tier||'?'}`,
+    color: DIV_COLOURS[parseInt(c.div)] || 0x3DCC47,
+  }),
+  departed: (c) => ({
+    title: `🚪 DEPARTURE`,
+    description: `**${c.driver}** departs **${c.team}**\nDivision ${c.div}`,
+    color: 0x8B0000,
+  }),
+};
+
+async function sendNotification(change) {
+  if (!NOTIFY_CHANNEL_ID) return;
+  const template = TEMPLATES[change.type];
+  if (!template) return;
+  const embed = { ...template(change), timestamp: new Date().toISOString(), footer: { text: 'F1XL Transfers' } };
+  const res = await discordRequest('POST', `/channels/${NOTIFY_CHANNEL_ID}/messages`, { embeds: [embed] });
+  if (res.status !== 200) console.error('Failed to send notification:', res.body);
+  await new Promise(r => setTimeout(r, 500));
+}
 
 // ─── BUILD TEAM EMBED ──────────────────────────────────────────────────────
 function buildTeamEmbed(team, season) {
@@ -242,6 +350,22 @@ async function main() {
   // Sort alphabetically by team name
   allTeams.sort((a, b) => a.team.localeCompare(b.team));
   console.log(`Total teams: ${allTeams.length}`);
+
+  // Build snapshot structure for change detection
+  const currSnapshot = {};
+  for (let d = 1; d <= divisions; d++) {
+    currSnapshot[`div${d}`] = allTeams.filter(t => t.div === d);
+  }
+
+  // Detect changes and send notifications
+  const prevSnapshot = loadSnapshot();
+  const changes = detectChanges(prevSnapshot, currSnapshot);
+  console.log(`Changes detected: ${changes.length}`);
+  for (const change of changes) {
+    console.log(`  ${change.type}: ${change.driver}`);
+    await sendNotification(change);
+  }
+  saveSnapshot(currSnapshot);
 
   // Get existing bot messages
   console.log('Fetching existing channel messages...');
