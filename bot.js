@@ -168,10 +168,12 @@ async function getDivisionTeams(sheetId, dataGid) {
     for (let i = 0; i < rows.length; i++) {
       if ((rows[i][9] || '').trim().toLowerCase() === 'team principal') { tpStart = i + 2; break; }
     }
+    console.log(`TP section starts at row: ${tpStart}`);
     if (tpStart >= 0) {
       for (let i = tpStart; i < rows.length; i++) {
         const tp   = (rows[i][9] || '').trim();
         const team = (rows[i][10] || '').trim();
+        console.log(`TP row ${i}: tp="${tp}" team="${team}"`);
         if (!tp || !team) continue;
         if (teams[team]) teams[team].tp = tp;
       }
