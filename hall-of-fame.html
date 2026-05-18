@@ -674,7 +674,10 @@ function renderLeagueRecords(divDataRaw, overallDataRaw){
 
   function lrTable(title, items){
     if(!items||!items.length) return '';
-    const top = items.sort((a,b)=>b.val-a.val).slice(0,10);
+    // Sort by wins desc, then by original sheet position desc within ties
+    // (sheet adds new entries at bottom, so higher index = more recent = should rank first in ties)
+    const indexed = items.map((item,i)=>({...item,_i:i}));
+    const top = indexed.sort((a,b)=>b.val-a.val||b._i-a._i).slice(0,10);
     return `<div class="lr-card">
       <div class="lr-card-title">${title}</div>
       ${top.map((item,i)=>`
