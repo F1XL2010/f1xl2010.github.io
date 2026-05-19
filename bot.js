@@ -259,7 +259,7 @@ function detectChanges(prev, curr) {
   // Check for new drivers and team changes
   for (const [key, curr_d] of Object.entries(currMap)) {
     if (!prevMap[key]) {
-      // New driver
+      // Brand new driver
       if (curr_d.team === 'Reserve') {
         changes.push({ type: 'new_reserve', driver: curr_d.name, tier: curr_d.tier, div: curr_d.div });
       } else {
@@ -268,18 +268,22 @@ function detectChanges(prev, curr) {
     } else {
       const prev_d = prevMap[key];
       if (prev_d.team !== curr_d.team) {
-        if (prev_d.team === 'Reserve' && curr_d.team !== 'Reserve') {
-          // Promoted from reserve
+        if (curr_d.team === 'Reserve') {
+          // Moved to reserve — fire departure from old team
+          changes.push({ type: 'departed', driver: curr_d.name, team: prev_d.team, div: prev_d.div });
+        } else if (prev_d.team === 'Reserve') {
+          // Promoted from reserve to team
           changes.push({ type: 'signed', driver: curr_d.name, team: curr_d.team, tier: curr_d.tier, div: curr_d.div });
-        } else if (curr_d.team !== 'Reserve') {
-          // Team change
+        } else {
+          // Moved between teams
+          changes.push({ type: 'departed', driver: curr_d.name, team: prev_d.team, div: prev_d.div });
           changes.push({ type: 'signed', driver: curr_d.name, team: curr_d.team, tier: curr_d.tier, div: curr_d.div });
         }
       }
     }
   }
 
-  // Check for removed drivers
+  // Check for drivers completely removed from roster
   for (const [key, prev_d] of Object.entries(prevMap)) {
     if (!currMap[key] && prev_d.team !== 'Reserve') {
       changes.push({ type: 'departed', driver: prev_d.name, team: prev_d.team, div: prev_d.div });
