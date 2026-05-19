@@ -2,8 +2,7 @@ name: F1XL Discord Teams Bot
 
 on:
   schedule:
-    # 
-    - cron: '*/5 * * * *'
+  - cron: '*/5 * * * *'
   workflow_dispatch:
     # Allows manual trigger from GitHub Actions tab
 
