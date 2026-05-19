@@ -380,6 +380,13 @@ async function main() {
 
   // Detect changes and send notifications
   const prevSnapshot = loadSnapshot();
+  if (prevSnapshot) {
+    const prevDrivers = Object.values(prevSnapshot).flat().reduce((a,t) => a + (t.drivers||[]).length, 0);
+    const currDrivers = allTeams.reduce((a,t) => a + (t.drivers||[]).length, 0);
+    console.log(`Prev snapshot drivers: ${prevDrivers}, Current: ${currDrivers}`);
+  } else {
+    console.log('No previous snapshot — first run, creating baseline');
+  }
   const changes = detectChanges(prevSnapshot, currSnapshot);
   console.log(`Changes detected: ${changes.length}`);
   for (const change of changes) {
@@ -402,17 +409,24 @@ async function main() {
     if (title) existingByTeam[title] = msg.id;
   }
 
-  // Post or update one message per team
+  // Post or update one message per team — only edit if content changed
   for (const team of allTeams) {
     const embed = buildTeamEmbed(team, season);
     if (existingByTeam[team.team]) {
-      console.log(`Editing: ${team.team}`);
-      await editMessage(existingByTeam[team.team], embed);
+      // Compare current embed description to existing to avoid unnecessary edits
+      const existingMsg = botMessages.find(m => m.embeds[0]?.title === team.team);
+      const existingDesc = existingMsg?.embeds[0]?.description || '';
+      const newDesc = embed.description || '';
+      if (existingDesc !== newDesc) {
+        console.log(`Editing: ${team.team} (content changed)`);
+        await editMessage(existingByTeam[team.team], embed);
+        await new Promise(r => setTimeout(r, 500));
+      }
     } else {
       console.log(`Posting: ${team.team}`);
       await sendMessage(embed);
+      await new Promise(r => setTimeout(r, 500));
     }
-    await new Promise(r => setTimeout(r, 500));
   }
 
   console.log('Done.');
