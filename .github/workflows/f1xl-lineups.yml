@@ -1,0 +1,20 @@
+name: F1XL Lineups and Calendar
+
+on:
+  schedule:
+    - cron: '0 9 * * 1,5'
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Run lineups and calendar bot
+        env:
+          DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+          DISCORD_CHANNEL_ID: ${{ secrets.DISCORD_CHANNEL_ID }}
+          DISCORD_CALENDAR_CHANNEL_ID: ${{ secrets.DISCORD_CALENDAR_CHANNEL_ID }}
+        run: node bot/lineups.js
