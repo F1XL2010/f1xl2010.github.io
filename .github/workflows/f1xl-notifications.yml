@@ -1,8 +1,8 @@
 name: F1XL Notifications
 
 on:
-  repository_dispatch:
-    types: [run-notifications]
+  schedule:
+    - cron: '0 18-23 * * 3,4,5,6,0'
   workflow_dispatch:
 
 jobs:
@@ -10,6 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
       - name: Run notifications bot
         env:
           DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
