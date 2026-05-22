@@ -82,19 +82,26 @@ async function loadState() {
       headers: { 'Authorization': `token ${GIST_TOKEN}`, 'User-Agent': 'F1XL-Bot', 'Accept': 'application/vnd.github.v3+json' },
     });
     const content = res.body.files?.['state.json']?.content || '{}';
+    console.log('Loaded state from Gist:', content.slice(0, 200));
     return JSON.parse(content);
   } catch(e) { console.warn('Failed to load state:', e.message); return {}; }
 }
 
 async function saveState(state) {
   try {
-    await httpRequest({
+    console.log('Saving state:', JSON.stringify(state));
+    const res = await httpRequest({
       hostname: 'api.github.com',
       path: `/gists/${GIST_ID}`,
       method: 'PATCH',
       headers: { 'Authorization': `token ${GIST_TOKEN}`, 'User-Agent': 'F1XL-Bot', 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
     }, { files: { 'state.json': { content: JSON.stringify(state, null, 2) } } });
-    console.log('State saved');
+    if (res.status === 200) {
+      const savedContent = res.body.files?.['state.json']?.content || 'unknown';
+      console.log('State saved — Gist now contains:', savedContent.slice(0, 200));
+    } else {
+      console.error('Failed to save state — HTTP', res.status, JSON.stringify(res.body).slice(0, 200));
+    }
   } catch(e) { console.warn('Failed to save state:', e.message); }
 }
 
