@@ -1030,7 +1030,6 @@ function tbRenderFrame(ctx, data, t) {
   const boxPhaseStart = flipPhaseStart + T_FLIP_GAP + T_FLIP_DUR + T_BOX_OFFSET;
 
   if(hasNextRace && t > boxPhaseStart - T_BOX_DUR) {
-    if(t < boxPhaseStart) console.log('Box phase starting soon, t='+t.toFixed(2)+' boxStart='+boxPhaseStart.toFixed(2));
     const boxAreaTop    = MT + 200*S;
     const boxAreaBottom = RH - MB;
     const boxAreaH      = boxAreaBottom - boxAreaTop;
@@ -1221,7 +1220,11 @@ async function tbGenerate() {
   recorder.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data);};
   recorder.start(100);
 
-  const totalFrames=Math.ceil(TOTAL_DUR*FPS);
+  const numRows = data.rows.length;
+  const flipPhaseStartCalc = T_EXIT_START_OFFSET + (numRows + 1) * T_EXIT_GAP + T_EXIT_DUR + T_FLIP_OFFSET;
+  const boxPhaseStartCalc  = flipPhaseStartCalc + T_FLIP_GAP + T_FLIP_DUR + T_BOX_OFFSET;
+  const TOTAL_DUR_DYNAMIC  = boxPhaseStartCalc + T_BOX_GAP * 2 + T_BOX_DUR + T_HOLD_END;
+  const totalFrames = Math.ceil(TOTAL_DUR_DYNAMIC * FPS);
   let frame=0;
   const msPerFrame = 1000/FPS; // ~33.3ms per frame at 30fps
 
