@@ -1030,6 +1030,7 @@ function tbRenderFrame(ctx, data, t) {
   const boxPhaseStart = flipPhaseStart + T_FLIP_GAP + T_FLIP_DUR + T_BOX_OFFSET;
 
   if(hasNextRace && t > boxPhaseStart - T_BOX_DUR) {
+    if(t < boxPhaseStart) console.log('Box phase starting soon, t='+t.toFixed(2)+' boxStart='+boxPhaseStart.toFixed(2));
     const boxAreaTop    = MT + 200*S;
     const boxAreaBottom = RH - MB;
     const boxAreaH      = boxAreaBottom - boxAreaTop;
