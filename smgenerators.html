@@ -457,6 +457,8 @@ function tbGetData() {
     nextRound: document.getElementById('tb-nextRound').value.trim() || '',
     nextDate:  document.getElementById('tb-nextDate').value.trim() || '',
     nextTime:  document.getElementById('tb-nextTime').value.trim() || '',
+    divLeaders: window._tbDivLeaders || [],
+    trackInfo:  window._tbTrackInfo  || null,
   };
 }
 
@@ -635,12 +637,66 @@ async function tbPopulate() {
       } catch(e){ divLeaders.push(null); }
     }
 
-    // Store on window so generate can access it
-    window._tbDivLeaders = divLeaders;
+    // Fetch track info from Track Records sheet
+    try {
+      const trackInfoUrl = `https://docs.google.com/spreadsheets/d/18vD7g_29uzRSr_GYbXkNjclCHe8F_bsp4cY69TjXrW4/export?format=csv&gid=1416959538`;
+      const tiRes = await fetch(trackInfoUrl);
+      const tiText = await tiRes.text();
+      if(!tiText.includes('<!DOCTYPE')) {
+        const tiRows = tiText.split(/\r?\n/).map(l=>{
+          const cells=[]; let cur='',inQ=false;
+          for(let i=0;i<l.length;i++){
+            const c=l[i];
+            if(c==='"'&&!inQ){inQ=true;}
+            else if(c==='"'&&inQ){if(l[i+1]==='"'){cur+='"';i++;}else{inQ=false;}}
+            else if(c===','&&!inQ){cells.push(cur.trim());cur='';}
+            else cur+=c;
+          }
+          cells.push(cur.trim()); return cells;
+        });
+        // Find matching track by GP name (col B = Race Name, col A = Country)
+        const nextGP = (document.getElementById('tb-nextGP').value||'').toLowerCase();
+        let matchRow = null;
+        for(let i=1;i<tiRows.length;i++){
+          const country   = (tiRows[i][0]||'').toLowerCase();
+          const raceName  = (tiRows[i][1]||'').toLowerCase();
+          const circuit   = (tiRows[i][2]||'').toLowerCase();
+          if(raceName.includes(nextGP)||nextGP.includes(country)||country.includes(nextGP)) {
+            matchRow = tiRows[i]; break;
+          }
+        }
+        if(matchRow) {
+          const trackInfo = {
+            country:    matchRow[0]||'',
+            raceName:   matchRow[1]||'',
+            circuit:    matchRow[2]||'',
+            length:     matchRow[3]||'',
+            laps:       matchRow[4]||'',
+            sprintLaps: matchRow[5]||'',
+            firstRaced: matchRow[6]||'',
+          };
+          // Load track image
+          const slug = trackInfo.country.toLowerCase().replace(/\s+/g,'');
+          const imgSrc = `https://f1xl2010.github.io/images/tracks/${slug}_track.png`;
+          await new Promise(resolve => {
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload  = () => { trackInfo._img = img; resolve(); };
+            img.onerror = () => resolve();
+            img.src = imgSrc;
+          });
+          window._tbTrackInfo = trackInfo;
+          console.log('Track info loaded:', trackInfo.circuit);
+        } else {
+          window._tbTrackInfo = null;
+          console.warn('No track info found for:', nextGP);
+        }
+      }
+    } catch(e) { console.warn('Track info fetch failed:', e.message); window._tbTrackInfo = null; }
 
     // Rebuild rows with populated data
     tbBuildRows(filled);
-    showStatus('tb-popStatus', `✓ Populated ${data.length} rows + division leaders`, 'ok');
+    showStatus('tb-popStatus', `✓ Populated ${data.length} rows + division leaders + track info`, 'ok');
 
   } catch(e) {
     showStatus('tb-popStatus', 'Error: ' + e.message, 'err');
@@ -970,11 +1026,10 @@ function tbRenderFrame(ctx, data, t) {
     ctx.restore(); ctx.globalAlpha=1;
   }
 
-  // ── BOX PHASE — 2x2 grid appears after flip ──
+  // ── BOX PHASE — new layout: small top row + large bottom track box ──
   const boxPhaseStart = flipPhaseStart + T_FLIP_GAP + T_FLIP_DUR + T_BOX_OFFSET;
 
   if(hasNextRace && t > boxPhaseStart - T_BOX_DUR) {
-    // Box layout — fills from below the header to bottom safe margin
     const boxAreaTop    = MT + 200*S;
     const boxAreaBottom = RH - MB;
     const boxAreaH      = boxAreaBottom - boxAreaTop;
@@ -982,131 +1037,155 @@ function tbRenderFrame(ctx, data, t) {
     const boxAreaRight  = RW - MR;
     const boxAreaW      = boxAreaRight - boxAreaLeft;
     const GAP           = 16*S;
-    const boxW          = (boxAreaW - GAP) / 2;
-    const boxH          = (boxAreaH - GAP) / 2;
 
-    const boxes = [
-      { idx:0, x:boxAreaLeft,       y:boxAreaTop,          label:'NEXT RACE',       type:'nextrace' },
-      { idx:1, x:boxAreaLeft+boxW+GAP, y:boxAreaTop,       label:'',                type:'empty' },
-      { idx:2, x:boxAreaLeft,       y:boxAreaTop+boxH+GAP, label:'DIVISION LEADERS',type:'divleaders' },
-      { idx:3, x:boxAreaLeft+boxW+GAP, y:boxAreaTop+boxH+GAP, label:'',             type:'empty' },
-    ];
+    // Top row: two small boxes side by side
+    const smallH  = boxAreaH * 0.35;
+    const smallW  = (boxAreaW - GAP) / 2;
+    // Bottom: one large box full width
+    const largeH  = boxAreaH - smallH - GAP;
+    const largeY  = boxAreaTop + smallH + GAP;
 
     const DIV_COLS = ['#8B3A3A','#8B6B2E','#7A8B2E','#2E8B57'];
 
-    boxes.forEach(box => {
-      const boxDelay = boxPhaseStart + box.idx * T_BOX_GAP;
-      const bP = easeOut5(clamp((t - boxDelay) / T_BOX_DUR, 0, 1));
-      if(bP <= 0) return;
-
-      // Reveal wipe — clip from top edge downward
-      const revealH = bP * boxH;
-
+    // ── Box 1 — Next Race (top left) — wipes DOWN ──────────────────────────
+    const b1Delay = boxPhaseStart;
+    const b1P = easeOut5(clamp((t - b1Delay) / T_BOX_DUR, 0, 1));
+    if(b1P > 0) {
+      const bx = boxAreaLeft, by = boxAreaTop, bw = smallW, bh = smallH;
+      const revealH = b1P * bh;
       ctx.save();
-      ctx.beginPath();
-      ctx.rect(box.x, box.y, boxW, revealH);
-      ctx.clip();
+      ctx.beginPath(); ctx.rect(bx, by, bw, revealH); ctx.clip();
+      ctx.fillStyle='#161b22'; ctx.fillRect(bx,by,bw,bh);
+      ctx.fillStyle='#e10600'; ctx.fillRect(bx,by,bw,4*S);
+      ctx.font=`400 ${10*S}px ${F1}`; ctx.fillStyle='#e10600';
+      ctx.textAlign='left'; ctx.textBaseline='top';
+      ctx.fillText('NEXT RACE', bx+14*S, by+14*S);
 
-      // Box background
-      ctx.fillStyle = '#161b22';
-      ctx.fillRect(box.x, box.y, boxW, boxH);
-
-      // Red top border
-      ctx.fillStyle = '#e10600';
-      ctx.fillRect(box.x, box.y, boxW, 4*S);
-
-      // Box label
-      if(box.label){
-        ctx.font=`400 ${10*S}px ${F1}`;
-        ctx.fillStyle='#e10600';
-        ctx.textAlign='left';ctx.textBaseline='top';
-        ctx.fillText(box.label, box.x+14*S, box.y+14*S);
+      const flagSrc2 = getFlag(data.nextGP||'');
+      const flagImg  = flagCache[flagSrc2];
+      if(flagImg){
+        const fScale=Math.max(bw/flagImg.width, bh/flagImg.height);
+        const fdw=flagImg.width*fScale, fdh=flagImg.height*fScale;
+        ctx.globalAlpha=0.12;
+        ctx.drawImage(flagImg, bx+(bw-fdw)/2, by+(bh-fdh)/2, fdw, fdh);
+        ctx.globalAlpha=1;
       }
-
-      if(box.type === 'nextrace') {
-        // Flag background
-        const flagSrc2 = getFlag(data.nextGP || '');
-        const flagImg  = flagCache[flagSrc2];
-        if(flagImg){
-          const fScale = Math.max(boxW/flagImg.width, boxH/flagImg.height);
-          const fdw=flagImg.width*fScale, fdh=flagImg.height*fScale;
-          ctx.globalAlpha=0.12;
-          ctx.drawImage(flagImg, box.x+(boxW-fdw)/2, box.y+(boxH-fdh)/2, fdw, fdh);
-          ctx.globalAlpha=1;
-        }
-        // Content
-        const cx = box.x + boxW/2;
-        const midY2 = box.y + boxH/2 + 10*S;
-        ctx.textAlign='center';ctx.textBaseline='middle';
-        ctx.font=`400 ${36*S}px ${F1}`;
-        ctx.fillStyle='#ffffff';
-        ctx.shadowColor='rgba(0,0,0,0.8)';ctx.shadowBlur=10*S;
-        ctx.fillText((data.nextGP||'').toUpperCase(), cx, midY2-38*S);
-        ctx.shadowColor='transparent';ctx.shadowBlur=0;
-        ctx.font=`400 ${14*S}px ${F1}`;
-        ctx.fillStyle='rgba(255,255,255,0.5)';
-        ctx.fillText(`ROUND ${data.nextRound}`, cx, midY2+4*S);
-        ctx.font=`400 ${18*S}px ${F1}`;
-        ctx.fillStyle='#ffffff';
-        ctx.fillText(data.nextDate||'', cx, midY2+30*S);
-        ctx.fillStyle='#e10600';
-        ctx.fillText(data.nextTime||'', cx, midY2+56*S);
-      }
-
-      if(box.type === 'divleaders') {
-        const leaders = data.divLeaders || [];
-        const rowH2 = (boxH - 40*S) / 4;
-        for(let d=0;d<4;d++){
-          const leader = leaders[d];
-          const ry = box.y + 36*S + d * rowH2;
-          const rm = ry + rowH2/2;
-          const divCol = DIV_COLS[d] || '#555';
-          // Division colour bar
-          ctx.fillStyle=divCol;
-          ctx.fillRect(box.x, ry, 6*S, rowH2-2*S);
-          // Div label
-          ctx.font=`400 ${10*S}px ${F1}`;
-          ctx.fillStyle=divCol;
-          ctx.textAlign='left';ctx.textBaseline='middle';
-          ctx.fillText(`D${d+1}`, box.x+14*S, rm);
-          // Driver name
-          ctx.font=`400 ${14*S}px ${F1}`;
-          ctx.fillStyle='#ffffff';
-          ctx.fillText(leader?.driver||'—', box.x+46*S, rm-8*S);
-          // Team
-          ctx.font=`400 ${10*S}px ${F1}`;
-          ctx.fillStyle='rgba(255,255,255,0.45)';
-          ctx.fillText(leader?.team||'', box.x+46*S, rm+10*S);
-          // Points
-          ctx.font=`400 ${16*S}px ${F1}`;
-          ctx.fillStyle='#ffffff';
-          ctx.textAlign='right';
-          ctx.fillText(leader?.pts||'', box.x+boxW-14*S, rm);
-          // Separator
-          if(d<3){
-            ctx.strokeStyle='rgba(255,255,255,0.07)';ctx.lineWidth=S;
-            ctx.beginPath();ctx.moveTo(box.x,ry+rowH2-S);ctx.lineTo(box.x+boxW,ry+rowH2-S);ctx.stroke();
-          }
-        }
-      }
-
-      if(box.type === 'empty'){
-        // Styled placeholder
-        ctx.font=`400 ${11*S}px ${F1}`;
-        ctx.fillStyle='rgba(255,255,255,0.12)';
-        ctx.textAlign='center';ctx.textBaseline='middle';
-        ctx.fillText('COMING SOON', box.x+boxW/2, box.y+boxH/2);
-      }
-
+      const cx=bx+bw/2, midY=by+bh/2+8*S;
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.font=`400 ${28*S}px ${F1}`; ctx.fillStyle='#ffffff';
+      ctx.shadowColor='rgba(0,0,0,0.8)'; ctx.shadowBlur=10*S;
+      ctx.fillText((data.nextGP||'').toUpperCase(), cx, midY-28*S);
+      ctx.shadowColor='transparent'; ctx.shadowBlur=0;
+      ctx.font=`400 ${12*S}px ${F1}`; ctx.fillStyle='rgba(255,255,255,0.5)';
+      ctx.fillText(`ROUND ${data.nextRound}`, cx, midY+2*S);
+      ctx.font=`400 ${15*S}px ${F1}`; ctx.fillStyle='#ffffff';
+      ctx.fillText(data.nextDate||'', cx, midY+22*S);
+      ctx.fillStyle='#e10600';
+      ctx.fillText(data.nextTime||'', cx, midY+42*S);
       ctx.restore();
+      ctx.save(); ctx.globalAlpha=b1P;
+      ctx.strokeStyle='rgba(255,255,255,0.1)'; ctx.lineWidth=S;
+      ctx.strokeRect(bx,by,bw,bh); ctx.restore();
+    }
 
-      // Box border
+    // ── Box 2 — Track Info (bottom large) — wipes from LEFT ───────────────
+    const b2Delay = boxPhaseStart + T_BOX_GAP;
+    const b2P = easeOut5(clamp((t - b2Delay) / T_BOX_DUR, 0, 1));
+    if(b2P > 0) {
+      const bx=boxAreaLeft, by=largeY, bw=boxAreaW, bh=largeH;
+      const revealW = b2P * bw;
       ctx.save();
-      ctx.globalAlpha=bP;
-      ctx.strokeStyle='rgba(255,255,255,0.1)';ctx.lineWidth=S;
-      ctx.strokeRect(box.x, box.y, boxW, boxH);
+      ctx.beginPath(); ctx.rect(bx, by, revealW, bh); ctx.clip();
+      ctx.fillStyle='#161b22'; ctx.fillRect(bx,by,bw,bh);
+      ctx.fillStyle='#e10600'; ctx.fillRect(bx,by,bw,4*S);
+      ctx.font=`400 ${10*S}px ${F1}`; ctx.fillStyle='#e10600';
+      ctx.textAlign='left'; ctx.textBaseline='top';
+      ctx.fillText('TRACK INFO', bx+14*S, by+14*S);
+
+      const ti = data.trackInfo;
+      if(ti) {
+        // Track image — left half
+        const imgAreaW = bw * 0.45;
+        const imgAreaH = bh - 30*S;
+        const imgX = bx + 14*S, imgY = by + 30*S;
+        if(ti._img) {
+          const iScale = Math.min(imgAreaW/ti._img.width, imgAreaH/ti._img.height);
+          const idw=ti._img.width*iScale, idh=ti._img.height*iScale;
+          ctx.drawImage(ti._img, imgX+(imgAreaW-idw)/2, imgY+(imgAreaH-idh)/2, idw, idh);
+        }
+        // Stats — right side
+        const statsX = bx + imgAreaW + 28*S;
+        const statsY = by + 36*S;
+        const statRows = [
+          { label:'CIRCUIT',    val: ti.circuit   || '—' },
+          { label:'LENGTH',     val: ti.length     || '—' },
+          { label:'LAPS',       val: ti.laps       ? String(ti.laps) : '—' },
+          { label:'SPRINT LAPS',val: ti.sprintLaps ? String(ti.sprintLaps) : '—' },
+          { label:'FIRST RACED',val: ti.firstRaced || '—' },
+        ];
+        const rowH3 = (bh - 40*S) / statRows.length;
+        statRows.forEach((row, i) => {
+          const ry = statsY + i * rowH3;
+          ctx.font=`400 ${9*S}px ${F1}`; ctx.fillStyle='rgba(255,255,255,0.4)';
+          ctx.textAlign='left'; ctx.textBaseline='top';
+          ctx.fillText(row.label, statsX, ry);
+          ctx.font=`400 ${16*S}px ${F1}`; ctx.fillStyle='#ffffff';
+          ctx.textBaseline='top';
+          ctx.fillText(row.val, statsX, ry+12*S);
+        });
+      } else {
+        ctx.font=`400 ${11*S}px ${F1}`; ctx.fillStyle='rgba(255,255,255,0.12)';
+        ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.fillText('TRACK DATA LOADING...', bx+bw/2, by+bh/2);
+      }
       ctx.restore();
-    });
+      ctx.save(); ctx.globalAlpha=b2P;
+      ctx.strokeStyle='rgba(255,255,255,0.1)'; ctx.lineWidth=S;
+      ctx.strokeRect(bx,by,bw,bh); ctx.restore();
+    }
+
+    // ── Box 3 — Division Leaders (top right) — wipes UP ───────────────────
+    const b3Delay = boxPhaseStart + T_BOX_GAP * 2;
+    const b3P = easeOut5(clamp((t - b3Delay) / T_BOX_DUR, 0, 1));
+    if(b3P > 0) {
+      const bx=boxAreaLeft+smallW+GAP, by=boxAreaTop, bw=smallW, bh=smallH;
+      const revealH = b3P * bh;
+      // Wipe up — clip from bottom edge upward
+      ctx.save();
+      ctx.beginPath(); ctx.rect(bx, by+bh-revealH, bw, revealH); ctx.clip();
+      ctx.fillStyle='#161b22'; ctx.fillRect(bx,by,bw,bh);
+      ctx.fillStyle='#e10600'; ctx.fillRect(bx,by,bw,4*S);
+      ctx.font=`400 ${10*S}px ${F1}`; ctx.fillStyle='#e10600';
+      ctx.textAlign='left'; ctx.textBaseline='top';
+      ctx.fillText('DIVISION LEADERS', bx+14*S, by+14*S);
+
+      const leaders = data.divLeaders || [];
+      const rowH2 = (bh - 36*S) / 4;
+      for(let d=0;d<4;d++){
+        const leader=leaders[d];
+        const ry=by+34*S+d*rowH2, rm=ry+rowH2/2;
+        const divCol=DIV_COLS[d]||'#555';
+        ctx.fillStyle=divCol; ctx.fillRect(bx,ry,6*S,rowH2-2*S);
+        ctx.font=`400 ${9*S}px ${F1}`; ctx.fillStyle=divCol;
+        ctx.textAlign='left'; ctx.textBaseline='middle';
+        ctx.fillText(`D${d+1}`, bx+14*S, rm);
+        ctx.font=`400 ${12*S}px ${F1}`; ctx.fillStyle='#ffffff';
+        ctx.fillText(leader?.driver||'—', bx+38*S, rm-7*S);
+        ctx.font=`400 ${9*S}px ${F1}`; ctx.fillStyle='rgba(255,255,255,0.45)';
+        ctx.fillText(leader?.team||'', bx+38*S, rm+8*S);
+        ctx.font=`400 ${13*S}px ${F1}`; ctx.fillStyle='#ffffff';
+        ctx.textAlign='right';
+        ctx.fillText(leader?.pts||'', bx+bw-14*S, rm);
+        if(d<3){
+          ctx.strokeStyle='rgba(255,255,255,0.07)'; ctx.lineWidth=S;
+          ctx.beginPath(); ctx.moveTo(bx,ry+rowH2-S); ctx.lineTo(bx+bw,ry+rowH2-S); ctx.stroke();
+        }
+      }
+      ctx.restore();
+      ctx.save(); ctx.globalAlpha=b3P;
+      ctx.strokeStyle='rgba(255,255,255,0.1)'; ctx.lineWidth=S;
+      ctx.strokeRect(bx,by,bw,bh); ctx.restore();
+    }
   }
 
   // Bottom + top bars always on top
