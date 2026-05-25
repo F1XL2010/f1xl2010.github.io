@@ -1224,6 +1224,7 @@ async function tbGenerate() {
   const flipPhaseStartCalc = T_EXIT_START_OFFSET + (numRows + 1) * T_EXIT_GAP + T_EXIT_DUR + T_FLIP_OFFSET;
   const boxPhaseStartCalc  = flipPhaseStartCalc + T_FLIP_GAP + T_FLIP_DUR + T_BOX_OFFSET;
   const TOTAL_DUR_DYNAMIC  = boxPhaseStartCalc + T_BOX_GAP * 2 + T_BOX_DUR + T_HOLD_END;
+  console.log(`Rows: ${numRows}, flipStart: ${flipPhaseStartCalc.toFixed(2)}, boxStart: ${boxPhaseStartCalc.toFixed(2)}, totalDur: ${TOTAL_DUR_DYNAMIC.toFixed(2)}`);
   const totalFrames = Math.ceil(TOTAL_DUR_DYNAMIC * FPS);
   let frame=0;
   const msPerFrame = 1000/FPS; // ~33.3ms per frame at 30fps
