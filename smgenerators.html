@@ -840,7 +840,7 @@ function tbRenderFrame(ctx, data, t) {
     const p = easeOut5(clamp((t - line.delay) / 2.7, 0, 1));
     if(p <= 0){ lineY += line.size + 10*S; return; }
     // Lines 2 and 3 are handled by flip animation once flip starts — stop drawing them
-    if(i > 0 && t >= flipPhaseStart) { lineY += line.size + 10*S; return; }
+    if(i > 0 && t >= flipPhaseStart2) { lineY += line.size + 10*S; return; }
     const alpha = Math.min(p*2, 1);
     const slideX = (1-p) * line.dir * -180*S;
     ctx.save();
