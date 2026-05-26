@@ -839,10 +839,9 @@ function tbRenderFrame(ctx, data, t) {
   headerLines.forEach((line, i) => {
     const p = easeOut5(clamp((t - line.delay) / 2.7, 0, 1));
     if(p <= 0){ lineY += line.size + 10*S; return; }
-    // Non-permanent lines fade out as flip phase approaches
-    const fadeOut = line.permanent ? 0 : easeIO2(clamp((t - (flipPhaseStart2 - 0.3)) / 0.5, 0, 1));
-    const alpha = Math.min(p*2, 1) * (1 - fadeOut);
-    if(alpha <= 0){ lineY += line.size + 10*S; return; }
+    // Lines 2 and 3 are handled by flip animation once flip starts — stop drawing them
+    if(i > 0 && t >= flipPhaseStart) { lineY += line.size + 10*S; return; }
+    const alpha = Math.min(p*2, 1);
     const slideX = (1-p) * line.dir * -180*S;
     ctx.save();
     ctx.globalAlpha = alpha;
@@ -982,47 +981,52 @@ function tbRenderFrame(ctx, data, t) {
   const flipPhaseStart = T_EXIT_START_OFFSET + (data.rows.length + 1) * T_EXIT_GAP + T_EXIT_DUR + T_FLIP_OFFSET;
   const hasNextRace = data.nextGP && data.nextRound;
 
-  if(hasNextRace && t > flipPhaseStart - T_FLIP_DUR) {
-    const gpH = 30*S;
-    const rdH = 18*S;
-    const gpY = MT + 82*S;
-    const rdY = MT + 126*S;
+  // Calculate actual header Y positions to match flip positions
+  const hLine1H = 56*S, hLine2H = 36*S, hLine3H = 22*S;
+  const hStartY = MT + 22*S;
+  const hLine1Y = hStartY;
+  const hLine2Y = hLine1Y + hLine1H + 10*S;
+  const hLine3Y = hLine2Y + hLine2H + 10*S;
 
-    // GP flip
+  if(hasNextRace && t > flipPhaseStart - T_FLIP_DUR) {
+    const gpH  = hLine2H;
+    const rdH  = hLine3H;
+
+    // GP flip — positioned exactly where line 2 is
     const flip1P = easeOut5(clamp((t - flipPhaseStart) / T_FLIP_DUR, 0, 1));
     ctx.save();
-    ctx.beginPath(); ctx.rect(ML, gpY - gpH*0.5, CW, gpH * 2); ctx.clip();
+    ctx.beginPath(); ctx.rect(ML, hLine2Y - gpH, CW, gpH * 3); ctx.clip();
     if(flip1P < 1){
-      ctx.font=`400 ${28*S}px ${F1}`; ctx.fillStyle='#ffffff';
+      ctx.font=`400 ${hLine2H}px ${F1}`; ctx.fillStyle='#ffffff';
       ctx.textAlign='left'; ctx.textBaseline='top';
       ctx.globalAlpha = 1 - flip1P;
-      ctx.fillText(`${data.gp.toUpperCase()} GRAND PRIX`, ML, gpY - flip1P * gpH * 2);
+      ctx.fillText(`${data.gp.toUpperCase()} GRAND PRIX`, ML, hLine2Y - flip1P * gpH * 2);
     }
     if(flip1P > 0){
-      ctx.font=`400 ${28*S}px ${F1}`; ctx.fillStyle='#ffffff';
+      ctx.font=`400 ${hLine2H}px ${F1}`; ctx.fillStyle='#ffffff';
       ctx.textAlign='left'; ctx.textBaseline='top';
       ctx.globalAlpha = flip1P;
-      ctx.fillText(`${data.nextGP.toUpperCase()} GRAND PRIX`, ML, gpY + (1-flip1P) * gpH * 2);
+      ctx.fillText(`${data.nextGP.toUpperCase()} GRAND PRIX`, ML, hLine2Y + (1-flip1P) * gpH * 2);
     }
     ctx.restore(); ctx.globalAlpha=1;
 
-    // Round/Date/Time flip
+    // Round/Date/Time flip — positioned exactly where line 3 is
     const flip2P = easeOut5(clamp((t - flipPhaseStart - T_FLIP_GAP) / T_FLIP_DUR, 0, 1));
     ctx.save();
-    ctx.beginPath(); ctx.rect(ML, rdY - rdH*0.5, CW, rdH * 2.5); ctx.clip();
+    ctx.beginPath(); ctx.rect(ML, hLine3Y - rdH, CW, rdH * 3); ctx.clip();
     const currentRD = `ROUND ${data.round} / ${data.totalRounds}  |  ${data.date}  |  ${data.time}`;
     const nextRD    = `ROUND ${data.nextRound} / ${data.totalRounds}  |  ${data.nextDate}  |  ${data.nextTime}`;
     if(flip2P < 1){
-      ctx.font=`400 ${16*S}px ${F1}`; ctx.fillStyle='#e10600';
+      ctx.font=`400 ${hLine3H}px ${F1}`; ctx.fillStyle='#e10600';
       ctx.textAlign='left'; ctx.textBaseline='top';
       ctx.globalAlpha = 1 - flip2P;
-      ctx.fillText(currentRD, ML, rdY - flip2P * rdH * 2);
+      ctx.fillText(currentRD, ML, hLine3Y - flip2P * rdH * 2);
     }
     if(flip2P > 0){
-      ctx.font=`400 ${16*S}px ${F1}`; ctx.fillStyle='#e10600';
+      ctx.font=`400 ${hLine3H}px ${F1}`; ctx.fillStyle='#e10600';
       ctx.textAlign='left'; ctx.textBaseline='top';
       ctx.globalAlpha = flip2P;
-      ctx.fillText(nextRD, ML, rdY + (1-flip2P) * rdH * 2);
+      ctx.fillText(nextRD, ML, hLine3Y + (1-flip2P) * rdH * 2);
     }
     ctx.restore(); ctx.globalAlpha=1;
   }
