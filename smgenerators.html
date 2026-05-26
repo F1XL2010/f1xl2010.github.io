@@ -1224,7 +1224,8 @@ async function tbGenerate() {
   recorder.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data);};
   recorder.start(100);
 
-  const numRows = data.rows.length;
+  const numRows = (data.rows || []).length;
+  console.log('numRows:', numRows, 'T_BOX_DUR2:', typeof T_BOX_DUR2, T_BOX_DUR2, 'T_BOX_GAP:', T_BOX_GAP);
   const flipPhaseStartCalc = T_EXIT_START_OFFSET + (numRows + 1) * T_EXIT_GAP + T_EXIT_DUR + T_FLIP_OFFSET;
   const boxPhaseStartCalc  = flipPhaseStartCalc + T_FLIP_GAP + T_FLIP_DUR + T_BOX_OFFSET;
   const TOTAL_DUR_DYNAMIC  = boxPhaseStartCalc + T_BOX_GAP * 2 + T_BOX_DUR2 + T_HOLD_END;
