@@ -1205,7 +1205,9 @@ async function tbGenerate() {
   // Preload font and logos before rendering
   // Preload flag for next race
   const flagSrc = getFlag(data.nextGP || '');
-  await Promise.all([loadF1Font(), tbPreloadLogos(data.rows), loadFlag(flagSrc)]);
+  try {
+    await Promise.all([loadF1Font(), tbPreloadLogos(data.rows), loadFlag(flagSrc)]);
+  } catch(e) { console.error('Preload error:', e); }
 
   tbSetProgress(8,'Starting render...');
   const canvas=document.getElementById('renderCanvas2');
