@@ -781,8 +781,9 @@ const T_FLIP_DUR  = 1.4;
 const T_FLIP_GAP  = 0.45;
 const T_HOLD_END  = 6.0;  // generous buffer
 const T_BOX_OFFSET = 1.0; // boxes start appearing after flip settles
-const T_BOX_DUR    = 0.7; // each box reveal duration
-const T_BOX_GAP    = 0.2; // stagger between boxes
+const T_BOX_DUR    = 3.0; // box 1 and 3 reveal duration
+const T_BOX_DUR2   = 4.0; // box 2 reveal duration
+const T_BOX_GAP    = 1.0; // stagger between boxes
 const TOTAL_DUR = T_EXIT_START_OFFSET + (14 * T_EXIT_GAP) + T_EXIT_DUR + T_FLIP_OFFSET + T_FLIP_GAP + T_FLIP_DUR + T_BOX_OFFSET + (4 * T_BOX_GAP) + T_BOX_DUR + T_HOLD_END;
 
 function easeOut3(t){return 1-Math.pow(1-Math.min(t,1),3);}
@@ -1090,7 +1091,7 @@ function tbRenderFrame(ctx, data, t) {
 
     // ── Box 2 — Track Info (bottom large) — wipes from LEFT ───────────────
     const b2Delay = boxPhaseStart + T_BOX_GAP;
-    const b2P = easeOut5(clamp((t - b2Delay) / T_BOX_DUR, 0, 1));
+    const b2P = easeOut5(clamp((t - b2Delay) / T_BOX_DUR2, 0, 1));
     if(b2P > 0) {
       const bx=boxAreaLeft, by=largeY, bw=boxAreaW, bh=largeH;
       const revealW = b2P * bw;
@@ -1225,7 +1226,7 @@ async function tbGenerate() {
   const numRows = data.rows.length;
   const flipPhaseStartCalc = T_EXIT_START_OFFSET + (numRows + 1) * T_EXIT_GAP + T_EXIT_DUR + T_FLIP_OFFSET;
   const boxPhaseStartCalc  = flipPhaseStartCalc + T_FLIP_GAP + T_FLIP_DUR + T_BOX_OFFSET;
-  const TOTAL_DUR_DYNAMIC  = boxPhaseStartCalc + T_BOX_GAP * 2 + T_BOX_DUR + T_HOLD_END;
+  const TOTAL_DUR_DYNAMIC  = boxPhaseStartCalc + T_BOX_GAP * 2 + T_BOX_DUR2 + T_HOLD_END;
   console.log(`Rows: ${numRows}, flipStart: ${flipPhaseStartCalc.toFixed(2)}, boxStart: ${boxPhaseStartCalc.toFixed(2)}, totalDur: ${TOTAL_DUR_DYNAMIC.toFixed(2)}`);
   const totalFrames = Math.ceil(TOTAL_DUR_DYNAMIC * FPS);
   let frame=0;
