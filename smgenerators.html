@@ -830,9 +830,9 @@ function tbRenderFrame(ctx, data, t) {
   // Lines 2+3 fade out when flip phase starts (flip takes over rendering them)
   const flipPhaseStart2 = T_EXIT_START_OFFSET + (data.rows.length + 1) * T_EXIT_GAP + T_EXIT_DUR + T_FLIP_OFFSET;
   const headerLines = [
-    { text:`SEASON ${data.season}`,             size:48*S, dir:1,  delay:0.05, color:'#e10600', permanent:true },
-    { text:`${data.gp.toUpperCase()} GRAND PRIX`, size:28*S, dir:-1, delay:0.30, color:'#ffffff', permanent:false },
-    { text:`ROUND ${data.round} / ${data.totalRounds}  |  ${data.date}  |  ${data.time}`, size:16*S, dir:1, delay:0.55, color:'#e10600', permanent:false },
+    { text:`SEASON ${data.season}`,             size:56*S, dir:1,  delay:0.05, color:'#e10600', permanent:true },
+    { text:`${data.gp.toUpperCase()} GRAND PRIX`, size:36*S, dir:-1, delay:0.30, color:'#ffffff', permanent:false },
+    { text:`ROUND ${data.round} / ${data.totalRounds}  |  ${data.date}  |  ${data.time}`, size:22*S, dir:1, delay:0.55, color:'#e10600', permanent:false },
   ];
 
   let lineY = MT + 22*S;
