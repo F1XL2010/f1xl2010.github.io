@@ -830,9 +830,9 @@ function tbRenderFrame(ctx, data, t) {
   // Lines 2+3 fade out when flip phase starts (flip takes over rendering them)
   const flipPhaseStart2 = T_EXIT_START_OFFSET + (data.rows.length + 1) * T_EXIT_GAP + T_EXIT_DUR + T_FLIP_OFFSET;
   const headerLines = [
-    { text:`SEASON ${data.season}`,             size:56*S, dir:1,  delay:0.05, color:'#e10600', permanent:true },
+    { text:`SEASON ${data.season}`,             size:56*S, dir:1,  delay:0.05, color:'#ffffff', permanent:true },
     { text:`${data.gp.toUpperCase()} GRAND PRIX`, size:36*S, dir:-1, delay:0.30, color:'#ffffff', permanent:false },
-    { text:`ROUND ${data.round} / ${data.totalRounds}  |  ${data.date}  |  ${data.time}`, size:22*S, dir:1, delay:0.55, color:'#e10600', permanent:false },
+    { text:`ROUND ${data.round} / ${data.totalRounds}  |  ${data.date}  |  ${data.time}`, size:22*S, dir:1, delay:0.55, color:'#ffffff', permanent:false },
   ];
 
   let lineY = MT + 22*S;
@@ -847,9 +847,25 @@ function tbRenderFrame(ctx, data, t) {
     ctx.globalAlpha = alpha;
     ctx.translate(slideX, 0);
     ctx.font=`400 ${line.size}px ${F1}`;
-    ctx.fillStyle = line.color;
     ctx.textAlign='left'; ctx.textBaseline='top';
-    ctx.fillText(line.text, ML, lineY);
+    if(i === 2) {
+      // Line 3: white text with red pipes
+      const parts = line.text.split('|');
+      let cx = ML;
+      parts.forEach((part, pi) => {
+        ctx.fillStyle='#ffffff';
+        ctx.fillText(part, cx, lineY);
+        cx += ctx.measureText(part).width;
+        if(pi < parts.length - 1) {
+          ctx.fillStyle='#e10600';
+          ctx.fillText('|', cx, lineY);
+          cx += ctx.measureText('|').width;
+        }
+      });
+    } else {
+      ctx.fillStyle = line.color;
+      ctx.fillText(line.text, ML, lineY);
+    }
     ctx.restore();
     lineY += line.size + 10*S;
   });
@@ -1016,18 +1032,27 @@ function tbRenderFrame(ctx, data, t) {
     ctx.beginPath(); ctx.rect(ML, hLine3Y - rdH, CW, rdH * 3); ctx.clip();
     const currentRD = `ROUND ${data.round} / ${data.totalRounds}  |  ${data.date}  |  ${data.time}`;
     const nextRD    = `ROUND ${data.nextRound} / ${data.totalRounds}  |  ${data.nextDate}  |  ${data.nextTime}`;
-    if(flip2P < 1){
-      ctx.font=`400 ${hLine3H}px ${F1}`; ctx.fillStyle='#e10600';
+    function drawRdLine(text, x, y, alpha) {
+      if(alpha <= 0) return;
+      ctx.globalAlpha = alpha;
+      ctx.font=`400 ${hLine3H}px ${F1}`;
       ctx.textAlign='left'; ctx.textBaseline='top';
-      ctx.globalAlpha = 1 - flip2P;
-      ctx.fillText(currentRD, ML, hLine3Y - flip2P * rdH * 2);
+      // Split by | and draw white/red alternating
+      const parts = text.split('|');
+      let cx = x;
+      parts.forEach((part, pi) => {
+        ctx.fillStyle='#ffffff';
+        ctx.fillText(part, cx, y);
+        cx += ctx.measureText(part).width;
+        if(pi < parts.length - 1) {
+          ctx.fillStyle='#e10600';
+          ctx.fillText('|', cx, y);
+          cx += ctx.measureText('|').width;
+        }
+      });
     }
-    if(flip2P > 0){
-      ctx.font=`400 ${hLine3H}px ${F1}`; ctx.fillStyle='#e10600';
-      ctx.textAlign='left'; ctx.textBaseline='top';
-      ctx.globalAlpha = flip2P;
-      ctx.fillText(nextRD, ML, hLine3Y + (1-flip2P) * rdH * 2);
-    }
+    if(flip2P < 1) drawRdLine(currentRD, ML, hLine3Y - flip2P * rdH * 2, 1 - flip2P);
+    if(flip2P > 0) drawRdLine(nextRD, ML, hLine3Y + (1-flip2P) * rdH * 2, flip2P);
     ctx.restore(); ctx.globalAlpha=1;
   }
 
@@ -1109,34 +1134,45 @@ function tbRenderFrame(ctx, data, t) {
 
       const ti = data.trackInfo;
       if(ti) {
-        // Track image — left half
+        // Circuit name — full width across top
+        const circuitNameH = 28*S;
+        const circuitY = by + 26*S;
+        ctx.font=`400 ${circuitNameH}px ${F1}`; ctx.fillStyle='#ffffff';
+        ctx.textAlign='left'; ctx.textBaseline='top';
+        ctx.fillText(ti.circuit || '—', bx+14*S, circuitY);
+
+        // Divider line under circuit name
+        const splitY = circuitY + circuitNameH + 10*S;
+        ctx.strokeStyle='rgba(255,255,255,0.15)'; ctx.lineWidth=S;
+        ctx.beginPath(); ctx.moveTo(bx+14*S, splitY); ctx.lineTo(bx+bw-14*S, splitY); ctx.stroke();
+
+        // Image and stats below divider
+        const contentY = splitY + 8*S;
+        const contentH = by + bh - contentY - 14*S;
         const imgAreaW = bw * 0.45;
-        const imgAreaH = bh - 30*S;
-        const imgX = bx + 14*S, imgY = by + 30*S;
+        const imgX = bx + 14*S;
         if(ti._img) {
-          const iScale = Math.min(imgAreaW/ti._img.width, imgAreaH/ti._img.height);
+          const iScale = Math.min((imgAreaW-14*S)/ti._img.width, contentH/ti._img.height);
           const idw=ti._img.width*iScale, idh=ti._img.height*iScale;
-          ctx.drawImage(ti._img, imgX+(imgAreaW-idw)/2, imgY+(imgAreaH-idh)/2, idw, idh);
+          ctx.drawImage(ti._img, imgX+(imgAreaW-14*S-idw)/2, contentY+(contentH-idh)/2, idw, idh);
         }
-        // Stats — right side
+        // Stats — right side, bigger text
         const statsX = bx + imgAreaW + 28*S;
-        const statsY = by + 36*S;
         const statRows = [
-          { label:'CIRCUIT',    val: ti.circuit   || '—' },
           { label:'LENGTH',     val: ti.length     || '—' },
           { label:'LAPS',       val: ti.laps       ? String(ti.laps) : '—' },
           { label:'SPRINT LAPS',val: ti.sprintLaps ? String(ti.sprintLaps) : '—' },
           { label:'FIRST RACED',val: ti.firstRaced || '—' },
         ];
-        const rowH3 = (bh - 40*S) / statRows.length;
-        statRows.forEach((row, i) => {
-          const ry = statsY + i * rowH3;
-          ctx.font=`400 ${9*S}px ${F1}`; ctx.fillStyle='rgba(255,255,255,0.4)';
+        const rowH3 = contentH / statRows.length;
+        statRows.forEach((row, si) => {
+          const ry = contentY + si * rowH3;
+          ctx.font=`400 ${11*S}px ${F1}`; ctx.fillStyle='rgba(255,255,255,0.4)';
           ctx.textAlign='left'; ctx.textBaseline='top';
           ctx.fillText(row.label, statsX, ry);
-          ctx.font=`400 ${16*S}px ${F1}`; ctx.fillStyle='#ffffff';
+          ctx.font=`400 ${22*S}px ${F1}`; ctx.fillStyle='#ffffff';
           ctx.textBaseline='top';
-          ctx.fillText(row.val, statsX, ry+12*S);
+          ctx.fillText(row.val, statsX, ry+14*S);
         });
       } else {
         ctx.font=`400 ${11*S}px ${F1}`; ctx.fillStyle='rgba(255,255,255,0.12)';
