@@ -1196,6 +1196,7 @@ function tbRenderFrame(ctx, data, t) {
 }
 
 async function tbGenerate() {
+  console.log('tbGenerate called');
   const btn=document.getElementById('tb-genBtn');
   const pa=document.getElementById('tb-progArea');
   btn.disabled=true;pa.style.display='block';
