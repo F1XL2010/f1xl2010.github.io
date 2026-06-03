@@ -282,10 +282,12 @@ async function init(){
     const sc        = season ? await loadSeasonConfig(season) : null;
 
     if(season){
-      document.getElementById('stat-seasons').innerHTML = `<span>${season}</span>`;
+      const el = document.getElementById('stat-seasons');
+      if(el) el.innerHTML = `<span>${season}</span>`;
     }
     const yr = new Date().getFullYear() - 2010;
-    document.querySelectorAll('.stat-num')[1].innerHTML = `<span>${yr}</span>`;
+    const statNums = document.querySelectorAll('.stat-num');
+    if(statNums[1]) statNums[1].innerHTML = `<span>${yr}</span>`;
 
     // ── Sign-ups badge ──────────────────────────────────────────────────────
     const signupsOpen = (config['signups_open'] || '').toLowerCase() === 'yes';
