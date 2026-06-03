@@ -48,10 +48,18 @@
   body::before{content:'';position:fixed;inset:0;background:rgba(17,24,22,0.82);z-index:-1;}
   .hero-accent{position:absolute;top:0;left:0;width:4px;height:100%;background:var(--green);}
   .hero-inner{max-width:700px;position:relative;z-index:1;}
-  .hero-status{display:inline-flex;align-items:center;gap:8px;background:rgba(61,204,71,0.08);border:1px solid rgba(61,204,71,0.2);border-radius:20px;padding:5px 12px;margin-bottom:20px;}
-  .hero-status-dot{width:7px;height:7px;border-radius:50%;background:var(--red);animation:pulse 2s infinite;}
+  .hero-badges{display:flex;flex-direction:column;gap:8px;align-items:flex-start;margin-bottom:20px;}
+  .hero-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:24px;border:1px solid;display:none;}
+  .hero-badge.visible{display:inline-flex;}
+  .hero-badge-green{background:rgba(61,204,71,0.10);border-color:rgba(61,204,71,0.30);}
+  .hero-badge-red{background:rgba(225,6,0,0.10);border-color:rgba(225,6,0,0.30);}
+  .hero-badge-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;animation:pulse 2s infinite;}
+  .hero-badge-dot-green{background:var(--green);}
+  .hero-badge-dot-red{background:var(--red);}
+  .hero-badge-text{font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;}
+  .hero-badge-text-green{color:var(--green);}
+  .hero-badge-text-red{color:var(--red);}
   @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
-  .hero-status-text{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--red);}
 
   /* SOCIAL ICON BUTTONS */
   .social-icons{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:28px;}
@@ -187,9 +195,15 @@
   <div class="hero-accent"></div>
   <div class="hero-inner">
     <img src="TRANSPARENT.png" alt="F1XL" style="width:clamp(240px,45vw,520px);height:auto;display:block;margin-bottom:28px;">
-    <div class="hero-status">
-      <div class="hero-status-dot"></div>
-      <div class="hero-status-text" id="hero-status-text">Season 28 · Now Racing</div>
+    <div class="hero-badges">
+      <div class="hero-badge hero-badge-green" id="badge-signups">
+        <div class="hero-badge-dot hero-badge-dot-green"></div>
+        <span class="hero-badge-text hero-badge-text-green" id="badge-signups-text">Sign-ups open</span>
+      </div>
+      <div class="hero-badge hero-badge-red" id="badge-season">
+        <div class="hero-badge-dot hero-badge-dot-red"></div>
+        <span class="hero-badge-text hero-badge-text-red" id="badge-season-text">Season loading...</span>
+      </div>
     </div>
     <h1 class="hero-title">The UK's longest<br>running <em>F1 league</em></h1>
     <p class="hero-desc">
@@ -263,13 +277,59 @@ function toggleMenu(){
 
 async function init(){
   try {
-    const season = await getCurrentSeason();
+    const config    = await loadConfig();
+    const season    = await getCurrentSeason();
+    const sc        = season ? await loadSeasonConfig(season) : null;
+
     if(season){
-      document.getElementById('hero-status-text').textContent = `Season ${season} · Now Racing`;
       document.getElementById('stat-seasons').innerHTML = `<span>${season}</span>`;
     }
     const yr = new Date().getFullYear() - 2010;
     document.querySelectorAll('.stat-num')[1].innerHTML = `<span>${yr}</span>`;
+
+    // ── Sign-ups badge ──────────────────────────────────────────────────────
+    const signupsOpen = (config['signups_open'] || '').toLowerCase() === 'yes';
+    if(signupsOpen && season){
+      document.getElementById('badge-signups-text').textContent = `Sign-ups open · Season ${season}`;
+      document.getElementById('badge-signups').classList.add('visible');
+    }
+
+    // ── Season start date badge ─────────────────────────────────────────────
+    // Read R1 date from D1 calendar GID
+    if(sc){
+      const calGid   = sc['d1_calendar_gid'];
+      const sheetId  = sc['d1_sheet_id'];
+      if(calGid && sheetId){
+        try {
+          const url  = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${calGid}`;
+          const res  = await fetch(url);
+          const text = await res.text();
+          const rows = text.split(/\r?\n/).slice(1); // skip header
+          for(const row of rows){
+            const cells = row.split(',');
+            const dateStr = (cells[2] || '').trim().replace(/^"|"$/g, '');
+            if(!dateStr || dateStr.toLowerCase() === 'never raced') continue;
+            // Parse date — expected format dd/mm/yyyy
+            const parts = dateStr.split('/');
+            if(parts.length !== 3) continue;
+            const r1Date = new Date(parseInt(parts[2]), parseInt(parts[1])-1, parseInt(parts[0]));
+            const now    = new Date();
+            if(r1Date > now){
+              // Season hasn't started yet — show start date
+              const formatted = r1Date.toLocaleDateString('en-GB', {day:'numeric', month:'long', year:'numeric'});
+              document.getElementById('badge-season-text').textContent = `Season ${season} starts ${formatted}`;
+              document.getElementById('badge-season').classList.add('visible');
+            } else {
+              // Season is live
+              document.getElementById('badge-season-text').textContent = `Season ${season} · Now Racing`;
+              document.getElementById('badge-season').classList.add('visible');
+            }
+            break;
+          }
+        } catch(e){ console.warn('Calendar fetch failed:', e.message); }
+      }
+    }
+
   } catch(e){ console.error(e); }
 }
 
