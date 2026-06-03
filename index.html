@@ -290,9 +290,12 @@ async function init(){
     if(statNums[1]) statNums[1].innerHTML = `<span>${yr}</span>`;
 
     // ── Sign-ups badge ──────────────────────────────────────────────────────
-    const signupsOpen = (config['signups_open'] || '').toLowerCase() === 'yes';
-    if(signupsOpen && season){
+    const signupsVal = (config['signups_open'] || '').toLowerCase();
+    if(signupsVal === 'yes' && season){
       document.getElementById('badge-signups-text').textContent = `Sign-ups open · Season ${season}`;
+      document.getElementById('badge-signups').classList.add('visible');
+    } else if(signupsVal === 'season' && season){
+      document.getElementById('badge-signups-text').textContent = `Season ${season} underway · Reserve spots still available`;
       document.getElementById('badge-signups').classList.add('visible');
     }
 
