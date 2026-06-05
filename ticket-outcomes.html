@@ -60,6 +60,18 @@
   /* CONTENT */
   .content{padding:20px 24px;max-width:900px;}
 
+  /* SEASON GROUP */
+  .season-group{margin-bottom:16px;}
+  .season-header{display:flex;align-items:center;gap:12px;padding:14px 20px;background:#111815;border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:background 0.2s;user-select:none;}
+  .season-header:hover{background:#161d1b;}
+  .season-header.open{border-radius:8px 8px 0 0;border-bottom-color:transparent;}
+  .season-name{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text);}
+  .season-meta{font-size:12px;color:var(--text-muted);margin-top:2px;}
+  .season-chevron{font-size:16px;color:var(--text-faint);transition:transform 0.25s;}
+  .season-chevron.open{transform:rotate(180deg);}
+  .season-body{display:none;border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;padding:12px;background:#131a18;}
+  .season-body.open{display:block;}
+
   /* RACE GROUP */
   .race-group{margin-bottom:12px;}
   .race-header{display:flex;align-items:center;gap:12px;padding:14px 18px;background:#1a2320;border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:background 0.2s;user-select:none;}
@@ -393,27 +405,53 @@ function renderTickets() {
     return;
   }
 
-  // Group by race - preserve order of first appearance
-  const raceOrder = [];
-  const byRace = {};
+  // Group by season then by race
+  const seasonOrder = [];
+  const bySeasonRace = {};
   filtered.forEach(row => {
     const race = (row[COLS.race] || '').trim();
-    if (!byRace[race]) { byRace[race] = []; raceOrder.push(race); }
-    byRace[race].push(row);
+    const match = race.match(/^S(\d+)/i);
+    const season = match ? `Season ${match[1]}` : 'Other';
+    if (!bySeasonRace[season]) { bySeasonRace[season] = { raceOrder: [], byRace: {} }; seasonOrder.push(season); }
+    const s = bySeasonRace[season];
+    if (!s.byRace[race]) { s.byRace[race] = []; s.raceOrder.push(race); }
+    s.byRace[race].push(row);
   });
 
-  // Reverse so most recent race appears first; tickets within each race stay in order (lowest number first)
-  raceOrder.reverse();
+  // Most recent season first; within each season most recent race first
+  seasonOrder.reverse();
+  seasonOrder.forEach(s => bySeasonRace[s].raceOrder.reverse());
 
   let html = '';
-  raceOrder.forEach((race, rIdx) => {
-    const tickets = byRace[race];
-    const totalPenalties = tickets.filter(t => {
+  let globalRaceIdx = 0;
+
+  seasonOrder.forEach((season, sIdx) => {
+    const { raceOrder, byRace } = bySeasonRace[season];
+    const seasonTickets = raceOrder.reduce((n, r) => n + byRace[r].length, 0);
+    const seasonPenalties = raceOrder.reduce((n, r) => n + byRace[r].filter(t => {
       const p = (t[COLS.penalty] || '').toLowerCase();
       return p && p !== 'no further action' && p !== 'nfa' && p !== '0';
-    }).length;
+    }).length, 0);
 
-    html += `<div class="race-group" id="race-${rIdx}">
+    html += `<div class="season-group" id="season-${sIdx}">
+      <div class="season-header" onclick="toggleSeason(${sIdx})" id="season-header-${sIdx}">
+        <div style="flex:1">
+          <div class="season-name">${season}</div>
+          <div class="season-meta">${raceOrder.length} race${raceOrder.length !== 1 ? 's' : ''} · ${seasonTickets} ticket${seasonTickets !== 1 ? 's' : ''} · ${seasonPenalties} penalt${seasonPenalties !== 1 ? 'ies' : 'y'}</div>
+        </div>
+        <div class="season-chevron" id="season-chevron-${sIdx}">▼</div>
+      </div>
+      <div class="season-body" id="season-body-${sIdx}">`;
+
+    raceOrder.forEach(race => {
+      const rIdx = globalRaceIdx++;
+      const tickets = byRace[race];
+      const totalPenalties = tickets.filter(t => {
+        const p = (t[COLS.penalty] || '').toLowerCase();
+        return p && p !== 'no further action' && p !== 'nfa' && p !== '0';
+      }).length;
+
+      html += `<div class="race-group" id="race-${rIdx}">
       <div class="race-header" onclick="toggleRace(${rIdx})" id="race-header-${rIdx}">
         <div class="race-header-left">
           <div class="race-name">${race}</div>
@@ -568,13 +606,29 @@ function renderTickets() {
       </div>`;
     });
 
+      html += `</div></div>`;
+    });
+
     html += `</div></div>`;
   });
 
   content.innerHTML = html;
 
-  // Open the first (most recent) race by default
-  if (raceOrder.length > 0) toggleRace(0);
+  // Open the most recent season and its first race by default
+  if (seasonOrder.length > 0) {
+    toggleSeason(0);
+    toggleRace(0);
+  }
+}
+
+function toggleSeason(idx) {
+  const body = document.getElementById(`season-body-${idx}`);
+  const header = document.getElementById(`season-header-${idx}`);
+  const chevron = document.getElementById(`season-chevron-${idx}`);
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  header.classList.toggle('open', !isOpen);
+  chevron.classList.toggle('open', !isOpen);
 }
 
 function toggleRace(idx) {
