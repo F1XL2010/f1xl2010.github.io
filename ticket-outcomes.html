@@ -233,7 +233,7 @@ const COLS = {
   driverPunished:17, points:18, penalty:19, evaluation:20,
   submitterOutcome:21, submitterPoints:22, submitterPenalty:23,
   offenderOutcome:24, offenderPoints:25, offenderPenalty:26,
-  appealed:27, appealOutcome:28, appealVerdict:29
+  appealed:27, appealInfo:28, appealEvidence:29, appealOutcome:30, appealVerdict:31
 };
 
 let allTickets = [];
@@ -454,8 +454,10 @@ function renderTickets() {
         .filter(e => e.startsWith('http'));
 
       const appealed = (row[COLS.appealed] || '').trim().toLowerCase() === 'yes';
-      const appealOutcome = (row[COLS.appealOutcome] || '').trim(); // col AC - written reasoning
-      const appealVerdict = (row[COLS.appealVerdict] || '').trim(); // col AD - new verdict/penalty
+      const appealInfo = (row[COLS.appealInfo] || '').trim();
+      const appealEvidence = (row[COLS.appealEvidence] || '').trim();
+      const appealOutcome = (row[COLS.appealOutcome] || '').trim();
+      const appealVerdict = (row[COLS.appealVerdict] || '').trim();
 
       // Collapsed header always shows original penalty from col T, unchanged
       const vc = verdictClass(penalty);
@@ -539,10 +541,22 @@ function renderTickets() {
           </div>
 
           ${appealed ? `<div class="detail-section">
-            <div class="detail-label" style="color:#E8B84B;">Appeal outcome</div>
-            ${appealVerdict
-              ? `<div class="detail-text" style="border-left:3px solid #E8B84B;padding-left:14px;">${appealVerdict}</div>`
-              : `<div class="detail-text" style="border-left:3px solid #E8B84B;padding-left:14px;color:var(--text-faint);">Appeal outcome pending</div>`}
+            <div class="detail-label" style="color:#E8B84B;">Appeal</div>
+            ${appealInfo
+              ? `<div class="detail-text" style="border-left:3px solid #E8B84B;padding-left:14px;">${appealInfo}</div>`
+              : ''}
+            ${appealEvidence
+              ? `<div style="margin-top:6px;">
+                  <span style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;">Appeal evidence</span>
+                  <div style="margin-top:4px;">${appealEvidence.split(/\s+/).filter(s=>s.startsWith('http')).map((url,i)=>`<a href="${url}" target="_blank" rel="noopener" style="display:inline-block;margin-right:6px;font-size:11px;color:#E8B84B;text-decoration:none;border:1px solid rgba(232,184,75,0.3);border-radius:3px;padding:2px 8px;">Video ${i+1}</a>`).join('') || `<span class="detail-text">${appealEvidence}</span>`}</div>
+                </div>`
+              : ''}
+            <div style="margin-top:8px;">
+              <div class="detail-label" style="color:#E8B84B;margin-bottom:4px;">Appeal outcome</div>
+              ${appealVerdict
+                ? `<div class="detail-text" style="border-left:3px solid #E8B84B;padding-left:14px;">${appealVerdict}</div>`
+                : `<div class="detail-text" style="border-left:3px solid #E8B84B;padding-left:14px;color:var(--text-faint);">Appeal outcome pending</div>`}
+            </div>
             <div style="margin-top:8px;display:flex;align-items:center;gap:8px;">
               <span style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;">Appeal verdict</span>
               ${appealOutcome
