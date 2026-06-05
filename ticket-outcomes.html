@@ -551,17 +551,17 @@ function renderTickets() {
                   <div style="margin-top:4px;">${appealEvidence.split(/\s+/).filter(s=>s.startsWith('http')).map((url,i)=>`<a href="${url}" target="_blank" rel="noopener" style="display:inline-block;margin-right:6px;font-size:11px;color:#E8B84B;text-decoration:none;border:1px solid rgba(232,184,75,0.3);border-radius:3px;padding:2px 8px;">Video ${i+1}</a>`).join('') || `<span class="detail-text">${appealEvidence}</span>`}</div>
                 </div>`
               : ''}
-            <div style="margin-top:8px;">
-              <div class="detail-label" style="color:#E8B84B;margin-bottom:4px;">Appeal outcome</div>
-              ${appealVerdict
-                ? `<div class="detail-text" style="border-left:3px solid #E8B84B;padding-left:14px;">${appealVerdict}</div>`
-                : `<div class="detail-text" style="border-left:3px solid #E8B84B;padding-left:14px;color:var(--text-faint);">Appeal outcome pending</div>`}
-            </div>
             <div style="margin-top:8px;display:flex;align-items:center;gap:8px;">
-              <span style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;">Appeal verdict</span>
-              ${appealOutcome
-                ? `<span class="verdict-badge ${verdictClass(appealOutcome)}">${verdictLabel(appealOutcome,'')}</span>`
+              <span style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;">Appeal decision</span>
+              ${appealVerdict
+                ? `<span class="verdict-badge ${verdictClass(appealVerdict)}">${verdictLabel(appealVerdict,'')}</span>`
                 : `<span style="font-size:11px;background:rgba(232,184,75,0.15);color:#E8B84B;border:1px solid rgba(232,184,75,0.25);border-radius:4px;padding:4px 10px;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.5px;text-transform:uppercase;">Pending</span>`}
+            </div>
+            <div style="margin-top:8px;">
+              <div class="detail-label" style="color:#E8B84B;margin-bottom:4px;">Appeals team comments</div>
+              ${appealOutcome
+                ? `<div class="detail-text" style="border-left:3px solid #E8B84B;padding-left:14px;">${appealOutcome}</div>`
+                : `<div class="detail-text" style="border-left:3px solid #E8B84B;padding-left:14px;color:var(--text-faint);">Appeal outcome pending</div>`}
             </div>
           </div>` : ''}
         </div>
