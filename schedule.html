@@ -178,7 +178,7 @@
 
 <div class="page-header">
   <div class="page-eyebrow">F1XL</div>
-  <div class="page-title">Season 27 Schedule</div>
+  <div class="page-title" id="page-title">Season 27 Schedule</div>
   <div class="page-meta" id="page-meta">Loading...</div>
 </div>
 <div class="disclaimer">All races start at 9:00pm BST unless otherwise announced on Discord.</div>
@@ -298,6 +298,11 @@ async function loadSchedule() {
     const sc = await getCurrentSeasonConfig();
     if (sc && sc['d1_sheet_id']) SHEET_ID = sc['d1_sheet_id'];
     if (sc && sc['d1_calendar_gid']) GID = sc['d1_calendar_gid'];
+    const season = await getCurrentSeason();
+    if (season) {
+      document.getElementById('page-title').textContent = `Season ${season} Schedule`;
+      document.title = `F1XL — Season ${season} Schedule`;
+    }
   } catch(e) {}
   try {
     const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${GID}`;
