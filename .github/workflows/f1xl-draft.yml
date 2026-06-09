@@ -1,8 +1,6 @@
 name: F1XL Draft Night
 
 on:
-  schedule:
-    - cron: '*/6 * * * *'
   workflow_dispatch:
 
 jobs:
