@@ -164,21 +164,26 @@ async function getDivisionTeams(sheetId, dataGid) {
   } catch(e) { return []; }
 }
 
-function buildLineupEmbed(team, season) {
-  const lines=[];
-  if (team.tp) lines.push(`Team Principal: *${team.tp}*`);
-  lines.push(`Division ${team.div}`);
-  if (team.drivers.length) {
-    lines.push(team.drivers.map(d=>{
-      const name=typeof d==='object'?d.name:d;
-      const tier=typeof d==='object'&&d.tier?` (${d.tier})`:'';
-      return `${name}${tier}`;
-    }).join('\n'));
-  }
+function buildLineupEmbed(teamName, divEntries, season) {
+  const tp = divEntries.find(e => e.tp)?.tp || '';
+  const lines = [];
+  if (tp) lines.push(`Team Principal: *${tp}*`);
+  divEntries.forEach(e => {
+    lines.push(`\n**Division ${e.div}**`);
+    if (e.drivers.length) {
+      e.drivers.forEach(d => {
+        const name = typeof d === 'object' ? d.name : d;
+        const tier = typeof d === 'object' && d.tier ? ` (${d.tier})` : '';
+        lines.push(`${name}${tier}`);
+      });
+    } else {
+      lines.push('—');
+    }
+  });
   return {
-    title: team.team,
+    title: teamName,
     description: lines.join('\n'),
-    color: DIV_COLOURS[team.div]||0x3DCC47,
+    color: DIV_COLOURS[divEntries[0]?.div] || 0x3DCC47,
     footer: { text: `F1XL Season ${season}` },
     timestamp: new Date().toISOString(),
   };
@@ -210,7 +215,16 @@ async function main() {
 
   // ── LINEUPS ──────────────────────────────────────────────────────────────
   const allTeams = teamResults.flat().sort((a,b)=>a.team.localeCompare(b.team));
-  console.log(`Teams: ${allTeams.length}`);
+
+  // Merge divisions per team — one embed per constructor
+  const teamMap = {};
+  for (const team of allTeams) {
+    const key = team.team.toLowerCase();
+    if (!teamMap[key]) teamMap[key] = { name: team.team, divs: [] };
+    teamMap[key].divs.push({ div: team.div, drivers: team.drivers, tp: team.tp });
+  }
+  const mergedTeams = Object.values(teamMap).sort((a, b) => a.name.localeCompare(b.name));
+  console.log(`Merged teams: ${mergedTeams.length}`);
 
   const lineupBotMsgs = lineupMsgs.filter(m=>m.author?.bot&&m.embeds?.length>0).reverse();
   const existingLineups={};
@@ -219,12 +233,20 @@ async function main() {
     if (title) existingLineups[title]={id:msg.id,desc:msg.embeds[0]?.description||''};
   }
 
-  for (const team of allTeams) {
-    const embed=buildLineupEmbed(team,season);
-    const existing=existingLineups[team.team];
+  for (const team of mergedTeams) {
+    const embed = buildLineupEmbed(team.name, team.divs, season);
+    const existing = existingLineups[team.name];
     if (existing) {
-      if (existing.desc!==embed.description) { console.log(`Editing: ${team.team}`); await editMessage(CHANNEL_ID,existing.id,embed); await new Promise(r=>setTimeout(r,600)); }
-    } else { console.log(`Posting: ${team.team}`); await postMessage(CHANNEL_ID,embed); await new Promise(r=>setTimeout(r,600)); }
+      if (existing.desc !== embed.description) {
+        console.log(`Editing: ${team.name}`);
+        await editMessage(CHANNEL_ID, existing.id, embed);
+        await new Promise(r => setTimeout(r, 600));
+      }
+    } else {
+      console.log(`Posting: ${team.name}`);
+      await postMessage(CHANNEL_ID, embed);
+      await new Promise(r => setTimeout(r, 600));
+    }
   }
 
   // ── CALENDAR ─────────────────────────────────────────────────────────────
