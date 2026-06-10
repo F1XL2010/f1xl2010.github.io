@@ -304,78 +304,77 @@ function renderSeason(data,num){
 let allData={};
 // ── S28+ DATA TAB PARSER ─────────────────────────────────────────────────────
 function parseS28DataTab(rows, divNum) {
-  // Primary driver source: cols I-N (0-based: 8-13)
-  //   I(8)=squad#, J(9)=Driver, K(10)=Platform, L(11)=ControllerType, M(12)=Team, N(13)=Tier
-  //   Rows 2+ = data (row 0 = section header, row 1 = col headers)
-  //   Rows 25+ = Team Principal section: J(9)=TP name, K(10)=team name (lowercase)
-  // Free agents (unassigned reserves): col P(15), rows 3+ (row 0=header, row 1=col header)
-  // Retired: col T(19), rows 3+ (row 0=header, row 1=col header)
+  // Step 1: Read TP section (rows 25+, col J=9=name, K=10=team)
+  //   If team has a real name next to it -> constructor team
+  //   If team has "reserve" next to it -> reserve section
+  // Step 2: Read driver rows (rows 2-23, col J=9=driver, M=12=team, N=13=tier)
+  //   Assign each driver to the team established in step 1
+  // Step 3: Col P (index 15) -> free agents
+  // Step 4: Col T (index 19) -> retired
 
-  const teams = {};
-  const reserveDrivers = []; // guaranteed seat, no constructor
+  const teams = {};       // constructor teams
+  const reserveTeams = {}; // teams flagged as reserve
   const freeAgents = [];
   const retired = [];
-  const SKIP = ['driver','reserve','retired','platform','controller type','tier','team','#','team principal',''];
+  const SKIP = ['driver','reserve','retired','platform','controller type','tier','team','#','team principal','name',''];
 
-  // Find where I-N driver data starts (row after col header row "# Driver Platform...")
-  let driverStart = -1;
-  for (let i = 0; i < rows.length; i++) {
-    const cell = (rows[i][9] || '').trim().toLowerCase();
-    if (cell === 'driver') { driverStart = i + 1; break; }
-  }
-  if (driverStart < 0) driverStart = 2;
-
-  // Find where TP section starts ("Team Principal" label in col J)
+  // Step 1 — find TP section
   let tpStart = -1;
-  for (let i = driverStart; i < rows.length; i++) {
+  for (let i = 0; i < rows.length; i++) {
     if ((rows[i][9] || '').trim().toLowerCase() === 'team principal') { tpStart = i + 2; break; }
   }
-  const driverEnd = tpStart > 0 ? tpStart - 2 : rows.length;
 
-  // Parse drivers from cols I-N
-  for (let i = driverStart; i < driverEnd; i++) {
-    const driver = (rows[i][9] || '').trim();
+  if (tpStart >= 0) {
+    for (let i = tpStart; i < rows.length; i++) {
+      const tp   = (rows[i][9]  || '').trim();
+      const team = (rows[i][10] || '').trim();
+      if (!team) continue;
+      if (tp.toLowerCase() === 'reserve') {
+        // This team goes in the reserve section
+        reserveTeams[team.toLowerCase()] = { name: team, tp: '', tier1: '', tier2: '', div: divNum };
+      } else if (tp && !SKIP.includes(tp.toLowerCase())) {
+        // Proper constructor team
+        teams[team.toLowerCase()] = { name: team, tp: tp, tier1: '', tier2: '', div: divNum };
+      } else {
+        // Team listed but TP not yet assigned — still a constructor team
+        if (!teams[team.toLowerCase()]) {
+          teams[team.toLowerCase()] = { name: team, tp: '', tier1: '', tier2: '', div: divNum };
+        }
+      }
+    }
+  }
+
+  // Step 2 — assign drivers (rows 2-23, col J=9, M=12, N=13)
+  for (let i = 1; i < rows.length; i++) {
+    const driver = (rows[i][9]  || '').trim();
     const team   = (rows[i][12] || '').trim();
     const tier   = (rows[i][13] || '').trim();
     if (!driver || SKIP.includes(driver.toLowerCase())) continue;
-    if (!team) continue;
-    if (team.toLowerCase() === 'reserve') {
-      reserveDrivers.push(driver);
-      continue;
-    }
-    if (!teams[team]) teams[team] = { name: team, tp: '', tier1: '', tier2: '', div: divNum };
-    if (tier.toLowerCase().includes('1')) teams[team].tier1 = driver;
-    else if (tier.toLowerCase().includes('2')) teams[team].tier2 = driver;
+    if (!team || SKIP.includes(team.toLowerCase())) continue;
+    const key = team.toLowerCase();
+    const target = teams[key] || reserveTeams[key];
+    if (!target) continue;
+    if (tier.toLowerCase().includes('1')) target.tier1 = driver;
+    else if (tier.toLowerCase().includes('2')) target.tier2 = driver;
   }
 
-  // Parse Team Principals from TP section (col J = name, col K = team)
-  if (tpStart >= 0) {
-    for (let i = tpStart; i < rows.length; i++) {
-      const name = (rows[i][9] || '').trim();
-      const team = (rows[i][10] || '').trim();
-      if (!name || !team || SKIP.includes(name.toLowerCase())) continue;
-      const match = Object.keys(teams).find(t => t.toLowerCase() === team.toLowerCase());
-      if (match) teams[match].tp = name;
-    }
-  }
-
-  // Parse free agents from col P (index 15), skip header rows
+  // Step 3 — free agents from col P (index 15)
   for (let i = 2; i < rows.length; i++) {
     const v = (rows[i][15] || '').trim();
     if (v && !SKIP.includes(v.toLowerCase())) freeAgents.push(v);
   }
 
-  // Parse retired from col T (index 19), skip header rows
+  // Step 4 — retired from col T (index 19)
   for (let i = 2; i < rows.length; i++) {
     const v = (rows[i][19] || '').trim();
     if (v && !SKIP.includes(v.toLowerCase())) retired.push(v);
   }
 
   return {
-    teams: Object.values(teams),
-    reserveDrivers: reserveDrivers.filter(Boolean),
-    freeAgents: freeAgents.filter(Boolean),
-    retired: retired.filter(Boolean)
+    teams:         Object.values(teams),
+    reserveTeams:  Object.values(reserveTeams),
+    freeAgents:    freeAgents.filter(Boolean),
+    retired:       retired.filter(Boolean)
   };
 }
 
@@ -422,7 +421,14 @@ function renderS28Season(divDataArr, seasonNum) {
   });
 
   const allTeams        = Object.values(teamMap).sort((a, b) => a.name.localeCompare(b.name));
-  const allReserves     = [...new Set(divDataArr.flatMap(d => d.reserveDrivers))].filter(Boolean);
+  const allReserveTeams = [];
+  divDataArr.forEach(divData => {
+    (divData.reserveTeams || []).forEach(t => {
+      if (!allReserveTeams.find(r => r.name.toLowerCase() === t.name.toLowerCase())) {
+        allReserveTeams.push(t);
+      }
+    });
+  });
   const allFreeAgents   = [...new Set(divDataArr.flatMap(d => d.freeAgents))].filter(Boolean);
   const allRetired      = [...new Set(divDataArr.flatMap(d => d.retired))].filter(Boolean);
 
@@ -461,34 +467,21 @@ function renderS28Season(divDataArr, seasonNum) {
   });
   html += '</div>';
 
-  // ── Reserve Drivers (guaranteed seats, no constructor) ──
-  if (allReserves.length) {
+  // ── Reserve Teams ──
+  if (allReserveTeams.length) {
     html += `<div class="section-divider"></div>
     <div class="section-label">Reserve Drivers</div>
-    <div class="section-sublabel" style="padding:0 24px 12px;font-size:12px;color:var(--text-faint);">Guaranteed race seat &mdash; no constructor assigned</div>
+    <div class="section-sublabel" style="padding:0 24px 12px;font-size:12px;color:var(--text-faint);">Guaranteed race seat — no constructor assigned</div>
     <div class="teams-grid">`;
-    // Group reserves into a single card per division they appear in
-    divDataArr.forEach(divData => {
-      if (!divData.reserveDrivers.length) return;
-      const color = 'var(--text-faint)';
-      html += `<div class="team-card">
-        <div class="tc-header">
-          <div class="tc-header-content">
-            <div class="tc-bar" style="background:var(--green)"></div>
-            <div>
-              <div class="tc-name">Reserves</div>
-              <div class="tc-owner-row"><span class="tc-owner-lbl">Division ${divData.teams[0]?.div || ''}</span></div>
-            </div>
-          </div>
-        </div>
-        <div class="tc-body">
-          <div class="tc-div">
-            <div class="tc-drivers" style="display:flex;flex-direction:column;gap:4px;">
-              ${divData.reserveDrivers.map(d => `<span>${d}</span>`).join('')}
-            </div>
-          </div>
+    allReserveTeams.forEach(t => {
+      const divsHtml = `<div class="tc-div">
+        <div class="tc-div-row"><span class="tc-div-lbl">Division ${t.div}</span></div>
+        <div class="tc-drivers">
+          <span style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">T1</span> ${t.tier1 || '&mdash;'}<br>
+          <span style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">T2</span> ${t.tier2 || '&mdash;'}
         </div>
       </div>`;
+      html += cardTemplate(t, divsHtml);
     });
     html += '</div>';
   }
