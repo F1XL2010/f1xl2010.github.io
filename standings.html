@@ -1125,7 +1125,7 @@ function buildOverallConstTable(rows){
     const r=rows[i];
     let t=(r[teamCol]||'').trim();
     if(!t) t=(r[teamCol+1]||'').trim();
-    if(!t||t.startsWith('#')) continue;
+    if(!t||t.startsWith('#')) { if(!t && data.length > 0) break; continue; }
     const pts=Math.floor(parseFloat((r[ptsCol]||'').trim().replace(/,/g,''))||0);
     const gapRaw=(gapCol>=0?(r[gapCol]||'').trim():'')||'';
     const gapNum = parseFloat(gapRaw);
