@@ -304,92 +304,79 @@ function renderSeason(data,num){
 let allData={};
 // ── S28+ DATA TAB PARSER ─────────────────────────────────────────────────────
 function parseS28DataTab(rows, divNum) {
-  // Col layout (0-based):
-  // A(0)=Driver, B(1)=Nationality, C(2)=Abbreviation, D(3)=Team, E(4)=Tier
-  // Row 0 = "DRIVERS" header label, Row 1 = column headers, Rows 2+ = data
-  // Reserve drivers: col 15 (header in row 1 = "Driver ")
-  // Retired drivers: col 19 (header in row 1 = "Driver")
-  // Team Principal: label "Team Principal" in col 9, data in col 9 (name) + col 10 (team)
+  // Primary driver source: cols I-N (0-based: 8-13)
+  //   I(8)=squad#, J(9)=Driver, K(10)=Platform, L(11)=ControllerType, M(12)=Team, N(13)=Tier
+  //   Rows 2+ = data (row 0 = section header, row 1 = col headers)
+  //   Rows 25+ = Team Principal section: J(9)=TP name, K(10)=team name (lowercase)
+  // Free agents (unassigned reserves): col P(15), rows 3+ (row 0=header, row 1=col header)
+  // Retired: col T(19), rows 3+ (row 0=header, row 1=col header)
 
   const teams = {};
-  const reserves = [];
+  const reserveDrivers = []; // guaranteed seat, no constructor
+  const freeAgents = [];
   const retired = [];
+  const SKIP = ['driver','reserve','retired','platform','controller type','tier','team','#','team principal',''];
 
-  // Find data start — row after the "Driver/Nationality/..." header row
-  let dataStart = -1;
+  // Find where I-N driver data starts (row after col header row "# Driver Platform...")
+  let driverStart = -1;
   for (let i = 0; i < rows.length; i++) {
-    if ((rows[i][0] || '').trim().toLowerCase() === 'driver') { dataStart = i + 1; break; }
+    const cell = (rows[i][9] || '').trim().toLowerCase();
+    if (cell === 'driver') { driverStart = i + 1; break; }
   }
-  if (dataStart < 0) dataStart = 2;
+  if (driverStart < 0) driverStart = 2;
 
-  // Parse active drivers from cols A-E (stop at first blank driver name)
-  for (let i = dataStart; i < rows.length; i++) {
-    const driver = (rows[i][0] || '').trim();
-    const team = (rows[i][3] || '').trim();
-    const tier = (rows[i][4] || '').trim();
-    if (!driver || driver.startsWith('#')) continue;
-    if (!team || team.toLowerCase() === 'reserve' || team.toLowerCase() === 'retired') continue;
+  // Find where TP section starts ("Team Principal" label in col J)
+  let tpStart = -1;
+  for (let i = driverStart; i < rows.length; i++) {
+    if ((rows[i][9] || '').trim().toLowerCase() === 'team principal') { tpStart = i + 2; break; }
+  }
+  const driverEnd = tpStart > 0 ? tpStart - 2 : rows.length;
+
+  // Parse drivers from cols I-N
+  for (let i = driverStart; i < driverEnd; i++) {
+    const driver = (rows[i][9] || '').trim();
+    const team   = (rows[i][12] || '').trim();
+    const tier   = (rows[i][13] || '').trim();
+    if (!driver || SKIP.includes(driver.toLowerCase())) continue;
+    if (!team) continue;
+    if (team.toLowerCase() === 'reserve') {
+      reserveDrivers.push(driver);
+      continue;
+    }
     if (!teams[team]) teams[team] = { name: team, tp: '', tier1: '', tier2: '', div: divNum };
     if (tier.toLowerCase().includes('1')) teams[team].tier1 = driver;
     else if (tier.toLowerCase().includes('2')) teams[team].tier2 = driver;
   }
 
-  // Parse reserve drivers from col 15 — header in row 1, data rows 2+
-  for (let i = 2; i < rows.length; i++) {
-    const v = (rows[i][15] || '').trim();
-    if (v && !['driver','reserve','retired','platform','controller type','tier'].includes(v.toLowerCase())) {
-      reserves.push(v);
-    }
-  }
-
-  // Parse retired drivers from col 19 — header in row 1, data rows 2+
-  for (let i = 2; i < rows.length; i++) {
-    const v = (rows[i][19] || '').trim();
-    if (v && !['driver','reserve','retired'].includes(v.toLowerCase())) {
-      retired.push(v);
-    }
-  }
-
-  // Parse reserve teams from constructors section (col 21) — "Reserve" entry
-  const resteams = [];
-  let consStart = -1;
-  for (let i = 0; i < rows.length; i++) {
-    if ((rows[i][21] || '').trim().toLowerCase() === 'short name') { consStart = i + 1; break; }
-  }
-  if (consStart >= 0) {
-    for (let i = consStart; i < rows.length; i++) {
-      const name = (rows[i][21] || '').trim();
-      if (!name) continue;
-      if (name.toLowerCase() === 'reserve') resteams.push('Reserve');
-    }
-  }
-
-  // Parse Team Principals — find "Team Principal" label in col 9
-  let tpStart = -1;
-  for (let i = 0; i < rows.length; i++) {
-    if ((rows[i][9] || '').trim().toLowerCase() === 'team principal') { tpStart = i + 2; break; }
-  }
+  // Parse Team Principals from TP section (col J = name, col K = team)
   if (tpStart >= 0) {
     for (let i = tpStart; i < rows.length; i++) {
       const name = (rows[i][9] || '').trim();
       const team = (rows[i][10] || '').trim();
-      if (!name || !team) continue;
-      if (['name','team','driver'].includes(name.toLowerCase())) continue;
-      // If TP is marked "reserve", add team to resteams and remove from full cards
-      if (name.toLowerCase() === 'reserve') {
-        const match = Object.keys(teams).find(t => t.toLowerCase() === team.toLowerCase());
-        if (match) {
-          resteams.push(teams[match].name);
-          delete teams[match];
-        }
-        continue;
-      }
+      if (!name || !team || SKIP.includes(name.toLowerCase())) continue;
       const match = Object.keys(teams).find(t => t.toLowerCase() === team.toLowerCase());
       if (match) teams[match].tp = name;
     }
   }
 
-  return { teams: Object.values(teams), resteams, reserves: reserves.filter(Boolean), retired: retired.filter(Boolean) };
+  // Parse free agents from col P (index 15), skip header rows
+  for (let i = 2; i < rows.length; i++) {
+    const v = (rows[i][15] || '').trim();
+    if (v && !SKIP.includes(v.toLowerCase())) freeAgents.push(v);
+  }
+
+  // Parse retired from col T (index 19), skip header rows
+  for (let i = 2; i < rows.length; i++) {
+    const v = (rows[i][19] || '').trim();
+    if (v && !SKIP.includes(v.toLowerCase())) retired.push(v);
+  }
+
+  return {
+    teams: Object.values(teams),
+    reserveDrivers: reserveDrivers.filter(Boolean),
+    freeAgents: freeAgents.filter(Boolean),
+    retired: retired.filter(Boolean)
+  };
 }
 
 function renderS28Card(t) {
@@ -423,26 +410,43 @@ function renderS28Card(t) {
 }
 
 function renderS28Season(divDataArr, seasonNum) {
-  // Merge teams across divisions — same team may appear in multiple divisions
+  // Merge constructor teams across divisions
   const teamMap = {};
   divDataArr.forEach(divData => {
     divData.teams.forEach(t => {
       const key = t.name.toLowerCase();
-      if (!teamMap[key]) teamMap[key] = {...t, divs: []};
+      if (!teamMap[key]) teamMap[key] = { ...t, divs: [] };
       teamMap[key].divs.push({ div: t.div, tier1: t.tier1, tier2: t.tier2 });
       if (t.tp && !teamMap[key].tp) teamMap[key].tp = t.tp;
     });
   });
 
-  const allTeams = Object.values(teamMap).sort((a, b) => a.name.localeCompare(b.name));
-  const allResteams = [...new Set(divDataArr.flatMap(d => d.resteams || []))].filter(Boolean);
-  const allReserves = [...new Set(divDataArr.flatMap(d => d.reserves))].filter(Boolean);
-  const allRetired = [...new Set(divDataArr.flatMap(d => d.retired))].filter(Boolean);
+  const allTeams        = Object.values(teamMap).sort((a, b) => a.name.localeCompare(b.name));
+  const allReserves     = [...new Set(divDataArr.flatMap(d => d.reserveDrivers))].filter(Boolean);
+  const allFreeAgents   = [...new Set(divDataArr.flatMap(d => d.freeAgents))].filter(Boolean);
+  const allRetired      = [...new Set(divDataArr.flatMap(d => d.retired))].filter(Boolean);
 
-  let html = `<div class="section-label">Season ${seasonNum} &middot; Teams</div><div class="teams-grid">`;
-
-  allTeams.forEach(t => {
+  const cardTemplate = (t, divsHtml) => {
     const color = getColor(t.name);
+    const img = 'images/teamlogos/squarelogo_' + t.name.toLowerCase().replace(/\s+/g,'').replace(/[^a-z0-9]/g,'') + '.webp';
+    return `<div class="team-card">
+      <img class="tc-header-img" src="${img}" alt="" onerror="this.style.display='none'">
+      <div class="tc-header">
+        <div class="tc-header-content">
+          <div class="tc-bar" style="background:${color}"></div>
+          <div>
+            <div class="tc-name">${t.name}</div>
+            <div class="tc-owner-row"><span class="tc-owner-lbl">Team Principal</span><span class="tc-owner">${t.tp || '&mdash;'}</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="tc-body">${divsHtml}</div>
+    </div>`;
+  };
+
+  // ── Constructor teams ──
+  let html = `<div class="section-label">Season ${seasonNum} &middot; Teams</div><div class="teams-grid">`;
+  allTeams.forEach(t => {
     let divsHtml = '';
     t.divs.forEach(d => {
       divsHtml += `<div class="tc-div">
@@ -453,38 +457,57 @@ function renderS28Season(divDataArr, seasonNum) {
         </div>
       </div>`;
     });
-    const imgSlugS28 = 'images/teamlogos/squarelogo_' + t.name.toLowerCase().replace(/\s+/g,'').replace(/[^a-z0-9]/g,'') + '.webp';
-    html += `<div class="team-card"><img class="tc-header-img" src="${imgSlugS28}" alt="" onerror="this.style.display='none'">
-      <div class="tc-header">
-        <div class="tc-header-content">
-        <div class="tc-bar" style="background:${color}"></div>
-        <div>
-          <div class="tc-name">${t.name}</div>
-          <div class="tc-owner-row"><span class="tc-owner-lbl">Team Principal</span><span class="tc-owner">${t.tp || '&mdash;'}</span></div>
-        </div>
-        </div>
-      </div>
-      <div class="tc-body">${divsHtml}</div>
-    </div>`;
+    html += cardTemplate(t, divsHtml);
   });
-
   html += '</div>';
 
-  if (allResteams.length || allReserves.length) {
-    html += '<div class="section-divider"></div><div class="section-label">Reserves</div>';
-    if (allResteams.length) {
-      html += '<div style="padding:0 24px 8px;display:flex;gap:8px;flex-wrap:wrap;">';
-      allResteams.forEach(t => { html += `<div style="background:#161d1b;border:1px solid var(--border);border-left:3px solid ${getColor(t)};border-radius:4px;padding:5px 12px;font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);">${t}</div>`; });
-      html += '</div>';
-    }
-    if (allReserves.length) {
-      html += '<div style="padding:0 24px 20px;display:flex;flex-wrap:wrap;gap:6px;">';
-      allReserves.forEach(d => { html += `<div class="retired-pill" style="color:var(--text-muted);">${d}</div>`; });
-      html += '</div>';
-    }
+  // ── Reserve Drivers (guaranteed seats, no constructor) ──
+  if (allReserves.length) {
+    html += `<div class="section-divider"></div>
+    <div class="section-label">Reserve Drivers</div>
+    <div class="section-sublabel" style="padding:0 24px 12px;font-size:12px;color:var(--text-faint);">Guaranteed race seat &mdash; no constructor assigned</div>
+    <div class="teams-grid">`;
+    // Group reserves into a single card per division they appear in
+    divDataArr.forEach(divData => {
+      if (!divData.reserveDrivers.length) return;
+      const color = 'var(--text-faint)';
+      html += `<div class="team-card">
+        <div class="tc-header">
+          <div class="tc-header-content">
+            <div class="tc-bar" style="background:var(--green)"></div>
+            <div>
+              <div class="tc-name">Reserves</div>
+              <div class="tc-owner-row"><span class="tc-owner-lbl">Division ${divData.teams[0]?.div || ''}</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="tc-body">
+          <div class="tc-div">
+            <div class="tc-drivers" style="display:flex;flex-direction:column;gap:4px;">
+              ${divData.reserveDrivers.map(d => `<span>${d}</span>`).join('')}
+            </div>
+          </div>
+        </div>
+      </div>`;
+    });
+    html += '</div>';
   }
+
+  // ── Free Agents ──
+  if (allFreeAgents.length) {
+    html += `<div class="section-divider"></div>
+    <div class="section-label">Free Agents</div>
+    <div class="section-sublabel" style="padding:0 24px 12px;font-size:12px;color:var(--text-faint);">Part-time &amp; overflow drivers &mdash; not guaranteed a seat each week</div>
+    <div class="retired-list">`;
+    allFreeAgents.forEach(d => { html += `<div class="retired-pill">${d}</div>`; });
+    html += '</div>';
+  }
+
+  // ── Retired ──
   if (allRetired.length) {
-    html += '<div class="section-divider"></div><div class="section-label">Retired</div><div class="retired-list">';
+    html += `<div class="section-divider"></div>
+    <div class="section-label">Retired</div>
+    <div class="retired-list">`;
     allRetired.forEach(d => { html += `<div class="retired-pill">${d}</div>`; });
     html += '</div>';
   }
