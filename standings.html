@@ -1578,7 +1578,7 @@ async function loadCoolStats() {
     let sHdrIdx = -1;
     for (let i=0; i<stRows.length; i++) { if (cs(stRows[i],0).toLowerCase()==='driver') { sHdrIdx=i; break; } }
     const sHdr = stRows[sHdrIdx];
-    if (!sHdr || !sHdr.c) { console.warn('Cool stats: no driver stats header found for div', div.id); return null; }
+    if (!sHdr || !sHdr.c) { console.warn('Cool stats: no driver stats header found for', d1.id); return; }
     const findCol = name => sHdr.c.findIndex(c=>(c.v||'').toString().trim().toLowerCase().includes(name));
     const colTier=findCol('tier'), colAvgFin=findCol('avg finish'), colAvgGrid=findCol('avg grid');
     const colGained=findCol('gained'), colTotPts=findCol('total points'), colTeam=1;
