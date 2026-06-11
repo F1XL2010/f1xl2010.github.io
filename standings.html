@@ -1537,135 +1537,82 @@ async function loadCoolStats() {
   cards.innerHTML = '<div class="loading-msg">Loading...</div>';
 
   try {
-    // Fetch driver results + stats for D1 (used for form/h2h/consistent/gained)
-    const d1 = divisions.find(d=>d.sheetId) || divisions[0];
-    if (!d1) { cards.innerHTML = '<div class="loading-msg">No division data.</div>'; return; }
+    // Fetch Driver Stats Calc Sheet from every division in parallel
+    const allDrivers = (await Promise.all(
+      divisions.map(async div => {
+        if (!div.sheetId || !div.gids.driverStats) return [];
+        try {
+          const t = await fetchSheet(div.sheetId, div.gids.driverStats);
+          const rows = t.rows;
+          // Find header row — "Driver" in col 0
+          let hi = -1;
+          for (let i = 0; i < rows.length; i++) {
+            if (cs(rows[i], 0).toLowerCase() === 'driver') { hi = i; break; }
+          }
+          if (hi < 0 || !rows[hi].c) return [];
+          const hdr = rows[hi];
+          const fc = name => hdr.c.findIndex(c => (c.v||'').toString().trim().toLowerCase().includes(name));
+          const colTeam    = fc('team');
+          const colTier    = fc('tier');
+          const colWins    = fc('win');
+          const colPodiums = fc('podium');
+          const colPoles   = fc('pole');
+          const colFL      = fc('fastest');
+          const colPts     = fc('total points');
+          const out = [];
+          for (let i = hi + 1; i < rows.length; i++) {
+            const name = cs(rows[i], 0).trim();
+            if (!name) break;
+            out.push({
+              name,
+              team:    cs(rows[i], colTeam).trim(),
+              tier:    cs(rows[i], colTier).trim(),
+              wins:    parseInt(cs(rows[i], colWins))    || 0,
+              podiums: parseInt(cs(rows[i], colPodiums)) || 0,
+              poles:   parseInt(cs(rows[i], colPoles))   || 0,
+              fl:      parseInt(cs(rows[i], colFL))      || 0,
+              pts:     Math.floor(parseFloat(cs(rows[i], colPts)) || 0),
+              div:     div.name
+            });
+          }
+          return out;
+        } catch(e) { return []; }
+      })
+    )).flat();
 
-    const [drTable, statsTable] = await Promise.all([
-      fetchSheet(d1.sheetId, d1.gids.drivers),
-      fetchSheet(d1.sheetId, d1.gids.driverStats)
-    ]);
-
-    // ── Parse Driver Results header ───────────────────────────────────────────
-    const drRows = drTable.rows;
-    let hIdx = -1;
-    for (let i=0; i<drRows.length; i++) { if (cs(drRows[i],0)==='Pos') { hIdx=i; break; } }
-    const drHdr = drRows[hIdx];
-    const ptsColIdx = drHdr.c.findIndex(c=>(c.v||'').toString().trim().toLowerCase()==='points');
-
-    // Race cols (main races only, no sprint quali)
-    const raceCols = [];
-    for (let c=4; c<drHdr.c.length; c++) {
-      const h = cs(drHdr,c);
-      if (!h) continue;
-      if (ptsColIdx>0 && c>=ptsColIdx) break;
-      const isSQ = h.toLowerCase().includes('(s)') && !h.toLowerCase().includes('(r)');
-      if (!isSQ) raceCols.push({col:c, label:h});
+    if (!allDrivers.length) {
+      cards.innerHTML = '<div class="loading-msg">No stats available yet.</div>';
+      return;
     }
 
-    // Collect drivers
-    const drivers = [];
-    for (let i=hIdx+1; i<drRows.length; i++) {
-      const row = drRows[i];
-      const name = cs(row,2).trim();
-      const team = cs(row,3).trim();
-      if (!name) continue;
-      drivers.push({name, team, row: i});
-    }
+    const top5 = (arr, key) => [...arr].filter(d => d[key] > 0).sort((a,b) => b[key] - a[key]).slice(0, 5);
 
-    // ── Parse Driver Stats ────────────────────────────────────────────────────
-    const stRows = statsTable.rows;
-    let sHdrIdx = -1;
-    for (let i=0; i<stRows.length; i++) { if (cs(stRows[i],0).toLowerCase()==='driver') { sHdrIdx=i; break; } }
-    const sHdr = stRows[sHdrIdx];
-    if (!sHdr || !sHdr.c) { console.warn('Cool stats: no driver stats header found for', d1.id); return; }
-    const findCol = name => sHdr.c.findIndex(c=>(c.v||'').toString().trim().toLowerCase().includes(name));
-    const colTier=findCol('tier'), colAvgFin=findCol('avg finish'), colAvgGrid=findCol('avg grid');
-    const colGained=findCol('gained'), colTotPts=findCol('total points'), colTeam=1;
-
-    const statsMap = {};
-    for (let i=sHdrIdx+1; i<stRows.length; i++) {
-      const row = stRows[i];
-      const name = cs(row,0).trim();
-      if (!name) continue;
-      statsMap[name] = {
-        tier: cs(row,colTier), team: cs(row,colTeam).trim(),
-        avgFin: parseFloat(cs(row,colAvgFin))||null,
-        avgGrid: parseFloat(cs(row,colAvgGrid))||null,
-        gained: parseFloat(cs(row,colGained))||null,
-        totPts: Math.floor(parseFloat(cs(row,colTotPts))||0)
-      };
-    }
-
-    let cardsHtml = '';
-
-    // ── CARD 1: FORM GUIDE ────────────────────────────────────────────────────
-    const last5 = raceCols.slice(-5);
-    if (last5.length) {
-      cardsHtml += '<div class="cs-card"><div><div class="cs-card-title">Form Guide</div><div class="cs-card-sub">Last 5 rounds · finishing pos</div></div>';
-      drivers.slice(0,6).forEach(d => {
+    const buildCard = (title, sub, arr, key) => {
+      if (!arr.length) return '';
+      let html = `<div class="cs-card"><div><div class="cs-card-title">${title}</div><div class="cs-card-sub">${sub}</div></div>`;
+      arr.forEach((d, i) => {
         const color = teamColors[d.team] || '#555';
-        const dots = last5.map(r => {
-          const v = cs(drRows[d.row], r.col).trim();
-          const n = parseInt(v);
-          const bg = !v||v===' '?'rgba(255,255,255,0.05)':['DNF','DNS','DSQ'].includes(v.toUpperCase())?'#3a1010':n===1?'var(--p1-bg)':n===2?'var(--p2-bg)':n===3?'var(--p3-bg)':n<=6?'var(--p46-bg)':n<=10?'var(--p710-bg)':'rgba(255,255,255,0.08)';
-          const tc = !v||v===' '?'rgba(255,255,255,0.2)':['DNF','DNS','DSQ'].includes(v.toUpperCase())?'#ff6b6b':n<=3?'#000':'#fff';
-          const disp = !v||v===' '?'·':['DNF','DNS','DSQ'].includes(v.toUpperCase())?'X':v;
-          return `<div class="cs-dot" style="background:${bg};color:${tc};">${disp}</div>`;
-        }).join('');
-        cardsHtml += `<div class="cs-row">
+        const gold = i === 0 ? 'gold' : '';
+        html += `<div class="cs-row">
+          <span class="cs-row-pos ${gold}">${i+1}</span>
           <div style="width:3px;height:14px;background:${color};border-radius:1px;flex-shrink:0;"></div>
-          <span class="cs-row-name">${d.name}</span>
-          <div class="cs-dots">${dots}</div>
+          <div style="flex:1;min-width:0;">
+            <div class="cs-row-name">${d.name}</div>
+            <div class="cs-row-sub">${d.team} · ${d.div}</div>
+          </div>
+          <span class="cs-row-val">${d[key]}</span>
         </div>`;
       });
-      cardsHtml += '</div>';
-    }
+      return html + '</div>';
+    };
 
-    // H2H removed
-
-    // ── CARD 3: TOP 5 TIER 2 ─────────────────────────────────────────────────
-    const allStatsPromises = divisions.map(async div => {
-      if (!div.sheetId) return [];
-      try {
-        const t = await fetchSheet(div.sheetId, div.gids.driverStats);
-        const rows = t.rows;
-        let hi=-1;
-        for (let i=0;i<rows.length;i++) { if(cs(rows[i],0).toLowerCase()==='driver'){hi=i;break;} }
-        if (hi<0) return [];
-        const hdr = rows[hi];
-        const tc = hdr.c.findIndex(c=>(c.v||'').toString().trim().toLowerCase().includes('tier'));
-        const pc = hdr.c.findIndex(c=>(c.v||'').toString().trim().toLowerCase().includes('total points'));
-        const teac = hdr.c.findIndex(c=>(c.v||'').toString().trim().toLowerCase()==='team');
-        const out = [];
-        for (let i=hi+1;i<rows.length;i++) {
-          const row=rows[i], name=cs(row,0).trim();
-          if (!name) continue;
-          if (!cs(row,tc).toLowerCase().includes('2')) continue;
-          out.push({name, team:cs(row,teac).trim(), pts:Math.floor(parseFloat(cs(row,pc))||0), div:div.name});
-        }
-        return out;
-      } catch(e){return [];}
-    });
-    const allT2 = (await Promise.all(allStatsPromises)).flat().sort((a,b)=>b.pts-a.pts).slice(0,5);
-    if (allT2.length) {
-      cardsHtml += '<div class="cs-card"><div><div class="cs-card-title">Top Tier 2</div><div class="cs-card-sub">By points across all divisions</div></div>';
-      allT2.forEach((d,i) => {
-        const color = teamColors[d.team]||'#555';
-        const pc = i===0?'gold':'';
-        cardsHtml += `<div class="cs-row">
-          <span class="cs-row-pos ${pc}">${i+1}</span>
-          <div style="width:3px;height:14px;background:${color};border-radius:1px;flex-shrink:0;"></div>
-          <div style="flex:1;"><div class="cs-row-name">${d.name}</div><div class="cs-row-sub">${d.team} · ${d.div}</div></div>
-          <span class="cs-row-val">${d.pts}</span>
-        </div>`;
-      });
-      cardsHtml += '</div>';
-    }
-
-    // Cards 4 and 5 (Most Consistent, Positions Gained) removed — to be revisited
-
-    cards.innerHTML = cardsHtml || '<div class="loading-msg">No stats available yet.</div>';
+    cards.innerHTML = [
+      buildCard('Most Wins',         'All divisions', top5(allDrivers, 'wins'),    'wins'),
+      buildCard('Most Podiums',      'All divisions', top5(allDrivers, 'podiums'), 'podiums'),
+      buildCard('Most Poles',        'All divisions', top5(allDrivers, 'poles'),   'poles'),
+      buildCard('Most Fastest Laps', 'All divisions', top5(allDrivers, 'fl'),      'fl'),
+      buildCard('Most Points',       'All divisions', top5(allDrivers, 'pts'),     'pts'),
+    ].join('') || '<div class="loading-msg">No stats available yet.</div>';
 
   } catch(e) {
     cards.innerHTML = `<div class="loading-msg">Could not load stats: ${e.message}</div>`;
