@@ -1612,6 +1612,7 @@ async function loadCoolStats() {
       buildCard('Most Poles',        'All divisions', top5(allDrivers, 'poles'),   'poles'),
       buildCard('Most Fastest Laps', 'All divisions', top5(allDrivers, 'fl'),      'fl'),
       buildCard('Most Points',       'All divisions', top5(allDrivers, 'pts'),     'pts'),
+      buildCard('Top Tier 2',        'By points · all divisions', top5(allDrivers.filter(d => d.tier.toLowerCase().includes('2')), 'pts'), 'pts'),
     ].join('') || '<div class="loading-msg">No stats available yet.</div>';
 
   } catch(e) {
