@@ -123,6 +123,31 @@
 
   /* DIVIDER */
   .section-div{height:1px;background:var(--border);margin:0 28px;}
+  /* HOF FLIPBOOK */
+  .hof-flipbook-wrap{padding:0 28px 32px;max-width:900px;margin:0 auto;}
+  .hof-flipbook{position:relative;width:100%;aspect-ratio:16/9;border-radius:12px;overflow:hidden;border:1px solid rgba(232,184,75,0.3);box-shadow:0 0 40px rgba(232,184,75,0.08);}
+  .hof-slide{position:absolute;inset:0;opacity:0;transition:opacity 0.6s ease;pointer-events:none;}
+  .hof-slide.active{opacity:1;pointer-events:auto;}
+  .hof-slide-img{width:100%;height:100%;object-fit:cover;display:block;}
+  .hof-slide-lower{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(10,14,12,0.97) 30%);padding:20px 28px 24px;}
+  .hof-slide-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:12px;}
+  .hof-stat{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:8px 6px;text-align:center;}
+  .hof-stat-val{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:#fff;line-height:1;}
+  .hof-stat-lbl{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-top:2px;}
+  .hof-slide-achs{display:flex;flex-wrap:wrap;gap:5px;}
+  .hof-ach{font-size:11px;background:rgba(232,184,75,0.08);border:1px solid rgba(232,184,75,0.2);color:rgba(232,184,75,0.8);padding:3px 9px;border-radius:4px;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.5px;}
+  .hof-controls{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:16px;max-width:900px;margin-left:auto;margin-right:auto;padding:0 28px;}
+  .hof-ctrl-btn{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all 0.2s;flex-shrink:0;}
+  .hof-ctrl-btn:hover{background:rgba(232,184,75,0.1);border-color:rgba(232,184,75,0.3);color:#E8B84B;}
+  .hof-progress-wrap{flex:1;display:flex;flex-direction:column;gap:6px;}
+  .hof-dots{display:flex;justify-content:center;gap:8px;}
+  .hof-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.15);cursor:pointer;transition:background 0.2s;flex-shrink:0;}
+  .hof-dot.active{background:#E8B84B;}
+  .hof-bar-wrap{height:2px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;}
+  .hof-bar{height:100%;background:#E8B84B;border-radius:2px;width:0;}
+  .hof-pause-btn{background:none;border:none;color:rgba(255,255,255,0.3);cursor:pointer;font-size:11px;letter-spacing:1px;text-transform:uppercase;font-family:'Barlow Condensed',sans-serif;padding:4px 8px;}
+  .hof-pause-btn:hover{color:rgba(232,184,75,0.7);}
+  @media(max-width:600px){.hof-slide-stats{grid-template-columns:repeat(3,1fr);}.hof-stat-val{font-size:18px;}}
 
   /* LOADING */
   .loading-msg{text-align:center;padding:48px 24px;color:var(--text-faint);font-size:13px;}
@@ -228,11 +253,37 @@
 
 <!-- SECTION NAV -->
 <div class="section-nav">
-  <button class="section-nav-btn active" onclick="scrollToSection('leaderboards',this)">Leaderboards</button>
+  <button class="section-nav-btn active" onclick="scrollToSection('hof-legends',this)">F1XL Legends</button>
+  <button class="section-nav-btn" onclick="scrollToSection('leaderboards',this)">Leaderboards</button>
   <button class="section-nav-btn" onclick="scrollToSection('league-records',this)">League Records</button>
   <button class="section-nav-btn" onclick="scrollToSection('seasons',this)">Seasons</button>
   <button class="section-nav-btn" onclick="scrollToSection('division-records',this)">Division Records</button>
 </div>
+
+<!-- HOF LEGENDS -->
+<div id="hof-legends"></div>
+<div class="chapter">
+  <div class="chapter-eyebrow">Hall of Fame</div>
+  <div class="chapter-title">F1XL Legends</div>
+</div>
+<div class="hof-flipbook-wrap">
+  <div class="hof-flipbook" id="hof-flipbook">
+    <div class="loading-msg">Loading...</div>
+  </div>
+  <div class="hof-controls" id="hof-controls" style="display:none;">
+    <button class="hof-ctrl-btn" id="hof-prev" onclick="hofGo(-1)">&#8592;</button>
+    <div class="hof-progress-wrap">
+      <div class="hof-dots" id="hof-dots"></div>
+      <div class="hof-bar-wrap"><div class="hof-bar" id="hof-bar"></div></div>
+    </div>
+    <button class="hof-ctrl-btn" id="hof-next" onclick="hofGo(1)">&#8594;</button>
+  </div>
+  <div style="text-align:center;margin-top:8px;">
+    <button class="hof-pause-btn" id="hof-pause" onclick="hofTogglePause()">&#9208; Pause</button>
+  </div>
+</div>
+
+<div class="section-div"></div>
 
 <!-- LEADERBOARDS -->
 <div id="leaderboards"></div>
@@ -756,6 +807,8 @@ async function init(){
     // Fetch all in parallel
     const fetches = {};
     if(cfg.stats_url) fetches.stats = fetchCSV(cfg.stats_url);
+    if(cfg.stats_url) window._hofStatsUrl = cfg.stats_url;
+    loadHofLegends();
     if(cfg.overall_winners_url) fetches.overall = fetchCSV(cfg.overall_winners_url);
     for(let d=1;d<=8;d++){
       const key = `d${d}_winners_url`;
@@ -813,6 +866,185 @@ async function init(){
 }
 
 init();
+
+// ── HOF LEGENDS FLIPBOOK ────────────────────────────────────────────────────
+const HOF_SHEET_ID = '1mrnmIHJNREanKawFTdDbB4m6YuB1B1tq2VS0PC18xfI';
+const HOF_GID      = '82852858';
+const HOF_INTERVAL = 30000;
+const HOF_IMG_BASE = 'images/hof/';
+
+let hofInductees = [], hofCurrent = 0, hofPaused = false;
+let hofElapsed = 0, hofLastTick = null, hofRafId = null;
+
+async function loadHofLegends() {
+  try {
+    const url  = `https://docs.google.com/spreadsheets/d/${HOF_SHEET_ID}/gviz/tq?tqx=out:csv&gid=${HOF_GID}`;
+    const text = await fetch(url).then(r => r.text());
+    const rows = parseCSVHof(text);
+
+    // Find header row — Name, Inducted Season, Image Filename
+    let hi = -1;
+    for (let i = 0; i < rows.length; i++) {
+      if ((rows[i][0]||'').trim().toLowerCase() === 'name') { hi = i; break; }
+    }
+    if (hi < 0) { document.getElementById('hof-flipbook').innerHTML = '<div class="loading-msg">No inductees found.</div>'; return; }
+
+    const inductees = [];
+    for (let i = hi + 1; i < rows.length; i++) {
+      const name    = (rows[i][0]||'').trim();
+      const season  = (rows[i][1]||'').trim();
+      const imgFile = (rows[i][2]||'').trim();
+      if (!name) break;
+      inductees.push({ name, season, imgFile });
+    }
+
+    if (!inductees.length) { document.getElementById('hof-flipbook').innerHTML = '<div class="loading-msg">No inductees yet.</div>'; return; }
+
+    // Now cross-reference with stats if available
+    hofInductees = inductees;
+    hofRenderFlipbook();
+
+  } catch(e) {
+    document.getElementById('hof-flipbook').innerHTML = `<div class="loading-msg">Could not load inductees.</div>`;
+    console.error('HOF error:', e);
+  }
+}
+
+function parseCSVHof(text) {
+  return text.split(/\r?\n/).filter(l => l.trim()).map(line => {
+    const cells = []; let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c==='"'&&!inQ){inQ=true;}
+      else if(c==='"'&&inQ){if(line[i+1]==='"'){cur+='"';i++;}else{inQ=false;}}
+      else if(c===','&&!inQ){cells.push(cur.trim());cur='';}
+      else cur+=c;
+    }
+    cells.push(cur.trim());
+    return cells;
+  });
+}
+
+function hofRenderFlipbook() {
+  const flipbook = document.getElementById('hof-flipbook');
+  const controls = document.getElementById('hof-controls');
+  const dotsEl   = document.getElementById('hof-dots');
+
+  // Build slides
+  flipbook.innerHTML = hofInductees.map((ind, i) => `
+    <div class="hof-slide${i===0?' active':''}" id="hof-slide-${i}">
+      <img class="hof-slide-img" src="${HOF_IMG_BASE}${ind.imgFile}" alt="${ind.name}" onerror="this.style.background='#1a2320'">
+      <div class="hof-slide-lower" id="hof-lower-${i}">
+        <div class="loading-msg" style="color:rgba(255,255,255,0.3);font-size:11px;">Loading stats...</div>
+      </div>
+    </div>
+  `).join('');
+
+  // Build dots
+  dotsEl.innerHTML = hofInductees.map((_, i) =>
+    `<div class="hof-dot${i===0?' active':''}" onclick="hofGo(${i} - hofCurrent)"></div>`
+  ).join('');
+
+  controls.style.display = 'flex';
+
+  // Load stats for each inductee from the main stats sheet
+  hofInductees.forEach((ind, i) => hofLoadStats(ind, i));
+
+  // Start timer
+  hofLastTick = performance.now();
+  requestAnimationFrame(hofTick);
+}
+
+async function hofLoadStats(ind, idx) {
+  const lower = document.getElementById(`hof-lower-${idx}`);
+  try {
+    // Get stats_url from config
+    const statsUrl = window._hofStatsUrl || '';
+    if (!statsUrl) { lower.innerHTML = ''; return; }
+
+    const text = await fetch(statsUrl.includes('gviz') ? statsUrl :
+      `https://docs.google.com/spreadsheets/d/${statsUrl.match(/\/d\/([^/]+)/)?.[1]}/gviz/tq?tqx=out:csv&gid=${statsUrl.match(/gid=(\d+)/)?.[1]||'0'}`
+    ).then(r => r.text());
+
+    const rows = parseCSVHof(text);
+
+    // Find header
+    let hi = -1;
+    for (let i = 0; i < rows.length; i++) {
+      if ((rows[i][0]||'').trim().toLowerCase() === 'driver') { hi = i; break; }
+    }
+    if (hi < 0) { lower.innerHTML = ''; return; }
+
+    const hdr = rows[hi];
+    const fc = name => hdr.findIndex(h => h.toLowerCase().includes(name));
+    const colWins    = fc('win');
+    const colPodiums = fc('podium');
+    const colPoles   = fc('pole');
+    const colFL      = fc('fastest');
+    const colPts     = fc('total points');
+    const colSeasons = fc('season');
+    const colRaces   = fc('race');
+
+    // Find driver — name may contain / variants
+    const nameVariants = ind.name.toLowerCase().split('/').map(n => n.trim());
+    let dRow = null;
+    for (let i = hi + 1; i < rows.length; i++) {
+      const rowName = (rows[i][0]||'').toLowerCase();
+      if (nameVariants.some(v => rowName.includes(v) || v.includes(rowName.split('/')[0].trim()))) {
+        dRow = rows[i]; break;
+      }
+    }
+
+    if (!dRow) { lower.innerHTML = ''; return; }
+
+    const g = (col) => col >= 0 ? (dRow[col]||'').trim() : '—';
+    const stats = [
+      { val: g(colSeasons), lbl: 'Seasons' },
+      { val: g(colRaces),   lbl: 'Races' },
+      { val: g(colWins),    lbl: 'Wins' },
+      { val: g(colPoles),   lbl: 'Poles' },
+      { val: g(colPts),     lbl: 'Points' },
+    ];
+
+    lower.innerHTML = `
+      <div class="hof-slide-stats">
+        ${stats.map(s => `<div class="hof-stat"><div class="hof-stat-val">${s.val}</div><div class="hof-stat-lbl">${s.lbl}</div></div>`).join('')}
+      </div>
+    `;
+  } catch(e) {
+    lower.innerHTML = '';
+  }
+}
+
+function hofGo(dir) {
+  const slides = document.querySelectorAll('.hof-slide');
+  const dots   = document.querySelectorAll('.hof-dot');
+  slides[hofCurrent].classList.remove('active');
+  dots[hofCurrent].classList.remove('active');
+  hofCurrent = (hofCurrent + dir + hofInductees.length) % hofInductees.length;
+  slides[hofCurrent].classList.add('active');
+  dots[hofCurrent].classList.add('active');
+  hofElapsed  = 0;
+  hofLastTick = hofPaused ? null : performance.now();
+  document.getElementById('hof-bar').style.width = '0%';
+}
+
+function hofTogglePause() {
+  hofPaused = !hofPaused;
+  document.getElementById('hof-pause').textContent = hofPaused ? '▶ Resume' : '⏸ Pause';
+  if (!hofPaused) hofLastTick = performance.now();
+}
+
+function hofTick(now) {
+  if (!hofPaused && hofLastTick !== null) {
+    hofElapsed += now - hofLastTick;
+    hofLastTick = now;
+    if (hofElapsed >= HOF_INTERVAL) { hofGo(1); return; }
+    document.getElementById('hof-bar').style.width = (hofElapsed / HOF_INTERVAL * 100) + '%';
+  }
+  requestAnimationFrame(hofTick);
+}
+
 </script>
 </body>
 </html>
