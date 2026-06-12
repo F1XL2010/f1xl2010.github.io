@@ -129,13 +129,13 @@
   .hof-slide{position:absolute;inset:0;opacity:0;transition:opacity 0.6s ease;pointer-events:none;}
   .hof-slide.active{opacity:1;pointer-events:auto;}
   .hof-slide-img{width:100%;height:100%;object-fit:cover;display:block;}
-  .hof-slide-lower{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(10,14,12,0.97) 30%);padding:20px 28px 24px;}
-  .hof-slide-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:12px;}
-  .hof-stat{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:8px 6px;text-align:center;}
-  .hof-stat-val{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:#fff;line-height:1;}
-  .hof-stat-lbl{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-top:2px;}
-  .hof-slide-achs{display:flex;flex-wrap:wrap;gap:5px;}
-  .hof-ach{font-size:11px;background:rgba(232,184,75,0.08);border:1px solid rgba(232,184,75,0.2);color:rgba(232,184,75,0.8);padding:3px 9px;border-radius:4px;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.5px;}
+  .hof-slide-lower{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(10,14,12,0.98) 25%);padding:28px 32px 28px;}
+  .hof-slide-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px;}
+  .hof-stat{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:12px 8px;text-align:center;}
+  .hof-stat-val{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:#fff;line-height:1;}
+  .hof-stat-lbl{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-top:4px;}
+  .hof-slide-achs{display:flex;flex-wrap:wrap;gap:6px;}
+  .hof-ach{font-size:12px;background:rgba(232,184,75,0.1);border:1px solid rgba(232,184,75,0.25);color:rgba(232,184,75,0.85);padding:4px 12px;border-radius:4px;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.5px;}
   .hof-controls{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:16px;max-width:900px;margin-left:auto;margin-right:auto;padding:0 28px;}
   .hof-ctrl-btn{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all 0.2s;flex-shrink:0;}
   .hof-ctrl-btn:hover{background:rgba(232,184,75,0.1);border-color:rgba(232,184,75,0.3);color:#E8B84B;}
@@ -958,17 +958,20 @@ function hofRenderFlipbook() {
 async function hofLoadStats(ind, idx) {
   const lower = document.getElementById(`hof-lower-${idx}`);
   try {
-    // Get stats_url from config
     const statsUrl = window._hofStatsUrl || '';
     if (!statsUrl) { lower.innerHTML = ''; return; }
 
-    const text = await fetch(statsUrl.includes('gviz') ? statsUrl :
-      `https://docs.google.com/spreadsheets/d/${statsUrl.match(/\/d\/([^/]+)/)?.[1]}/gviz/tq?tqx=out:csv&gid=${statsUrl.match(/gid=(\d+)/)?.[1]||'0'}`
-    ).then(r => r.text());
+    // stats_url is a full Google Sheets URL — use export CSV endpoint
+    const idMatch  = statsUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
+    const gidMatch = statsUrl.match(/gid=(\d+)/);
+    if (!idMatch) { lower.innerHTML = ''; return; }
+    const fetchUrl = `https://docs.google.com/spreadsheets/d/${idMatch[1]}/export?format=csv&gid=${gidMatch?.[1]||'0'}`;
+    const text = await fetch(fetchUrl).then(r => r.text());
+    if (text.includes('<!DOCTYPE')) { lower.innerHTML = ''; return; }
 
     const rows = parseCSVHof(text);
 
-    // Find header
+    // Find header row — "Driver" in col 0
     let hi = -1;
     for (let i = 0; i < rows.length; i++) {
       if ((rows[i][0]||'').trim().toLowerCase() === 'driver') { hi = i; break; }
@@ -976,7 +979,7 @@ async function hofLoadStats(ind, idx) {
     if (hi < 0) { lower.innerHTML = ''; return; }
 
     const hdr = rows[hi];
-    const fc = name => hdr.findIndex(h => h.toLowerCase().includes(name));
+    const fc = name => hdr.findIndex(h => (h||'').toLowerCase().includes(name));
     const colWins    = fc('win');
     const colPodiums = fc('podium');
     const colPoles   = fc('pole');
@@ -984,34 +987,43 @@ async function hofLoadStats(ind, idx) {
     const colPts     = fc('total points');
     const colSeasons = fc('season');
     const colRaces   = fc('race');
+    const colAcc     = fc('accolade');
 
-    // Find driver — name may contain / variants
-    const nameVariants = ind.name.toLowerCase().split('/').map(n => n.trim());
+    // Name matching — strip special chars, try loose match across / variants
+    const clean = s => s.toLowerCase().replace(/[|l\s]/g, '').replace(/[^a-z0-9]/g, '');
+    const nameVariants = ind.name.split('/').map(n => clean(n.trim()));
     let dRow = null;
     for (let i = hi + 1; i < rows.length; i++) {
-      const rowName = (rows[i][0]||'').toLowerCase();
-      if (nameVariants.some(v => rowName.includes(v) || v.includes(rowName.split('/')[0].trim()))) {
-        dRow = rows[i]; break;
-      }
+      const rowRaw  = (rows[i][0]||'').trim();
+      if (!rowRaw) continue;
+      const rowVariants = rowRaw.split('/').map(n => clean(n.trim()));
+      const matched = nameVariants.some(nv => rowVariants.some(rv => rv === nv || rv.includes(nv) || nv.includes(rv)));
+      if (matched) { dRow = rows[i]; break; }
     }
 
     if (!dRow) { lower.innerHTML = ''; return; }
 
-    const g = (col) => col >= 0 ? (dRow[col]||'').trim() : '—';
-    const stats = [
-      { val: g(colSeasons), lbl: 'Seasons' },
-      { val: g(colRaces),   lbl: 'Races' },
-      { val: g(colWins),    lbl: 'Wins' },
-      { val: g(colPoles),   lbl: 'Poles' },
-      { val: g(colPts),     lbl: 'Points' },
-    ];
+    const g = col => col >= 0 && dRow[col] ? dRow[col].trim() : '—';
+
+    // Parse accolades from the accolades column if present, otherwise build from known titles
+    let achHtml = '';
+    if (colAcc >= 0 && dRow[colAcc]) {
+      const achs = dRow[colAcc].split(',').map(a => a.trim()).filter(Boolean);
+      achHtml = achs.slice(0, 6).map(a => `<span class="hof-ach">${a}</span>`).join('');
+    }
 
     lower.innerHTML = `
       <div class="hof-slide-stats">
-        ${stats.map(s => `<div class="hof-stat"><div class="hof-stat-val">${s.val}</div><div class="hof-stat-lbl">${s.lbl}</div></div>`).join('')}
+        <div class="hof-stat"><div class="hof-stat-val">${g(colSeasons)}</div><div class="hof-stat-lbl">Seasons</div></div>
+        <div class="hof-stat"><div class="hof-stat-val">${g(colRaces)}</div><div class="hof-stat-lbl">Races</div></div>
+        <div class="hof-stat"><div class="hof-stat-val">${g(colWins)}</div><div class="hof-stat-lbl">Wins</div></div>
+        <div class="hof-stat"><div class="hof-stat-val">${g(colPoles)}</div><div class="hof-stat-lbl">Poles</div></div>
+        <div class="hof-stat"><div class="hof-stat-val">${g(colPts)}</div><div class="hof-stat-lbl">Points</div></div>
       </div>
+      ${achHtml ? `<div class="hof-slide-achs">${achHtml}</div>` : ''}
     `;
   } catch(e) {
+    console.warn('HOF stats error:', e);
     lower.innerHTML = '';
   }
 }
