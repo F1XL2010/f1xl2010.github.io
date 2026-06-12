@@ -129,7 +129,7 @@
   .hof-slide{position:absolute;inset:0;opacity:0;transition:opacity 0.6s ease;pointer-events:none;}
   .hof-slide.active{opacity:1;pointer-events:auto;}
   .hof-slide-img{width:100%;height:100%;object-fit:cover;display:block;}
-  .hof-slide-lower{position:absolute;bottom:18%;right:4%;width:42%;display:flex;flex-direction:column;gap:10px;}
+  .hof-slide-lower{position:absolute;bottom:8%;right:4%;width:42%;display:flex;flex-direction:column;gap:10px;}
   .hof-slide-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
   .hof-stat{background:rgba(10,14,12,0.75);border:1px solid rgba(232,184,75,0.25);border-radius:8px;padding:10px 12px;text-align:center;backdrop-filter:blur(4px);}
   .hof-stat-val{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;color:#fff;line-height:1;}
@@ -852,9 +852,6 @@ async function init(){
     // Render division records
     renderDivisionRecords();
 
-    // Build HOF accolades now that allDivData and overallData are ready
-    hofBuildAccolades();
-
     // Render league records — pass raw rows for parsing
     const divRawRows = {};
     for(let d=1;d<=8;d++){
@@ -944,8 +941,10 @@ async function loadHofLegends() {
       const name      = (rows[i][0]||'').trim();
       const season    = (rows[i][1]||'').trim();
       const imgFile   = (rows[i][2]||'').trim();
+      const accolades = [rows[i][3],rows[i][4],rows[i][5],rows[i][6]]
+        .map(a=>(a||'').trim()).filter(Boolean);
       if (!name) break;
-      inductees.push({ name, season, imgFile, accolades: [] });
+      inductees.push({ name, season, imgFile, accolades });
     }
 
     if (!inductees.length) { document.getElementById('hof-flipbook').innerHTML = '<div class="loading-msg">No inductees yet.</div>'; return; }
