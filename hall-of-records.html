@@ -547,6 +547,8 @@ function isHofInductee(driver) {
   const allVariants = [driver.primary, ...driver.aliases].map(n => clean(n));
   return hofNames.some(hn => allVariants.some(v => v === clean(hn) || v.includes(clean(hn)) || clean(hn).includes(v)));
 }
+
+function initials(name){
   const words = name.split(/\s+/);
   if(words.length>=2) return (words[0][0]+(words[1][0]||'')).toUpperCase();
   return name.substring(0,2).toUpperCase();
