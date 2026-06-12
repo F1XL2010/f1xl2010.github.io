@@ -961,66 +961,48 @@ async function hofLoadStats(ind, idx) {
     const statsUrl = window._hofStatsUrl || '';
     if (!statsUrl) { lower.innerHTML = ''; return; }
 
-    // stats_url is a full Google Sheets URL — use export CSV endpoint
-    const idMatch  = statsUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
-    const gidMatch = statsUrl.match(/gid=(\d+)/);
-    if (!idMatch) { lower.innerHTML = ''; return; }
-    const fetchUrl = `https://docs.google.com/spreadsheets/d/${idMatch[1]}/export?format=csv&gid=${gidMatch?.[1]||'0'}`;
-    const text = await fetch(fetchUrl).then(r => r.text());
+    const idM  = statsUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
+    const gidM = statsUrl.match(/gid=(\d+)/);
+    if (!idM) { lower.innerHTML = ''; return; }
+
+    const text = await fetch(`https://docs.google.com/spreadsheets/d/${idM[1]}/export?format=csv&gid=${gidM?.[1]||'0'}`).then(r => r.text());
     if (text.includes('<!DOCTYPE')) { lower.innerHTML = ''; return; }
 
+    // Parse using same logic as hall-of-records
     const rows = parseCSVHof(text);
 
-    // Find header row — "Driver" in col 0
-    let hi = -1;
-    for (let i = 0; i < rows.length; i++) {
-      if ((rows[i][0]||'').trim().toLowerCase() === 'driver') { hi = i; break; }
-    }
-    if (hi < 0) { lower.innerHTML = ''; return; }
+    // Name matching — strip pipes/spaces/special chars for loose comparison
+    const clean = s => s.toLowerCase().replace(/[|\s]/g,'').replace(/[^a-z0-9]/g,'');
+    const indVariants = ind.name.split('/').map(n => clean(n.trim()));
 
-    const hdr = rows[hi];
-    const fc = name => hdr.findIndex(h => (h||'').toLowerCase().includes(name));
-    const colWins    = fc('win');
-    const colPodiums = fc('podium');
-    const colPoles   = fc('pole');
-    const colFL      = fc('fastest');
-    const colPts     = fc('total points');
-    const colSeasons = fc('season');
-    const colRaces   = fc('race');
-    const colAcc     = fc('accolade');
-
-    // Name matching — strip special chars, try loose match across / variants
-    const clean = s => s.toLowerCase().replace(/[|l\s]/g, '').replace(/[^a-z0-9]/g, '');
-    const nameVariants = ind.name.split('/').map(n => clean(n.trim()));
+    // Data starts at row 4, driver in col 3
     let dRow = null;
-    for (let i = hi + 1; i < rows.length; i++) {
-      const rowRaw  = (rows[i][0]||'').trim();
-      if (!rowRaw) continue;
-      const rowVariants = rowRaw.split('/').map(n => clean(n.trim()));
-      const matched = nameVariants.some(nv => rowVariants.some(rv => rv === nv || rv.includes(nv) || nv.includes(rv)));
-      if (matched) { dRow = rows[i]; break; }
+    for (let i = 4; i < rows.length; i++) {
+      const raw = (rows[i][3]||'').trim();
+      if (!raw || raw.toLowerCase() === 'driver') continue;
+      const rowVariants = raw.split('/').map(n => clean(n.trim()));
+      if (indVariants.some(iv => rowVariants.some(rv => rv === iv || rv.includes(iv) || iv.includes(rv)))) {
+        dRow = rows[i]; break;
+      }
     }
 
     if (!dRow) { lower.innerHTML = ''; return; }
 
-    const g = col => col >= 0 && dRow[col] ? dRow[col].trim() : '—';
-
-    // Parse accolades from the accolades column if present, otherwise build from known titles
-    let achHtml = '';
-    if (colAcc >= 0 && dRow[colAcc]) {
-      const achs = dRow[colAcc].split(',').map(a => a.trim()).filter(Boolean);
-      achHtml = achs.slice(0, 6).map(a => `<span class="hof-ach">${a}</span>`).join('');
-    }
+    const gv = col => (dRow[col]||'').trim() || '—';
+    const seasons = parseInt(gv(4)) || 0;
+    const wins    = parseInt(gv(5)) || 0;
+    const podiums = parseInt(gv(6)) || 0;
+    const poles   = parseInt(gv(7)) || 0;
+    const races   = parseInt(gv(9)) || 0;
 
     lower.innerHTML = `
       <div class="hof-slide-stats">
-        <div class="hof-stat"><div class="hof-stat-val">${g(colSeasons)}</div><div class="hof-stat-lbl">Seasons</div></div>
-        <div class="hof-stat"><div class="hof-stat-val">${g(colRaces)}</div><div class="hof-stat-lbl">Races</div></div>
-        <div class="hof-stat"><div class="hof-stat-val">${g(colWins)}</div><div class="hof-stat-lbl">Wins</div></div>
-        <div class="hof-stat"><div class="hof-stat-val">${g(colPoles)}</div><div class="hof-stat-lbl">Poles</div></div>
-        <div class="hof-stat"><div class="hof-stat-val">${g(colPts)}</div><div class="hof-stat-lbl">Points</div></div>
+        <div class="hof-stat"><div class="hof-stat-val">${seasons||'—'}</div><div class="hof-stat-lbl">Seasons</div></div>
+        <div class="hof-stat"><div class="hof-stat-val">${races||'—'}</div><div class="hof-stat-lbl">Races</div></div>
+        <div class="hof-stat"><div class="hof-stat-val">${wins||'—'}</div><div class="hof-stat-lbl">Wins</div></div>
+        <div class="hof-stat"><div class="hof-stat-val">${podiums||'—'}</div><div class="hof-stat-lbl">Podiums</div></div>
+        <div class="hof-stat"><div class="hof-stat-val">${poles||'—'}</div><div class="hof-stat-lbl">Poles</div></div>
       </div>
-      ${achHtml ? `<div class="hof-slide-achs">${achHtml}</div>` : ''}
     `;
   } catch(e) {
     console.warn('HOF stats error:', e);
