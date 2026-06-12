@@ -59,6 +59,9 @@
   .driver-entry:hover{border-color:var(--border2);}
   .driver-header{display:flex;align-items:center;gap:12px;padding:12px 16px;cursor:pointer;user-select:none;}
   .driver-avatar{width:36px;height:36px;border-radius:50%;background:#0f3d2e;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--green);flex-shrink:0;font-family:'Barlow Condensed',sans-serif;}
+  .driver-avatar.hof-avatar{background:#1a1400;border:1px solid rgba(232,184,75,0.4);}
+  .driver-entry.hof-inductee{border-color:rgba(232,184,75,0.5);box-shadow:0 0 12px rgba(232,184,75,0.08);}
+  .driver-entry.hof-inductee .driver-header{background:linear-gradient(90deg,rgba(232,184,75,0.06),transparent);}
   .driver-name-block{flex:1;min-width:0;}
   .driver-name-primary{font-size:14px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .driver-name-aka{font-size:11px;color:var(--text-faint);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -517,7 +520,33 @@ function countTitles(accolades){
 }
 
 // ── RENDER ────────────────────────────────────────────────────────────────────
-function initials(name){
+const HOF_SHEET_ID = '1mrnmIHJNREanKawFTdDbB4m6YuB1B1tq2VS0PC18xfI';
+const HOF_GID      = '82852858';
+let hofNames = []; // primary names of HOF inductees
+
+async function loadHofNames() {
+  try {
+    const text = await fetch(`https://docs.google.com/spreadsheets/d/${HOF_SHEET_ID}/gviz/tq?tqx=out:csv&gid=${HOF_GID}`).then(r => r.text());
+    const rows = parseCSV(text);
+    let hi = -1;
+    for (let i = 0; i < rows.length; i++) {
+      if ((rows[i][0]||'').trim().toLowerCase() === 'name') { hi = i; break; }
+    }
+    if (hi < 0) return;
+    for (let i = hi + 1; i < rows.length; i++) {
+      const name = (rows[i][0]||'').trim();
+      if (!name) break;
+      hofNames.push(name.toLowerCase());
+    }
+  } catch(e) { /* silent fail */ }
+}
+
+function isHofInductee(driver) {
+  if (!hofNames.length) return false;
+  const clean = s => s.toLowerCase().replace(/[^a-z0-9]/g,'');
+  const allVariants = [driver.primary, ...driver.aliases].map(n => clean(n));
+  return hofNames.some(hn => allVariants.some(v => v === clean(hn) || v.includes(clean(hn)) || clean(hn).includes(v)));
+}
   const words = name.split(/\s+/);
   if(words.length>=2) return (words[0][0]+(words[1][0]||'')).toUpperCase();
   return name.substring(0,2).toUpperCase();
@@ -539,15 +568,34 @@ function renderDrivers(drivers){
 
   count.textContent = `${drivers.length} driver${drivers.length!==1?'s':''} · complete to S26`;
 
+  const HOF_SVG = `<svg viewBox="156 22 368 404" xmlns="http://www.w3.org/2000/svg" width="26" height="26">
+    <polygon points="340,50 492,138 492,314 340,402 188,314 188,138" fill="#1a2320" stroke="#E8B84B" stroke-width="6"/>
+    <polygon points="340,58 345,74 364,74 349,85 355,103 340,92 325,103 331,85 316,74 335,74" fill="#E8B84B"/>
+    <g fill="#E8B84B" opacity="0.9">
+      <ellipse cx="250" cy="122" rx="16" ry="7" transform="rotate(-52,250,122)"/>
+      <ellipse cx="232" cy="146" rx="16" ry="7" transform="rotate(-62,232,146)"/>
+      <ellipse cx="216" cy="172" rx="15" ry="7" transform="rotate(-72,216,172)"/>
+      <ellipse cx="205" cy="200" rx="15" ry="6.5" transform="rotate(-80,205,200)"/>
+      <ellipse cx="198" cy="230" rx="15" ry="6.5" transform="rotate(-84,198,230)"/>
+      <ellipse cx="430" cy="122" rx="16" ry="7" transform="rotate(52,430,122)"/>
+      <ellipse cx="448" cy="146" rx="16" ry="7" transform="rotate(62,448,146)"/>
+      <ellipse cx="464" cy="172" rx="15" ry="7" transform="rotate(72,464,172)"/>
+      <ellipse cx="475" cy="200" rx="15" ry="6.5" transform="rotate(80,475,200)"/>
+      <ellipse cx="482" cy="230" rx="15" ry="6.5" transform="rotate(84,482,230)"/>
+    </g>
+    <text x="340" y="260" text-anchor="middle" font-family="Barlow Condensed,Arial Narrow,sans-serif" font-size="118" font-weight="700" fill="#E8B84B">HOF</text>
+  </svg>`;
+
   list.innerHTML = drivers.map((d, idx) => {
     const titles = countTitles(d.accolades);
     const init = initials(d.primary);
     const hasAliases = d.aliases.length > 0;
     const id = 'drv-' + idx;
+    const isHof = isHofInductee(d);
 
-    return `<div class="driver-entry" id="entry-${id}">
+    return `<div class="driver-entry${isHof?' hof-inductee':''}" id="entry-${id}">
       <div class="driver-header" onclick="toggleDriver('${id}')">
-        <div class="driver-avatar">${init}</div>
+        <div class="driver-avatar${isHof?' hof-avatar':''}">${isHof ? HOF_SVG : init}</div>
         <div class="driver-name-block">
           <div class="driver-name-primary">${d.primary}${titles>0?`<span class="title-pill">${titles} title${titles!==1?'s':''}</span>`:''}</div>
           <div class="driver-name-aka">${hasAliases?'also known as: '+d.aliases.join(' · '):'&nbsp;'}</div>
@@ -619,6 +667,7 @@ function filterDrivers(q){
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 async function init(){
+  loadHofNames();
   console.log('init started');
   try {
     console.log('fetching config values...');
