@@ -129,7 +129,7 @@
   .hof-slide{position:absolute;inset:0;opacity:0;transition:opacity 0.6s ease;pointer-events:none;}
   .hof-slide.active{opacity:1;pointer-events:auto;}
   .hof-slide-img{width:100%;height:100%;object-fit:cover;display:block;}
-  .hof-slide-lower{position:absolute;bottom:32%;right:4%;width:42%;display:flex;flex-direction:column;gap:10px;}
+  .hof-slide-lower{position:absolute;bottom:18%;right:4%;width:42%;display:flex;flex-direction:column;gap:10px;}
   .hof-slide-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
   .hof-stat{background:rgba(10,14,12,0.75);border:1px solid rgba(232,184,75,0.25);border-radius:8px;padding:10px 12px;text-align:center;backdrop-filter:blur(4px);}
   .hof-stat-val{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;color:#fff;line-height:1;}
@@ -886,32 +886,34 @@ function hofBuildAccolades() {
   hofInductees.forEach(ind => {
     const indVariants = ind.name.split('/').map(n => clean(n.trim()));
     const matches = name => {
+      if (!name) return false;
       const nv = name.split('/').map(n => clean(n.trim()));
       return indVariants.some(iv => nv.some(rv => rv === iv || rv.includes(iv) || iv.includes(rv)));
     };
 
-    const achs = [];
+    // Separate buckets by prestige
+    const overallTitles = [], divDriverTitles = [], divConsTitles = [], divRuTitles = [];
 
-    // Check overall championship
+    // Overall TP championships
     overallData.forEach(s => {
-      if (s.owner && matches(s.owner)) achs.push(`👑 Overall TP Champion S${s.season}`);
-      if (s.ru && matches(s.ru)) achs.push(`Overall TP Runner Up S${s.season}`);
+      if (s.owner && matches(s.owner)) overallTitles.push(`👑 Overall Champion S${s.season}`);
     });
 
-    // Check division championships
+    // Division championships
     for (let d = 1; d <= 8; d++) {
       const divSeasons = allDivData[`Division ${d}`] || [];
       divSeasons.forEach(s => {
-        if (s.champ && matches(s.champ)) achs.push(`🏆 D${d} Driver Champion S${s.season}`);
-        if (s.ru && matches(s.ru)) achs.push(`D${d} Runner Up S${s.season}`);
+        if (s.champ && matches(s.champ)) divDriverTitles.push(`🏆 D${d} Driver Champion S${s.season}`);
         if ((s.consDriver1 && matches(s.consDriver1)) || (s.consDriver2 && matches(s.consDriver2)))
-          achs.push(`🪙 D${d} Constructor Champion S${s.season}`);
+          divConsTitles.push(`🪙 D${d} Constructor Champion S${s.season}`);
       });
     }
 
-    ind.accolades = achs.slice(0, 6);
+    // Combine — overall first, then driver titles, then constructor titles
+    const achs = [...overallTitles, ...divDriverTitles, ...divConsTitles].slice(0, 6);
+    ind.accolades = achs;
 
-    // Re-render lower panel if already loaded
+    // Re-render pills if stats panel already exists
     const lower = document.getElementById(`hof-lower-${hofInductees.indexOf(ind)}`);
     if (lower && lower.querySelector('.hof-slide-stats') && achs.length) {
       const existing = lower.querySelector('.hof-slide-achs');
