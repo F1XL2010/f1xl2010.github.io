@@ -924,9 +924,6 @@ function hofBuildAccolades() {
   });
 }
 
-let hofInductees = [], hofCurrent = 0, hofPaused = false;
-let hofElapsed = 0, hofLastTick = null, hofRafId = null;
-
 async function loadHofLegends() {
   try {
     const url  = `https://docs.google.com/spreadsheets/d/${HOF_SHEET_ID}/gviz/tq?tqx=out:csv&gid=${HOF_GID}`;
