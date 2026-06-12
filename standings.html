@@ -940,33 +940,42 @@ async function loadStats() {
     let cols = {};
     for (let i=0; i<rows.length; i++) {
       const row = rows[i];
+      if (!row.c) continue;
       for (let c=0; c<row.c.length; c++) {
-        const v = cs(row,c).toLowerCase();
-        if (v==='driver') { hIdx=i; cols.driver=c; }
-        if (v.includes('total wins')||v==='wins') cols.wins=c;
-        if (v.includes('total podiums')||v==='podiums') cols.pods=c;
-        if (v.includes('total poles')||v==='poles') cols.poles=c;
-        if (v.includes('average finish')) cols.avgFin=c;
-        if (v.includes('average points')) cols.avgPts=c;
-        if (v.includes('average gained')||v.includes('pos. gained')) cols.avgGain=c;
-        if (v.includes('races started')) cols.started=c;
-        if (v.includes('races dnf')) cols.dnfs=c;
-        if (v==='reliability') cols.rel=c;
+        const v = cs(row,c).toLowerCase().trim();
+        if (v==='driver')                                cols.driver=c;
+        if (v==='wins'||v.includes('total wins'))        cols.wins=c;
+        if (v==='podiums'||v.includes('total podiums'))  cols.pods=c;
+        if (v==='poles'||v.includes('total poles'))      cols.poles=c;
+        if (v==='fastest laps'||v.includes('fastest'))   cols.fl=c;
+        if (v==='total points'||v.includes('total points')) cols.totalPts=c;
+        if (v==='points per race'||v.includes('per race'))  cols.ppr=c;
+        if (v.includes('avg finish')||v.includes('average finish')) cols.avgFin=c;
+        if (v.includes('avg grid')||v.includes('average grid'))     cols.avgGrid=c;
+        if (v.includes('avg pos gained')||v.includes('pos gained')||v.includes('gained')) cols.avgGain=c;
+        if (v==='races started'||v.includes('started'))  cols.started=c;
+        if (v==='races finished'||v.includes('finished')) cols.finished=c;
+        if (v==='dnf')                                   cols.dnfs=c;
+        if (v==='reliability %'||v==='reliability')      cols.rel=c;
       }
       if (cols.driver !== undefined) break;
     }
 
-    // Fallbacks matching what we saw in the sheet
-    if (cols.driver===undefined) cols.driver=0;
-    if (cols.wins===undefined) cols.wins=2;
-    if (cols.pods===undefined) cols.pods=3;
-    if (cols.poles===undefined) cols.poles=4;
-    if (cols.avgFin===undefined) cols.avgFin=5;
-    if (cols.avgPts===undefined) cols.avgPts=6;
-    if (cols.avgGain===undefined) cols.avgGain=8;
-    if (cols.started===undefined) cols.started=17;
-    if (cols.dnfs===undefined) cols.dnfs=20;
-    if (cols.rel===undefined) cols.rel=22;
+    // Fallbacks matching Driver Stats Calc Sheet column order
+    if (cols.driver===undefined)   cols.driver=0;
+    if (cols.wins===undefined)     cols.wins=3;
+    if (cols.pods===undefined)     cols.pods=4;
+    if (cols.poles===undefined)    cols.poles=5;
+    if (cols.fl===undefined)       cols.fl=6;
+    if (cols.totalPts===undefined) cols.totalPts=7;
+    if (cols.ppr===undefined)      cols.ppr=8;
+    if (cols.avgFin===undefined)   cols.avgFin=9;
+    if (cols.avgGrid===undefined)  cols.avgGrid=10;
+    if (cols.avgGain===undefined)  cols.avgGain=11;
+    if (cols.started===undefined)  cols.started=16;
+    if (cols.finished===undefined) cols.finished=17;
+    if (cols.dnfs===undefined)     cols.dnfs=18;
+    if (cols.rel===undefined)      cols.rel=20;
 
     for (let i=hIdx+1; i<rows.length; i++) {
       const row = rows[i];
@@ -976,18 +985,19 @@ async function loadStats() {
       const wins     = parseFloat(cs(row,cols.wins))||0;
       const pods     = parseFloat(cs(row,cols.pods))||0;
       const poles    = parseFloat(cs(row,cols.poles))||0;
+      const fl       = parseFloat(cs(row,cols.fl))||0;
       const avgFin   = cs(row,cols.avgFin);
-      const avgPts   = cs(row,cols.avgPts);
       const avgGain  = cs(row,cols.avgGain);
+      const ppr      = cs(row,cols.ppr);
       const started  = parseFloat(cs(row,cols.started))||0;
       const dnfs     = parseFloat(cs(row,cols.dnfs))||0;
       const relStr   = cs(row,cols.rel);
       const rel      = parseFloat(relStr)||0;
       const relClass = rel>=85?'':rel>=60?'mid':'low';
 
-      const gainNum  = avgGain!==null ? parseFloat(avgGain) : null;
-      const gainStr  = gainNum!==null ? (gainNum>0?'+':'')+gainNum.toFixed(1) : '—';
-      const gainCls  = gainNum!==null ? (gainNum>0?'good':gainNum<0?'bad':'') : '';
+      const gainNum  = avgGain ? parseFloat(avgGain) : null;
+      const gainStr  = gainNum!==null && !isNaN(gainNum) ? (gainNum>0?'+':'')+gainNum.toFixed(1) : '—';
+      const gainCls  = gainNum!==null && !isNaN(gainNum) ? (gainNum>0?'good':gainNum<0?'bad':'') : '';
 
       html += `<div class="stat-card">
         <div class="stat-card-header">
@@ -1001,8 +1011,8 @@ async function loadStats() {
           <div class="stat-metric"><div class="stat-metric-val">${wins}</div><div class="stat-metric-lbl">Wins</div></div>
           <div class="stat-metric"><div class="stat-metric-val">${pods}</div><div class="stat-metric-lbl">Podiums</div></div>
           <div class="stat-metric"><div class="stat-metric-val">${poles}</div><div class="stat-metric-lbl">Poles</div></div>
-          <div class="stat-metric"><div class="stat-metric-val">${avgFin!==null?parseFloat(avgFin).toFixed(1):'—'}</div><div class="stat-metric-lbl">Avg finish</div></div>
-          <div class="stat-metric"><div class="stat-metric-val">${avgPts!==null?parseFloat(avgPts).toFixed(1):'—'}</div><div class="stat-metric-lbl">Avg pts</div></div>
+          <div class="stat-metric"><div class="stat-metric-val">${fl}</div><div class="stat-metric-lbl">Fastest laps</div></div>
+          <div class="stat-metric"><div class="stat-metric-val">${avgFin!==''?parseFloat(avgFin).toFixed(1):'—'}</div><div class="stat-metric-lbl">Avg finish</div></div>
           <div class="stat-metric"><div class="stat-metric-val ${gainCls}">${gainStr}</div><div class="stat-metric-lbl">Avg gained</div></div>
         </div>
         <div>
