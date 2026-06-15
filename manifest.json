@@ -1,0 +1,27 @@
+{
+  "name": "F1XL — The UK's Longest Running F1 League",
+  "short_name": "F1XL",
+  "description": "Live standings, results, schedules and stats for F1XL — est. 2010",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#111816",
+  "theme_color": "#111816",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "images/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "images/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "categories": ["sports", "entertainment"],
+  "lang": "en-GB"
+}
