@@ -120,6 +120,12 @@
   .footer-logo{background:var(--green);color:#000;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;padding:4px 9px;border-radius:3px;}
   .footer-text{font-size:11px;color:var(--text-faint);}
 </style>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#111816">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="F1XL">
+<link rel="apple-touch-icon" href="/images/icons/icon-512.png">
 </head>
 <body>
 
@@ -340,6 +346,45 @@ async function init(){
 
 init();
 
+</script>
+<script>
+if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js').catch(e=>console.warn('SW:',e));});}
+</script>
+<style>
+  #pwa-banner{position:fixed;bottom:0;left:0;right:0;background:#1a2320;border-top:1px solid rgba(232,184,75,0.3);padding:14px 16px;display:flex;align-items:center;gap:12px;z-index:9999;transform:translateY(100%);transition:transform 0.3s ease;}
+  #pwa-banner.show{transform:translateY(0);}
+  #pwa-banner-icon{width:40px;height:40px;border-radius:10px;background:#111816;border:1px solid rgba(232,184,75,0.2);flex-shrink:0;overflow:hidden;}
+  #pwa-banner-icon img{width:100%;height:100%;object-fit:cover;}
+  #pwa-banner-text{flex:1;}
+  #pwa-banner-title{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:0.5px;}
+  #pwa-banner-sub{font-size:11px;color:rgba(255,255,255,0.5);margin-top:2px;}
+  #pwa-banner-install{background:#3DCC47;color:#000;border:none;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:8px 14px;border-radius:4px;cursor:pointer;flex-shrink:0;}
+  #pwa-banner-close{background:none;border:none;color:rgba(255,255,255,0.3);font-size:18px;cursor:pointer;padding:4px;flex-shrink:0;line-height:1;}
+</style>
+<div id="pwa-banner">
+  <div id="pwa-banner-icon"><img src="/images/icons/icon-192.png" alt="F1XL"></div>
+  <div id="pwa-banner-text">
+    <div id="pwa-banner-title">Install F1XL</div>
+    <div id="pwa-banner-sub"></div>
+  </div>
+  <button id="pwa-banner-install" style="display:none;">Install</button>
+  <button id="pwa-banner-close" onclick="pwaDismiss()">&#x2715;</button>
+</div>
+<script>
+let deferredPrompt=null;
+const pwaBanner=document.getElementById('pwa-banner');
+const pwaInstallBtn=document.getElementById('pwa-banner-install');
+const pwaSub=document.querySelector('#pwa-banner-sub');
+const pwaAlreadyInstalled=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone;
+const pwaDismissed=localStorage.getItem('pwa-dismissed');
+if(!pwaAlreadyInstalled&&(!pwaDismissed||Date.now()-parseInt(pwaDismissed)>7*24*60*60*1000)){
+  const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent)&&!window.MSStream;
+  if(isIOS){pwaSub.textContent='Tap Share then "Add to Home Screen"';setTimeout(()=>pwaBanner.classList.add('show'),2000);}
+  window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;pwaSub.textContent='Get the full app experience';pwaInstallBtn.style.display='block';setTimeout(()=>pwaBanner.classList.add('show'),2000);});
+  pwaInstallBtn.addEventListener('click',async()=>{if(!deferredPrompt)return;deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;pwaDismiss();});
+}
+function pwaDismiss(){pwaBanner.classList.remove('show');localStorage.setItem('pwa-dismissed',Date.now().toString());}
+window.addEventListener('appinstalled',pwaDismiss);
 </script>
 </body>
 </html>

@@ -103,6 +103,12 @@
   @media(max-width:860px){.s-btn-wrap{display:none;}.s-select-wrap{display:block;width:100%;}}
   @media(min-width:861px){.s-btn-wrap{display:flex;}.s-select-wrap{display:none;}}
 </style>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#111816">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="F1XL">
+<link rel="apple-touch-icon" href="/images/icons/icon-512.png">
 </head>
 <body>
 <nav>
@@ -1072,6 +1078,9 @@ function toggleMenu(){
 }
 
 init();
+</script>
+<script>
+if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js').catch(e=>console.warn('SW:',e));});}
 </script>
 </body>
 </html>
