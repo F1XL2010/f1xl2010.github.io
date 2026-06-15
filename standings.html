@@ -1689,12 +1689,16 @@ async function initStandings() {
         for (let c=4; c<hRow.c.length; c++) {
           if (cs(hRow,c)==='Points') { ptsCol=c; break; }
         }
-        // Get leader - find row where Pos = 1
+        // Get leader - find row with highest points
         let leaderRow = null;
+        let maxPts = -1;
         for(let r=hIdx+1; r<rows.length; r++){
-          if(cs(rows[r],0)==='1'){ leaderRow=rows[r]; break; }
+          const driver = cs(rows[r], 2);
+          if (!driver || driver === 'Driver') continue;
+          const pts = parseFloat(cs(rows[r], ptsCol)) || 0;
+          if (pts > maxPts) { maxPts = pts; leaderRow = rows[r]; }
         }
-        if(!leaderRow) leaderRow = rows[hIdx+1]; // fallback to first row
+        if(!leaderRow) leaderRow = rows[hIdx+1];
         if (!leaderRow) return;
         divisions[i].leader = cs(leaderRow, 2) || '—';
         divisions[i].leaderTeam = cs(leaderRow, 3) || '';
