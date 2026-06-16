@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Join F1XL — The UK's Longest Running F1 Racing League</title>
+<meta name="description" content="Join F1XL — competitive but accessible F1 racing on Xbox, PlayStation and PC. No custom setups. All skill levels welcome. Est. 2010. Apply now.">
+<meta property="og:title" content="Join F1XL — The UK's Longest Running F1 Racing League">
+<meta property="og:description" content="Competitive but accessible F1 racing. No custom setups required. All skill levels welcome. Xbox, PlayStation and PC. Est. 2010.">
+<meta property="og:image" content="https://www.f1xl.co.uk/images/icons/icon-512.png">
+<meta property="og:url" content="https://www.f1xl.co.uk/join">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#111816">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="/images/icons/icon-512.png">
+<style>
+  :root{
+    --green:#3DCC47;--teal:#5ECFCF;--red:#E10600;
+    --black:#111816;--dark:#161d1b;--dark2:#1a2320;
+    --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+    --text:#ffffff;--text-muted:rgba(255,255,255,0.60);--text-faint:rgba(255,255,255,0.30);
+    --discord:#5865F2;--twitch:#9146FF;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{background:var(--black);color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;}
+
+  /* NAV */
+  nav{background:rgba(9,9,9,0.97);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;}
+  .nav-logo{display:flex;align-items:center;height:40px;text-decoration:none;}
+  .nav-logo img{height:34px;width:auto;display:block;}
+  .nav-site-link{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);text-decoration:none;border:1px solid var(--border2);border-radius:4px;padding:6px 14px;transition:all 0.2s;}
+  .nav-site-link:hover{color:var(--text);border-color:rgba(255,255,255,0.25);}
+
+  /* HERO */
+  .hero{background:linear-gradient(135deg,#0a110e 0%,#111816 50%,#0d1a12 100%);border-bottom:1px solid var(--border);padding:80px 24px;text-align:center;position:relative;overflow:hidden;}
+  .hero-bg{position:absolute;inset:0;background-image:url('images/join_background.png');background-size:cover;background-position:center;opacity:0.3;}
+  .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(61,204,71,0.08) 0%,transparent 70%);}
+  .hero-eyebrow{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--green);margin-bottom:16px;position:relative;}
+  .hero-title{font-family:'Barlow Condensed',sans-serif;font-size:clamp(48px,8vw,88px);font-weight:900;text-transform:uppercase;letter-spacing:2px;line-height:0.95;margin-bottom:24px;position:relative;}
+  .hero-title em{color:var(--green);font-style:normal;display:block;}
+  .hero-sub{font-size:clamp(14px,2vw,18px);color:var(--text-muted);max-width:560px;margin:0 auto 40px;line-height:1.7;position:relative;}
+  .hero-sub strong{color:var(--text);}
+  .hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;position:relative;}
+  .btn-primary{background:var(--green);color:#000;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:14px 32px;border-radius:4px;text-decoration:none;transition:opacity 0.2s;display:inline-flex;align-items:center;gap:8px;}
+  .btn-primary:hover{opacity:0.9;}
+  .btn-secondary{background:transparent;color:var(--text-muted);font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:600;letter-spacing:2px;text-transform:uppercase;padding:14px 32px;border-radius:4px;text-decoration:none;border:1px solid var(--border2);transition:all 0.2s;display:inline-flex;align-items:center;gap:8px;}
+  .btn-secondary:hover{color:var(--text);border-color:rgba(255,255,255,0.25);}
+
+  /* STATS BAR */
+  .stats-bar{background:#161d1b;border-bottom:1px solid var(--border);padding:24px;display:grid;grid-template-columns:repeat(4,1fr);gap:1px;}
+  .stat-item{text-align:center;padding:8px;}
+  .stat-val{font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;color:var(--green);line-height:1;}
+  .stat-lbl{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-faint);margin-top:4px;}
+  @media(max-width:600px){.stats-bar{grid-template-columns:repeat(2,1fr);}}
+
+  /* SECTIONS */
+  .section{padding:64px 24px;max-width:860px;margin:0 auto;}
+  .section-eyebrow{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--teal);margin-bottom:8px;}
+  .section-title{font-family:'Barlow Condensed',sans-serif;font-size:clamp(28px,4vw,42px);font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;line-height:1.1;}
+  .section-text{font-size:15px;color:var(--text-muted);line-height:1.8;max-width:640px;}
+
+  /* USP CARDS */
+  .usp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:40px;}
+  @media(max-width:700px){.usp-grid{grid-template-columns:1fr;}}
+  .usp-card{background:#1a2320;border:1px solid var(--border);border-top:3px solid var(--green);border-radius:8px;padding:24px;}
+  .usp-icon{font-size:28px;margin-bottom:12px;}
+  .usp-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;}
+  .usp-text{font-size:13px;color:var(--text-muted);line-height:1.7;}
+
+  /* HOW IT WORKS */
+  .steps{margin-top:40px;display:flex;flex-direction:column;gap:0;}
+  .step{display:flex;gap:24px;align-items:flex-start;padding:24px 0;border-bottom:1px solid var(--border);}
+  .step:last-child{border-bottom:none;}
+  .step-num{font-family:'Barlow Condensed',sans-serif;font-size:48px;font-weight:900;color:var(--green);opacity:0.25;line-height:1;flex-shrink:0;width:60px;text-align:right;}
+  .step-content{}
+  .step-title{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;}
+  .step-text{font-size:14px;color:var(--text-muted);line-height:1.7;}
+  .step-badge{display:inline-flex;align-items:center;gap:6px;margin-top:10px;background:rgba(145,70,255,0.15);border:1px solid rgba(145,70,255,0.3);border-radius:4px;padding:4px 10px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#9146FF;text-decoration:none;}
+  .step-badge:hover{background:rgba(145,70,255,0.25);}
+  .step-badge-discord{background:rgba(88,101,242,0.15);border-color:rgba(88,101,242,0.3);color:var(--discord);}
+  .step-badge-discord:hover{background:rgba(88,101,242,0.25);}
+
+  /* DIVIDER */
+  .divider{height:1px;background:var(--border);margin:0 24px;}
+
+  /* PLATFORMS */
+  .platforms{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px;}
+  .platform-pill{background:#1a2320;border:1px solid var(--border2);border-radius:20px;padding:8px 18px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);}
+
+  /* TESTIMONIALS */
+  .testimonials{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:40px;}
+  @media(max-width:600px){.testimonials{grid-template-columns:1fr;}}
+  .testimonial{background:#1a2320;border:1px solid var(--border);border-radius:8px;padding:24px;}
+  .testimonial-text{font-size:14px;color:var(--text-muted);line-height:1.8;font-style:italic;margin-bottom:16px;}
+  .testimonial-name{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--green);}
+  .testimonial-seasons{font-size:11px;color:var(--text-faint);margin-top:2px;}
+
+  /* CTA */
+  .cta{background:linear-gradient(135deg,#0d1a12,#111816);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:80px 24px;text-align:center;}
+  .cta-title{font-family:'Barlow Condensed',sans-serif;font-size:clamp(32px,5vw,56px);font-weight:900;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;}
+  .cta-sub{font-size:15px;color:var(--text-muted);max-width:480px;margin:0 auto 40px;line-height:1.7;}
+  .cta-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+
+  /* FOOTER */
+  footer{background:var(--dark);border-top:1px solid var(--border);padding:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+  .footer-logo{background:var(--green);color:#000;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;padding:4px 9px;border-radius:3px;}
+  .footer-links{display:flex;gap:20px;flex-wrap:wrap;}
+  .footer-links a{font-size:12px;color:var(--text-faint);text-decoration:none;transition:color 0.2s;}
+  .footer-links a:hover{color:var(--text-muted);}
+  .footer-text{font-size:12px;color:var(--text-faint);}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="index.html" class="nav-logo">
+    <img src="TRANSPARENT.png" alt="F1XL">
+  </a>
+  <a href="index.html" class="nav-site-link">Visit the site →</a>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-eyebrow">Est. 2010 · The UK's Longest Running F1 League</div>
+  <h1 class="hero-title">
+    Race with us.<br>
+    <em>No barriers.</em>
+  </h1>
+  <p class="hero-sub">
+    <strong>F1XL is competitive F1 sim racing — but accessible to everyone.</strong>
+    No custom setups required. No experience needed. Just a passion for racing.
+    Xbox, PlayStation and PC all race together.
+  </p>
+  <div class="hero-btns">
+    <a href="applications.html" class="btn-primary">Apply to race →</a>
+    <a href="https://discord.gg/3gKvrQA34x" class="btn-secondary" target="_blank" rel="noopener">Join Discord</a>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="stat-item"><div class="stat-val season-num">28</div><div class="stat-lbl">Seasons</div></div>
+  <div class="stat-item"><div class="stat-val">300+</div><div class="stat-lbl">Members</div></div>
+  <div class="stat-item"><div class="stat-val">Multiple</div><div class="stat-lbl">Divisions</div></div>
+  <div class="stat-item"><div class="stat-val">3</div><div class="stat-lbl">Platforms</div></div>
+</div>
+
+<!-- WHY F1XL -->
+<div class="section">
+  <div class="section-eyebrow">Why F1XL</div>
+  <h2 class="section-title">Racing that works for everyone</h2>
+  <p class="section-text">Most sim racing leagues are intimidating — custom setups, strict experience requirements, highly competitive entry barriers. F1XL is different. We've been running since the very beginning in 2010 with the sole aim of creating a fun league, aimed at casual and competitive alike, where people without the time to dedicate blood, sweat and tears to practising can just show up and race. You can also be assured that the league is well run, with a robust rule set in place to ensure everyone is treated fairly and races are conducted in the right spirit.</p>
+
+  <div class="usp-grid">
+    <div class="usp-card">
+      <div class="usp-icon">🎮</div>
+      <div class="usp-title">No custom setups</div>
+      <div class="usp-text">Race with standard in-game settings. No custom assists configurations required — just the game as it comes.</div>
+    </div>
+    <div class="usp-card">
+      <div class="usp-icon">🏎️</div>
+      <div class="usp-title">Multiple divisions</div>
+      <div class="usp-text">From competitive to casual. Time trials place you in the right division so you're always racing people at your level.</div>
+    </div>
+    <div class="usp-card">
+      <div class="usp-icon">🤝</div>
+      <div class="usp-title">Team structure</div>
+      <div class="usp-text">Every driver races under a Team Principal who manages the team, handles tickets, and looks after their drivers — like a proper F1 team.</div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- HOW IT WORKS -->
+<div class="section">
+  <div class="section-eyebrow">How it works</div>
+  <h2 class="section-title">From application to race night</h2>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <div class="step-title">Explore the site</div>
+        <div class="step-text">Check out the standings, results, Hall of Fame and team history. Get a feel for the league and what F1XL is about before you apply.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <div class="step-title">Submit an application</div>
+        <div class="step-text">Fill in the F1 Driver Application. Simple form, takes a couple of minutes. Applications are always open.</div>
+        <a href="applications.html" class="step-badge step-badge-discord" style="background:rgba(61,204,71,0.1);border-color:rgba(61,204,71,0.3);color:var(--green);">Apply now →</a>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <div class="step-title">Join the Discord</div>
+        <div class="step-text">The F1XL Discord is where everything happens — announcements, community chat, and where you submit your time trial to get placed in a division.</div>
+        <a href="https://discord.gg/3gKvrQA34x" class="step-badge step-badge-discord" target="_blank" rel="noopener">Join Discord →</a>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <div class="step-title">Track Draw — live on Twitch</div>
+        <div class="step-text">Before each season, the race calendar is revealed live on Twitch. Team Principals are announced and the season build-up begins.</div>
+        <a href="https://www.twitch.tv/f1xl" class="step-badge" target="_blank" rel="noopener">Watch on Twitch →</a>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-content">
+        <div class="step-title">Draft Night — live on Twitch</div>
+        <div class="step-text">The highlight of the pre-season. Team Principals pick their drivers live on Twitch — find out which team you'll be racing for and who your teammates are.</div>
+        <a href="https://www.twitch.tv/f1xl" class="step-badge" target="_blank" rel="noopener">Watch on Twitch →</a>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">6</div>
+      <div class="step-content">
+        <div class="step-title">Race on Sunday nights</div>
+        <div class="step-text">Every Sunday night, all four divisions race. Full race weekends, stewards, race directors, ticket system — a proper league experience from start to finish.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- PLATFORMS -->
+<div class="section">
+  <div class="section-eyebrow">Platforms</div>
+  <h2 class="section-title">Cross-platform racing</h2>
+  <p class="section-text">F1XL started as an Xbox league in 2010 — hence the name. But as the F1 game went cross-platform, so did we. Today our drivers race across all three platforms in the same divisions.</p>
+  <div class="platforms">
+    <div class="platform-pill">🎮 Xbox</div>
+    <div class="platform-pill">🎮 PlayStation</div>
+    <div class="platform-pill">🖥️ PC</div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- TESTIMONIALS - placeholder, to be filled in -->
+<div class="section" id="testimonials" style="display:none;">
+  <div class="section-eyebrow">From our drivers</div>
+  <h2 class="section-title">Don't just take our word for it</h2>
+  <div class="testimonials">
+    <div class="testimonial">
+      <div class="testimonial-text">"Placeholder testimonial — replace with a real quote from a member."</div>
+      <div class="testimonial-name">Driver Name</div>
+      <div class="testimonial-seasons">X seasons · Division X</div>
+    </div>
+    <div class="testimonial">
+      <div class="testimonial-text">"Placeholder testimonial — replace with a real quote from a member."</div>
+      <div class="testimonial-name">Driver Name</div>
+      <div class="testimonial-seasons">X seasons · Division X</div>
+    </div>
+  </div>
+</div>
+
+<!-- CTA -->
+<div class="cta">
+  <h2 class="cta-title">Ready to race?</h2>
+  <p class="cta-sub">Applications are always open. Submit yours, join the Discord, and get ready for the most relaxed F1 league experience on any platform.</p>
+  <div class="cta-btns">
+    <a href="applications.html" class="btn-primary">Apply to race →</a>
+    <a href="https://discord.gg/3gKvrQA34x" class="btn-secondary" target="_blank" rel="noopener">Join Discord</a>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="footer-logo">F1XL</div>
+    <div class="footer-text">The UK's longest running F1 league · Est. 2010</div>
+  </div>
+  <div class="footer-links">
+    <a href="index.html">Main site</a>
+    <a href="https://discord.gg/3gKvrQA34x" target="_blank" rel="noopener">Discord</a>
+    <a href="https://www.twitch.tv/f1xl" target="_blank" rel="noopener">Twitch</a>
+    <a href="applications.html">Apply</a>
+  </div>
+</footer>
+
+<script>
+if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js').catch(e=>console.warn('SW:',e));});}
+
+// Auto-update season number from config
+(async () => {
+  try {
+    const CONFIG_SHEET_ID = '1ThIh7aKlGOuv83v9IJVSGpuspZLl0c9ajE0GJBpuCtk';
+    const url = `https://docs.google.com/spreadsheets/d/${CONFIG_SHEET_ID}/export?format=csv&gid=0`;
+    const text = await fetch(url).then(r => r.text());
+    const rows = text.split(/\r?\n/).map(l => l.split(',').map(v => v.replace(/^"|"$/g,'').trim()));
+    let latest = 0;
+    for (const r of rows) {
+      const m = (r[0]||'').match(/^s(\d+)_gid$/i);
+      if (m) { const n = parseInt(m[1]); if (n > latest) latest = n; }
+    }
+    if (latest > 0) {
+      document.querySelectorAll('.season-num').forEach(el => el.textContent = latest);
+    }
+  } catch(e) {}
+})();
+</script>
+</body>
+</html>
