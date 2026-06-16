@@ -135,14 +135,16 @@ select.field option{background:#111;}
       <div class="form-group"><label class="field-label">Grand Prix</label><input type="text" id="tb-gp" value="Bahrain"></div>
       <div class="form-group"><label class="field-label">Round</label><input type="text" id="tb-round" value="1"></div>
       <div class="form-group"><label class="field-label">Total Rounds</label><input type="number" id="tb-totalRounds" value="21"></div>
-      <div class="form-group"><label class="field-label">Date</label><input type="text" id="tb-date" value="Sun 20 Apr"></div>
-      <div class="form-group"><label class="field-label">Time</label><input type="text" id="tb-time" value="21:00 BST"></div>
+      <div class="form-group"><label class="field-label">Race Date</label><input type="date" id="tb-dateRaw" onchange="tbFormatDate()"></div>
+      <input type="hidden" id="tb-date" value="Sun 20 Apr">
+      <input type="hidden" id="tb-time" value="21:00 BST">
     </div>
     <div class="form-row" style="margin-top:.7rem;padding-top:.7rem;border-top:1px solid #2a2a2a;">
       <div class="form-group"><label class="field-label">Next GP</label><input type="text" id="tb-nextGP" placeholder="e.g. Saudi Arabia"></div>
       <div class="form-group"><label class="field-label">Next Round</label><input type="text" id="tb-nextRound" placeholder="e.g. 2"></div>
-      <div class="form-group"><label class="field-label">Next Date</label><input type="text" id="tb-nextDate" placeholder="e.g. Sun 27 Apr"></div>
-      <div class="form-group"><label class="field-label">Next Time</label><input type="text" id="tb-nextTime" placeholder="e.g. 21:00 BST"></div>
+      <div class="form-group"><label class="field-label">Next Date</label><input type="date" id="tb-nextDateRaw" onchange="tbFormatNextDate()"></div>
+      <input type="hidden" id="tb-nextDate" value="">
+      <input type="hidden" id="tb-nextTime" value="21:00 BST">
     </div>
   </div>
 
@@ -463,6 +465,24 @@ function tbGetData() {
 }
 
 // ── Auto-populate from sheet ──────────────────────────────────────
+function tbFormatDate() {
+  const raw = document.getElementById('tb-dateRaw').value;
+  if (!raw) return;
+  const d = new Date(raw + 'T00:00:00');
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  document.getElementById('tb-date').value = `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
+}
+
+function tbFormatNextDate() {
+  const raw = document.getElementById('tb-nextDateRaw').value;
+  if (!raw) return;
+  const d = new Date(raw + 'T00:00:00');
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  document.getElementById('tb-nextDate').value = `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
+}
+
 async function tbPopulate() {
   const btn = document.getElementById('tb-populateBtn');
   const statusEl = document.getElementById('tb-popStatus');
@@ -620,18 +640,29 @@ async function tbPopulate() {
           cells.push(cur.trim());
           return cells;
         });
-        // Find header row (Pos, Nat, Driver, Team...)
+        // Find header row (Pos, Nat, Driver, Team...) — skip empty rows
         let hRow=-1;
         for(let i=0;i<dRows.length;i++){
-          if((dRows[i][0]||'').toLowerCase()==='pos'){ hRow=i; break; }
+          const v = (dRows[i][0]||'').toLowerCase().trim();
+          if(v==='pos'){ hRow=i; break; }
         }
         if(hRow<0){ divLeaders.push(null); continue; }
-        const p1Row = dRows[hRow+1];
+        // Find first data row with a valid position number
+        let p1Row = null;
+        for(let i=hRow+1;i<dRows.length;i++){
+          const pos = (dRows[i][0]||'').trim();
+          const driver = (dRows[i][2]||'').trim();
+          if(pos && driver && !isNaN(parseInt(pos))){ p1Row = dRows[i]; break; }
+        }
         if(!p1Row){ divLeaders.push(null); continue; }
+        // Find points column from header row
+        const hRowData = dRows[hRow];
+        let ptsCol = hRowData.findIndex(v => (v||'').toLowerCase().trim() === 'points');
+        if(ptsCol < 0) ptsCol = 31; // fallback to col AF
         divLeaders.push({
           driver: (p1Row[2]||'').trim(),
           team:   (p1Row[3]||'').trim(),
-          pts:    parseInt((p1Row[4]||'0').replace(/,/g,''))||0,
+          pts:    parseInt((p1Row[ptsCol]||'0').replace(/,/g,''))||0,
           div:    d,
         });
       } catch(e){ divLeaders.push(null); }
@@ -798,7 +829,7 @@ function tbSetProgress(pct,label){
 function tbRenderFrame(ctx, data, t) {
   const S=2;
   const RW=720*S, RH=1280*S;
-  const ML=130, MR=300, MT=220, MB=760;
+  const ML=130, MR=160, MT=220, MB=760;
   const CW=RW-ML-MR;
   const F1=f1FontLoaded?"'Formula1',sans-serif":"'Barlow Condensed',sans-serif";
 
@@ -1134,12 +1165,18 @@ function tbRenderFrame(ctx, data, t) {
 
       const ti = data.trackInfo;
       if(ti) {
-        // Circuit name — full width across top
-        const circuitNameH = 28*S;
+        // Circuit name — full width across top, auto-scale if too long
+        let circuitNameH = 28*S;
         const circuitY = by + 26*S;
+        const circuitText = ti.circuit || '—';
+        const maxCircuitW = bw - 28*S;
         ctx.font=`400 ${circuitNameH}px ${F1}`; ctx.fillStyle='#ffffff';
         ctx.textAlign='left'; ctx.textBaseline='top';
-        ctx.fillText(ti.circuit || '—', bx+14*S, circuitY);
+        while(ctx.measureText(circuitText).width > maxCircuitW && circuitNameH > 14*S) {
+          circuitNameH -= S;
+          ctx.font=`400 ${circuitNameH}px ${F1}`;
+        }
+        ctx.fillText(circuitText, bx+14*S, circuitY);
 
         // Divider line under circuit name
         const splitY = circuitY + circuitNameH + 10*S;
