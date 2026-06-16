@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: /smgenerators.html
+
+Sitemap: https://www.f1xl.co.uk/sitemap.xml
