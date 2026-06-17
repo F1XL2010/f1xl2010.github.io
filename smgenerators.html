@@ -656,6 +656,139 @@ function teamOpts(sel) {
 
 
 
+const F1_FONT_URL = 'https://f1xl2010.github.io/video-gen/assets/fonts/Formula1-Regular_web_0.ttf';
+let f1FontLoaded = false;
+
+async function loadF1Font() {
+  if (f1FontLoaded) return;
+  try {
+    const font = new FontFace('Formula1', `url(${F1_FONT_URL})`);
+    await font.load();
+    document.fonts.add(font);
+    f1FontLoaded = true;
+  } catch(e) { console.warn('Formula1 font failed, using fallback:', e); }
+}
+
+// ── Logo image cache ─────────────────────────────────────────────
+const tbImgCache = {};
+
+function tbLoadImg(src) {
+  if (tbImgCache[src]) return Promise.resolve(tbImgCache[src]);
+  return new Promise(resolve => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload  = () => { tbImgCache[src] = img; resolve(img); };
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
+
+async function tbPreloadLogos(rows) {
+  const teams = [...new Set(rows.map(r => r.team))];
+  await Promise.all(teams.map(t => {
+    const f = LOGO_FILES[t];
+    return f ? tbLoadImg(LOGO_BASE + f) : Promise.resolve();
+  }));
+}
+
+// ── Render ────────────────────────────────────────────────────────
+const FPS=30, W=1440, H=2560;
+const T_HEADER=1.2, T_ROW_START=8.25, T_ROW_GAP=0.18, T_HOLD=10.0;
+const T_EXIT_START_OFFSET = T_ROW_START + (12 * T_ROW_GAP) + 0.6 + T_HOLD;
+const T_EXIT_GAP  = 0.15;
+const T_EXIT_DUR  = 0.9;
+const T_FLIP_OFFSET = 1.2;
+const T_FLIP_DUR  = 1.4;
+const T_FLIP_GAP  = 0.45;
+const T_HOLD_END  = 6.0;  // generous buffer
+const T_BOX_OFFSET = 1.0; // boxes start appearing after flip settles
+const T_BOX_DUR    = 3.0; // box 1 and 3 reveal duration
+const T_BOX_DUR2   = 4.0; // box 2 reveal duration
+const T_BOX_GAP    = 1.0; // stagger between boxes
+const TOTAL_DUR = T_EXIT_START_OFFSET + (14 * T_EXIT_GAP) + T_EXIT_DUR + T_FLIP_OFFSET + T_FLIP_GAP + T_FLIP_DUR + T_BOX_OFFSET + (4 * T_BOX_GAP) + T_BOX_DUR + T_HOLD_END;
+
+function easeOut3(t){return 1-Math.pow(1-Math.min(t,1),3);}
+function easeOut5(t){return 1-Math.pow(1-Math.min(t,1),5);}
+function easeIO2(t){t=Math.min(t,1);return t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+function getFlag(gpName){
+  const key=(gpName||'').toLowerCase().replace(' grand prix','').trim();
+  const code=GP_FLAG[key]||'';
+  return code?`https://f1xl2010.github.io/images/smallflags/${code}.svg`:'';
+}
+const flagCache={};
+function loadFlag(src){
+  if(!src) return Promise.resolve(null);
+  if(flagCache[src]) return Promise.resolve(flagCache[src]);
+  return new Promise(resolve=>{
+    const img=new Image();
+    img.crossOrigin='anonymous';
+    img.onload=()=>{flagCache[src]=img;resolve(img);};
+    img.onerror=()=>resolve(null);
+    img.src=src;
+  });
+}
+
+const F1_FONT_URL = 'https://f1xl2010.github.io/video-gen/assets/fonts/Formula1-Regular_web_0.ttf';
+let f1FontLoaded = false;
+
+async function loadF1Font() {
+  if (f1FontLoaded) return;
+  try {
+    const font = new FontFace('Formula1', `url(${F1_FONT_URL})`);
+    await font.load();
+    document.fonts.add(font);
+    f1FontLoaded = true;
+  } catch(e) { console.warn('Formula1 font failed, using fallback:', e); }
+}
+
+// ── Logo image cache ─────────────────────────────────────────────
+const tbImgCache = {};
+
+function tbLoadImg(src) {
+  if (tbImgCache[src]) return Promise.resolve(tbImgCache[src]);
+  return new Promise(resolve => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload  = () => { tbImgCache[src] = img; resolve(img); };
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
+
+async function tbPreloadLogos(rows) {
+  const teams = [...new Set(rows.map(r => r.team))];
+  await Promise.all(teams.map(t => {
+    const f = LOGO_FILES[t];
+    return f ? tbLoadImg(LOGO_BASE + f) : Promise.resolve();
+  }));
+}
+
+// ── Render ────────────────────────────────────────────────────────
+const FPS=30, W=1440, H=2560;
+const T_HEADER=1.2, T_ROW_START=8.25, T_ROW_GAP=0.18, T_HOLD=10.0;
+const T_EXIT_START_OFFSET = T_ROW_START + (12 * T_ROW_GAP) + 0.6 + T_HOLD;
+const T_EXIT_GAP  = 0.15;
+const T_EXIT_DUR  = 0.9;
+const T_FLIP_OFFSET = 1.2;
+const T_FLIP_DUR  = 1.4;
+const T_FLIP_GAP  = 0.45;
+const T_HOLD_END  = 6.0;  // generous buffer
+const T_BOX_OFFSET = 1.0; // boxes start appearing after flip settles
+const T_BOX_DUR    = 3.0; // box 1 and 3 reveal duration
+const T_BOX_DUR2   = 4.0; // box 2 reveal duration
+const T_BOX_GAP    = 1.0; // stagger between boxes
+const TOTAL_DUR = T_EXIT_START_OFFSET + (14 * T_EXIT_GAP) + T_EXIT_DUR + T_FLIP_OFFSET + T_FLIP_GAP + T_FLIP_DUR + T_BOX_OFFSET + (4 * T_BOX_GAP) + T_BOX_DUR + T_HOLD_END;
+
+function easeOut3(t){return 1-Math.pow(1-Math.min(t,1),3);}
+function easeOut5(t){return 1-Math.pow(1-Math.min(t,1),5);}
+function easeIO2(t){t=Math.min(t,1);return t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+function tbSetProgress(pct,label){
+  document.getElementById('tb-progBar').style.width=pct+'%';
+  document.getElementById('tb-progLabel').textContent=label;
+}
+
 function tbRenderFrame(ctx, data, t) {
   const S=2;
   const RW=720*S, RH=1280*S;
@@ -1083,6 +1216,25 @@ function tbRenderFrame(ctx, data, t) {
         ctx.fillText(leader?.team||'', bx+38*S, rm+8*S);
         ctx.font=`400 ${13*S}px ${F1}`; ctx.fillStyle='#ffffff';
         ctx.textAlign='right';
+        ctx.fillText(leader?.pts||'', bx+bw-14*S, rm);
+        if(d<3){
+          ctx.strokeStyle='rgba(255,255,255,0.07)'; ctx.lineWidth=S;
+          ctx.beginPath(); ctx.moveTo(bx,ry+rowH2-S); ctx.lineTo(bx+bw,ry+rowH2-S); ctx.stroke();
+        }
+      }
+      ctx.restore();
+      ctx.save(); ctx.globalAlpha=b3P;
+      ctx.strokeStyle='rgba(255,255,255,0.1)'; ctx.lineWidth=S;
+      ctx.strokeRect(bx,by,bw,bh); ctx.restore();
+    }
+  }
+
+  // Bottom + top bars always on top
+  ctx.fillStyle='#e10600';
+  ctx.fillRect(0,0,RW,4*S);
+  ctx.fillRect(0,RH-4*S,RW,4*S);
+}
+
 </script>
 </body>
 </html>
