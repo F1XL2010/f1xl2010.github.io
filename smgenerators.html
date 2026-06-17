@@ -12,60 +12,34 @@ h1{font-family:'Barlow Condensed',sans-serif;font-size:1.4rem;font-weight:700;le
 .subtitle{font-size:.75rem;color:#666;letter-spacing:1px;text-transform:uppercase;margin-bottom:1.5rem;}
 .selector-row{display:flex;align-items:center;gap:10px;margin-bottom:1.5rem;}
 .selector-row label{font-size:.8rem;color:#888;text-transform:uppercase;letter-spacing:1px;white-space:nowrap;}
-select.tool-select{background:#1a1a1a;border:1px solid #333;border-radius:4px;color:#fff;font-family:'Barlow',sans-serif;font-size:1rem;padding:8px 12px;cursor:pointer;min-width:260px;}
+select.tool-select{background:#1a1a1a;border:1px solid #333;border-radius:4px;color:#fff;font-family:'Barlow',sans-serif;font-size:1rem;padding:8px 12px;cursor:pointer;min-width:280px;}
 select.tool-select:focus{outline:none;border-color:#666;}
 select option{background:#1a1a1a;}
-
-/* Sections */
 .tool-section{display:none;}
-.tool-section.active{display:block;}
-
-/* Generic card */
 .card{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:6px;padding:1.2rem;margin-bottom:1rem;}
 .card-title{font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:3px;color:#888;text-transform:uppercase;margin-bottom:.9rem;padding-bottom:.5rem;border-bottom:1px solid #2a2a2a;}
-
-/* Form */
-.form-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:.7rem;margin-bottom:.5rem;}
-.form-row:last-child{margin-bottom:0;}
+.form-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.7rem;margin-bottom:.7rem;}
 .form-group{display:flex;flex-direction:column;gap:4px;}
 label.field-label{font-size:.65rem;color:#666;text-transform:uppercase;letter-spacing:1px;}
-input,select.field{background:#111;border:1px solid #2a2a2a;border-radius:3px;color:#ddd;font-family:'Barlow',sans-serif;font-size:.9rem;padding:7px 9px;width:100%;transition:border-color .15s;}
-input:focus,select.field:focus{outline:none;border-color:#555;}
-select.field option{background:#111;}
-
-/* Table rows for results */
-.rows-grid{display:flex;flex-direction:column;gap:5px;}
-.row-entry{display:grid;grid-template-columns:28px 1fr 1fr 75px;gap:6px;align-items:center;padding:6px 8px;background:#111;border:1px solid #222;border-radius:4px;}
-.row-pos{font-family:'Barlow Condensed',sans-serif;font-size:.95rem;font-weight:700;color:#555;text-align:center;}
-
-/* Buttons */
+input,select.field-select{background:#111;border:1px solid #2a2a2a;border-radius:3px;color:#ddd;font-family:'Barlow',sans-serif;font-size:.9rem;padding:7px 9px;width:100%;transition:border-color .15s;}
+input:focus,select.field-select:focus{outline:none;border-color:#555;}
+select.field-select option{background:#111;}
 .btn{display:inline-block;padding:.6rem 1.2rem;border:none;border-radius:4px;font-family:'Barlow Condensed',sans-serif;font-size:.9rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:background .15s;}
 .btn-primary{background:#e10600;color:#fff;}
 .btn-primary:hover{background:#ff1a0e;}
 .btn-primary:disabled{background:#333;color:#555;cursor:not-allowed;}
-.btn-secondary{background:#2a2a2a;color:#aaa;margin-right:.5rem;}
-.btn-secondary:hover{background:#333;color:#ddd;}
-.btn-green{background:#1a4a1a;color:#3DCC47;border:1px solid #2a6a2a;}
-.btn-green:hover{background:#1e5a1e;}
-
+.btn-sec{background:#2a2a2a;color:#aaa;}
+.btn-sec:hover{background:#333;color:#ddd;}
 .btn-row{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-top:.8rem;}
-
-/* Progress */
 .prog-area{display:none;margin-top:.8rem;}
 .prog-label{font-size:.78rem;color:#666;margin-bottom:5px;}
 .prog-outer{height:3px;background:#222;border-radius:2px;overflow:hidden;}
 .prog-inner{height:100%;background:#e10600;border-radius:2px;width:0%;transition:width .2s;}
-
-/* Status messages */
-.status{font-size:.78rem;padding:.4rem .7rem;border-radius:3px;margin-top:.5rem;display:none;}
-.status.ok{background:#1a3a1a;color:#3DCC47;border:1px solid #2a5a2a;}
-.status.err{background:#3a0a0a;color:#ff6b6b;border:1px solid #5a1a1a;}
-.status.info{background:#1a2a3a;color:#6ab0ff;border:1px solid #2a4a6a;}
-
-.note{font-size:.72rem;color:#555;margin-top:.5rem;line-height:1.7;}
-.note span{color:#888;}
-.note code{background:#1a1a1a;padding:1px 4px;border-radius:2px;font-size:.68rem;}
-
+.status-msg{font-size:.78rem;padding:.4rem .7rem;border-radius:3px;margin-top:.5rem;display:none;}
+.status-ok{background:#1a3a1a;color:#3DCC47;border:1px solid #2a5a2a;display:block;}
+.status-err{background:#3a0a0a;color:#ff6b6b;border:1px solid #5a1a1a;display:block;}
+.status-loading{background:#1a2a3a;color:#6ab0ff;border:1px solid #2a4a6a;display:block;}
+.preview-canvas{max-width:320px;display:block;margin:0 auto;border:1px solid #2a2a2a;border-radius:4px;}
 #renderCanvas{display:none;}
 #renderCanvas2{display:none;}
 </style>
@@ -75,9 +49,7 @@ select.field option{background:#111;}
 <h1>F1XL · SM Generators</h1>
 <p class="subtitle">Staff tools — not for public use</p>
 
-<!-- Tool Selector -->
 <div class="selector-row">
-  <div class="tool-select-wrap">
   <label>What are you making?</label>
   <select class="tool-select" onchange="switchTool(this.value)">
     <option value="">— Select a generator —</option>
@@ -86,10 +58,10 @@ select.field option{background:#111;}
   </select>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════════════ -->
-<!-- TOOL 1: RACE RESULTS & DRIVER STANDINGS                        -->
-<!-- ═══════════════════════════════════════════════════════════════ -->
-<div class="tool-section" id="section-race" style="display:none;">
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- TOOL 1: RACE RESULTS & DRIVER STANDINGS                          -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<div class="tool-section" id="section-race">
   <div class="card">
     <div class="card-title">Race Info</div>
     <div class="form-row">
@@ -99,8 +71,10 @@ select.field option{background:#111;}
       <div class="form-group"><label class="field-label">Total Rounds</label><input type="number" id="rc-totalRounds" value="21"></div>
       <div class="form-group"><label class="field-label">Race Date</label><input type="date" id="rc-dateRaw" onchange="rcFormatDate()"></div>
       <input type="hidden" id="rc-date" value="">
+    </div>
+    <div class="form-row">
       <div class="form-group"><label class="field-label">Division</label>
-        <select id="rc-division" class="tool-select" style="margin:0;">
+        <select id="rc-division" class="field-select">
           <option value="1">Division 1</option>
           <option value="2">Division 2</option>
           <option value="3">Division 3</option>
@@ -108,25 +82,31 @@ select.field option{background:#111;}
         </select>
       </div>
     </div>
-    <button class="btn" onclick="rcPopulate()">Populate from Sheets</button>
-    <div id="rc-status" class="status-msg"></div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="rcPopulate()">Populate from Sheets</button>
+    </div>
+    <div class="status-msg" id="rc-status"></div>
   </div>
 
-  <div class="card" id="rc-preview-card" style="display:none;">
-    <div class="card-title">Preview</div>
-    <canvas id="rc-canvas" width="720" height="1280" style="max-width:360px;display:block;margin:0 auto;border:1px solid rgba(255,255,255,0.1);border-radius:4px;"></canvas>
-    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
-      <button class="btn" onclick="rcGenerate()">Generate Video</button>
+  <div class="card" id="rc-output" style="display:none;">
+    <div class="card-title">Output</div>
+    <canvas id="rc-preview" class="preview-canvas" width="720" height="1280"></canvas>
+    <div class="btn-row" style="margin-top:12px;">
+      <button class="btn btn-primary" id="rc-genBtn" onclick="rcGenerate()">Generate Video</button>
       <button class="btn btn-sec" onclick="rcDownloadImage()">Download Image</button>
     </div>
-    <div id="rc-gen-status" class="status-msg"></div>
+    <div class="prog-area" id="rc-prog">
+      <div class="prog-label" id="rc-prog-label">Rendering...</div>
+      <div class="prog-outer"><div class="prog-inner" id="rc-prog-bar"></div></div>
+    </div>
+    <div class="status-msg" id="rc-gen-status"></div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════════════ -->
-<!-- TOOL 2: CONSTRUCTORS & OVERALL TABLE                           -->
-<!-- ═══════════════════════════════════════════════════════════════ -->
-<div class="tool-section" id="section-constructors" style="display:none;">
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- TOOL 2: CONSTRUCTORS & OVERALL TABLE                             -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<div class="tool-section" id="section-constructors">
   <div class="card">
     <div class="card-title">Race Info</div>
     <div class="form-row">
@@ -136,8 +116,10 @@ select.field option{background:#111;}
       <div class="form-group"><label class="field-label">Total Rounds</label><input type="number" id="co-totalRounds" value="21"></div>
       <div class="form-group"><label class="field-label">Race Date</label><input type="date" id="co-dateRaw" onchange="coFormatDate()"></div>
       <input type="hidden" id="co-date" value="">
+    </div>
+    <div class="form-row">
       <div class="form-group"><label class="field-label">View</label>
-        <select id="co-division" class="tool-select" style="margin:0;">
+        <select id="co-view" class="field-select">
           <option value="1">Division 1 Constructors</option>
           <option value="2">Division 2 Constructors</option>
           <option value="3">Division 3 Constructors</option>
@@ -146,54 +128,494 @@ select.field option{background:#111;}
         </select>
       </div>
     </div>
-    <button class="btn" onclick="coPopulate()">Populate from Sheets</button>
-    <div id="co-status" class="status-msg"></div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="coPopulate()">Populate from Sheets</button>
+    </div>
+    <div class="status-msg" id="co-status"></div>
   </div>
 
-  <div class="card" id="co-preview-card" style="display:none;">
-    <div class="card-title">Preview</div>
-    <canvas id="co-canvas" width="720" height="1280" style="max-width:360px;display:block;margin:0 auto;border:1px solid rgba(255,255,255,0.1);border-radius:4px;"></canvas>
-    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
-      <button class="btn" onclick="coGenerate()">Generate Video</button>
+  <div class="card" id="co-output" style="display:none;">
+    <div class="card-title">Output</div>
+    <canvas id="co-preview" class="preview-canvas" width="720" height="1280"></canvas>
+    <div class="btn-row" style="margin-top:12px;">
+      <button class="btn btn-primary" id="co-genBtn" onclick="coGenerate()">Generate Video</button>
       <button class="btn btn-sec" onclick="coDownloadImage()">Download Image</button>
     </div>
-    <div id="co-gen-status" class="status-msg"></div>
+    <div class="prog-area" id="co-prog">
+      <div class="prog-label" id="co-prog-label">Rendering...</div>
+      <div class="prog-outer"><div class="prog-inner" id="co-prog-bar"></div></div>
+    </div>
+    <div class="status-msg" id="co-gen-status"></div>
   </div>
 </div>
 
-
+<!-- Hidden canvases for rendering -->
 <canvas id="renderCanvas" width="720" height="1280"></canvas>
 <canvas id="renderCanvas2" width="1440" height="2560"></canvas>
 
-<script src="config.js"></script>
 <script>
-'use strict';
+// ── CONFIG ─────────────────────────────────────────────────────────────────
+const CONFIG_SHEET_ID = '1ThIh7aKlGOuv83v9IJVSGpuspZLl0c9ajE0GJBpuCtk';
+const CONFIG_GID      = '0';
 
-// ─── TOOL SWITCHER ──────────────────────────────────────────────────────────
+// ── HELPERS ────────────────────────────────────────────────────────────────
 function switchTool(val) {
   document.querySelectorAll('.tool-section').forEach(s => s.style.display = 'none');
   if (val) document.getElementById('section-' + val).style.display = 'block';
 }
 
+function showStatus(id, msg, type) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'status-msg status-' + type;
+}
+
+function setProgress(barId, labelId, pct, label) {
+  const bar = document.getElementById(barId);
+  const lbl = document.getElementById(labelId);
+  if (bar) bar.style.width = pct + '%';
+  if (lbl) lbl.textContent = label;
+}
+
+function parseCSV(text) {
+  return text.split(/\r?\n/).filter(l => l.trim()).map(line => {
+    const cells = []; let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c==='"'&&!inQ){inQ=true;}
+      else if(c==='"'&&inQ){if(line[i+1]==='"'){cur+='"';i++;}else{inQ=false;}}
+      else if(c===','&&!inQ){cells.push(cur.trim());cur='';}
+      else cur+=c;
+    }
+    cells.push(cur.trim());
+    return cells;
+  });
+}
+
+async function fetchCSV(sheetId, gid) {
+  const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
+  const r = await fetch(url);
+  const text = await r.text();
+  if (text.includes('<!DOCTYPE')) throw new Error('Sheet not published or wrong GID');
+  return text;
+}
+
+async function loadConfig() {
+  const text = await fetchCSV(CONFIG_SHEET_ID, CONFIG_GID);
+  const rows = parseCSV(text);
+  const map = {};
+  for (const r of rows) {
+    const k = (r[0]||'').trim().toLowerCase().replace(/^"|"$/g,'');
+    const v = (r[1]||'').trim().replace(/^"|"$/g,'');
+    if (k && v && k !== 'key') map[k] = v;
+  }
+  return map;
+}
+
+async function getSeasonConfig(cfg) {
+  let latest = 0, latestGid = null;
+  for (const k of Object.keys(cfg)) {
+    const m = k.match(/^s(\d+)_gid$/);
+    if (m) { const n = parseInt(m[1]); if (n > latest) { latest = n; latestGid = cfg[k]; } }
+  }
+  if (!latestGid) return { season: latest, sc: {} };
+  const text = await fetchCSV(CONFIG_SHEET_ID, latestGid);
+  const rows = parseCSV(text);
+  const sc = {};
+  for (const r of rows) {
+    const k = (r[0]||'').trim().toLowerCase().replace(/^"|"$/g,'');
+    const v = (r[1]||'').trim().replace(/^"|"$/g,'');
+    if (k && v) sc[k] = v;
+  }
+  return { season: latest, sc };
+}
+
+function formatDate(dateStr) {
+  // dateStr = dd/mm/yyyy
+  const [d,m,y] = dateStr.split('/');
+  if (!d||!m||!y) return dateStr;
+  const dt = new Date(parseInt(y), parseInt(m)-1, parseInt(d));
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${days[dt.getDay()]} ${parseInt(d)} ${months[dt.getMonth()]}`;
+}
+
 function rcFormatDate() {
   const raw = document.getElementById('rc-dateRaw').value;
   if (!raw) return;
-  const d = new Date(raw + 'T00:00:00');
-  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  document.getElementById('rc-date').value = `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
+  const [y,m,d] = raw.split('-');
+  document.getElementById('rc-date').value = formatDate(`${d}/${m}/${y}`);
 }
 
 function coFormatDate() {
   const raw = document.getElementById('co-dateRaw').value;
   if (!raw) return;
-  const d = new Date(raw + 'T00:00:00');
-  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  document.getElementById('co-date').value = `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
+  const [y,m,d] = raw.split('-');
+  document.getElementById('co-date').value = formatDate(`${d}/${m}/${y}`);
 }
 
-// ─── SHARED DATA ────────────────────────────────────────────────────────────
+async function findLatestRound(sheetId, calGid) {
+  const text = await fetchCSV(sheetId, calGid);
+  const rows = parseCSV(text);
+  const now = new Date();
+  let latestRound = null, latestTrack = '', latestDate = '';
+  for (let i = 1; i < rows.length; i++) {
+    const round   = (rows[i][0]||'').trim();
+    const track   = (rows[i][3]||'').trim();
+    const dateStr = (rows[i][2]||'').trim();
+    if (!round || !track || !dateStr) continue;
+    const [d,m,y] = dateStr.split('/');
+    if (!d||!m||!y) continue;
+    const raceDate = new Date(parseInt(y), parseInt(m)-1, parseInt(d));
+    if (raceDate <= now) { latestRound = round; latestTrack = track; latestDate = dateStr; }
+  }
+  return { latestRound, latestTrack, latestDate };
+}
+
+// ── RACE RESULTS POPULATE ─────────────────────────────────────────────────
+async function rcPopulate() {
+  showStatus('rc-status', 'Loading...', 'loading');
+  try {
+    const cfg = await loadConfig();
+    const { season, sc } = await getSeasonConfig(cfg);
+    document.getElementById('rc-season').value = season;
+
+    const div      = document.getElementById('rc-division').value;
+    const sheetId  = sc[`d${div}_sheet_id`];
+    const calGid   = sc[`d${div}_calendar_gid`];
+    const resGid   = sc[`d${div}_driver_results_gid`];
+
+    if (!sheetId) throw new Error(`No sheet ID for Division ${div}`);
+
+    // Find latest completed round
+    let latestRound = null, latestTrack = '', latestDate = '';
+    if (calGid) {
+      ({ latestRound, latestTrack, latestDate } = await findLatestRound(sheetId, calGid));
+    }
+
+    if (latestRound) {
+      document.getElementById('rc-round').value = latestRound;
+      document.getElementById('rc-gp').value = latestTrack;
+      if (latestDate) {
+        document.getElementById('rc-date').value = formatDate(latestDate);
+        const [d,m,y] = latestDate.split('/');
+        document.getElementById('rc-dateRaw').value = `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
+      }
+    }
+
+    // Fetch race results from R{round} tab
+    window._rcRaceRows = [];
+    const rTabGid = sc[`d${div}_r${latestRound}_gid`];
+    if (rTabGid) {
+      const rText = await fetchCSV(sheetId, rTabGid);
+      const rRows = parseCSV(rText);
+      // Find main race header — "Pos" after row 20 (past sprint section)
+      let raceHdr = -1;
+      for (let i = 20; i < rRows.length; i++) {
+        if ((rRows[i][0]||'').trim().toLowerCase() === 'pos') { raceHdr = i; break; }
+      }
+      if (raceHdr >= 0) {
+        for (let i = raceHdr + 1; i < Math.min(raceHdr + 11, rRows.length); i++) {
+          const pos    = (rRows[i][0]||'').trim();
+          const driver = (rRows[i][3]||'').trim();
+          const team   = (rRows[i][4]||'').trim();
+          if (!driver || !pos || isNaN(parseInt(pos))) break;
+          window._rcRaceRows.push({ pos: parseInt(pos), driver, team });
+        }
+      }
+    }
+
+    // Fetch driver standings
+    window._rcStandingsRows = [];
+    if (resGid) {
+      const sText = await fetchCSV(sheetId, resGid);
+      const sRows = parseCSV(sText);
+      let hRow = -1;
+      for (let i = 0; i < sRows.length; i++) {
+        if ((sRows[i][0]||'').trim().toLowerCase() === 'pos') { hRow = i; break; }
+      }
+      if (hRow >= 0) {
+        const hd = sRows[hRow];
+        let ptsCol = hd.findIndex(v => (v||'').toLowerCase().trim() === 'points');
+        if (ptsCol < 0) {
+          for (let c = hd.length-1; c >= 4; c--) { if ((hd[c]||'').trim()) { ptsCol = c; break; } }
+        }
+        const gapCol = hd.findIndex(v => (v||'').toLowerCase().trim() === 'gap');
+        for (let i = hRow + 1; i < sRows.length; i++) {
+          const driver = (sRows[i][2]||'').trim();
+          const team   = (sRows[i][3]||'').trim();
+          const pts    = parseFloat((sRows[i][ptsCol]||'0').replace(/,/g,'')) || 0;
+          const gap    = gapCol >= 0 ? (sRows[i][gapCol]||'').trim() : '';
+          if (!driver) break;
+          window._rcStandingsRows.push({ driver, team, pts, gap });
+        }
+      }
+    }
+
+    showStatus('rc-status', `✓ Loaded R${latestRound} ${latestTrack} — ${window._rcRaceRows.length} race results, ${window._rcStandingsRows.length} standings`, 'ok');
+    document.getElementById('rc-output').style.display = 'block';
+
+    // Render preview frame
+    const canvas = document.getElementById('rc-preview');
+    const data = rcGetData();
+    await loadF1Font();
+    tbRenderFrame(canvas.getContext('2d'), data, 0);
+
+  } catch(e) {
+    showStatus('rc-status', `Error: ${e.message}`, 'err');
+    console.error(e);
+  }
+}
+
+function rcGetData() {
+  return {
+    season:      document.getElementById('rc-season').value,
+    gp:          document.getElementById('rc-gp').value.trim(),
+    round:       document.getElementById('rc-round').value.trim(),
+    totalRounds: document.getElementById('rc-totalRounds').value,
+    date:        document.getElementById('rc-date').value.trim(),
+    time:        '21:00 BST',
+    rows: (window._rcStandingsRows || []).map(r => ({ team: r.team, driver: r.driver, pts: r.pts, gap: r.gap })),
+    raceResults: window._rcRaceRows || [],
+    nextGP: '', nextRound: '', nextDate: '', nextTime: '',
+    divLeaders: [],
+    trackInfo: null,
+    mode: 'race',
+    divLabel: `Division ${document.getElementById('rc-division').value}`,
+  };
+}
+
+function rcDownloadImage() {
+  const canvas = document.getElementById('rc-preview');
+  const a = document.createElement('a');
+  a.href = canvas.toDataURL('image/png');
+  const d = rcGetData();
+  a.download = `F1XL_S${d.season}_R${d.round}_D${document.getElementById('rc-division').value}_Results.png`;
+  a.click();
+}
+
+async function rcGenerate() {
+  const data = rcGetData();
+  const btn = document.getElementById('rc-genBtn');
+  btn.disabled = true;
+  document.getElementById('rc-prog').style.display = 'block';
+  await runGenerate(
+    data,
+    document.getElementById('rc-preview'),
+    `F1XL_S${data.season}_R${data.round}_D${document.getElementById('rc-division').value}_Results.webm`,
+    'rc-prog-bar', 'rc-prog-label', 'rc-gen-status'
+  );
+  btn.disabled = false;
+  setTimeout(() => { document.getElementById('rc-prog').style.display = 'none'; }, 2000);
+}
+
+// ── CONSTRUCTORS POPULATE ──────────────────────────────────────────────────
+async function coPopulate() {
+  showStatus('co-status', 'Loading...', 'loading');
+  try {
+    const cfg = await loadConfig();
+    const { season, sc } = await getSeasonConfig(cfg);
+    document.getElementById('co-season').value = season;
+
+    const view      = document.getElementById('co-view').value;
+    const isOverall = view === 'overall';
+
+    // Find latest round from D1 calendar for header info
+    const d1SheetId = sc['d1_sheet_id'];
+    const d1CalGid  = sc['d1_calendar_gid'];
+    let latestRound = '', latestTrack = '', latestDate = '';
+    if (d1SheetId && d1CalGid) {
+      ({ latestRound, latestTrack, latestDate } = await findLatestRound(d1SheetId, d1CalGid));
+      document.getElementById('co-round').value = latestRound || '';
+      document.getElementById('co-gp').value    = latestTrack || '';
+      if (latestDate) {
+        document.getElementById('co-date').value = formatDate(latestDate);
+        const [d,m,y] = latestDate.split('/');
+        document.getElementById('co-dateRaw').value = `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
+      }
+    }
+
+    window._coRows = [];
+
+    if (isOverall) {
+      // Fetch overall constructors
+      const overallUrl = sc['overall_gid'] || cfg['overall_gid'];
+      if (!overallUrl) throw new Error('No overall_gid in config');
+      const idM  = overallUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
+      const gidM = overallUrl.match(/gid=(\d+)/);
+      if (!idM) throw new Error('Invalid overall URL');
+      const text = await fetchCSV(idM[1], gidM?.[1]||'0');
+      const rows = parseCSV(text);
+      let hi = -1;
+      for (let i = 0; i < rows.length; i++) {
+        const v0 = (rows[i][0]||'').toLowerCase().trim();
+        const v1 = (rows[i][1]||'').toLowerCase().trim();
+        if (v0 === 'pos' || v1 === 'team') { hi = i; break; }
+      }
+      if (hi >= 0) {
+        const hd = rows[hi];
+        let ptsCol = hd.findIndex(v => (v||'').toLowerCase().trim() === 'points');
+        if (ptsCol < 0) ptsCol = 3;
+        let tpCol  = hd.findIndex(v => (v||'').toLowerCase().includes('principal') || (v||'').toLowerCase() === 'owner');
+        let gapCol = hd.findIndex(v => (v||'').toLowerCase().trim() === 'gap');
+        for (let i = hi + 1; i < rows.length; i++) {
+          const team = (rows[i][1]||'').trim() || (rows[i][0]||'').trim();
+          const pts  = parseFloat((rows[i][ptsCol]||'0').replace(/,/g,'')) || 0;
+          const tp   = tpCol >= 0 ? (rows[i][tpCol]||'').trim() : '';
+          const gap  = gapCol >= 0 ? (rows[i][gapCol]||'').trim() : '';
+          if (!team) break;
+          window._coRows.push({ team, pts, tp, gap, isOverall: true });
+        }
+      }
+    } else {
+      // Fetch per-division constructors
+      const sheetId = sc[`d${view}_sheet_id`];
+      const consGid = sc[`d${view}_constructors_gid`];
+      if (!sheetId || !consGid) throw new Error(`No constructors GID for Division ${view}`);
+      const text = await fetchCSV(sheetId, consGid);
+      const rows = parseCSV(text);
+      let hi = -1;
+      for (let i = 0; i < rows.length; i++) {
+        if ((rows[i][0]||'').trim().toLowerCase() === 'pos') { hi = i; break; }
+      }
+      if (hi >= 0) {
+        const hd = rows[hi];
+        let ptsCol = hd.findIndex(v => (v||'').toLowerCase().trim() === 'points');
+        if (ptsCol < 0) ptsCol = 2;
+        let gapCol = hd.findIndex(v => (v||'').toLowerCase().trim() === 'gap');
+        for (let i = hi + 1; i < rows.length; i++) {
+          const team = (rows[i][1]||'').trim();
+          const pts  = parseFloat((rows[i][ptsCol]||'0').replace(/,/g,'')) || 0;
+          const gap  = gapCol >= 0 ? (rows[i][gapCol]||'').trim() : '';
+          if (!team) break;
+          window._coRows.push({ team, pts, gap, isOverall: false });
+        }
+      }
+    }
+
+    const label = isOverall ? 'Overall Constructors' : `Division ${view} Constructors`;
+    showStatus('co-status', `✓ Loaded ${label} — ${window._coRows.length} teams`, 'ok');
+    document.getElementById('co-output').style.display = 'block';
+
+    // Render preview
+    const canvas = document.getElementById('co-preview');
+    const data = coGetData();
+    await loadF1Font();
+    tbRenderFrame(canvas.getContext('2d'), data, 0);
+
+  } catch(e) {
+    showStatus('co-status', `Error: ${e.message}`, 'err');
+    console.error(e);
+  }
+}
+
+function coGetData() {
+  const view = document.getElementById('co-view').value;
+  const isOverall = view === 'overall';
+  return {
+    season:      document.getElementById('co-season').value,
+    gp:          document.getElementById('co-gp').value.trim(),
+    round:       document.getElementById('co-round').value.trim(),
+    totalRounds: document.getElementById('co-totalRounds').value,
+    date:        document.getElementById('co-date').value.trim(),
+    time:        '21:00 BST',
+    rows: (window._coRows || []).map(r => ({
+      team:   r.team,
+      driver: isOverall ? (r.tp || r.team) : r.team,
+      pts:    r.pts,
+      gap:    r.gap || '',
+    })),
+    nextGP: '', nextRound: '', nextDate: '', nextTime: '',
+    divLeaders: [],
+    trackInfo: null,
+    mode: 'constructors',
+    showTP: isOverall,
+    divLabel: isOverall ? 'Overall Constructors' : `Division ${view} Constructors`,
+  };
+}
+
+function coDownloadImage() {
+  const canvas = document.getElementById('co-preview');
+  const a = document.createElement('a');
+  a.href = canvas.toDataURL('image/png');
+  const d = coGetData();
+  a.download = `F1XL_S${d.season}_R${d.round}_Constructors_${document.getElementById('co-view').value}.png`;
+  a.click();
+}
+
+async function coGenerate() {
+  const data = coGetData();
+  const btn = document.getElementById('co-genBtn');
+  btn.disabled = true;
+  document.getElementById('co-prog').style.display = 'block';
+  await runGenerate(
+    data,
+    document.getElementById('co-preview'),
+    `F1XL_S${data.season}_R${data.round}_Constructors_${document.getElementById('co-view').value}.webm`,
+    'co-prog-bar', 'co-prog-label', 'co-gen-status'
+  );
+  btn.disabled = false;
+  setTimeout(() => { document.getElementById('co-prog').style.display = 'none'; }, 2000);
+}
+
+// ── SHARED GENERATE RUNNER ─────────────────────────────────────────────────
+async function runGenerate(data, canvas, filename, barId, labelId, statusId) {
+  showStatus(statusId, 'Preparing...', 'loading');
+  try {
+    await Promise.all([loadF1Font(), tbPreloadLogos(data.rows)]);
+  } catch(e) {}
+
+  const mime = ['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm']
+    .find(m => MediaRecorder.isTypeSupported(m)) || 'video/webm';
+
+  const stream  = canvas.captureStream(FPS);
+  const chunks  = [];
+  const recorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 20_000_000 });
+  recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+  recorder.start(100);
+
+  const numRows        = (data.rows || []).length;
+  const flipStart      = T_EXIT_START_OFFSET + (numRows + 1) * T_EXIT_GAP + T_EXIT_DUR + T_FLIP_OFFSET;
+  const boxStart       = flipStart + T_FLIP_GAP + T_FLIP_DUR + T_BOX_OFFSET;
+  const TOTAL_DUR      = boxStart + T_BOX_GAP * 2 + T_BOX_DUR2 + T_HOLD_END;
+  const totalFrames    = Math.ceil(TOTAL_DUR * FPS);
+  const msPerFrame     = 1000 / FPS;
+  let frame = 0;
+
+  setProgress(barId, labelId, 2, 'Rendering frames...');
+
+  await new Promise(resolve => {
+    function next() {
+      if (frame >= totalFrames) { resolve(); return; }
+      const start = performance.now();
+      tbRenderFrame(canvas.getContext('2d'), data, frame / FPS);
+      frame++;
+      if (frame % 20 === 0) {
+        const pct = Math.round((frame / totalFrames) * 94) + 2;
+        setProgress(barId, labelId, pct, `Frame ${frame} / ${totalFrames}`);
+      }
+      const elapsed = performance.now() - start;
+      setTimeout(next, Math.max(0, msPerFrame - elapsed));
+    }
+    next();
+  });
+
+  recorder.stop();
+  await new Promise(r => recorder.onstop = r);
+  setProgress(barId, labelId, 99, 'Packaging...');
+
+  const blob = new Blob(chunks, { type: mime });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+
+  setProgress(barId, labelId, 100, 'Done!');
+  showStatus(statusId, '✓ Video downloaded!', 'ok');
+}
+
 const LOGO_BASE = 'https://f1xl2010.github.io/video-gen/assets/logos/';
 
 const F1_TEAMS = ['Alpine','Aston Martin','Audi','Cadillac','Ferrari','Haas','McLaren','Mercedes','Racing Bull','Red Bull','Williams','Reserve'];
@@ -232,614 +654,7 @@ function teamOpts(sel) {
   return F1_TEAMS.map(t => `<option value="${t}"${t===sel?' selected':''}>${t}</option>`).join('');
 }
 
-function showStatus(id, msg, type) {
-  const el = document.getElementById(id);
-  el.textContent = msg;
-  el.className = 'status ' + type;
-  el.style.display = 'block';
-}
 
-// ═══════════════════════════════════════════════════════════════════
-// CAPCUT GENERATOR
-// ═══════════════════════════════════════════════════════════════════
-
-const CC_DIVS = 4;
-
-const TEXT_IDS = {
-  season1:  '874C4F6D-349A-4f7b-9586-45708AE04FDD',
-  track1:   '8E63DAD2-74E9-43bb-A6B4-C796E2855D50',
-  race1:    'E68909D8-6D1C-411d-8023-796477C5D39D',
-  season2:  '7FABA8EA-0F83-4313-8C71-C910E9F44B67',
-  track2:   'E2D5C513-F317-4472-97ED-0C9F8D3944B6',
-  race2:    '454ED4E2-C2CF-49ed-BDDC-D6651BBF0E07',
-  p1: ['54DDC0C2-7FA1-4657-B528-69B34E7AA109','010BA87F-DE83-42f9-A59D-1292F9C1C97B','684D2DDE-0EDC-4909-8F76-686DA4AC1526','C98EB0CE-867B-414a-9885-F4694D7982A6'],
-  p2: ['103374A8-48C5-431c-BA1C-2887BAB82AFB','1743C89C-F96F-40e4-BC95-D3D9B905F84C','712521B9-186E-44fe-B20D-BE4F2C6C5023','05D6A740-2C40-4c68-B313-4EB185E3E134'],
-  p3: ['44B8D26B-9669-4d13-9E43-7E4EB85C01D4','A2838750-2628-4b1c-A76C-08D8E6D54FED','682858CC-75C4-4e22-8754-8E16CF36A025','A2FE9485-36A1-4e60-8AA7-7985F253E250'],
-};
-
-const LOGO_IDS = {
-  p1: ['7B2172D8-36D0-4f4d-B7C8-9C9ACF0BF540','6E958B08-4ECD-46e1-A3B4-0CAFB2FF60D0','9FA48C87-1C49-4730-B9AA-B93D64CA74E5','C442B81A-DE6E-4c51-8CD9-CE1A488E78E3'],
-  p2: ['8E4B2C5E-6069-475c-867F-E4E5B593BC42','80B618D2-D064-40d4-90B4-EDBBD50F5AEE','E92B781C-E8FA-4fc7-8C12-25143CF37D32','ED4A9FBB-558A-4b62-A4CD-53188508A194'],
-  p3: ['97BC138F-6EB3-4fae-879D-E970E70F13AC','516DBFF0-0192-41ac-80F1-431AD0FDB933','75375DC6-0A39-477f-80B2-4253D88FA124','6DB4D9CE-CD93-482c-B981-AD6FFD0799DE'],
-};
-
-let ccProjectData = null;
-
-function ccBuildDivisions() {
-  const c = document.getElementById('cc-divisions');
-  c.innerHTML = '';
-  for (let i=1; i<=CC_DIVS; i++) {
-    c.innerHTML += `
-    <div style="margin-bottom:.8rem;">
-      <div style="font-size:.7rem;color:#666;letter-spacing:1px;text-transform:uppercase;margin-bottom:.4rem;">Division ${i}</div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;">
-        <div>
-          <div style="font-size:.6rem;color:#444;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">P1</div>
-          <input type="text" id="d${i}p1n" placeholder="Driver" style="margin-bottom:3px;">
-          <select class="field" id="d${i}p1t">${teamOpts('Red Bull')}</select>
-        </div>
-        <div>
-          <div style="font-size:.6rem;color:#444;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">P2</div>
-          <input type="text" id="d${i}p2n" placeholder="Driver" style="margin-bottom:3px;">
-          <select class="field" id="d${i}p2t">${teamOpts('McLaren')}</select>
-        </div>
-        <div>
-          <div style="font-size:.6rem;color:#444;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">P3</div>
-          <input type="text" id="d${i}p3n" placeholder="Driver" style="margin-bottom:3px;">
-          <select class="field" id="d${i}p3t">${teamOpts('Ferrari')}</select>
-        </div>
-      </div>
-    </div>`;
-  }
-}
-
-function ccLoadProject(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    try {
-      ccProjectData = JSON.parse(e.target.result);
-      showStatus('cc-status', '✓ Loaded: ' + file.name, 'ok');
-    } catch(e) {
-      showStatus('cc-status', 'Failed to parse JSON — make sure you selected draft_content.json', 'err');
-    }
-  };
-  reader.readAsText(file);
-}
-
-function ccUpdateText(data, id, text) {
-  for (const t of data.materials.texts) {
-    if (t.id === id) {
-      try {
-        const inner = JSON.parse(t.content);
-        inner.text = text;
-        if (inner.styles && inner.styles.length > 0) {
-          const len = text.length;
-          if (inner.styles.length === 1) inner.styles[0].range = [0, len];
-          else inner.styles[inner.styles.length-1].range[1] = len;
-        }
-        t.content = JSON.stringify(inner);
-        return true;
-      } catch(e) { return false; }
-    }
-  }
-  return false;
-}
-
-function ccGetLogoScale(logoFile, currentScale) {
-  const tmpl = LOGO_DIMS['logo_alpine.png'];
-  const larger = Math.max(tmpl.w, tmpl.h);
-  const nd = LOGO_DIMS[logoFile];
-  if (!nd) return currentScale;
-  return currentScale * (larger / Math.max(nd.w, nd.h));
-}
-
-function ccUpdateLogo(data, id, team) {
-  const f = LOGO_FILES[team];
-  if (!f) return false;
-  const nd = LOGO_DIMS[f];
-  for (const v of data.materials.videos) {
-    if (v.id === id) {
-      v.path = LOGO_BASE + f;
-      if (v.material_url) v.material_url = LOGO_BASE + f;
-      if (nd) { v.width = nd.w; v.height = nd.h; }
-      return true;
-    }
-  }
-  return false;
-}
-
-function ccUpdateLogoScale(data, logoId, logoFile) {
-  if (!logoFile || !LOGO_DIMS[logoFile]) return;
-  for (const track of (data.tracks||[])) {
-    for (const seg of (track.segments||[])) {
-      if (seg.material_id === logoId && seg.clip && seg.clip.scale) {
-        const ns = ccGetLogoScale(logoFile, seg.clip.scale.x);
-        seg.clip.scale.x = ns;
-        seg.clip.scale.y = ns;
-      }
-    }
-  }
-}
-
-function ccGenerate() {
-  if (!ccProjectData) {
-    showStatus('cc-status', 'Please load your draft_content.json first', 'err');
-    return;
-  }
-  const season  = document.getElementById('cc-season').value;
-  const raceNum = document.getElementById('cc-raceNum').value;
-  const track1  = document.getElementById('cc-track1').value.toUpperCase().trim() || 'LOCATION';
-  const track2  = document.getElementById('cc-track2').value.toUpperCase().trim() || 'LOCATION';
-
-  const nd = JSON.parse(JSON.stringify(ccProjectData));
-
-  ccUpdateText(nd, TEXT_IDS.season1, `SEASON ${season}`);
-  ccUpdateText(nd, TEXT_IDS.season2, `SEASON ${season}`);
-  ccUpdateText(nd, TEXT_IDS.track1,  track1);
-  ccUpdateText(nd, TEXT_IDS.track2,  track2);
-  ccUpdateText(nd, TEXT_IDS.race1,   `Race ${raceNum}`);
-  ccUpdateText(nd, TEXT_IDS.race2,   `Race ${raceNum}`);
-
-  for (let d=0; d<4; d++) {
-    ['p1','p2','p3'].forEach(pos => {
-      const name = document.getElementById(`d${d+1}${pos}n`).value.trim() || 'TBC';
-      const team = document.getElementById(`d${d+1}${pos}t`).value;
-      const lf   = LOGO_FILES[team];
-      ccUpdateText(nd, TEXT_IDS[pos][d], name);
-      ccUpdateLogo(nd, LOGO_IDS[pos][d], team);
-      ccUpdateLogoScale(nd, LOGO_IDS[pos][d], lf);
-    });
-  }
-
-  const blob  = new Blob([JSON.stringify(nd, null, 2)], {type:'application/json'});
-  const fname = `draft_content.json`;
-  const url   = URL.createObjectURL(blob);
-  const a     = document.createElement('a');
-  a.href=url; a.download=fname;
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 3000);
-  showStatus('cc-status', '✓ draft_content.json downloaded — replace in your CapCut project folder', 'ok');
-}
-
-// ═══════════════════════════════════════════════════════════════════
-// TABLE VIDEO GENERATOR
-// ═══════════════════════════════════════════════════════════════════
-
-const TB_MAX_ROWS = 12; // maximum supported
-const TB_NUM_ROWS = 12; // build 12 form rows
-
-const TB_DEFAULT = [
-  {team:'Red Bull',    driver:'', pts:0},
-  {team:'Ferrari',     driver:'', pts:0},
-  {team:'Williams',    driver:'', pts:0},
-  {team:'Aston Martin',driver:'', pts:0},
-  {team:'McLaren',     driver:'', pts:0},
-  {team:'Racing Bull', driver:'', pts:0},
-  {team:'Mercedes',    driver:'', pts:0},
-  {team:'Haas',        driver:'', pts:0},
-  {team:'Alpine',      driver:'', pts:0},
-  {team:'Audi',        driver:'', pts:0},
-  {team:'Cadillac',    driver:'', pts:0},
-  {team:'Reserve',     driver:'', pts:0},
-];
-
-function tbBuildRows(data) {
-  const g = document.getElementById('tb-rowsGrid');
-  const rows = data || TB_DEFAULT;
-  g.innerHTML = '';
-  rows.forEach((r,i) => {
-    g.innerHTML += `
-    <div class="row-entry">
-      <div class="row-pos">${i+1}</div>
-      <select class="field" id="tb-r${i}team">${teamOpts(r.team)}</select>
-      <input type="text" id="tb-r${i}driver" value="${r.driver}" placeholder="Team Principal">
-      <input type="number" id="tb-r${i}pts" value="${r.pts}" placeholder="Pts" min="0">
-    </div>`;
-  });
-}
-
-function tbGetData() {
-  const rows = [];
-  for (let i=0; i<TB_NUM_ROWS; i++) {
-    const driver = document.getElementById(`tb-r${i}driver`).value.trim();
-    const pts    = parseInt(document.getElementById(`tb-r${i}pts`).value) || 0;
-    // Only include rows that have a driver name OR points entered
-    if (!driver && pts === 0) continue;
-    rows.push({
-      team:   document.getElementById(`tb-r${i}team`).value,
-      driver: driver || 'TBC',
-      pts,
-    });
-  }
-  return {
-    season:      document.getElementById('tb-season').value,
-    gp:          document.getElementById('tb-gp').value.trim(),
-    round:       document.getElementById('tb-round').value.trim(),
-    totalRounds: document.getElementById('tb-totalRounds').value,
-    date:        document.getElementById('tb-date').value.trim(),
-    time:        document.getElementById('tb-time').value.trim(),
-    rows,
-    nextGP:    document.getElementById('tb-nextGP').value.trim() || '',
-    nextRound: document.getElementById('tb-nextRound').value.trim() || '',
-    nextDate:  document.getElementById('tb-nextDate').value.trim() || '',
-    nextTime:  document.getElementById('tb-nextTime').value.trim() || '',
-    divLeaders: window._tbDivLeaders || [],
-    trackInfo:  window._tbTrackInfo  || null,
-  };
-}
-
-// ── Auto-populate from sheet ──────────────────────────────────────
-function tbFormatDate() {
-  const raw = document.getElementById('tb-dateRaw').value;
-  if (!raw) return;
-  const d = new Date(raw + 'T00:00:00');
-  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  document.getElementById('tb-date').value = `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
-}
-
-function tbFormatNextDate() {
-  const raw = document.getElementById('tb-nextDateRaw').value;
-  if (!raw) return;
-  const d = new Date(raw + 'T00:00:00');
-  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  document.getElementById('tb-nextDate').value = `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
-}
-
-async function tbPopulate() {
-  const btn = document.getElementById('tb-populateBtn');
-  const statusEl = document.getElementById('tb-popStatus');
-  btn.disabled = true;
-  showStatus('tb-popStatus', 'Loading from sheet...', 'info');
-
-  try {
-    // Load season config via config.js
-    const seasonConfig = await getCurrentSeasonConfig();
-    if (!seasonConfig) throw new Error('Could not load season config');
-
-    const currentSeason = await getCurrentSeason();
-
-    // Update season field
-    document.getElementById('tb-season').value = currentSeason || 28;
-
-    // Get overall sheet URL + GID
-    const overallUrl = seasonConfig['overall_gid'];
-    if (!overallUrl) throw new Error('overall_gid not found in config');
-
-    const mId  = overallUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
-    const mGid = overallUrl.match(/gid=(\d+)/);
-    if (!mId || !mGid) throw new Error('Could not parse overall_gid URL');
-
-    const csvUrl = `https://docs.google.com/spreadsheets/d/${mId[1]}/export?format=csv&gid=${mGid[1]}`;
-    const res = await fetch(csvUrl);
-    if (!res.ok) throw new Error(`Sheet fetch failed: ${res.status}`);
-    const text = await res.text();
-    if (text.includes('<!DOCTYPE')) throw new Error('Sheet not published to web');
-
-    // Parse CSV
-    const lines = text.split(/\r?\n/).filter(l => l.trim());
-    const rows  = lines.map(l => {
-      const cells=[]; let cur='',inQ=false;
-      for(let i=0;i<l.length;i++){
-        const c=l[i];
-        if(c==='"'&&!inQ){inQ=true;}
-        else if(c==='"'&&inQ){if(l[i+1]==='"'){cur+='"';i++;}else{inQ=false;}}
-        else if(c===','&&!inQ){cells.push(cur.trim());cur='';}
-        else cur+=c;
-      }
-      cells.push(cur.trim());
-      return cells;
-    });
-
-    // Find header row
-    let hIdx=-1, posCol=-1, teamCol=-1, ptsCol=-1, tpCol=-1;
-    for(let i=0;i<rows.length;i++){
-      const r=rows[i];
-      const pi=r.findIndex(v=>(v||'').toLowerCase().startsWith('pos'));
-      if(pi>=0){
-        posCol=pi;
-        teamCol=r.findIndex(v=>(v||'').toLowerCase()==='team');
-        if(teamCol<0) teamCol=pi+1;
-        ptsCol=r.findIndex(v=>(v||'').toLowerCase()==='points');
-        // Look for Team Principal column — try common names
-        tpCol=r.findIndex(v=>/(team\s*principal|principal|tp\b)/i.test(v||''));
-        // If not found by name, take the last non-empty header column
-        if(tpCol<0){
-          for(let c=r.length-1;c>ptsCol;c--){
-            if((r[c]||'').trim() && isNaN(parseFloat((r[c]||'').trim()))){
-              tpCol=c; break;
-            }
-          }
-        }
-        hIdx=i; break;
-      }
-    }
-    if(hIdx<0||teamCol<0||ptsCol<0) throw new Error('Could not find standings columns in sheet');
-
-    // Extract data rows, sort by points desc
-    const data=[];
-    for(let i=hIdx+1;i<rows.length;i++){
-      const r=rows[i];
-      const team=(r[teamCol]||'').trim();
-      const ptsRaw=(r[ptsCol]||'').trim().replace(/,/g,'');
-      if(!team||!ptsRaw) continue;
-      const pts=Math.floor(parseFloat(ptsRaw))||0;
-      data.push({team, driver:'', pts});
-    }
-    data.sort((a,b)=>b.pts-a.pts);
-
-    if(!data.length) throw new Error('No data found in sheet');
-
-    // Fill up to TB_MAX_ROWS, leave extras blank
-    const filled=[];
-    for(let i=0;i<TB_MAX_ROWS;i++){
-      filled.push(data[i] || {team:TB_DEFAULT[i]?.team||'Reserve', driver:'', pts:0});
-    }
-
-    // Now fetch TP names from D1 data sheet
-    try {
-      const d1SheetId  = seasonConfig['d1_sheet_id'];
-      const d1InfoGid  = seasonConfig['d1_team_info_gid'];
-      if(d1SheetId && d1InfoGid){
-        const infoUrl = `https://docs.google.com/spreadsheets/d/${d1SheetId}/export?format=csv&gid=${d1InfoGid}`;
-        const infoRes = await fetch(infoUrl);
-        const infoText = await infoRes.text();
-        if(!infoText.includes('<!DOCTYPE')){
-          const infoRows = infoText.split(/\r?\n/).map(l => {
-            const cells=[]; let cur='',inQ=false;
-            for(let i=0;i<l.length;i++){
-              const c=l[i];
-              if(c==='"'&&!inQ){inQ=true;}
-              else if(c==='"'&&inQ){if(l[i+1]==='"'){cur+='"';i++;}else{inQ=false;}}
-              else if(c===','&&!inQ){cells.push(cur.trim());cur='';}
-              else cur+=c;
-            }
-            cells.push(cur.trim());
-            return cells;
-          });
-          // Find "Team Principal" header in col J (index 9)
-          const teamOwners={};
-          let tpStart=-1;
-          for(let i=0;i<infoRows.length;i++){
-            if((infoRows[i][9]||'').trim().toLowerCase()==='team principal'){ tpStart=i+2; break; }
-          }
-          if(tpStart>=0){
-            for(let i=tpStart;i<infoRows.length;i++){
-              const tp=(infoRows[i][9]||'').trim();
-              const team=(infoRows[i][10]||'').trim().toLowerCase();
-              if(!tp||!team) continue;
-              teamOwners[team]=tp;
-            }
-          }
-          // Apply TP names to filled rows
-          filled.forEach(row=>{
-            if(!row.driver) row.driver = teamOwners[row.team.toLowerCase()]||'';
-          });
-        }
-      }
-    } catch(e){ console.warn('TP fetch failed:', e); }
-
-    // Fetch division leaders (P1 from each division's driver results)
-    const divLeaders = [];
-    const divCount = parseInt(seasonConfig['divisions'])||4;
-    for(let d=1;d<=divCount;d++){
-      try{
-        const dSheetId  = seasonConfig[`d${d}_sheet_id`];
-        const dResGid   = seasonConfig[`d${d}_driver_results_gid`];
-        console.log(`D${d} sheetId:`, dSheetId, 'resGid:', dResGid);
-        if(!dSheetId||!dResGid){ console.warn(`D${d}: missing sheetId or gid`); divLeaders.push(null); continue; }
-        const dUrl = `https://docs.google.com/spreadsheets/d/${dSheetId}/export?format=csv&gid=${dResGid}`;
-        const dRes = await fetch(dUrl);
-        const dText = await dRes.text();
-        console.log(`D${d} fetch status:`, dRes.status, 'text start:', dText.substring(0,80));
-        if(dText.includes('<!DOCTYPE')){ console.warn(`D${d}: not published`); divLeaders.push(null); continue; }
-        const dRows = dText.split(/\r?\n/).map(l=>{
-          const cells=[]; let cur='',inQ=false;
-          for(let i=0;i<l.length;i++){
-            const c=l[i];
-            if(c==='"'&&!inQ){inQ=true;}
-            else if(c==='"'&&inQ){if(l[i+1]==='"'){cur+='"';i++;}else{inQ=false;}}
-            else if(c===','&&!inQ){cells.push(cur.trim());cur='';}
-            else cur+=c;
-          }
-          cells.push(cur.trim());
-          return cells;
-        });
-        // Find header row (Pos, Nat, Driver, Team...) — skip empty rows
-        let hRow=-1;
-        for(let i=0;i<dRows.length;i++){
-          const v = (dRows[i][0]||'').toLowerCase().trim();
-          if(v==='pos'){ hRow=i; break; }
-        }
-        if(hRow<0){ divLeaders.push(null); continue; }
-        // Find first data row with a valid position number
-        let p1Row = null;
-        for(let i=hRow+1;i<dRows.length;i++){
-          const pos = (dRows[i][0]||'').trim();
-          const driver = (dRows[i][2]||'').trim();
-          if(pos && driver && !isNaN(parseInt(pos))){ p1Row = dRows[i]; break; }
-        }
-        if(!p1Row){ divLeaders.push(null); continue; }
-        // Find points column — search header for 'points', fallback to last non-empty header col
-        const hRowData = dRows[hRow];
-        let ptsCol = hRowData.findIndex(v => (v||'').toLowerCase().trim() === 'points');
-        if(ptsCol < 0) {
-          // Find last non-empty header cell
-          for(let c = hRowData.length-1; c >= 4; c--) {
-            if((hRowData[c]||'').trim()) { ptsCol = c; break; }
-          }
-        }
-        if(ptsCol < 0) ptsCol = 31;
-        divLeaders.push({
-          driver: (p1Row[2]||'').trim(),
-          team:   (p1Row[3]||'').trim(),
-          pts:    parseInt((p1Row[ptsCol]||'0').replace(/,/g,''))||0,
-          div:    d,
-        });
-      } catch(e){ console.error(`D${d} leaders fetch failed:`, e.message); divLeaders.push(null); }
-    }
-    window._tbDivLeaders = divLeaders;
-
-    // Fetch track info from Track Records sheet
-    try {
-      const trackInfoUrl = `https://docs.google.com/spreadsheets/d/18vD7g_29uzRSr_GYbXkNjclCHe8F_bsp4cY69TjXrW4/export?format=csv&gid=1416959538`;
-      const tiRes = await fetch(trackInfoUrl);
-      const tiText = await tiRes.text();
-      if(!tiText.includes('<!DOCTYPE')) {
-        const tiRows = tiText.split(/\r?\n/).map(l=>{
-          const cells=[]; let cur='',inQ=false;
-          for(let i=0;i<l.length;i++){
-            const c=l[i];
-            if(c==='"'&&!inQ){inQ=true;}
-            else if(c==='"'&&inQ){if(l[i+1]==='"'){cur+='"';i++;}else{inQ=false;}}
-            else if(c===','&&!inQ){cells.push(cur.trim());cur='';}
-            else cur+=c;
-          }
-          cells.push(cur.trim()); return cells;
-        });
-        // Find matching track by GP name (col B = Race Name, col A = Country)
-        const nextGP = (document.getElementById('tb-nextGP').value||'').toLowerCase();
-        let matchRow = null;
-        for(let i=1;i<tiRows.length;i++){
-          const country   = (tiRows[i][0]||'').toLowerCase();
-          const raceName  = (tiRows[i][1]||'').toLowerCase();
-          const circuit   = (tiRows[i][2]||'').toLowerCase();
-          if(raceName.includes(nextGP)||nextGP.includes(country)||country.includes(nextGP)) {
-            matchRow = tiRows[i]; break;
-          }
-        }
-        if(matchRow) {
-          const trackInfo = {
-            country:    matchRow[0]||'',
-            raceName:   matchRow[1]||'',
-            circuit:    matchRow[2]||'',
-            length:     matchRow[3]||'',
-            laps:       matchRow[4]||'',
-            sprintLaps: matchRow[5]||'',
-            firstRaced: matchRow[6]||'',
-          };
-          // Load track image
-          const slug = trackInfo.country.toLowerCase().replace(/\s+/g,'');
-          const imgSrc = `https://f1xl2010.github.io/images/tracks/${slug}_track.png`;
-          await new Promise(resolve => {
-            const img = new Image();
-            img.crossOrigin = 'anonymous';
-            img.onload  = () => { trackInfo._img = img; resolve(); };
-            img.onerror = () => resolve();
-            img.src = imgSrc;
-          });
-          window._tbTrackInfo = trackInfo;
-          console.log('Track info loaded:', trackInfo.circuit);
-        } else {
-          window._tbTrackInfo = null;
-          console.warn('No track info found for:', nextGP);
-        }
-      }
-    } catch(e) { console.warn('Track info fetch failed:', e.message); window._tbTrackInfo = null; }
-
-    // Rebuild rows with populated data
-    tbBuildRows(filled);
-    showStatus('tb-popStatus', `✓ Populated ${data.length} rows + division leaders + track info`, 'ok');
-
-  } catch(e) {
-    showStatus('tb-popStatus', 'Error: ' + e.message, 'err');
-    console.error('Populate error:', e);
-  } finally {
-    btn.disabled = false;
-  }
-}
-
-// ── Font ─────────────────────────────────────────────────────────
-
-// ─── GP TO FLAG MAPPING ──────────────────────────────────────────────────────
-const GP_FLAG = {
-  'bahrain':'bh','saudi arabia':'sa','australia':'au','japan':'jp','china':'cn',
-  'miami':'us','emilia romagna':'it','monaco':'mc','canada':'ca','spain':'es',
-  'austria':'at','great britain':'gb','hungary':'hu','belgium':'be','netherlands':'nl',
-  'italy':'it','azerbaijan':'az','singapore':'sg','united states':'us','mexico':'mx',
-  'brazil':'br','las vegas':'us','qatar':'qa','abu dhabi':'ae','britain':'gb',
-  'usa':'us','mexico city':'mx','são paulo':'br','sao paulo':'br','belgium':'be',
-};
-function getFlag(gpName){
-  const key=(gpName||'').toLowerCase().replace(' grand prix','').trim();
-  const code=GP_FLAG[key]||'';
-  return code?`https://f1xl2010.github.io/images/smallflags/${code}.svg`:'';
-}
-const flagCache={};
-function loadFlag(src){
-  if(!src) return Promise.resolve(null);
-  if(flagCache[src]) return Promise.resolve(flagCache[src]);
-  return new Promise(resolve=>{
-    const img=new Image();
-    img.crossOrigin='anonymous';
-    img.onload=()=>{flagCache[src]=img;resolve(img);};
-    img.onerror=()=>resolve(null);
-    img.src=src;
-  });
-}
-
-const F1_FONT_URL = 'https://f1xl2010.github.io/video-gen/assets/fonts/Formula1-Regular_web_0.ttf';
-let f1FontLoaded = false;
-
-async function loadF1Font() {
-  if (f1FontLoaded) return;
-  try {
-    const font = new FontFace('Formula1', `url(${F1_FONT_URL})`);
-    await font.load();
-    document.fonts.add(font);
-    f1FontLoaded = true;
-  } catch(e) { console.warn('Formula1 font failed, using fallback:', e); }
-}
-
-// ── Logo image cache ─────────────────────────────────────────────
-const tbImgCache = {};
-
-function tbLoadImg(src) {
-  if (tbImgCache[src]) return Promise.resolve(tbImgCache[src]);
-  return new Promise(resolve => {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload  = () => { tbImgCache[src] = img; resolve(img); };
-    img.onerror = () => resolve(null);
-    img.src = src;
-  });
-}
-
-async function tbPreloadLogos(rows) {
-  const teams = [...new Set(rows.map(r => r.team))];
-  await Promise.all(teams.map(t => {
-    const f = LOGO_FILES[t];
-    return f ? tbLoadImg(LOGO_BASE + f) : Promise.resolve();
-  }));
-}
-
-// ── Render ────────────────────────────────────────────────────────
-const FPS=30, W=1440, H=2560;
-const T_HEADER=1.2, T_ROW_START=8.25, T_ROW_GAP=0.18, T_HOLD=10.0;
-const T_EXIT_START_OFFSET = T_ROW_START + (12 * T_ROW_GAP) + 0.6 + T_HOLD;
-const T_EXIT_GAP  = 0.15;
-const T_EXIT_DUR  = 0.9;
-const T_FLIP_OFFSET = 1.2;
-const T_FLIP_DUR  = 1.4;
-const T_FLIP_GAP  = 0.45;
-const T_HOLD_END  = 6.0;  // generous buffer
-const T_BOX_OFFSET = 1.0; // boxes start appearing after flip settles
-const T_BOX_DUR    = 3.0; // box 1 and 3 reveal duration
-const T_BOX_DUR2   = 4.0; // box 2 reveal duration
-const T_BOX_GAP    = 1.0; // stagger between boxes
-const TOTAL_DUR = T_EXIT_START_OFFSET + (14 * T_EXIT_GAP) + T_EXIT_DUR + T_FLIP_OFFSET + T_FLIP_GAP + T_FLIP_DUR + T_BOX_OFFSET + (4 * T_BOX_GAP) + T_BOX_DUR + T_HOLD_END;
-
-function easeOut3(t){return 1-Math.pow(1-Math.min(t,1),3);}
-function easeOut5(t){return 1-Math.pow(1-Math.min(t,1),5);}
-function easeIO2(t){t=Math.min(t,1);return t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;}
-function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
-function tbSetProgress(pct,label){
-  document.getElementById('tb-progBar').style.width=pct+'%';
-  document.getElementById('tb-progLabel').textContent=label;
-}
 
 function tbRenderFrame(ctx, data, t) {
   const S=2;
@@ -1268,486 +1083,6 @@ function tbRenderFrame(ctx, data, t) {
         ctx.fillText(leader?.team||'', bx+38*S, rm+8*S);
         ctx.font=`400 ${13*S}px ${F1}`; ctx.fillStyle='#ffffff';
         ctx.textAlign='right';
-        ctx.fillText(leader?.pts||'', bx+bw-14*S, rm);
-        if(d<3){
-          ctx.strokeStyle='rgba(255,255,255,0.07)'; ctx.lineWidth=S;
-          ctx.beginPath(); ctx.moveTo(bx,ry+rowH2-S); ctx.lineTo(bx+bw,ry+rowH2-S); ctx.stroke();
-        }
-      }
-      ctx.restore();
-      ctx.save(); ctx.globalAlpha=b3P;
-      ctx.strokeStyle='rgba(255,255,255,0.1)'; ctx.lineWidth=S;
-      ctx.strokeRect(bx,by,bw,bh); ctx.restore();
-    }
-  }
-
-  // Bottom + top bars always on top
-  ctx.fillStyle='#e10600';
-  ctx.fillRect(0,0,RW,4*S);
-  ctx.fillRect(0,RH-4*S,RW,4*S);
-}
-
-async function tbGenerate() {
-  console.log('tbGenerate called');
-  const btn=document.getElementById('tb-genBtn');
-  const pa=document.getElementById('tb-progArea');
-  btn.disabled=true;pa.style.display='block';
-  tbSetProgress(2,'Loading font & logos...');
-
-  const data=tbGetData();
-
-  // Preload font and logos before rendering
-  // Preload flag for next race
-  const flagSrc = getFlag(data.nextGP || '');
-  try {
-    await Promise.all([loadF1Font(), tbPreloadLogos(data.rows), loadFlag(flagSrc)]);
-  } catch(e) { console.error('Preload error:', e); }
-
-  tbSetProgress(8,'Starting render...');
-  const canvas=document.getElementById('renderCanvas2');
-  const ctx=canvas.getContext('2d');
-
-  const mime=['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm']
-    .find(m=>MediaRecorder.isTypeSupported(m))||'video/webm';
-
-  const stream=canvas.captureStream(FPS);
-  const chunks=[];
-  const recorder=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:20_000_000});
-  recorder.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data);};
-  recorder.start(100);
-
-  const numRows = (data.rows || []).length;
-  console.log('numRows:', numRows, 'T_BOX_DUR2:', typeof T_BOX_DUR2, T_BOX_DUR2, 'T_BOX_GAP:', T_BOX_GAP);
-  const flipPhaseStartCalc = T_EXIT_START_OFFSET + (numRows + 1) * T_EXIT_GAP + T_EXIT_DUR + T_FLIP_OFFSET;
-  const boxPhaseStartCalc  = flipPhaseStartCalc + T_FLIP_GAP + T_FLIP_DUR + T_BOX_OFFSET;
-  const TOTAL_DUR_DYNAMIC  = boxPhaseStartCalc + T_BOX_GAP * 2 + T_BOX_DUR2 + T_HOLD_END;
-  console.log(`Rows: ${numRows}, flipStart: ${flipPhaseStartCalc.toFixed(2)}, boxStart: ${boxPhaseStartCalc.toFixed(2)}, totalDur: ${TOTAL_DUR_DYNAMIC.toFixed(2)}`);
-  const totalFrames = Math.ceil(TOTAL_DUR_DYNAMIC * FPS);
-  let frame=0;
-  const msPerFrame = 1000/FPS; // ~33.3ms per frame at 30fps
-
-  await new Promise(resolve=>{
-    function next(){
-      if(frame>=totalFrames){resolve();return;}
-      const frameStart=performance.now();
-      tbRenderFrame(ctx,data,frame/FPS);
-      frame++;
-      if(frame%15===0) tbSetProgress(8+Math.round((frame/totalFrames)*86),`Frame ${frame}/${totalFrames}`);
-      // Schedule next frame at correct interval so recorder captures at right rate
-      const elapsed=performance.now()-frameStart;
-      const delay=Math.max(0, msPerFrame-elapsed);
-      setTimeout(next, delay);
-    }
-    next();
-  });
-
-  recorder.stop();
-  await new Promise(r=>recorder.onstop=r);
-  tbSetProgress(98,'Packaging...');
-
-  const blob=new Blob(chunks,{type:mime});
-  const fname=`F1XL_S${data.season}_R${data.round}_${data.gp.replace(/\s+/g,'_')}_Table.webm`;
-  tbSetProgress(100,'Done — downloading!');
-
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url;a.download=fname;
-  document.body.appendChild(a);a.click();document.body.removeChild(a);
-  setTimeout(()=>URL.revokeObjectURL(url),5000);
-
-  setTimeout(()=>{btn.disabled=false;pa.style.display='none';tbSetProgress(0,'');},2500);
-}
-
-
-// ─── INIT ────────────────────────────────────────────────────────────────────
-
-// ── Race Results & Driver Standings ────────────────────────────────────────
-async function rcPopulate() {
-  showStatus('rc-status', 'Loading...', 'loading');
-  try {
-    const cfg = await loadConfig();
-    const { season, sc } = await getSeasonConfig(cfg);
-
-    // Update season field
-    document.getElementById('rc-season').value = season;
-
-    const div = document.getElementById('rc-division').value;
-    const sheetId = sc[`d${div}_sheet_id`];
-    const calGid  = sc[`d${div}_calendar_gid`];
-    const resGid  = sc[`d${div}_driver_results_gid`];
-
-    if (!sheetId) throw new Error(`No sheet ID for Division ${div}`);
-
-    // Find most recent completed round from calendar
-    let latestRound = null, latestTrack = '', latestDate = '';
-    if (calGid) {
-      const calText = await fetchCSV(sheetId, calGid);
-      const calRows = parseCSV(calText);
-      const now = new Date();
-      for (let i = 1; i < calRows.length; i++) {
-        const round = (calRows[i][0]||'').trim();
-        const track = (calRows[i][3]||'').trim();
-        const dateStr = (calRows[i][2]||'').trim();
-        if (!round || !track || !dateStr) continue;
-        const [d,m,y] = dateStr.split('/');
-        if (!d||!m||!y) continue;
-        const raceDate = new Date(parseInt(y), parseInt(m)-1, parseInt(d));
-        if (raceDate <= now) { latestRound = round; latestTrack = track; latestDate = dateStr; }
-      }
-    }
-
-    if (latestRound) {
-      document.getElementById('rc-round').value = latestRound;
-      document.getElementById('rc-gp').value = latestTrack;
-      // Format date
-      const [d,m,y] = latestDate.split('/');
-      if (d&&m&&y) {
-        const dt = new Date(parseInt(y), parseInt(m)-1, parseInt(d));
-        const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-        document.getElementById('rc-date').value = `${days[dt.getDay()]} ${parseInt(d)} ${months[dt.getMonth()]}`;
-        document.getElementById('rc-dateRaw').value = `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
-      }
-    }
-
-    // Fetch race results from R{round} tab
-    const rTabGid = sc[`d${div}_r${latestRound}_gid`];
-    window._rcRaceRows = [];
-    if (rTabGid) {
-      const rText = await fetchCSV(sheetId, rTabGid);
-      const rRows = parseCSV(rText);
-      // Find main race section — header "Pos" after "Race" label
-      let raceStart = -1;
-      for (let i = 0; i < rRows.length; i++) {
-        if ((rRows[i][0]||'').toLowerCase().trim() === 'pos' && i > 5) { raceStart = i + 1; break; }
-      }
-      if (raceStart >= 0) {
-        for (let i = raceStart; i < Math.min(raceStart + 10, rRows.length); i++) {
-          const pos    = (rRows[i][0]||'').trim();
-          const driver = (rRows[i][3]||'').trim();
-          const team   = (rRows[i][4]||'').trim();
-          if (!driver || !pos) break;
-          window._rcRaceRows.push({ pos, driver, team });
-        }
-      }
-    }
-
-    // Fetch driver standings
-    window._rcStandingsRows = [];
-    if (resGid) {
-      const sText = await fetchCSV(sheetId, resGid);
-      const sRows = parseCSV(sText);
-      let hRow = -1;
-      for (let i = 0; i < sRows.length; i++) {
-        if ((sRows[i][0]||'').toLowerCase().trim() === 'pos') { hRow = i; break; }
-      }
-      if (hRow >= 0) {
-        const hRowData = sRows[hRow];
-        let ptsCol = hRowData.findIndex(v => (v||'').toLowerCase().trim() === 'points');
-        if (ptsCol < 0) ptsCol = 31;
-        let gapCol = hRowData.findIndex(v => (v||'').toLowerCase().trim() === 'gap');
-        for (let i = hRow + 1; i < sRows.length; i++) {
-          const driver = (sRows[i][2]||'').trim();
-          const team   = (sRows[i][3]||'').trim();
-          const pts    = (sRows[i][ptsCol]||'').trim();
-          const gap    = gapCol >= 0 ? (sRows[i][gapCol]||'').trim() : '';
-          if (!driver) break;
-          window._rcStandingsRows.push({ driver, team, pts, gap });
-        }
-      }
-    }
-
-    showStatus('rc-status', `✓ Loaded R${latestRound} ${latestTrack} — ${window._rcRaceRows.length} race results, ${window._rcStandingsRows.length} standings rows`, 'ok');
-    document.getElementById('rc-preview-card').style.display = 'block';
-    rcRenderPreview();
-  } catch(e) {
-    showStatus('rc-status', `Error: ${e.message}`, 'error');
-  }
-}
-
-function rcRenderPreview() {
-  const canvas = document.getElementById('rc-canvas');
-  const ctx = canvas.getContext('2d');
-  const data = rcGetData();
-  // Render first frame for preview
-  tbRenderFrame(ctx, data, 0, 0.5);
-}
-
-function rcGetData() {
-  const season      = document.getElementById('rc-season').value;
-  const gp          = document.getElementById('rc-gp').value.trim();
-  const round       = document.getElementById('rc-round').value.trim();
-  const totalRounds = document.getElementById('rc-totalRounds').value;
-  const date        = document.getElementById('rc-date').value.trim();
-  const div         = document.getElementById('rc-division').value;
-
-  // Build rows from standings (driver standings with points & gap)
-  const rows = (window._rcStandingsRows || []).map(r => ({
-    team:   r.team,
-    driver: r.driver,
-    pts:    parseFloat(r.pts) || 0,
-    gap:    r.gap,
-  }));
-
-  // Race results for the top box
-  const raceResults = window._rcRaceRows || [];
-
-  return {
-    season, gp, round, totalRounds, date,
-    time: '21:00 BST',
-    rows,
-    raceResults,
-    isRaceResults: true,
-    divisionLabel: `Division ${div}`,
-    nextGP: '', nextRound: '', nextDate: '', nextTime: '',
-    divLeaders: [],
-    trackInfo: window._tbTrackInfo || null,
-  };
-}
-
-function rcDownloadImage() {
-  const canvas = document.getElementById('rc-canvas');
-  const data = rcGetData();
-  tbRenderFrame(canvas.getContext('2d'), data, 5, 1);
-  const a = document.createElement('a');
-  a.href = canvas.toDataURL('image/png');
-  a.download = `F1XL_S${data.season}_R${data.round}_D${document.getElementById('rc-division').value}_Results.png`;
-  a.click();
-}
-
-async function rcGenerate() {
-  const btn = document.getElementById('rc-genBtn') || { disabled: false };
-  showStatus('rc-gen-status', 'Rendering...', 'loading');
-  const data = rcGetData();
-  await runGenerate(data, 'rc-canvas', `F1XL_S${data.season}_R${data.round}_${data.gp.replace(/\s+/g,'_')}_D${document.getElementById('rc-division').value}_Results.webm`, 'rc-gen-status');
-}
-
-// ── Constructors & Overall Table ────────────────────────────────────────────
-async function coPopulate() {
-  showStatus('co-status', 'Loading...', 'loading');
-  try {
-    const cfg = await loadConfig();
-    const { season, sc } = await getSeasonConfig(cfg);
-    document.getElementById('co-season').value = season;
-
-    const div = document.getElementById('co-division').value;
-    const isOverall = div === 'overall';
-
-    window._coRows = [];
-
-    if (isOverall) {
-      // Fetch overall constructors from overall_gid
-      const overallUrl = sc['overall_gid'] || cfg['overall_gid'];
-      if (!overallUrl) throw new Error('No overall_gid in config');
-      const idM  = overallUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
-      const gidM = overallUrl.match(/gid=(\d+)/);
-      if (!idM) throw new Error('Invalid overall URL');
-      const text = await fetchCSV(idM[1], gidM?.[1]||'0');
-      const rows = parseCSV(text);
-      let hi = -1;
-      for (let i = 0; i < rows.length; i++) {
-        if ((rows[i][0]||'').toLowerCase().includes('pos') || (rows[i][1]||'').toLowerCase().includes('team')) { hi = i; break; }
-      }
-      if (hi >= 0) {
-        for (let i = hi + 1; i < rows.length; i++) {
-          const team = (rows[i][1]||'').trim() || (rows[i][0]||'').trim();
-          const pts  = (rows[i][3]||'').trim() || (rows[i][2]||'').trim();
-          const tp   = (rows[i][2]||'').trim();
-          if (!team || !pts) break;
-          window._coRows.push({ team, pts: parseFloat(pts)||0, tp, isOverall: true });
-        }
-      }
-    } else {
-      // Fetch per-division constructors
-      const sheetId  = sc[`d${div}_sheet_id`];
-      const consGid  = sc[`d${div}_constructors_gid`];
-      if (!sheetId || !consGid) throw new Error(`No constructors GID for Division ${div}`);
-      const text = await fetchCSV(sheetId, consGid);
-      const rows = parseCSV(text);
-      let hi = -1;
-      for (let i = 0; i < rows.length; i++) {
-        if ((rows[i][0]||'').toLowerCase().trim() === 'pos') { hi = i; break; }
-      }
-      if (hi >= 0) {
-        const hRowData = rows[hi];
-        let ptsCol = hRowData.findIndex(v => (v||'').toLowerCase().trim() === 'points');
-        if (ptsCol < 0) ptsCol = 2;
-        let gapCol = hRowData.findIndex(v => (v||'').toLowerCase().trim() === 'gap');
-        for (let i = hi + 1; i < rows.length; i++) {
-          const team = (rows[i][1]||'').trim();
-          const pts  = (rows[i][ptsCol]||'').trim();
-          const gap  = gapCol >= 0 ? (rows[i][gapCol]||'').trim() : '';
-          if (!team) break;
-          window._coRows.push({ team, pts: parseFloat(pts)||0, gap, isOverall: false });
-        }
-      }
-    }
-
-    showStatus('co-status', `✓ Loaded ${isOverall ? 'Overall' : `Division ${div}`} Constructors — ${window._coRows.length} teams`, 'ok');
-    document.getElementById('co-preview-card').style.display = 'block';
-    coRenderPreview();
-  } catch(e) {
-    showStatus('co-status', `Error: ${e.message}`, 'error');
-  }
-}
-
-function coGetData() {
-  const season      = document.getElementById('co-season').value;
-  const gp          = document.getElementById('co-gp').value.trim();
-  const round       = document.getElementById('co-round').value.trim();
-  const totalRounds = document.getElementById('co-totalRounds').value;
-  const date        = document.getElementById('co-date').value.trim();
-  const div         = document.getElementById('co-division').value;
-  const isOverall   = div === 'overall';
-
-  const rows = (window._coRows || []).map(r => ({
-    team:   r.team,
-    driver: r.tp || r.team,
-    pts:    r.pts,
-    gap:    r.gap || '',
-  }));
-
-  return {
-    season, gp, round, totalRounds, date,
-    time: '21:00 BST',
-    rows,
-    isConstructors: true,
-    showTP: isOverall,
-    divisionLabel: isOverall ? 'Overall Constructors' : `Division ${div} Constructors`,
-    nextGP: '', nextRound: '', nextDate: '', nextTime: '',
-    divLeaders: [],
-    trackInfo: window._tbTrackInfo || null,
-  };
-}
-
-function coRenderPreview() {
-  const canvas = document.getElementById('co-canvas');
-  tbRenderFrame(canvas.getContext('2d'), coGetData(), 0, 0.5);
-}
-
-function coDownloadImage() {
-  const canvas = document.getElementById('co-canvas');
-  const data = coGetData();
-  tbRenderFrame(canvas.getContext('2d'), data, 5, 1);
-  const a = document.createElement('a');
-  a.href = canvas.toDataURL('image/png');
-  a.download = `F1XL_S${data.season}_R${data.round}_Constructors_${document.getElementById('co-division').value}.png`;
-  a.click();
-}
-
-async function coGenerate() {
-  showStatus('co-gen-status', 'Rendering...', 'loading');
-  const data = coGetData();
-  await runGenerate(data, 'co-canvas', `F1XL_S${data.season}_R${data.round}_Constructors_${document.getElementById('co-division').value}.webm`, 'co-gen-status');
-}
-
-// ── Shared generate runner ───────────────────────────────────────────────────
-async function runGenerate(data, canvasId, filename, statusId) {
-  const canvas = document.getElementById(canvasId);
-  const ctx = canvas.getContext('2d');
-
-  try {
-    await Promise.all([loadF1Font(), tbPreloadLogos(data.rows)]);
-  } catch(e) {}
-
-  const mime = ['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm']
-    .find(m => MediaRecorder.isTypeSupported(m)) || 'video/webm';
-
-  const stream = canvas.captureStream(FPS);
-  const chunks = [];
-  const recorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 20_000_000 });
-  recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
-  recorder.start(100);
-
-  const numRows = (data.rows || []).length;
-  const flipPhaseStart = T_EXIT_START_OFFSET + (numRows + 1) * T_EXIT_GAP + T_EXIT_DUR + T_FLIP_OFFSET;
-  const boxPhaseStart  = flipPhaseStart + T_FLIP_GAP + T_FLIP_DUR + T_BOX_OFFSET;
-  const TOTAL_DUR      = boxPhaseStart + T_BOX_GAP * 2 + T_BOX_DUR2 + T_HOLD_END;
-  const totalFrames    = Math.ceil(TOTAL_DUR * FPS);
-  let frame = 0;
-  const msPerFrame = 1000 / FPS;
-
-  await new Promise(resolve => {
-    function next() {
-      if (frame >= totalFrames) { resolve(); return; }
-      const start = performance.now();
-      tbRenderFrame(ctx, data, frame / FPS);
-      frame++;
-      if (frame % 15 === 0) showStatus(statusId, `Rendering frame ${frame}/${totalFrames}...`, 'loading');
-      const elapsed = performance.now() - start;
-      setTimeout(next, Math.max(0, msPerFrame - elapsed));
-    }
-    next();
-  });
-
-  recorder.stop();
-  await new Promise(r => recorder.onstop = r);
-
-  const blob = new Blob(chunks, { type: mime });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = filename;
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 5000);
-  showStatus(statusId, '✓ Done — video downloaded!', 'ok');
-}
-
-// ── Helper: load config ──────────────────────────────────────────────────────
-const CONFIG_SHEET_ID = '1ThIh7aKlGOuv83v9IJVSGpuspZLl0c9ajE0GJBpuCtk';
-const CONFIG_GID      = '0';
-
-function parseCSV(text) {
-  return text.split(/\r?\n/).filter(l => l.trim()).map(line => {
-    const cells = []; let cur = '', inQ = false;
-    for (let i = 0; i < line.length; i++) {
-      const c = line[i];
-      if (c==='"'&&!inQ){inQ=true;}
-      else if(c==='"'&&inQ){if(line[i+1]==='"'){cur+='"';i++;}else{inQ=false;}}
-      else if(c===','&&!inQ){cells.push(cur.trim());cur='';}
-      else cur+=c;
-    }
-    cells.push(cur.trim());
-    return cells;
-  });
-}
-
-async function loadConfig() {
-  const text = await fetchCSV(CONFIG_SHEET_ID, CONFIG_GID);
-  const rows = parseCSV(text);
-  const map = {};
-  for (const r of rows) {
-    const k = (r[0]||'').trim().toLowerCase();
-    const v = (r[1]||'').trim();
-    if (k && v) map[k] = v;
-  }
-  return map;
-}
-
-async function getSeasonConfig(cfg) {
-  let latest = 0, latestGid = null;
-  for (const k of Object.keys(cfg)) {
-    const m = k.match(/^s(\d+)_gid$/);
-    if (m) { const n = parseInt(m[1]); if (n > latest) { latest = n; latestGid = cfg[k]; } }
-  }
-  if (!latestGid) return { season: latest, sc: {} };
-  const text = await fetchCSV(CONFIG_SHEET_ID, latestGid);
-  const rows = parseCSV(text);
-  const sc = {};
-  for (const r of rows) {
-    const k = (r[0]||'').trim().toLowerCase();
-    const v = (r[1]||'').trim();
-    if (k && v) sc[k] = v;
-  }
-  return { season: latest, sc };
-}
-
-async function fetchCSV(sheetId, gid) {
-  const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
-  const r = await fetch(url);
-  return await r.text();
-}
-
-tbBuildRows();
 </script>
 </body>
 </html>
