@@ -624,7 +624,7 @@ async function tbPopulate() {
         const dSheetId  = seasonConfig[`d${d}_sheet_id`];
         const dResGid   = seasonConfig[`d${d}_driver_results_gid`];
         if(!dSheetId||!dResGid){ divLeaders.push(null); continue; }
-        const dUrl = `https://docs.google.com/spreadsheets/d/${dSheetId}/export?format=csv&gid=${dResGid}`;
+        const dUrl = `https://docs.google.com/spreadsheets/d/${dSheetId}/gviz/tq?tqx=out:csv&gid=${dResGid}`;
         const dRes = await fetch(dUrl);
         const dText = await dRes.text();
         if(dText.includes('<!DOCTYPE')){ divLeaders.push(null); continue; }
@@ -655,10 +655,16 @@ async function tbPopulate() {
           if(pos && driver && !isNaN(parseInt(pos))){ p1Row = dRows[i]; break; }
         }
         if(!p1Row){ divLeaders.push(null); continue; }
-        // Find points column from header row
+        // Find points column — search header for 'points', fallback to last non-empty header col
         const hRowData = dRows[hRow];
         let ptsCol = hRowData.findIndex(v => (v||'').toLowerCase().trim() === 'points');
-        if(ptsCol < 0) ptsCol = 31; // fallback to col AF
+        if(ptsCol < 0) {
+          // Find last non-empty header cell
+          for(let c = hRowData.length-1; c >= 4; c--) {
+            if((hRowData[c]||'').trim()) { ptsCol = c; break; }
+          }
+        }
+        if(ptsCol < 0) ptsCol = 31;
         divLeaders.push({
           driver: (p1Row[2]||'').trim(),
           team:   (p1Row[3]||'').trim(),
