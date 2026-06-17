@@ -618,16 +618,18 @@ async function tbPopulate() {
 
     // Fetch division leaders (P1 from each division's driver results)
     const divLeaders = [];
-    const divCount = 4; // fetch D1-D4
+    const divCount = parseInt(seasonConfig['divisions'])||4;
     for(let d=1;d<=divCount;d++){
       try{
         const dSheetId  = seasonConfig[`d${d}_sheet_id`];
         const dResGid   = seasonConfig[`d${d}_driver_results_gid`];
-        if(!dSheetId||!dResGid){ divLeaders.push(null); continue; }
-        const dUrl = `https://docs.google.com/spreadsheets/d/${dSheetId}/gviz/tq?tqx=out:csv&gid=${dResGid}`;
+        console.log(`D${d} sheetId:`, dSheetId, 'resGid:', dResGid);
+        if(!dSheetId||!dResGid){ console.warn(`D${d}: missing sheetId or gid`); divLeaders.push(null); continue; }
+        const dUrl = `https://docs.google.com/spreadsheets/d/${dSheetId}/export?format=csv&gid=${dResGid}`;
         const dRes = await fetch(dUrl);
         const dText = await dRes.text();
-        if(dText.includes('<!DOCTYPE')){ divLeaders.push(null); continue; }
+        console.log(`D${d} fetch status:`, dRes.status, 'text start:', dText.substring(0,80));
+        if(dText.includes('<!DOCTYPE')){ console.warn(`D${d}: not published`); divLeaders.push(null); continue; }
         const dRows = dText.split(/\r?\n/).map(l=>{
           const cells=[]; let cur='',inQ=false;
           for(let i=0;i<l.length;i++){
@@ -671,7 +673,7 @@ async function tbPopulate() {
           pts:    parseInt((p1Row[ptsCol]||'0').replace(/,/g,''))||0,
           div:    d,
         });
-      } catch(e){ divLeaders.push(null); }
+      } catch(e){ console.error(`D${d} leaders fetch failed:`, e.message); divLeaders.push(null); }
     }
     window._tbDivLeaders = divLeaders;
 
