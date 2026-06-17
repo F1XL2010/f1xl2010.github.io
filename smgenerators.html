@@ -81,6 +81,12 @@ select.field-select option{background:#111;}
           <option value="4">Division 4</option>
         </select>
       </div>
+      <div class="form-group"><label class="field-label">Show</label>
+        <select id="rc-view" class="field-select">
+          <option value="results">Race Results (Top 10)</option>
+          <option value="standings">Driver Standings (Top 10)</option>
+        </select>
+      </div>
     </div>
     <div class="btn-row">
       <button class="btn btn-primary" onclick="rcPopulate()">Populate from Sheets</button>
@@ -335,6 +341,9 @@ async function rcPopulate() {
           if (!driver) break;
           window._rcStandingsRows.push({ driver, team, pts, gap });
         }
+        // Sort by points descending and limit to top 10
+        window._rcStandingsRows.sort((a,b) => b.pts - a.pts);
+        window._rcStandingsRows = window._rcStandingsRows.slice(0, 10);
       }
     }
 
@@ -358,6 +367,11 @@ async function rcPopulate() {
 }
 
 function rcGetData() {
+  const view = (document.getElementById('rc-view')||{}).value || 'standings';
+  const isResults = view === 'results';
+  const rows = isResults
+    ? (window._rcRaceRows || []).map(r => ({ team: r.team, driver: r.driver, pts: r.pos }))
+    : (window._rcStandingsRows || []).map(r => ({ team: r.team, driver: r.driver, pts: r.pts, gap: r.gap }));
   return {
     season:      document.getElementById('rc-season').value,
     gp:          document.getElementById('rc-gp').value.trim(),
@@ -365,12 +379,12 @@ function rcGetData() {
     totalRounds: document.getElementById('rc-totalRounds').value,
     date:        document.getElementById('rc-date').value.trim(),
     time:        '21:00 BST',
-    rows: (window._rcStandingsRows || []).map(r => ({ team: r.team, driver: r.driver, pts: r.pts, gap: r.gap })),
-    raceResults: window._rcRaceRows || [],
+    rows,
     nextGP: '', nextRound: '', nextDate: '', nextTime: '',
     divLeaders: [],
     trackInfo: null,
-    mode: 'race',
+    mode: isResults ? 'race' : 'standings',
+    isRaceResults: isResults,
     divLabel: `Division ${document.getElementById('rc-division').value}`,
   };
 }
