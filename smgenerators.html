@@ -524,7 +524,7 @@ function coGetData() {
     nextGP: '', nextRound: '', nextDate: '', nextTime: '',
     divLeaders: [],
     trackInfo: null,
-    mode: 'constructors',
+    mode: isOverall ? 'overall' : 'constructors',
     showTP: isOverall,
     divLabel: isOverall ? 'Overall Constructors' : `Division ${view} Constructors`,
   };
@@ -835,11 +835,32 @@ function tbRenderFrame(ctx, data, t) {
     ctx.font=`400 ${11*S}px ${F1}`;
     ctx.fillStyle='#ffffff';
     ctx.textAlign='left'; ctx.textBaseline='middle';
-    ctx.fillText('POS', ML+8*S, colY2);
-    ctx.fillText('TEAM', ML+posColW+8*S, colY2);
-    ctx.fillText('TEAM PRINCIPAL', ML+posColW+LOGO_COL_W+8*S, colY2);
-    ctx.textAlign='right';
-    ctx.fillText('PTS', RW-MR, colY2);
+
+    // Dynamic column headers based on mode
+    const mode = data.mode || 'overall';
+    if (mode === 'race') {
+      ctx.fillText('POS', ML+8*S, colY2);
+      ctx.fillText('DRIVER', ML+posColW+8*S, colY2);
+      ctx.fillText('TEAM', ML+posColW+LOGO_COL_W+8*S, colY2);
+    } else if (mode === 'standings') {
+      ctx.fillText('POS', ML+8*S, colY2);
+      ctx.fillText('DRIVER', ML+posColW+8*S, colY2);
+      ctx.fillText('TEAM', ML+posColW+LOGO_COL_W+8*S, colY2);
+      ctx.textAlign='right';
+      ctx.fillText('PTS', RW-MR, colY2);
+    } else if (mode === 'constructors') {
+      ctx.fillText('POS', ML+8*S, colY2);
+      ctx.fillText('TEAM', ML+posColW+8*S, colY2);
+      ctx.textAlign='right';
+      ctx.fillText('PTS', RW-MR, colY2);
+    } else {
+      // overall — with TP
+      ctx.fillText('POS', ML+8*S, colY2);
+      ctx.fillText('TEAM', ML+posColW+8*S, colY2);
+      ctx.fillText('TEAM PRINCIPAL', ML+posColW+LOGO_COL_W+8*S, colY2);
+      ctx.textAlign='right';
+      ctx.fillText('PTS', RW-MR, colY2);
+    }
     ctx.restore();
   }
 
