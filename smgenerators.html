@@ -77,101 +77,89 @@ select.field option{background:#111;}
 
 <!-- Tool Selector -->
 <div class="selector-row">
+  <div class="tool-select-wrap">
   <label>What are you making?</label>
   <select class="tool-select" onchange="switchTool(this.value)">
     <option value="">— Select a generator —</option>
-    <option value="results">Race Results Video (CapCut)</option>
-    <option value="table">Overall Standings Table Video</option>
+    <option value="race">Race Results &amp; Driver Standings</option>
+    <option value="constructors">Constructors &amp; Overall Table</option>
   </select>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════ -->
-<!-- TOOL 1: RESULTS VIDEO (CapCut generator)                       -->
+<!-- TOOL 1: RACE RESULTS & DRIVER STANDINGS                        -->
 <!-- ═══════════════════════════════════════════════════════════════ -->
-<div class="tool-section" id="section-results">
-
+<div class="tool-section" id="section-race" style="display:none;">
   <div class="card">
     <div class="card-title">Race Info</div>
     <div class="form-row">
-      <div class="form-group"><label class="field-label">Season</label><input type="number" id="cc-season" value="28"></div>
-      <div class="form-group"><label class="field-label">Race No.</label><input type="number" id="cc-raceNum" value="1"></div>
-      <div class="form-group"><label class="field-label">Track (title card)</label><input type="text" id="cc-track1" placeholder="e.g. BAHRAIN"></div>
-      <div class="form-group"><label class="field-label">Track (results card)</label><input type="text" id="cc-track2" placeholder="e.g. BAHRAIN"></div>
+      <div class="form-group"><label class="field-label">Season</label><input type="number" id="rc-season" value="28"></div>
+      <div class="form-group"><label class="field-label">Grand Prix</label><input type="text" id="rc-gp" placeholder="e.g. Bahrain"></div>
+      <div class="form-group"><label class="field-label">Round</label><input type="text" id="rc-round" placeholder="e.g. 1"></div>
+      <div class="form-group"><label class="field-label">Total Rounds</label><input type="number" id="rc-totalRounds" value="21"></div>
+      <div class="form-group"><label class="field-label">Race Date</label><input type="date" id="rc-dateRaw" onchange="rcFormatDate()"></div>
+      <input type="hidden" id="rc-date" value="">
+      <div class="form-group"><label class="field-label">Division</label>
+        <select id="rc-division" class="tool-select" style="margin:0;">
+          <option value="1">Division 1</option>
+          <option value="2">Division 2</option>
+          <option value="3">Division 3</option>
+          <option value="4">Division 4</option>
+        </select>
+      </div>
     </div>
+    <button class="btn" onclick="rcPopulate()">Populate from Sheets</button>
+    <div id="rc-status" class="status-msg"></div>
   </div>
 
-  <div class="card">
-    <div class="card-title">Division Results</div>
-    <div id="cc-divisions"></div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">Project File</div>
-    <div class="form-group">
-      <label class="field-label">Load draft_content.json</label>
-      <input type="file" id="cc-projectFile" accept=".json" onchange="ccLoadProject(this)">
+  <div class="card" id="rc-preview-card" style="display:none;">
+    <div class="card-title">Preview</div>
+    <canvas id="rc-canvas" width="720" height="1280" style="max-width:360px;display:block;margin:0 auto;border:1px solid rgba(255,255,255,0.1);border-radius:4px;"></canvas>
+    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn" onclick="rcGenerate()">Generate Video</button>
+      <button class="btn btn-sec" onclick="rcDownloadImage()">Download Image</button>
     </div>
-    <p class="note" style="margin-top:.4rem;">
-      Find at: <code>%LOCALAPPDATA%\CapCut\User Data\Projects\[folder]\draft_content.json</code>
-    </p>
-    <div class="status" id="cc-status"></div>
+    <div id="rc-gen-status" class="status-msg"></div>
   </div>
-
-  <div class="btn-row">
-    <button class="btn btn-primary" id="cc-genBtn" onclick="ccGenerate()">Generate Project File</button>
-  </div>
-
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════ -->
-<!-- TOOL 2: OVERALL TABLE VIDEO                                     -->
+<!-- TOOL 2: CONSTRUCTORS & OVERALL TABLE                           -->
 <!-- ═══════════════════════════════════════════════════════════════ -->
-<div class="tool-section" id="section-table">
-
+<div class="tool-section" id="section-constructors" style="display:none;">
   <div class="card">
     <div class="card-title">Race Info</div>
     <div class="form-row">
-      <div class="form-group"><label class="field-label">Season</label><input type="number" id="tb-season" value="28"></div>
-      <div class="form-group"><label class="field-label">Grand Prix</label><input type="text" id="tb-gp" value="Bahrain"></div>
-      <div class="form-group"><label class="field-label">Round</label><input type="text" id="tb-round" value="1"></div>
-      <div class="form-group"><label class="field-label">Total Rounds</label><input type="number" id="tb-totalRounds" value="21"></div>
-      <div class="form-group"><label class="field-label">Race Date</label><input type="date" id="tb-dateRaw" onchange="tbFormatDate()"></div>
-      <input type="hidden" id="tb-date" value="Sun 20 Apr">
-      <input type="hidden" id="tb-time" value="21:00 BST">
+      <div class="form-group"><label class="field-label">Season</label><input type="number" id="co-season" value="28"></div>
+      <div class="form-group"><label class="field-label">Grand Prix</label><input type="text" id="co-gp" placeholder="e.g. Bahrain"></div>
+      <div class="form-group"><label class="field-label">Round</label><input type="text" id="co-round" placeholder="e.g. 1"></div>
+      <div class="form-group"><label class="field-label">Total Rounds</label><input type="number" id="co-totalRounds" value="21"></div>
+      <div class="form-group"><label class="field-label">Race Date</label><input type="date" id="co-dateRaw" onchange="coFormatDate()"></div>
+      <input type="hidden" id="co-date" value="">
+      <div class="form-group"><label class="field-label">View</label>
+        <select id="co-division" class="tool-select" style="margin:0;">
+          <option value="1">Division 1 Constructors</option>
+          <option value="2">Division 2 Constructors</option>
+          <option value="3">Division 3 Constructors</option>
+          <option value="4">Division 4 Constructors</option>
+          <option value="overall">Overall Constructors</option>
+        </select>
+      </div>
     </div>
-    <div class="form-row" style="margin-top:.7rem;padding-top:.7rem;border-top:1px solid #2a2a2a;">
-      <div class="form-group"><label class="field-label">Next GP</label><input type="text" id="tb-nextGP" placeholder="e.g. Saudi Arabia"></div>
-      <div class="form-group"><label class="field-label">Next Round</label><input type="text" id="tb-nextRound" placeholder="e.g. 2"></div>
-      <div class="form-group"><label class="field-label">Next Date</label><input type="date" id="tb-nextDateRaw" onchange="tbFormatNextDate()"></div>
-      <input type="hidden" id="tb-nextDate" value="">
-      <input type="hidden" id="tb-nextTime" value="21:00 BST">
+    <button class="btn" onclick="coPopulate()">Populate from Sheets</button>
+    <div id="co-status" class="status-msg"></div>
+  </div>
+
+  <div class="card" id="co-preview-card" style="display:none;">
+    <div class="card-title">Preview</div>
+    <canvas id="co-canvas" width="720" height="1280" style="max-width:360px;display:block;margin:0 auto;border:1px solid rgba(255,255,255,0.1);border-radius:4px;"></canvas>
+    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn" onclick="coGenerate()">Generate Video</button>
+      <button class="btn btn-sec" onclick="coDownloadImage()">Download Image</button>
     </div>
+    <div id="co-gen-status" class="status-msg"></div>
   </div>
-
-  <div class="card">
-    <div class="card-title">Standings</div>
-    <div class="btn-row" style="margin-top:0;margin-bottom:.8rem;">
-      <button class="btn btn-green" id="tb-populateBtn" onclick="tbPopulate()">↓ Populate from Sheet</button>
-      <div class="status" id="tb-popStatus"></div>
-    </div>
-    <div class="rows-grid" id="tb-rowsGrid"></div>
-  </div>
-
-  <div class="btn-row">
-    <button class="btn btn-primary" id="tb-genBtn" onclick="tbGenerate()">Generate Table Video</button>
-  </div>
-
-  <div class="prog-area" id="tb-progArea">
-    <div class="prog-label" id="tb-progLabel">Rendering...</div>
-    <div class="prog-outer"><div class="prog-inner" id="tb-progBar"></div></div>
-  </div>
-
-  <p class="note" style="margin-top:.8rem;">
-    Output: <span>.webm</span> at 1440×2560 (2x sharpness). Import into CapCut, set blend mode to <code>Screen</code> for transparent background.
-  </p>
-
 </div>
-
 
 
 <canvas id="renderCanvas" width="720" height="1280"></canvas>
@@ -183,8 +171,26 @@ select.field option{background:#111;}
 
 // ─── TOOL SWITCHER ──────────────────────────────────────────────────────────
 function switchTool(val) {
-  document.querySelectorAll('.tool-section').forEach(s => s.classList.remove('active'));
-  if (val) document.getElementById('section-' + val).classList.add('active');
+  document.querySelectorAll('.tool-section').forEach(s => s.style.display = 'none');
+  if (val) document.getElementById('section-' + val).style.display = 'block';
+}
+
+function rcFormatDate() {
+  const raw = document.getElementById('rc-dateRaw').value;
+  if (!raw) return;
+  const d = new Date(raw + 'T00:00:00');
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  document.getElementById('rc-date').value = `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
+}
+
+function coFormatDate() {
+  const raw = document.getElementById('co-dateRaw').value;
+  if (!raw) return;
+  const d = new Date(raw + 'T00:00:00');
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  document.getElementById('co-date').value = `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
 }
 
 // ─── SHARED DATA ────────────────────────────────────────────────────────────
@@ -1354,6 +1360,378 @@ async function tbGenerate() {
 
 
 // ─── INIT ────────────────────────────────────────────────────────────────────
+
+// ── Race Results & Driver Standings ────────────────────────────────────────
+async function rcPopulate() {
+  showStatus('rc-status', 'Loading...', 'loading');
+  try {
+    const cfg = await loadConfig();
+    const { season, sc } = await getSeasonConfig(cfg);
+
+    // Update season field
+    document.getElementById('rc-season').value = season;
+
+    const div = document.getElementById('rc-division').value;
+    const sheetId = sc[`d${div}_sheet_id`];
+    const calGid  = sc[`d${div}_calendar_gid`];
+    const resGid  = sc[`d${div}_driver_results_gid`];
+
+    if (!sheetId) throw new Error(`No sheet ID for Division ${div}`);
+
+    // Find most recent completed round from calendar
+    let latestRound = null, latestTrack = '', latestDate = '';
+    if (calGid) {
+      const calText = await fetchCSV(sheetId, calGid);
+      const calRows = parseCSV(calText);
+      const now = new Date();
+      for (let i = 1; i < calRows.length; i++) {
+        const round = (calRows[i][0]||'').trim();
+        const track = (calRows[i][3]||'').trim();
+        const dateStr = (calRows[i][2]||'').trim();
+        if (!round || !track || !dateStr) continue;
+        const [d,m,y] = dateStr.split('/');
+        if (!d||!m||!y) continue;
+        const raceDate = new Date(parseInt(y), parseInt(m)-1, parseInt(d));
+        if (raceDate <= now) { latestRound = round; latestTrack = track; latestDate = dateStr; }
+      }
+    }
+
+    if (latestRound) {
+      document.getElementById('rc-round').value = latestRound;
+      document.getElementById('rc-gp').value = latestTrack;
+      // Format date
+      const [d,m,y] = latestDate.split('/');
+      if (d&&m&&y) {
+        const dt = new Date(parseInt(y), parseInt(m)-1, parseInt(d));
+        const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        document.getElementById('rc-date').value = `${days[dt.getDay()]} ${parseInt(d)} ${months[dt.getMonth()]}`;
+        document.getElementById('rc-dateRaw').value = `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
+      }
+    }
+
+    // Fetch race results from R{round} tab
+    const rTabGid = sc[`d${div}_r${latestRound}_gid`];
+    window._rcRaceRows = [];
+    if (rTabGid) {
+      const rText = await fetchCSV(sheetId, rTabGid);
+      const rRows = parseCSV(rText);
+      // Find main race section — header "Pos" after "Race" label
+      let raceStart = -1;
+      for (let i = 0; i < rRows.length; i++) {
+        if ((rRows[i][0]||'').toLowerCase().trim() === 'pos' && i > 5) { raceStart = i + 1; break; }
+      }
+      if (raceStart >= 0) {
+        for (let i = raceStart; i < Math.min(raceStart + 10, rRows.length); i++) {
+          const pos    = (rRows[i][0]||'').trim();
+          const driver = (rRows[i][3]||'').trim();
+          const team   = (rRows[i][4]||'').trim();
+          if (!driver || !pos) break;
+          window._rcRaceRows.push({ pos, driver, team });
+        }
+      }
+    }
+
+    // Fetch driver standings
+    window._rcStandingsRows = [];
+    if (resGid) {
+      const sText = await fetchCSV(sheetId, resGid);
+      const sRows = parseCSV(sText);
+      let hRow = -1;
+      for (let i = 0; i < sRows.length; i++) {
+        if ((sRows[i][0]||'').toLowerCase().trim() === 'pos') { hRow = i; break; }
+      }
+      if (hRow >= 0) {
+        const hRowData = sRows[hRow];
+        let ptsCol = hRowData.findIndex(v => (v||'').toLowerCase().trim() === 'points');
+        if (ptsCol < 0) ptsCol = 31;
+        let gapCol = hRowData.findIndex(v => (v||'').toLowerCase().trim() === 'gap');
+        for (let i = hRow + 1; i < sRows.length; i++) {
+          const driver = (sRows[i][2]||'').trim();
+          const team   = (sRows[i][3]||'').trim();
+          const pts    = (sRows[i][ptsCol]||'').trim();
+          const gap    = gapCol >= 0 ? (sRows[i][gapCol]||'').trim() : '';
+          if (!driver) break;
+          window._rcStandingsRows.push({ driver, team, pts, gap });
+        }
+      }
+    }
+
+    showStatus('rc-status', `✓ Loaded R${latestRound} ${latestTrack} — ${window._rcRaceRows.length} race results, ${window._rcStandingsRows.length} standings rows`, 'ok');
+    document.getElementById('rc-preview-card').style.display = 'block';
+    rcRenderPreview();
+  } catch(e) {
+    showStatus('rc-status', `Error: ${e.message}`, 'error');
+  }
+}
+
+function rcRenderPreview() {
+  const canvas = document.getElementById('rc-canvas');
+  const ctx = canvas.getContext('2d');
+  const data = rcGetData();
+  // Render first frame for preview
+  tbRenderFrame(ctx, data, 0, 0.5);
+}
+
+function rcGetData() {
+  const season      = document.getElementById('rc-season').value;
+  const gp          = document.getElementById('rc-gp').value.trim();
+  const round       = document.getElementById('rc-round').value.trim();
+  const totalRounds = document.getElementById('rc-totalRounds').value;
+  const date        = document.getElementById('rc-date').value.trim();
+  const div         = document.getElementById('rc-division').value;
+
+  // Build rows from standings (driver standings with points & gap)
+  const rows = (window._rcStandingsRows || []).map(r => ({
+    team:   r.team,
+    driver: r.driver,
+    pts:    parseFloat(r.pts) || 0,
+    gap:    r.gap,
+  }));
+
+  // Race results for the top box
+  const raceResults = window._rcRaceRows || [];
+
+  return {
+    season, gp, round, totalRounds, date,
+    time: '21:00 BST',
+    rows,
+    raceResults,
+    isRaceResults: true,
+    divisionLabel: `Division ${div}`,
+    nextGP: '', nextRound: '', nextDate: '', nextTime: '',
+    divLeaders: [],
+    trackInfo: window._tbTrackInfo || null,
+  };
+}
+
+function rcDownloadImage() {
+  const canvas = document.getElementById('rc-canvas');
+  const data = rcGetData();
+  tbRenderFrame(canvas.getContext('2d'), data, 5, 1);
+  const a = document.createElement('a');
+  a.href = canvas.toDataURL('image/png');
+  a.download = `F1XL_S${data.season}_R${data.round}_D${document.getElementById('rc-division').value}_Results.png`;
+  a.click();
+}
+
+async function rcGenerate() {
+  const btn = document.getElementById('rc-genBtn') || { disabled: false };
+  showStatus('rc-gen-status', 'Rendering...', 'loading');
+  const data = rcGetData();
+  await runGenerate(data, 'rc-canvas', `F1XL_S${data.season}_R${data.round}_${data.gp.replace(/\s+/g,'_')}_D${document.getElementById('rc-division').value}_Results.webm`, 'rc-gen-status');
+}
+
+// ── Constructors & Overall Table ────────────────────────────────────────────
+async function coPopulate() {
+  showStatus('co-status', 'Loading...', 'loading');
+  try {
+    const cfg = await loadConfig();
+    const { season, sc } = await getSeasonConfig(cfg);
+    document.getElementById('co-season').value = season;
+
+    const div = document.getElementById('co-division').value;
+    const isOverall = div === 'overall';
+
+    window._coRows = [];
+
+    if (isOverall) {
+      // Fetch overall constructors from overall_gid
+      const overallUrl = sc['overall_gid'] || cfg['overall_gid'];
+      if (!overallUrl) throw new Error('No overall_gid in config');
+      const idM  = overallUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
+      const gidM = overallUrl.match(/gid=(\d+)/);
+      if (!idM) throw new Error('Invalid overall URL');
+      const text = await fetchCSV(idM[1], gidM?.[1]||'0');
+      const rows = parseCSV(text);
+      let hi = -1;
+      for (let i = 0; i < rows.length; i++) {
+        if ((rows[i][0]||'').toLowerCase().includes('pos') || (rows[i][1]||'').toLowerCase().includes('team')) { hi = i; break; }
+      }
+      if (hi >= 0) {
+        for (let i = hi + 1; i < rows.length; i++) {
+          const team = (rows[i][1]||'').trim() || (rows[i][0]||'').trim();
+          const pts  = (rows[i][3]||'').trim() || (rows[i][2]||'').trim();
+          const tp   = (rows[i][2]||'').trim();
+          if (!team || !pts) break;
+          window._coRows.push({ team, pts: parseFloat(pts)||0, tp, isOverall: true });
+        }
+      }
+    } else {
+      // Fetch per-division constructors
+      const sheetId  = sc[`d${div}_sheet_id`];
+      const consGid  = sc[`d${div}_constructors_gid`];
+      if (!sheetId || !consGid) throw new Error(`No constructors GID for Division ${div}`);
+      const text = await fetchCSV(sheetId, consGid);
+      const rows = parseCSV(text);
+      let hi = -1;
+      for (let i = 0; i < rows.length; i++) {
+        if ((rows[i][0]||'').toLowerCase().trim() === 'pos') { hi = i; break; }
+      }
+      if (hi >= 0) {
+        const hRowData = rows[hi];
+        let ptsCol = hRowData.findIndex(v => (v||'').toLowerCase().trim() === 'points');
+        if (ptsCol < 0) ptsCol = 2;
+        let gapCol = hRowData.findIndex(v => (v||'').toLowerCase().trim() === 'gap');
+        for (let i = hi + 1; i < rows.length; i++) {
+          const team = (rows[i][1]||'').trim();
+          const pts  = (rows[i][ptsCol]||'').trim();
+          const gap  = gapCol >= 0 ? (rows[i][gapCol]||'').trim() : '';
+          if (!team) break;
+          window._coRows.push({ team, pts: parseFloat(pts)||0, gap, isOverall: false });
+        }
+      }
+    }
+
+    showStatus('co-status', `✓ Loaded ${isOverall ? 'Overall' : `Division ${div}`} Constructors — ${window._coRows.length} teams`, 'ok');
+    document.getElementById('co-preview-card').style.display = 'block';
+    coRenderPreview();
+  } catch(e) {
+    showStatus('co-status', `Error: ${e.message}`, 'error');
+  }
+}
+
+function coGetData() {
+  const season      = document.getElementById('co-season').value;
+  const gp          = document.getElementById('co-gp').value.trim();
+  const round       = document.getElementById('co-round').value.trim();
+  const totalRounds = document.getElementById('co-totalRounds').value;
+  const date        = document.getElementById('co-date').value.trim();
+  const div         = document.getElementById('co-division').value;
+  const isOverall   = div === 'overall';
+
+  const rows = (window._coRows || []).map(r => ({
+    team:   r.team,
+    driver: r.tp || r.team,
+    pts:    r.pts,
+    gap:    r.gap || '',
+  }));
+
+  return {
+    season, gp, round, totalRounds, date,
+    time: '21:00 BST',
+    rows,
+    isConstructors: true,
+    showTP: isOverall,
+    divisionLabel: isOverall ? 'Overall Constructors' : `Division ${div} Constructors`,
+    nextGP: '', nextRound: '', nextDate: '', nextTime: '',
+    divLeaders: [],
+    trackInfo: window._tbTrackInfo || null,
+  };
+}
+
+function coRenderPreview() {
+  const canvas = document.getElementById('co-canvas');
+  tbRenderFrame(canvas.getContext('2d'), coGetData(), 0, 0.5);
+}
+
+function coDownloadImage() {
+  const canvas = document.getElementById('co-canvas');
+  const data = coGetData();
+  tbRenderFrame(canvas.getContext('2d'), data, 5, 1);
+  const a = document.createElement('a');
+  a.href = canvas.toDataURL('image/png');
+  a.download = `F1XL_S${data.season}_R${data.round}_Constructors_${document.getElementById('co-division').value}.png`;
+  a.click();
+}
+
+async function coGenerate() {
+  showStatus('co-gen-status', 'Rendering...', 'loading');
+  const data = coGetData();
+  await runGenerate(data, 'co-canvas', `F1XL_S${data.season}_R${data.round}_Constructors_${document.getElementById('co-division').value}.webm`, 'co-gen-status');
+}
+
+// ── Shared generate runner ───────────────────────────────────────────────────
+async function runGenerate(data, canvasId, filename, statusId) {
+  const canvas = document.getElementById(canvasId);
+  const ctx = canvas.getContext('2d');
+
+  try {
+    await Promise.all([loadF1Font(), tbPreloadLogos(data.rows)]);
+  } catch(e) {}
+
+  const mime = ['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm']
+    .find(m => MediaRecorder.isTypeSupported(m)) || 'video/webm';
+
+  const stream = canvas.captureStream(FPS);
+  const chunks = [];
+  const recorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 20_000_000 });
+  recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+  recorder.start(100);
+
+  const numRows = (data.rows || []).length;
+  const flipPhaseStart = T_EXIT_START_OFFSET + (numRows + 1) * T_EXIT_GAP + T_EXIT_DUR + T_FLIP_OFFSET;
+  const boxPhaseStart  = flipPhaseStart + T_FLIP_GAP + T_FLIP_DUR + T_BOX_OFFSET;
+  const TOTAL_DUR      = boxPhaseStart + T_BOX_GAP * 2 + T_BOX_DUR2 + T_HOLD_END;
+  const totalFrames    = Math.ceil(TOTAL_DUR * FPS);
+  let frame = 0;
+  const msPerFrame = 1000 / FPS;
+
+  await new Promise(resolve => {
+    function next() {
+      if (frame >= totalFrames) { resolve(); return; }
+      const start = performance.now();
+      tbRenderFrame(ctx, data, frame / FPS);
+      frame++;
+      if (frame % 15 === 0) showStatus(statusId, `Rendering frame ${frame}/${totalFrames}...`, 'loading');
+      const elapsed = performance.now() - start;
+      setTimeout(next, Math.max(0, msPerFrame - elapsed));
+    }
+    next();
+  });
+
+  recorder.stop();
+  await new Promise(r => recorder.onstop = r);
+
+  const blob = new Blob(chunks, { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+  showStatus(statusId, '✓ Done — video downloaded!', 'ok');
+}
+
+// ── Helper: load config ──────────────────────────────────────────────────────
+const CONFIG_SHEET_ID = '1ThIh7aKlGOuv83v9IJVSGpuspZLl0c9ajE0GJBpuCtk';
+const CONFIG_GID      = '0';
+
+async function loadConfig() {
+  const text = await fetchCSV(CONFIG_SHEET_ID, CONFIG_GID);
+  const rows = parseCSV(text);
+  const map = {};
+  for (const r of rows) {
+    const k = (r[0]||'').trim().toLowerCase();
+    const v = (r[1]||'').trim();
+    if (k && v) map[k] = v;
+  }
+  return map;
+}
+
+async function getSeasonConfig(cfg) {
+  let latest = 0, latestGid = null;
+  for (const k of Object.keys(cfg)) {
+    const m = k.match(/^s(\d+)_gid$/);
+    if (m) { const n = parseInt(m[1]); if (n > latest) { latest = n; latestGid = cfg[k]; } }
+  }
+  if (!latestGid) return { season: latest, sc: {} };
+  const text = await fetchCSV(CONFIG_SHEET_ID, latestGid);
+  const rows = parseCSV(text);
+  const sc = {};
+  for (const r of rows) {
+    const k = (r[0]||'').trim().toLowerCase();
+    const v = (r[1]||'').trim();
+    if (k && v) sc[k] = v;
+  }
+  return { season: latest, sc };
+}
+
+async function fetchCSV(sheetId, gid) {
+  const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
+  const r = await fetch(url);
+  return await r.text();
+}
+
 ccBuildDivisions();
 tbBuildRows();
 </script>
