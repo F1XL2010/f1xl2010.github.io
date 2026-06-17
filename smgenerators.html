@@ -281,32 +281,17 @@ async function rcPopulate() {
     const { season, sc } = await getSeasonConfig(cfg);
     document.getElementById('rc-season').value = season;
 
-    const div      = document.getElementById('rc-division').value;
-    const sheetId  = sc[`d${div}_sheet_id`];
-    const calGid   = sc[`d${div}_calendar_gid`];
-    const resGid   = sc[`d${div}_driver_results_gid`];
+    const div     = document.getElementById('rc-division').value;
+    const sheetId = sc[`d${div}_sheet_id`];
+    const resGid  = sc[`d${div}_driver_results_gid`];
+    const round   = document.getElementById('rc-round').value.trim();
 
     if (!sheetId) throw new Error(`No sheet ID for Division ${div}`);
-
-    // Find latest completed round
-    let latestRound = null, latestTrack = '', latestDate = '';
-    if (calGid) {
-      ({ latestRound, latestTrack, latestDate } = await findLatestRound(sheetId, calGid));
-    }
-
-    if (latestRound) {
-      document.getElementById('rc-round').value = latestRound;
-      document.getElementById('rc-gp').value = latestTrack;
-      if (latestDate) {
-        document.getElementById('rc-date').value = formatDate(latestDate);
-        const [d,m,y] = latestDate.split('/');
-        document.getElementById('rc-dateRaw').value = `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
-      }
-    }
+    if (!round)   throw new Error('Please enter a round number first');
 
     // Fetch race results from R{round} tab
     window._rcRaceRows = [];
-    const rTabGid = sc[`d${div}_r${latestRound}_gid`];
+    const rTabGid = sc[`d${div}_r${round}_gid`];
     if (rTabGid) {
       const rText = await fetchCSV(sheetId, rTabGid);
       const rRows = parseCSV(rText);
@@ -353,10 +338,9 @@ async function rcPopulate() {
       }
     }
 
-    showStatus('rc-status', `✓ Loaded R${latestRound} ${latestTrack} — ${window._rcRaceRows.length} race results, ${window._rcStandingsRows.length} standings`, 'ok');
+    showStatus('rc-status', `✓ R${round} — ${window._rcRaceRows.length} race results, ${window._rcStandingsRows.length} standings`, 'ok');
     document.getElementById('rc-output').style.display = 'block';
 
-    // Render preview frame
     const canvas = document.getElementById('rc-preview');
     const data = rcGetData();
     await loadF1Font();
@@ -421,20 +405,8 @@ async function coPopulate() {
     const view      = document.getElementById('co-view').value;
     const isOverall = view === 'overall';
 
-    // Find latest round from D1 calendar for header info
-    const d1SheetId = sc['d1_sheet_id'];
-    const d1CalGid  = sc['d1_calendar_gid'];
-    let latestRound = '', latestTrack = '', latestDate = '';
-    if (d1SheetId && d1CalGid) {
-      ({ latestRound, latestTrack, latestDate } = await findLatestRound(d1SheetId, d1CalGid));
-      document.getElementById('co-round').value = latestRound || '';
-      document.getElementById('co-gp').value    = latestTrack || '';
-      if (latestDate) {
-        document.getElementById('co-date').value = formatDate(latestDate);
-        const [d,m,y] = latestDate.split('/');
-        document.getElementById('co-dateRaw').value = `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
-      }
-    }
+    const round   = document.getElementById('co-round').value.trim();
+    if (!round) throw new Error('Please enter a round number first');
 
     window._coRows = [];
 
