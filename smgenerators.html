@@ -341,10 +341,15 @@ async function rcPopulate() {
     showStatus('rc-status', `✓ R${round} — ${window._rcRaceRows.length} race results, ${window._rcStandingsRows.length} standings`, 'ok');
     document.getElementById('rc-output').style.display = 'block';
 
-    const canvas = document.getElementById('rc-preview');
+    const renderCanvas = document.getElementById('renderCanvas2');
+    const previewCanvas = document.getElementById('rc-preview');
     const data = rcGetData();
     await loadF1Font();
-    tbRenderFrame(canvas.getContext('2d'), data, 0);
+    tbRenderFrame(renderCanvas.getContext('2d'), data, 0);
+    // Scale down to preview canvas
+    const pCtx = previewCanvas.getContext('2d');
+    pCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+    pCtx.drawImage(renderCanvas, 0, 0, previewCanvas.width, previewCanvas.height);
 
   } catch(e) {
     showStatus('rc-status', `Error: ${e.message}`, 'err');
@@ -371,7 +376,7 @@ function rcGetData() {
 }
 
 function rcDownloadImage() {
-  const canvas = document.getElementById('rc-preview');
+  const canvas = document.getElementById('renderCanvas2');
   const a = document.createElement('a');
   a.href = canvas.toDataURL('image/png');
   const d = rcGetData();
@@ -386,7 +391,7 @@ async function rcGenerate() {
   document.getElementById('rc-prog').style.display = 'block';
   await runGenerate(
     data,
-    document.getElementById('rc-preview'),
+    document.getElementById('renderCanvas2'),
     `F1XL_S${data.season}_R${data.round}_D${document.getElementById('rc-division').value}_Results.webm`,
     'rc-prog-bar', 'rc-prog-label', 'rc-gen-status'
   );
@@ -471,10 +476,14 @@ async function coPopulate() {
     document.getElementById('co-output').style.display = 'block';
 
     // Render preview
-    const canvas = document.getElementById('co-preview');
+    const renderCanvas = document.getElementById('renderCanvas2');
+    const previewCanvas = document.getElementById('co-preview');
     const data = coGetData();
     await loadF1Font();
-    tbRenderFrame(canvas.getContext('2d'), data, 0);
+    tbRenderFrame(renderCanvas.getContext('2d'), data, 0);
+    const pCtx = previewCanvas.getContext('2d');
+    pCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+    pCtx.drawImage(renderCanvas, 0, 0, previewCanvas.width, previewCanvas.height);
 
   } catch(e) {
     showStatus('co-status', `Error: ${e.message}`, 'err');
@@ -508,7 +517,7 @@ function coGetData() {
 }
 
 function coDownloadImage() {
-  const canvas = document.getElementById('co-preview');
+  const canvas = document.getElementById('renderCanvas2');
   const a = document.createElement('a');
   a.href = canvas.toDataURL('image/png');
   const d = coGetData();
@@ -523,7 +532,7 @@ async function coGenerate() {
   document.getElementById('co-prog').style.display = 'block';
   await runGenerate(
     data,
-    document.getElementById('co-preview'),
+    document.getElementById('renderCanvas2'),
     `F1XL_S${data.season}_R${data.round}_Constructors_${document.getElementById('co-view').value}.webm`,
     'co-prog-bar', 'co-prog-label', 'co-gen-status'
   );
