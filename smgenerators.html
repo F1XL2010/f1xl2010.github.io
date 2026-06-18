@@ -820,6 +820,24 @@ function tbRenderFrame(ctx, data, t) {
   const posColW = 56*S;
   const exitPhaseStart = T_EXIT_START_OFFSET;
 
+  // Division label — appears just above the column header, same animation
+  const divLabelY = ROW_START_Y - ROW_SPACING*1.8;
+  const divEntryP = easeOut3(clamp((t - (T_ROW_START-0.5)) / 0.4, 0, 1));
+  const colExitDelay0 = exitPhaseStart + data.rows.length * T_EXIT_GAP;
+  const divExitP = easeOut3(clamp((t - colExitDelay0) / T_EXIT_DUR, 0, 1));
+  if (divEntryP > 0 && data.divLabel) {
+    ctx.save();
+    ctx.globalAlpha = divExitP > 0 ? Math.max(1 - divExitP * 1.5, 0) : divEntryP;
+    const divSlideX = divExitP > 0 ? -divExitP * (RW + 200*S) : 0;
+    ctx.translate(divSlideX, 0);
+    ctx.font = `400 ${14*S}px ${F1}`;
+    ctx.fillStyle = '#E8B84B';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText((data.divLabel || '').toUpperCase(), ML + 8*S, divLabelY);
+    ctx.restore();
+  }
+
   // Col header — drawn here so it participates in same logic
   const colY2 = ROW_START_Y - ROW_SPACING/2;
   const colH2 = ROW_SPACING - 4*S;
@@ -932,20 +950,22 @@ function tbRenderFrame(ctx, data, t) {
 
     ctx.font=`400 ${24*S}px ${F1}`;
     ctx.fillStyle='#ffffff'; ctx.textAlign='right';
-    ctx.fillText(row.pts, RW-MR, midY-6*S);
+    ctx.fillText(data.mode === 'race' ? `P${row.pts}` : row.pts, RW-MR, midY-6*S);
 
-    const barStart = RW-MR+16*S;
-    const barMaxW  = RW - barStart - 8*S;
-    const barW     = maxPts>0 ? (row.pts/maxPts)*barMaxW : 0;
-    ctx.fillStyle=`rgba(${r2},${g2},${b2},0.15)`;
-    ctx.fillRect(barStart, rowY, barMaxW, ROW_SPACING);
-    ctx.fillStyle=`rgba(${r2},${g2},${b2},0.45)`;
-    ctx.fillRect(barStart, rowY, barW, ROW_SPACING);
-    if(idx > 0){
-      const gap = data.rows[0].pts - row.pts;
-      ctx.font=`400 ${11*S}px ${F1}`;
-      ctx.fillStyle='rgba(255,255,255,0.75)'; ctx.textAlign='left'; ctx.textBaseline='middle';
-      ctx.fillText(`-${gap}`, barStart+8*S, midY);
+    if (data.mode !== 'race') {
+      const barStart = RW-MR+16*S;
+      const barMaxW  = RW - barStart - 8*S;
+      const barW     = maxPts>0 ? (row.pts/maxPts)*barMaxW : 0;
+      ctx.fillStyle=`rgba(${r2},${g2},${b2},0.15)`;
+      ctx.fillRect(barStart, rowY, barMaxW, ROW_SPACING);
+      ctx.fillStyle=`rgba(${r2},${g2},${b2},0.45)`;
+      ctx.fillRect(barStart, rowY, barW, ROW_SPACING);
+      if(idx > 0){
+        const gap = data.rows[0].pts - row.pts;
+        ctx.font=`400 ${11*S}px ${F1}`;
+        ctx.fillStyle='rgba(255,255,255,0.75)'; ctx.textAlign='left'; ctx.textBaseline='middle';
+        ctx.fillText(`-${gap}`, barStart+8*S, midY);
+      }
     }
     ctx.restore();
   });
