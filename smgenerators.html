@@ -991,7 +991,7 @@ function tbRenderFrame(ctx, data, t) {
 
     ctx.font=`400 ${24*S}px ${F1}`;
     ctx.fillStyle='#ffffff'; ctx.textAlign='right';
-    ctx.fillText(row.pts, RW-MR, midY-6*S);
+    ctx.fillText(Math.floor(row.pts), RW-MR, midY-6*S);
 
     if (data.mode !== 'race') {
       const barStart = RW-MR+16*S;
