@@ -573,7 +573,9 @@ async function runGenerate(data, canvas, filename, barId, labelId, statusId) {
   const numRows        = (data.rows || []).length;
   const flipStart      = T_EXIT_START_OFFSET + (numRows + 1) * T_EXIT_GAP + T_EXIT_DUR + T_FLIP_OFFSET;
   const boxStart       = flipStart + T_FLIP_GAP + T_FLIP_DUR + T_BOX_OFFSET;
-  const TOTAL_DUR      = boxStart + T_BOX_GAP * 2 + T_BOX_DUR2 + T_HOLD_END;
+  // End video after rows exit + hold — before heading exits
+  const rowsExitEnd    = T_EXIT_START_OFFSET + (numRows + 1) * T_EXIT_GAP + T_EXIT_DUR;
+  const TOTAL_DUR      = rowsExitEnd + T_HOLD_END;
   const totalFrames    = Math.ceil(TOTAL_DUR * FPS);
   const msPerFrame     = 1000 / FPS;
   let frame = 0;
@@ -706,18 +708,18 @@ async function tbPreloadLogos(rows) {
 
 // ── Render ────────────────────────────────────────────────────────
 const FPS=30, W=1440, H=2560;
-const T_HEADER=1.2, T_ROW_START=8.25, T_ROW_GAP=0.18, T_HOLD=10.0;
+const T_HEADER=1.2, T_ROW_START=4.1, T_ROW_GAP=0.18, T_HOLD=6.0;
 const T_EXIT_START_OFFSET = T_ROW_START + (12 * T_ROW_GAP) + 0.6 + T_HOLD;
 const T_EXIT_GAP  = 0.15;
 const T_EXIT_DUR  = 0.9;
 const T_FLIP_OFFSET = 1.2;
 const T_FLIP_DUR  = 1.4;
 const T_FLIP_GAP  = 0.45;
-const T_HOLD_END  = 6.0;  // generous buffer
-const T_BOX_OFFSET = 1.0; // boxes start appearing after flip settles
-const T_BOX_DUR    = 3.0; // box 1 and 3 reveal duration
-const T_BOX_DUR2   = 4.0; // box 2 reveal duration
-const T_BOX_GAP    = 1.0; // stagger between boxes
+const T_HOLD_END  = 2.5;  // hold on heading only after rows exit
+const T_BOX_OFFSET = 1.0;
+const T_BOX_DUR    = 3.0;
+const T_BOX_DUR2   = 4.0;
+const T_BOX_GAP    = 1.0;
 const TOTAL_DUR = T_EXIT_START_OFFSET + (14 * T_EXIT_GAP) + T_EXIT_DUR + T_FLIP_OFFSET + T_FLIP_GAP + T_FLIP_DUR + T_BOX_OFFSET + (4 * T_BOX_GAP) + T_BOX_DUR + T_HOLD_END;
 
 function easeOut3(t){return 1-Math.pow(1-Math.min(t,1),3);}
