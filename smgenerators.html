@@ -84,6 +84,7 @@ select.field-select option{background:#111;}
       <div class="form-group"><label class="field-label">Show</label>
         <select id="rc-view" class="field-select">
           <option value="results">Race Results (Top 10)</option>
+          <option value="sprint">Sprint Results (Top 10)</option>
           <option value="standings">Driver Standings (Top 10)</option>
         </select>
       </div>
@@ -297,11 +298,16 @@ async function rcPopulate() {
 
     // Fetch race results from R{round} tab
     window._rcRaceRows = [];
+    window._rcSprintRows = [];
     const rTabGid = sc[`d${div}_r${round}_gid`];
+    const SPRINT_ROUNDS = ['3','9','14','19'];
+    const isSprintRound = SPRINT_ROUNDS.includes(String(round));
+
     if (rTabGid) {
       const rText = await fetchCSV(sheetId, rTabGid);
       const rRows = parseCSV(rText);
-      // Find main race header — "Pos" after row 20 (past sprint section)
+
+      // Find main race header — "Pos" where row above says "Race" or after row 20
       let raceHdr = -1;
       for (let i = 20; i < rRows.length; i++) {
         if ((rRows[i][0]||'').trim().toLowerCase() === 'pos') { raceHdr = i; break; }
@@ -314,6 +320,24 @@ async function rcPopulate() {
           const pts    = parseFloat((rRows[i][7]||'0').replace(/,/g,'')) || 0;
           if (!driver || !pos || isNaN(parseInt(pos))) break;
           window._rcRaceRows.push({ pos: parseInt(pos), driver, team, pts });
+        }
+      }
+
+      // For sprint rounds, also find sprint race section (header before row 20)
+      if (isSprintRound) {
+        let sprintHdr = -1;
+        for (let i = 0; i < 20; i++) {
+          if ((rRows[i][0]||'').trim().toLowerCase() === 'pos') { sprintHdr = i; break; }
+        }
+        if (sprintHdr >= 0) {
+          for (let i = sprintHdr + 1; i < Math.min(sprintHdr + 11, rRows.length); i++) {
+            const pos    = (rRows[i][0]||'').trim();
+            const driver = (rRows[i][3]||'').trim();
+            const team   = (rRows[i][4]||'').trim();
+            const pts    = parseFloat((rRows[i][7]||'0').replace(/,/g,'')) || 0;
+            if (!driver || !pos || isNaN(parseInt(pos))) break;
+            window._rcSprintRows.push({ pos: parseInt(pos), driver, team, pts });
+          }
         }
       }
     }
@@ -370,9 +394,22 @@ async function rcPopulate() {
 function rcGetData() {
   const view = (document.getElementById('rc-view')||{}).value || 'standings';
   const isResults = view === 'results';
-  const rows = isResults
-    ? (window._rcRaceRows || []).map(r => ({ team: r.team, driver: r.driver, pts: r.pts, pos: r.pos }))
-    : (window._rcStandingsRows || []).map(r => ({ team: r.team, driver: r.driver, pts: r.pts, gap: r.gap }));
+  const isSprint  = view === 'sprint';
+  const div = document.getElementById('rc-division').value;
+
+  const rows = isSprint
+    ? (window._rcSprintRows || []).map(r => ({ team: r.team, driver: r.driver, pts: r.pts, pos: r.pos }))
+    : isResults
+      ? (window._rcRaceRows || []).map(r => ({ team: r.team, driver: r.driver, pts: r.pts, pos: r.pos }))
+      : (window._rcStandingsRows || []).map(r => ({ team: r.team, driver: r.driver, pts: r.pts, gap: r.gap }));
+
+  const mode = (isResults || isSprint) ? 'race' : 'standings';
+  const divLabel = isSprint
+    ? `Division ${div} — Sprint Results Top 10`
+    : isResults
+      ? `Division ${div} — Race Results Top 10`
+      : `Division ${div} — Driver Standings Top 10`;
+
   return {
     season:      document.getElementById('rc-season').value,
     gp:          document.getElementById('rc-gp').value.trim(),
@@ -384,11 +421,9 @@ function rcGetData() {
     nextGP: '', nextRound: '', nextDate: '', nextTime: '',
     divLeaders: [],
     trackInfo: null,
-    mode: isResults ? 'race' : 'standings',
-    isRaceResults: isResults,
-    divLabel: isResults
-      ? `Division ${document.getElementById('rc-division').value} — Race Results Top 10`
-      : `Division ${document.getElementById('rc-division').value} — Driver Standings Top 10`,
+    mode,
+    isRaceResults: isResults || isSprint,
+    divLabel,
   };
 }
 
