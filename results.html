@@ -985,8 +985,8 @@ function legacyRenderRound(r, parsed){
   html += '<div class="results-grid">';
   if(meta.isSprint){
     html += legacyQTable(sprintQuali, 'Sprint Qualifying');
-    html += legacyRTable(sprintRace, 'Sprint Race');
     html += legacyQTable(quali, 'Qualifying');
+    html += legacyRTable(sprintRace, 'Sprint Race');
     html += legacyRTable(race, 'Race');
   } else {
     html += legacyQTable(quali, 'Qualifying');
