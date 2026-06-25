@@ -719,7 +719,11 @@ function legacyFetchURL(sheetId, gid, fallbackSheetId){
   return `https://docs.google.com/spreadsheets/d/${sid}/export?format=csv&gid=${gid}`;
 }
 
-function legacyExtractSection(rows, colOffset, isRace){
+function legacyExtractSection(rows, colOffset, isRace, ptsOffset){
+  // ptsOffset lets callers override where Points sits relative to colOffset,
+  // since S22-27 has an extra Penalty Points column between Gap and Points
+  // that S20-21 doesn't have. Defaults to +8 (S20-21 layout).
+  if(ptsOffset===undefined) ptsOffset = 8;
   const results = [];
   // Find the header row dynamically (look for 'Pos' at colOffset) rather than
   // assuming a fixed starting row index. Blank rows get stripped by csv()
@@ -744,22 +748,27 @@ function legacyExtractSection(rows, colOffset, isRace){
     if(!driver || driver === ' ') break;
     const team = (row[colOffset+4]||'').toString().trim();
     if(isRace){
-      // Confirmed against real S20 D1 R18 sheet: Pos@0 Nat@1 #@2 Driver@3 Team@4
-      // Team(dup)@5 Stops@6 Gap@7 Points@8 [blank]@9 FL@10 PenaltyPoints@11 Penalty@12
+      // S20-21 (ptsOffset=8): Pos@0 Nat@1 #@2 Driver@3 Team@4 Team(dup)@5
+      //   Stops@6 Gap@7 Points@8 [blank]@9 FL@10 PenaltyPoints@11 Penalty@12
+      // S22-27 (ptsOffset=9): same up to Gap@7, then PenaltyPoints@8 Points@9
+      //   — FL/Penalty positions for S22-27 not yet confirmed against a
+      //   sheet that has values past col 21, so left at same relative spot.
       results.push({
         pos: rawPos,
         num: (row[colOffset+2]||'').toString().trim(),
         driver, team,
         stops: (row[colOffset+6]||'').toString().trim(),
         gap: (row[colOffset+7]||'').toString().trim(),
-        pts: String(Math.floor(parseFloat((row[colOffset+8]||'').toString())||0)||'0'),
+        pts: String(Math.floor(parseFloat((row[colOffset+ptsOffset]||'').toString())||0)||'0'),
         fl: (row[colOffset+10]||'').toString().trim(),
         pen: (row[colOffset+12]||'').toString().trim()
       });
     } else {
-      // Confirmed against real S20 D1 R18 sheet: Pos@0 Nat@1 #@2 Driver@3 Team@4
+      // Confirmed against real S20/S21 sheets: Pos@0 Nat@1 #@2 Driver@3 Team@4
       // [blank]@5 Time@6 PenaltyPoints@7 Penalty@8 [blank]@9
-      // Note: S20-27 quali sections have no Tyre column at all.
+      // S27 quali DOES have a real Tyre column at @7 (unlike S20-21) — but
+      // since that shifts Penalty's position too and isn't confirmed yet,
+      // Tyre/Penalty for S22-27 quali are left as a known gap for now.
       results.push({
         pos: rawPos,
         num: (row[colOffset+2]||'').toString().trim(),
@@ -850,17 +859,27 @@ function legacyParseRound(rows, isSprint){
   const season = parseFloat(_currentSeason || 0);
 
   if(season >= 20){
-    // S20-S27: original horizontal format
-    // Non-sprint confirmed against real sheet (S20 D1 R18): Quali=Pos@0..Pen@8, Race=Pos@10..Pen@22
     if(!isSprint){
-      const quali = legacyExtractSection(rows, 0, false);
-      const race  = legacyExtractSection(rows, 10, true);
-      return {meta, quali, race, sprintQuali:[], sprintRace:[]};
+      if(season <= 21){
+        // S20-21: confirmed against real sheets (S20 D1 R18, S21 D6 R1)
+        // Quali=Pos@0..Pen@8, Race=Pos@10..Pen@22
+        const quali = legacyExtractSection(rows, 0, false);
+        const race  = legacyExtractSection(rows, 10, true, 8);
+        return {meta, quali, race, sprintQuali:[], sprintRace:[]};
+      } else {
+        // S22-27: confirmed against real sheet (S27 D1 R1) — Race starts at
+        // col 12, with an extra Penalty Points column shifting Points to +9
+        // instead of +8. FL/Penalty positions beyond col 21 not yet confirmed.
+        const quali = legacyExtractSection(rows, 0, false);
+        const race  = legacyExtractSection(rows, 12, true, 9);
+        return {meta, quali, race, sprintQuali:[], sprintRace:[]};
+      }
     } else {
-      // TODO: sprint-weekend column offsets (25, 38) are UNVERIFIED against a
-      // real sprint-round sheet. The non-sprint Race offset was wrong by -2
-      // (10 not 12), so these are likely wrong too, but need a real S20-27
-      // sprint round (R3/R9/R14/R19-style) to confirm before changing.
+      // TODO: sprint-weekend column offsets are UNVERIFIED against a real
+      // sprint-round sheet for any S20-27 season. Given non-sprint rounds
+      // turned out to have a genuine S20-21 vs S22-27 split, sprint rounds
+      // likely need the same treatment — but this needs a real sprint round
+      // (R3/R9/R14/R19-style) sheet to confirm before changing further.
       const sprintQuali = legacyExtractSection(rows, 0, false);
       const sprintRace  = legacyExtractSection(rows, 12, true);
       const quali       = legacyExtractSection(rows, 25, false);
