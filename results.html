@@ -2,11 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="description" content="F1XL — Competitive but accessible F1 racing league. No custom setups required. All skill levels welcome. Est. 2010.">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Results | F1XL — UK F1 Racing League</title>
-  <link rel="icon" href="/favicon.ico" sizes="any">
-<link rel="apple-touch-icon" href="/favicon-180.png">
+<title>F1XL — Results</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -734,6 +731,8 @@ function legacyExtractSection(rows, colOffset, isRace){
     if(!driver || driver === ' ') break;
     const team = (row[colOffset+4]||'').toString().trim();
     if(isRace){
+      // Confirmed against real S20 D1 R18 sheet: Pos@0 Nat@1 #@2 Driver@3 Team@4
+      // Team(dup)@5 Stops@6 Gap@7 Points@8 [blank]@9 FL@10 PenaltyPoints@11 Penalty@12
       results.push({
         pos: rawPos,
         num: (row[colOffset+2]||'').toString().trim(),
@@ -742,16 +741,19 @@ function legacyExtractSection(rows, colOffset, isRace){
         gap: (row[colOffset+7]||'').toString().trim(),
         pts: String(Math.floor(parseFloat((row[colOffset+8]||'').toString())||0)||'0'),
         fl: (row[colOffset+10]||'').toString().trim(),
-        pen: (row[colOffset+11]||'').toString().trim()
+        pen: (row[colOffset+12]||'').toString().trim()
       });
     } else {
+      // Confirmed against real S20 D1 R18 sheet: Pos@0 Nat@1 #@2 Driver@3 Team@4
+      // [blank]@5 Time@6 PenaltyPoints@7 Penalty@8 [blank]@9
+      // Note: S20-27 quali sections have no Tyre column at all.
       results.push({
         pos: rawPos,
         num: (row[colOffset+2]||'').toString().trim(),
         driver, team,
         time: (row[colOffset+6]||'').toString().trim(),
-        tyre: (row[colOffset+7]||'').toString().trim(),
-        pen: (row[colOffset+9]||'').toString().trim()
+        tyre: '',
+        pen: (row[colOffset+8]||'').toString().trim()
       });
     }
   }
@@ -835,12 +837,17 @@ function legacyParseRound(rows, isSprint){
   const season = parseFloat(_currentSeason || 0);
 
   if(season >= 20){
-    // S20-S27: original horizontal format — Quali col 0, Race col 12
+    // S20-S27: original horizontal format
+    // Non-sprint confirmed against real sheet (S20 D1 R18): Quali=Pos@0..Pen@8, Race=Pos@10..Pen@22
     if(!isSprint){
       const quali = legacyExtractSection(rows, 0, false);
-      const race  = legacyExtractSection(rows, 12, true);
+      const race  = legacyExtractSection(rows, 10, true);
       return {meta, quali, race, sprintQuali:[], sprintRace:[]};
     } else {
+      // TODO: sprint-weekend column offsets (25, 38) are UNVERIFIED against a
+      // real sprint-round sheet. The non-sprint Race offset was wrong by -2
+      // (10 not 12), so these are likely wrong too, but need a real S20-27
+      // sprint round (R3/R9/R14/R19-style) to confirm before changing.
       const sprintQuali = legacyExtractSection(rows, 0, false);
       const sprintRace  = legacyExtractSection(rows, 12, true);
       const quali       = legacyExtractSection(rows, 25, false);
