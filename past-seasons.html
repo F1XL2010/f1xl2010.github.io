@@ -2,11 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="description" content="F1XL — Competitive but accessible F1 racing league. No custom setups required. All skill levels welcome. Est. 2010.">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Past Seasons | F1XL — UK F1 Racing League</title>
-  <link rel="icon" href="/favicon.ico" sizes="any">
-<link rel="apple-touch-icon" href="/favicon-180.png">
+<title>F1XL &mdash; Past Seasons</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="config.js"></script>
@@ -428,6 +425,11 @@ function switchDiv(id, div, total){
 async function loadSeason(id, season, body){
   const sc = await loadSeasonConfig(season);
   if(!sc){ body.innerHTML='<div class="div-loading" style="padding:16px 20px;">No config data for this season.</div>'; return; }
+  // Store this card's config on the body element itself so switchDivTab can
+  // retrieve the correct config later, even if multiple season cards are
+  // open at once. (Previously relied on a single shared global which broke
+  // lazy-loading of Division 2+ tabs across the whole page.)
+  body._seasonConfig = sc;
   const s = parseFloat(season);
   if(s<=2) await renderS1S2(id, season, sc, body);
   else if(s>=3 && s<=9 || s===11 || s===12 || s===13 || s===14 || s===15 || s===16 || s===17 || s===18 || s===19) await renderS3to5(id, season, sc, body);
@@ -756,13 +758,22 @@ function switchDivTab(id, tabKey){
   }
   // Recolour all other active tabs (non-active ones stay muted)
   setTimeout(_colourActiveTabs, 0);
-  if(anyContent.dataset.loaded === 'false' && _currentSeasonConfig){
+
+  // Retrieve this card's season config from the body element (set in loadSeason)
+  // rather than a shared global — fixes lazy-loading for any season once
+  // multiple cards have been opened, and for Division 2+ on every season.
+  const bodyEl = document.getElementById(id+'-body');
+  const sc = bodyEl ? bodyEl._seasonConfig : null;
+
+  if(anyContent.dataset.loaded === 'false' && sc){
     const divNum = parseInt(tabKey);
     if(!isNaN(divNum)){
-      const s = parseFloat(_currentSeason||0);
-      if(s>=28) loadS28DivContent(id, divNum, _currentSeasonConfig);
-      else if(s>=20) loadS20DivContent(id, divNum, _currentSeasonConfig);
-      else loadDivContent(id, divNum, _currentSeasonConfig);
+      // Derive season from the card id itself (e.g. 's27' -> 27, 's1_5' -> 1.5)
+      const seasonStr = id.replace(/^s/, '').replace('_', '.');
+      const s = parseFloat(seasonStr) || 0;
+      if(s>=28) loadS28DivContent(id, divNum, sc);
+      else if(s>=20) loadS20DivContent(id, divNum, sc);
+      else loadDivContent(id, divNum, sc);
     }
   }
 }
