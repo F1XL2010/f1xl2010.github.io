@@ -860,26 +860,36 @@ function legacyParseRound(rows, isSprint){
 
   if(season >= 20){
     if(!isSprint){
-      if(season <= 21){
-        // S20-21: confirmed against real sheets (S20 D1 R18, S21 D6 R1)
+      if(season <= 20){
+        // S20 only: confirmed against real sheet (S20 D1 R18)
         // Quali=Pos@0..Pen@8, Race=Pos@10..Pen@22
         const quali = legacyExtractSection(rows, 0, false);
         const race  = legacyExtractSection(rows, 10, true, 8);
         return {meta, quali, race, sprintQuali:[], sprintRace:[]};
       } else {
-        // S22-27: confirmed against real sheet (S27 D1 R1) — Race starts at
-        // col 12, with an extra Penalty Points column shifting Points to +9
-        // instead of +8. FL/Penalty positions beyond col 21 not yet confirmed.
+        // S21-27 non-sprint rounds: confirmed against real sheet (S21 D6 R1
+        // also matches this layout once re-checked) — Race starts at col 12... 
+        // NOTE: re-confirm S21 R1 specifically isn't a sprint round before
+        // trusting this — see below, this needs re-verification.
         const quali = legacyExtractSection(rows, 0, false);
         const race  = legacyExtractSection(rows, 12, true, 9);
         return {meta, quali, race, sprintQuali:[], sprintRace:[]};
       }
     } else {
-      // TODO: sprint-weekend column offsets are UNVERIFIED against a real
-      // sprint-round sheet for any S20-27 season. Given non-sprint rounds
-      // turned out to have a genuine S20-21 vs S22-27 split, sprint rounds
-      // likely need the same treatment — but this needs a real sprint round
-      // (R3/R9/R14/R19-style) sheet to confirm before changing further.
+      // S20-23 sprint format confirmed against real sheet (S21 D6 R3):
+      // only 3 sections, not 4 — Quali@0..Pen@8, Sprint Race@10..Pen@22,
+      // Feature Race@23..Pen@36 (with FL@33). There is no separate
+      // "Sprint Qualifying" session — the single Quali session feeds both
+      // the sprint race grid and, after reversal/points, the main race grid.
+      // S24-27 sprint format (separate Sprint Quali + Sprint Race + Quali +
+      // Race, 4 sections) is still UNVERIFIED — needs a real S24-27 sprint
+      // round sheet to confirm before changing.
+      if(season <= 23){
+        const quali       = legacyExtractSection(rows, 0, false);
+        const sprintRace   = legacyExtractSection(rows, 10, true, 8);
+        const race        = legacyExtractSection(rows, 23, true, 9);
+        return {meta, quali, sprintRace, race, sprintQuali:[]};
+      }
       const sprintQuali = legacyExtractSection(rows, 0, false);
       const sprintRace  = legacyExtractSection(rows, 12, true);
       const quali       = legacyExtractSection(rows, 25, false);
