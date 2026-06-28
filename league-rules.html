@@ -5,8 +5,6 @@
 <meta name="description" content="F1XL — Competitive but accessible F1 racing league. No custom setups required. All skill levels welcome. Est. 2010.">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>League Rules | F1XL — UK F1 Racing League</title>
-  <link rel="icon" href="/favicon.ico" sizes="any">
-<link rel="apple-touch-icon" href="/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -411,7 +409,7 @@ async function init() {
     const rulesUrl = await getConfigValue('league_rules_url');
     if (!rulesUrl) throw new Error('No league_rules_url in config');
 
-    const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(rulesUrl)}`);
+    const res = await fetch(rulesUrl);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const html = await res.text();
     const chapters = parseDocHtml(html);
