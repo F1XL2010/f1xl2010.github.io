@@ -2,11 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="description" content="F1XL — Competitive but accessible F1 racing league. No custom setups required. All skill levels welcome. Est. 2010.">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hall of Fame | F1XL — UK F1 Racing League</title>
-  <link rel="icon" href="/favicon.ico" sizes="any">
-<link rel="apple-touch-icon" href="/favicon-180.png">
+<title>F1XL — Hall of Fame</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -132,6 +129,13 @@
   .hof-slide{position:absolute;inset:0;opacity:0;transition:opacity 0.6s ease;pointer-events:none;}
   .hof-slide.active{opacity:1;pointer-events:auto;}
   .hof-slide-img{width:100%;height:100%;object-fit:cover;display:block;}
+  .hof-slide-lower{position:absolute;bottom:8%;right:4%;width:42%;display:flex;flex-direction:column;gap:10px;}
+  .hof-slide-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .hof-stat{background:rgba(10,14,12,0.75);border:1px solid rgba(232,184,75,0.25);border-radius:8px;padding:10px 12px;text-align:center;backdrop-filter:blur(4px);}
+  .hof-stat-val{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;color:#fff;line-height:1;}
+  .hof-stat-lbl{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-top:3px;}
+  .hof-slide-achs{display:flex;flex-wrap:wrap;gap:5px;}
+  .hof-ach{font-size:10px;background:rgba(10,14,12,0.75);border:1px solid rgba(232,184,75,0.3);color:rgba(232,184,75,0.9);padding:3px 9px;border-radius:4px;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.5px;backdrop-filter:blur(4px);white-space:nowrap;}
   .hof-controls{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:16px;max-width:900px;margin-left:auto;margin-right:auto;padding:0 28px;}
   .hof-ctrl-btn{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all 0.2s;flex-shrink:0;}
   .hof-ctrl-btn:hover{background:rgba(232,184,75,0.1);border-color:rgba(232,184,75,0.3);color:#E8B84B;}
@@ -143,6 +147,7 @@
   .hof-bar{height:100%;background:#E8B84B;border-radius:2px;width:0;}
   .hof-pause-btn{background:none;border:none;color:rgba(255,255,255,0.3);cursor:pointer;font-size:11px;letter-spacing:1px;text-transform:uppercase;font-family:'Barlow Condensed',sans-serif;padding:4px 8px;}
   .hof-pause-btn:hover{color:rgba(232,184,75,0.7);}
+  @media(max-width:600px){.hof-slide-stats{grid-template-columns:repeat(3,1fr);}.hof-stat-val{font-size:18px;}}
 
   /* LOADING */
   .loading-msg{text-align:center;padding:48px 24px;color:var(--text-faint);font-size:13px;}
@@ -168,7 +173,6 @@
 </style>
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#111816">
-<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="F1XL">
@@ -179,7 +183,7 @@
 <nav>
   <div class="nav-left">
     <a href="index.html" class="nav-logo">
-      <img src="TRANSPARENT.png" alt="F1XL">
+      <img src="TRANSPARENT.png" alt="F1XL - UK Casual F1 League Racing on Xbox, PlayStation and PC">
     </a>
   </div>
   <div class="nav-links">
@@ -334,7 +338,7 @@
 <footer>
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="footer-logo">F1XL</div>
-    <div class="footer-text">The UK's longest running F1 league · Est. 2010</div>
+    <div class="footer-text">F1 League · F1 Sim Racing on Xbox, PlayStation and PC. Casual Racing on F1 26</div>
   </div>
   <div class="footer-text">f1xl.co.uk</div>
 </footer>
@@ -809,6 +813,7 @@ async function init(){
     // Fetch all in parallel
     const fetches = {};
     if(cfg.stats_url) fetches.stats = fetchCSV(cfg.stats_url);
+    if(cfg.stats_url) window._hofStatsUrl = cfg.stats_url;
     loadHofLegends();
     if(cfg.overall_winners_url) fetches.overall = fetchCSV(cfg.overall_winners_url);
     for(let d=1;d<=8;d++){
@@ -877,6 +882,53 @@ const HOF_IMG_BASE = 'images/hof/';
 let hofInductees = [], hofCurrent = 0, hofPaused = false;
 let hofElapsed = 0, hofLastTick = null, hofRafId = null;
 
+function hofBuildAccolades() {
+  if (!hofInductees.length) return;
+  const clean = s => s.toLowerCase().replace(/[^a-z0-9]/g,'');
+
+  hofInductees.forEach(ind => {
+    const indVariants = ind.name.split('/').map(n => clean(n.trim()));
+    const matches = name => {
+      if (!name) return false;
+      const nv = name.split('/').map(n => clean(n.trim()));
+      return indVariants.some(iv => nv.some(rv => rv === iv || rv.includes(iv) || iv.includes(rv)));
+    };
+
+    // Separate buckets by prestige
+    const overallTitles = [], divDriverTitles = [], divConsTitles = [], divRuTitles = [];
+
+    // Overall TP championships
+    overallData.forEach(s => {
+      if (s.owner && matches(s.owner)) overallTitles.push(`👑 Overall Champion S${s.season}`);
+    });
+
+    // Division championships
+    for (let d = 1; d <= 8; d++) {
+      const divSeasons = allDivData[`Division ${d}`] || [];
+      divSeasons.forEach(s => {
+        if (s.champ && matches(s.champ)) divDriverTitles.push(`🏆 D${d} Driver Champion S${s.season}`);
+        if ((s.consDriver1 && matches(s.consDriver1)) || (s.consDriver2 && matches(s.consDriver2)))
+          divConsTitles.push(`🪙 D${d} Constructor Champion S${s.season}`);
+      });
+    }
+
+    // Combine — overall first, then driver titles, then constructor titles
+    const achs = [...overallTitles, ...divDriverTitles, ...divConsTitles].slice(0, 6);
+    ind.accolades = achs;
+
+    // Re-render pills if stats panel already exists
+    const lower = document.getElementById(`hof-lower-${hofInductees.indexOf(ind)}`);
+    if (lower && lower.querySelector('.hof-slide-stats') && achs.length) {
+      const existing = lower.querySelector('.hof-slide-achs');
+      if (existing) existing.remove();
+      const achDiv = document.createElement('div');
+      achDiv.className = 'hof-slide-achs';
+      achDiv.innerHTML = achs.map(a => `<span class="hof-ach">${a}</span>`).join('');
+      lower.appendChild(achDiv);
+    }
+  });
+}
+
 async function loadHofLegends() {
   try {
     const url  = `https://docs.google.com/spreadsheets/d/${HOF_SHEET_ID}/gviz/tq?tqx=out:csv&gid=${HOF_GID}`;
@@ -892,15 +944,18 @@ async function loadHofLegends() {
 
     const inductees = [];
     for (let i = hi + 1; i < rows.length; i++) {
-      const name    = (rows[i][0]||'').trim();
-      const season  = (rows[i][1]||'').trim();
-      const imgFile = (rows[i][2]||'').trim();
+      const name      = (rows[i][0]||'').trim();
+      const season    = (rows[i][1]||'').trim();
+      const imgFile   = (rows[i][2]||'').trim();
+      const accolades = [rows[i][3],rows[i][4],rows[i][5],rows[i][6]]
+        .map(a=>(a||'').trim()).filter(Boolean);
       if (!name) break;
-      inductees.push({ name, season, imgFile });
+      inductees.push({ name, season, imgFile, accolades });
     }
 
     if (!inductees.length) { document.getElementById('hof-flipbook').innerHTML = '<div class="loading-msg">No inductees yet.</div>'; return; }
 
+    // Now cross-reference with stats if available
     hofInductees = inductees;
     hofRenderFlipbook();
 
@@ -930,10 +985,13 @@ function hofRenderFlipbook() {
   const controls = document.getElementById('hof-controls');
   const dotsEl   = document.getElementById('hof-dots');
 
-  // Build slides — image only, no overlay
+  // Build slides
   flipbook.innerHTML = hofInductees.map((ind, i) => `
     <div class="hof-slide${i===0?' active':''}" id="hof-slide-${i}">
       <img class="hof-slide-img" src="${HOF_IMG_BASE}${ind.imgFile}" alt="${ind.name}" onerror="this.style.background='#1a2320'">
+      <div class="hof-slide-lower" id="hof-lower-${i}">
+        <div class="loading-msg" style="color:rgba(255,255,255,0.3);font-size:11px;">Loading stats...</div>
+      </div>
     </div>
   `).join('');
 
@@ -944,11 +1002,68 @@ function hofRenderFlipbook() {
 
   controls.style.display = 'flex';
 
+  // Load stats for each inductee from the main stats sheet
+  hofInductees.forEach((ind, i) => hofLoadStats(ind, i));
+
   // Start timer
   hofLastTick = performance.now();
   requestAnimationFrame(hofTick);
 }
 
+async function hofLoadStats(ind, idx) {
+  const lower = document.getElementById(`hof-lower-${idx}`);
+  try {
+    const statsUrl = window._hofStatsUrl || '';
+    if (!statsUrl) { lower.innerHTML = ''; return; }
+
+    const idM  = statsUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
+    const gidM = statsUrl.match(/gid=(\d+)/);
+    if (!idM) { lower.innerHTML = ''; return; }
+
+    const text = await fetch(`https://docs.google.com/spreadsheets/d/${idM[1]}/export?format=csv&gid=${gidM?.[1]||'0'}`).then(r => r.text());
+    if (text.includes('<!DOCTYPE')) { lower.innerHTML = ''; return; }
+
+    // Parse using same logic as hall-of-records
+    const rows = parseCSVHof(text);
+
+    // Name matching — strip pipes/spaces/special chars for loose comparison
+    const clean = s => s.toLowerCase().replace(/[|\s]/g,'').replace(/[^a-z0-9]/g,'');
+    const indVariants = ind.name.split('/').map(n => clean(n.trim()));
+
+    // Data starts at row 4, driver in col 3
+    let dRow = null;
+    for (let i = 4; i < rows.length; i++) {
+      const raw = (rows[i][3]||'').trim();
+      if (!raw || raw.toLowerCase() === 'driver') continue;
+      const rowVariants = raw.split('/').map(n => clean(n.trim()));
+      if (indVariants.some(iv => rowVariants.some(rv => rv === iv || rv.includes(iv) || iv.includes(rv)))) {
+        dRow = rows[i]; break;
+      }
+    }
+
+    if (!dRow) { lower.innerHTML = ''; return; }
+
+    const gv = col => (dRow[col]||'').trim() || '—';
+    const seasons = parseInt(gv(4)) || 0;
+    const wins    = parseInt(gv(5)) || 0;
+    const podiums = parseInt(gv(6)) || 0;
+    const poles   = parseInt(gv(7)) || 0;
+    const races   = parseInt(gv(9)) || 0;
+
+    lower.innerHTML = `
+      <div class="hof-slide-stats">
+        <div class="hof-stat"><div class="hof-stat-val">${seasons||'—'}</div><div class="hof-stat-lbl">Seasons</div></div>
+        <div class="hof-stat"><div class="hof-stat-val">${races||'—'}</div><div class="hof-stat-lbl">Races</div></div>
+        <div class="hof-stat"><div class="hof-stat-val">${wins||'—'}</div><div class="hof-stat-lbl">Wins</div></div>
+        <div class="hof-stat"><div class="hof-stat-val">${podiums||'—'}</div><div class="hof-stat-lbl">Podiums</div></div>
+      </div>
+      ${ind.accolades && ind.accolades.length ? `<div class="hof-slide-achs">${ind.accolades.map(a=>`<span class="hof-ach">${a}</span>`).join('')}</div>` : ''}
+    `;
+  } catch(e) {
+    console.warn('HOF stats error:', e);
+    lower.innerHTML = '';
+  }
+}
 
 function hofGo(dir) {
   const slides = document.querySelectorAll('.hof-slide');

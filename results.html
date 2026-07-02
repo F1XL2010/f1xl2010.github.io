@@ -114,7 +114,7 @@
 <nav>
   <div class="nav-left">
     <a href="index.html" class="nav-logo">
-      <img src="TRANSPARENT.png" alt="F1XL">
+      <img src="TRANSPARENT.png" alt="F1XL - UK Casual F1 League Racing on Xbox, PlayStation and PC">
     </a>
   </div>
   <div class="nav-links">
@@ -194,7 +194,7 @@
 <footer>
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="footer-logo">F1XL</div>
-    <div class="footer-text">The UK's longest running F1 league · Est. 2010</div>
+    <div class="footer-text">F1 League · F1 Sim Racing on Xbox, PlayStation and PC. Casual Racing on F1 26</div>
   </div>
   <div class="footer-text">f1xl.co.uk</div>
 </footer>
@@ -719,26 +719,9 @@ function legacyFetchURL(sheetId, gid, fallbackSheetId){
   return `https://docs.google.com/spreadsheets/d/${sid}/export?format=csv&gid=${gid}`;
 }
 
-function legacyExtractSection(rows, colOffset, isRace, ptsOffset){
-  // ptsOffset lets callers override where Points sits relative to colOffset,
-  // since S22-27 has an extra Penalty Points column between Gap and Points
-  // that S20-21 doesn't have. Defaults to +8 (S20-21 layout).
-  if(ptsOffset===undefined) ptsOffset = 8;
+function legacyExtractSection(rows, colOffset, isRace){
   const results = [];
-  // Find the header row dynamically (look for 'Pos' at colOffset) rather than
-  // assuming a fixed starting row index. Blank rows get stripped by csv()
-  // before this function ever sees the data, so the real header row's index
-  // shifts depending on how many blank rows preceded it in the original
-  // sheet — a hardcoded start row caused Pos 1/2 to be skipped whenever that
-  // shift happened.
-  let dataStart = -1;
-  for(let i=0;i<rows.length;i++){
-    const v = (rows[i][colOffset]||'').toString().trim().toLowerCase();
-    if(v==='pos'||v==='pos.'){ dataStart = i+1; break; }
-  }
-  if(dataStart<0) return results;
-
-  for(let i=dataStart; i<rows.length; i++){
+  for(let i=5; i<rows.length; i++){
     const row = rows[i] || [];
     const rawPos = (row[colOffset]||'').toString().trim();
     if(!rawPos || rawPos === ' ') break;
@@ -748,34 +731,24 @@ function legacyExtractSection(rows, colOffset, isRace, ptsOffset){
     if(!driver || driver === ' ') break;
     const team = (row[colOffset+4]||'').toString().trim();
     if(isRace){
-      // S20-21 (ptsOffset=8): Pos@0 Nat@1 #@2 Driver@3 Team@4 Team(dup)@5
-      //   Stops@6 Gap@7 Points@8 [blank]@9 FL@10 PenaltyPoints@11 Penalty@12
-      // S22-27 (ptsOffset=9): same up to Gap@7, then PenaltyPoints@8 Points@9
-      //   — FL/Penalty positions for S22-27 not yet confirmed against a
-      //   sheet that has values past col 21, so left at same relative spot.
       results.push({
         pos: rawPos,
         num: (row[colOffset+2]||'').toString().trim(),
         driver, team,
         stops: (row[colOffset+6]||'').toString().trim(),
         gap: (row[colOffset+7]||'').toString().trim(),
-        pts: String(Math.floor(parseFloat((row[colOffset+ptsOffset]||'').toString())||0)||'0'),
+        pts: String(Math.floor(parseFloat((row[colOffset+8]||'').toString())||0)||'0'),
         fl: (row[colOffset+10]||'').toString().trim(),
-        pen: (row[colOffset+12]||'').toString().trim()
+        pen: (row[colOffset+11]||'').toString().trim()
       });
     } else {
-      // Confirmed against real S20/S21 sheets: Pos@0 Nat@1 #@2 Driver@3 Team@4
-      // [blank]@5 Time@6 PenaltyPoints@7 Penalty@8 [blank]@9
-      // S27 quali DOES have a real Tyre column at @7 (unlike S20-21) — but
-      // since that shifts Penalty's position too and isn't confirmed yet,
-      // Tyre/Penalty for S22-27 quali are left as a known gap for now.
       results.push({
         pos: rawPos,
         num: (row[colOffset+2]||'').toString().trim(),
         driver, team,
         time: (row[colOffset+6]||'').toString().trim(),
-        tyre: '',
-        pen: (row[colOffset+8]||'').toString().trim()
+        tyre: (row[colOffset+7]||'').toString().trim(),
+        pen: (row[colOffset+9]||'').toString().trim()
       });
     }
   }
@@ -859,37 +832,12 @@ function legacyParseRound(rows, isSprint){
   const season = parseFloat(_currentSeason || 0);
 
   if(season >= 20){
+    // S20-S27: original horizontal format — Quali col 0, Race col 12
     if(!isSprint){
-      if(season <= 20){
-        // S20 only: confirmed against real sheet (S20 D1 R18)
-        // Quali=Pos@0..Pen@8, Race=Pos@10..Pen@22
-        const quali = legacyExtractSection(rows, 0, false);
-        const race  = legacyExtractSection(rows, 10, true, 8);
-        return {meta, quali, race, sprintQuali:[], sprintRace:[]};
-      } else {
-        // S21-27 non-sprint rounds: confirmed against real sheet (S21 D6 R1
-        // also matches this layout once re-checked) — Race starts at col 12... 
-        // NOTE: re-confirm S21 R1 specifically isn't a sprint round before
-        // trusting this — see below, this needs re-verification.
-        const quali = legacyExtractSection(rows, 0, false);
-        const race  = legacyExtractSection(rows, 12, true, 9);
-        return {meta, quali, race, sprintQuali:[], sprintRace:[]};
-      }
+      const quali = legacyExtractSection(rows, 0, false);
+      const race  = legacyExtractSection(rows, 12, true);
+      return {meta, quali, race, sprintQuali:[], sprintRace:[]};
     } else {
-      // S20-23 sprint format confirmed against real sheet (S21 D6 R3):
-      // only 3 sections, not 4 — Quali@0..Pen@8, Sprint Race@10..Pen@22,
-      // Feature Race@23..Pen@36 (with FL@33). There is no separate
-      // "Sprint Qualifying" session — the single Quali session feeds both
-      // the sprint race grid and, after reversal/points, the main race grid.
-      // S24-27 sprint format (separate Sprint Quali + Sprint Race + Quali +
-      // Race, 4 sections) is still UNVERIFIED — needs a real S24-27 sprint
-      // round sheet to confirm before changing.
-      if(season <= 23){
-        const quali       = legacyExtractSection(rows, 0, false);
-        const sprintRace   = legacyExtractSection(rows, 10, true, 8);
-        const race        = legacyExtractSection(rows, 23, true, 9);
-        return {meta, quali, sprintRace, race, sprintQuali:[]};
-      }
       const sprintQuali = legacyExtractSection(rows, 0, false);
       const sprintRace  = legacyExtractSection(rows, 12, true);
       const quali       = legacyExtractSection(rows, 25, false);
@@ -985,8 +933,8 @@ function legacyRenderRound(r, parsed){
   html += '<div class="results-grid">';
   if(meta.isSprint){
     html += legacyQTable(sprintQuali, 'Sprint Qualifying');
-    html += legacyQTable(quali, 'Qualifying');
     html += legacyRTable(sprintRace, 'Sprint Race');
+    html += legacyQTable(quali, 'Qualifying');
     html += legacyRTable(race, 'Race');
   } else {
     html += legacyQTable(quali, 'Qualifying');
