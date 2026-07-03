@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>F1XL — Season 27 Schedule</title>
+  <link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -243,9 +245,7 @@ const TRACKS = {
     path:'M23,62 L23,40 L28,28 L45,18 L62,25 L67,37 L62,53 L50,57 L45,52 L38,57 L38,67 L50,72 L63,67 L68,57' },
   'monaco':       { flag:'🇲🇨', name:'Circuit de Monaco', country:'Monaco',
     path:'M28,35 L28,55 L40,67 L60,67 L72,55 L72,35 L60,23 L40,23 L28,35' },
-  'spain':        { flag:'🇪🇸', name:'Madrid Street Circuit', country:'Spain',
-    path:'M23,52 L23,30 L35,18 L65,18 L72,30 L72,52 L65,62 L35,62 L23,52' },
-  'catalunya':    { flag:'🇪🇸', name:'Circuit de Barcelona-Catalunya', country:'Catalunya',
+  'spain':        { flag:'🇪🇸', name:'Circuit de Barcelona-Catalunya', country:'Spain',
     path:'M23,52 L23,30 L35,18 L65,18 L72,30 L72,52 L65,62 L35,62 L23,52' },
   'mexico':       { flag:'🇲🇽', name:'Autodromo Hermanos Rodriguez', country:'Mexico',
     path:'M28,57 L23,40 L30,23 L50,18 L70,23 L77,40 L70,57 L57,62 L57,52 L43,52 L43,62 L28,57' },
@@ -411,7 +411,6 @@ function countryToImg(country) {
     .replace('saudi arabia', 'saudi_arabia')
     .replace('south korea', 'south_korea')
     .replace('south africa', 'south_africa')
-    .replace('catalunya', 'spain')
     .replace(' ', '_');
   return `images/largeflags/grunge_${name}.webp`;
 }
