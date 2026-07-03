@@ -1405,13 +1405,15 @@ function buildS20Drivers(rows, roundNames, driverTeamMap){
   const ptsCol = headerRow.findIndex(v=>(v||'').trim().toLowerCase()==='points');
   if(ptsCol<0) return '<div class="div-loading">Could not find points column.</div>';
 
-  // Build round labels — row 0 has circuit names aligned to sprint quali cols
-  // Sprint race cols (blank in row 0) inherit name from preceding sprint quali col
+  const poleCol = headerRow.findIndex(v=>(v||'').trim().toLowerCase()==='pole');
+  const flCol   = headerRow.findIndex(v=>{ const t=(v||'').trim().toLowerCase(); return t==='f/l'||t==='fl'||t==='fastest lap'; });
+
+  const roundColRe = /^r\d+(\(s\))?$/i;
   const roundCols = [];
   let lastCircuit = '';
-  for(let c=4;c<ptsCol-1;c++){
+  for(let c=4;c<ptsCol;c++){
     const label = (headerRow[c]||'').trim();
-    if(!label) continue;
+    if(!label || !roundColRe.test(label)) continue;
     const isSprint = label.toLowerCase().includes('(s)');
     const isSprintRace = !isSprint && c>4 && (headerRow[c-1]||'').trim().toLowerCase().includes('(s)');
     // Extract round number from label (e.g. "R1", "R3(s)" -> 1, 3)
@@ -1443,6 +1445,8 @@ function buildS20Drivers(rows, roundNames, driverTeamMap){
   if(!dataRows.length) return '<div class="div-loading">No driver data found.</div>';
 
   const hasPointsData = dataRows.some(r=>parseFloat((r[ptsCol]||'').trim())>0);
+  const hasPoleData   = poleCol>=0 && dataRows.some(r=>(r[poleCol]||'').trim());
+  const hasFLData     = flCol>=0   && dataRows.some(r=>(r[flCol]||'').trim());
 
   let html = '<div class="section-label">Drivers</div><div class="st-wrap"><table class="standings-table"><thead><tr>';
   html += '<th class="ps-st-pos"><span class="ps-pos-header">Pos</span></th>';
@@ -1452,6 +1456,8 @@ function buildS20Drivers(rows, roundNames, driverTeamMap){
     const suffix = rc.isSprint ? '<span style="font-size:8px;opacity:0.6;display:block;">S</span>' : rc.isSprintRace ? '<span style="font-size:8px;opacity:0.6;display:block;">R</span>' : '';
     html += '<th class="ps-result'+sc+'"><div class="ps-round-header">'+(rc.label||'?')+suffix+'</div></th>';
   });
+  if(hasPoleData) html += '<th class="ps-result"><div class="ps-round-header">Pole</div></th>';
+  if(hasFLData)   html += '<th class="ps-result"><div class="ps-round-header">F/L</div></th>';
   if(hasPointsData) html += '<th class="ps-result"><div class="ps-round-header">Pts</div></th>';
   html += '</tr></thead><tbody>';
 
@@ -1460,7 +1466,9 @@ function buildS20Drivers(rows, roundNames, driverTeamMap){
     const driver = (r[2]||'').trim();
     const teamFromRow = (r[3]||'').trim();
     const team = teamFromRow || (driverTeamMap && driverTeamMap[driver.toLowerCase()]) || '';
-    const pts = (r[ptsCol]||'').trim();
+    const pts  = (r[ptsCol]||'').trim();
+    const pole = poleCol>=0 ? (r[poleCol]||'').trim() : '';
+    const fl   = flCol>=0   ? (r[flCol]||'').trim()   : '';
     const pc = pos===1?'p1':pos===2?'p2':pos===3?'p3':'';
     html += '<tr>';
     html += '<td class="ps-st-pos"><span class="ps-pos-cell '+pc+'">'+pos+'</span></td>';
@@ -1471,6 +1479,8 @@ function buildS20Drivers(rows, roundNames, driverTeamMap){
       const ric = psRiClass(val);
       html += '<td class="ps-result'+sc+'"><div class="ps-ri '+ric+'">'+(val||'')+'</div></td>';
     });
+    if(hasPoleData) html += '<td class="ps-result"><span class="ps-pts'+((!pole)?' zero':'')+'">'+(pole||'—')+'</span></td>';
+    if(hasFLData)   html += '<td class="ps-result"><span class="ps-pts'+((!fl)?' zero':'')+'">'+(fl||'—')+'</span></td>';
     if(hasPointsData) html += '<td class="ps-result"><span class="ps-pts'+((!pts||pts==='0')?' zero':'')+'">'+(pts||'—')+'</span></td>';
     html += '</tr>';
   });

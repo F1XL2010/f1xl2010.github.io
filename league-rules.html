@@ -409,7 +409,7 @@ async function init() {
     const rulesUrl = await getConfigValue('league_rules_url');
     if (!rulesUrl) throw new Error('No league_rules_url in config');
 
-    const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(rulesUrl)}`);
+    const res = await fetch(rulesUrl);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const html = await res.text();
     const chapters = parseDocHtml(html);
