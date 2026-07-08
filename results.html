@@ -1055,7 +1055,10 @@ async function loadLegacyDivision(d){
   const calGid = sc[`d${d}_calendar_gid`];
   if(calGid){
     try{
-      const calUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${calGid}`;
+      const calParsed = legacyParseURL(calGid);
+      const calSheetId = calParsed ? calParsed.sheetId : sheetId;
+      const calGidResolved = calParsed ? calParsed.gid : calGid;
+      const calUrl = legacyFetchURL(calSheetId, calGidResolved, sheetId);
       const res = await fetch(calUrl);
       const text = await res.text();
       if(!text.includes('<!DOCTYPE')){
