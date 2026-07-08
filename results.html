@@ -114,7 +114,7 @@
 <nav>
   <div class="nav-left">
     <a href="index.html" class="nav-logo">
-      <img src="TRANSPARENT.png" alt="F1XL">
+      <img src="TRANSPARENT.png" alt="F1XL - UK Casual F1 League Racing on Xbox, PlayStation and PC">
     </a>
   </div>
   <div class="nav-links">
@@ -194,7 +194,7 @@
 <footer>
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="footer-logo">F1XL</div>
-    <div class="footer-text">The UK's longest running F1 league · Est. 2010</div>
+    <div class="footer-text">F1 League · F1 Sim Racing on Xbox, PlayStation and PC. Casual Racing on F1 26</div>
   </div>
   <div class="footer-text">f1xl.co.uk</div>
 </footer>
@@ -325,9 +325,7 @@ function getMeta(rows){
     for(let j=0;j<row.length;j++){
       const v=(row[j]||'').trim().toLowerCase();
       const next=(row[j+1]||'').trim();
-      // Circuit name only searched in first 2 rows to avoid picking up
-      // lobby settings rows that also contain 'circuit' and 'weather' labels
-      if(i<2 && v==='circuit') circuit=next;
+      if(v==='circuit') circuit=next;
       if(v==='safety cars'||v==='safety car') sc=next||'0';
       if(v==='red flag'||v==='red flags') rf=next||'0';
       if(v==='sprint') isSprint=next.toLowerCase()==='yes'||next.toLowerCase()==='y';
@@ -980,7 +978,9 @@ function legacyRTable(data, title){
 
 function legacyRenderRound(r, parsed){
   const {meta, quali, race, sprintQuali, sprintRace} = parsed;
-  const circuit = meta.circuit || r.circuit || '';
+  // Calendar name (r.circuit) is authoritative; row-scan (meta.circuit) is only a fallback
+  // for rounds/seasons where the calendar didn't resolve a name.
+  const circuit = r.circuit || meta.circuit || '';
   const winner = race.length ? race[0] : null;
   console.log('legacyRenderRound - circuit:', circuit, '| winner:', winner, '| race.length:', race.length);
   let html = header(r, circuit, winner, meta.sc, meta.rf, meta.isSprint);
@@ -1049,8 +1049,9 @@ async function loadLegacyDivision(d){
   rounds = [];
   let lastDone = -1;
 
-  // Try to get sprint info from calendar if available, otherwise default to no sprints
+  // Try to get sprint info + circuit names from calendar if available
   let sprintRounds = new Set();
+  let calCircuits = {};
   const calGid = sc[`d${d}_calendar_gid`];
   if(calGid){
     try{
@@ -1062,7 +1063,17 @@ async function loadLegacyDivision(d){
         for(let i=1; i<rows.length; i++){
           const row = rows[i];
           const num = parseInt((row[0]||'').trim());
-          if(!isNaN(num) && (row[1]||'').trim().toLowerCase()==='sprint') sprintRounds.add(num);
+          if(isNaN(num)) continue;
+          if((row[1]||'').trim().toLowerCase()==='sprint') sprintRounds.add(num);
+          // Legacy calendar layout: col E(4)=short name, F(5)=full GP name, G(6)=circuit desc.
+          // D(3) is labelled "Grand Prix" but its VLOOKUP is broken in these old sheets — skip it.
+          // Prefer the short name: it matches CIRCUIT_TO_COUNTRY's flag lookup (e.g. "usa",
+          // "miami", "las vegas") and matches how the modern (S28+) calendar path already
+          // labels rounds. Full name is only a fallback if short is blank.
+          const short = (row[4]||'').trim();
+          const full = (row[5]||'').trim();
+          let name = short || full.replace(/\s*grand prix\s*$/i, '');
+          if(name) calCircuits[num] = name;
         }
       }
     } catch(e){ /* ignore calendar errors */ }
@@ -1072,13 +1083,13 @@ async function loadLegacyDivision(d){
   for(let i=1; i<=25; i++){
     const rawGid = sc[`d${d}_r${i}_gid`];
     if(!rawGid) continue;
-    rounds.push({round:i, circuit:'', date:null, isSprint:sprintRounds.has(i), gid:rawGid, done:true});
+    rounds.push({round:i, circuit:calCircuits[i]||'', date:null, isSprint:sprintRounds.has(i), gid:rawGid, done:true});
     lastDone = rounds.length - 1;
   }
 
   const sel = document.getElementById('round-selector');
   sel.innerHTML = rounds.map(r=>
-    `<button class="round-btn${r.isSprint?' sprint':''}" id="rb${r.round}" onclick="selectLegacyRound(${r.round})">${r.isSprint?'⚡ ':''}R${r.round}</button>`
+    `<button class="round-btn${r.isSprint?' sprint':''}" id="rb${r.round}" onclick="selectLegacyRound(${r.round})">${r.isSprint?'⚡ ':''}R${r.round}${r.circuit?' · '+r.circuit:''}</button>`
   ).join('');
 
   if(rounds.length) document.getElementById('page-meta').textContent = `Season ${_currentSeason} · Division ${d} · ${rounds.length} rounds`;
