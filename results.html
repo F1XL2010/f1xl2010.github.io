@@ -1075,7 +1075,8 @@ async function loadLegacyDivision(d){
           // labels rounds. Full name is only a fallback if short is blank.
           const short = (row[4]||'').trim();
           const full = (row[5]||'').trim();
-          let name = short || full.replace(/\s*grand prix\s*$/i, '');
+          let name = short || full;
+          if(name) name = name.replace(/\s*grand prix\s*$/i, '');
           if(name) calCircuits[num] = name;
         }
       }
