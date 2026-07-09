@@ -182,11 +182,14 @@ async function main() {
 
   const divResults = await Promise.all(divPromises);
 
-  // Build current roster — keyed by team name, value is array of drivers
+  // Build current roster — keyed by "div::team" so identical team names
+  // (e.g. "Ferrari" existing in every division) don't collide and overwrite
+  // each other. Only the last division processed used to survive.
   const currRoster = {};
   for (const teamMap of divResults) {
     for (const [team, drivers] of Object.entries(teamMap)) {
-      currRoster[team] = drivers;
+      const div = drivers[0]?.div;
+      currRoster[`${div}::${team}`] = drivers;
     }
   }
 
@@ -194,12 +197,12 @@ async function main() {
   // Compare current drivers against previous state
   const newByTeam = {};
 
-  for (const [team, drivers] of Object.entries(currRoster)) {
-    const prevDrivers = prevRoster[team] || [];
+  for (const [key, drivers] of Object.entries(currRoster)) {
+    const prevDrivers = prevRoster[key] || [];
     const prevNames = new Set(prevDrivers.map(d => d.name.toLowerCase()));
     const newDrivers = drivers.filter(d => !prevNames.has(d.name.toLowerCase()));
     if (newDrivers.length > 0) {
-      newByTeam[team] = newDrivers;
+      newByTeam[key] = newDrivers;
     }
   }
 
@@ -207,7 +210,8 @@ async function main() {
   console.log(`Teams with new signings: ${teamCount}`);
 
   // Post one message per team
-  for (const [team, drivers] of Object.entries(newByTeam)) {
+  for (const [key, drivers] of Object.entries(newByTeam)) {
+    const team = key.includes('::') ? key.split('::').slice(1).join('::') : key;
     const div = drivers[0].div;
     let msg;
 
