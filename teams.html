@@ -430,14 +430,21 @@ function renderS28Season(divDataArr, seasonNum) {
   });
 
   const allTeams        = Object.values(teamMap).sort((a, b) => a.name.localeCompare(b.name));
-  const allReserveTeams = [];
+
+  // Merge reserve teams across divisions (same approach as constructor teams
+  // above) — dedup by name was previously dropping every division's reserve
+  // team except the first one encountered, since they share generic names
+  // like "Reserve" across every division.
+  const reserveTeamMap = {};
   divDataArr.forEach(divData => {
     (divData.reserveTeams || []).forEach(t => {
-      if (!allReserveTeams.find(r => r.name.toLowerCase() === t.name.toLowerCase())) {
-        allReserveTeams.push(t);
-      }
+      const key = t.name.toLowerCase();
+      if (!reserveTeamMap[key]) reserveTeamMap[key] = { ...t, divs: [] };
+      reserveTeamMap[key].divs.push({ div: t.div, tier1: t.tier1, tier2: t.tier2 });
     });
   });
+  const allReserveTeams = Object.values(reserveTeamMap);
+
   const allFreeAgents   = [...new Set(divDataArr.flatMap(d => d.freeAgents))].filter(Boolean);
   const allRetired      = [...new Set(divDataArr.flatMap(d => d.retired))].filter(Boolean);
 
@@ -483,13 +490,16 @@ function renderS28Season(divDataArr, seasonNum) {
     <div class="section-sublabel" style="padding:0 24px 12px;font-size:12px;color:var(--text-faint);">Guaranteed race seat — no constructor assigned</div>
     <div class="teams-grid">`;
     allReserveTeams.forEach(t => {
-      const divsHtml = `<div class="tc-div">
-        <div class="tc-div-row"><span class="tc-div-lbl">Division ${t.div}</span></div>
-        <div class="tc-drivers">
-          <span style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">T1</span> ${t.tier1 || '&mdash;'}<br>
-          <span style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">T2</span> ${t.tier2 || '&mdash;'}
-        </div>
-      </div>`;
+      let divsHtml = '';
+      t.divs.forEach(d => {
+        divsHtml += `<div class="tc-div">
+          <div class="tc-div-row"><span class="tc-div-lbl">Division ${d.div}</span></div>
+          <div class="tc-drivers">
+            <span style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">T1</span> ${d.tier1 || '&mdash;'}<br>
+            <span style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">T2</span> ${d.tier2 || '&mdash;'}
+          </div>
+        </div>`;
+      });
       html += cardTemplate(t, divsHtml);
     });
     html += '</div>';
