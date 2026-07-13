@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>F1XL — Predictor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green:#3DCC47;--teal:#5ECFCF;--red:#E10600;--black:#111816;--dark:#161d1b;--dark2:#1a2320;--dark3:#1e2a27;
+    --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+    --text:#ffffff;--text-muted:rgba(255,255,255,0.60);--text-faint:rgba(255,255,255,0.30);
+    --p1-bg:#FFD700;--p1-text:#5a3e00;--p2-bg:#C0C0C0;--p2-text:#2a2a2a;--p3-bg:#cd7f32;--p3-text:#fff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:#111816;color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;}
+
+  nav{background:rgba(17,24,22,0.97);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;backdrop-filter:blur(8px);}
+  .nav-left{display:flex;align-items:center;flex-shrink:0;}
+  .nav-logo{display:flex;align-items:center;height:40px;text-decoration:none;}
+  .nav-logo img{height:34px;width:auto;display:block;}
+  .nav-links{display:flex;align-items:stretch;height:56px;}
+  .nav-item{position:relative;display:flex;align-items:stretch;}
+  .nav-item>a,.nav-item>button{color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:500;letter-spacing:0.5px;padding:0 13px;display:flex;align-items:center;gap:4px;border-bottom:2px solid transparent;border-top:none;border-left:none;border-right:none;background:none;cursor:pointer;font-family:'Barlow',sans-serif;text-transform:uppercase;transition:color 0.2s;white-space:nowrap;}
+  .nav-item>a:hover,.nav-item>button:hover{color:var(--text);}
+  .nav-item>a.active,.nav-item>button.active{color:var(--text);border-bottom-color:var(--green);}
+  .nav-chevron{font-size:8px;opacity:0.5;transition:transform 0.2s;}
+  .nav-item:hover .nav-chevron{transform:rotate(180deg);}
+  .nav-dropdown{display:none;position:absolute;top:100%;left:0;background:#141a18;border:1px solid var(--border2);border-top:2px solid var(--green);border-radius:0 0 6px 6px;min-width:180px;padding:6px 0;z-index:300;}
+  .nav-item:hover .nav-dropdown{display:block;}
+  .nav-dropdown a{display:block;padding:9px 16px;color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;transition:color 0.15s,background 0.15s;white-space:nowrap;}
+  .nav-dropdown a:hover{color:var(--text);background:rgba(255,255,255,0.05);}
+  .nav-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:8px;background:none;border:none;}
+  .nav-hamburger span{display:block;width:22px;height:2px;background:var(--text-muted);border-radius:2px;transition:all 0.25s;}
+  .nav-hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+  .nav-hamburger.open span:nth-child(2){opacity:0;}
+  .nav-hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+  .mobile-menu{display:none;position:fixed;top:56px;left:0;right:0;background:#141a18;border-bottom:1px solid var(--border2);z-index:199;padding:12px 0;max-height:calc(100vh - 56px);overflow-y:auto;}
+  .mobile-menu.open{display:block;}
+  .mob-section{font-size:10px;letter-spacing:2px;color:var(--text-faint);padding:12px 24px 4px;text-transform:uppercase;}
+  .mobile-menu a{display:block;padding:10px 24px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;}
+  .mobile-menu a:hover{color:var(--text);}
+  @media(max-width:900px){.nav-links{display:none;}.nav-hamburger{display:flex;}}
+
+  .page-header{background:#161d1b;border-bottom:1px solid var(--border);padding:24px;}
+  .page-eyebrow{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:2.5px;color:var(--teal);text-transform:uppercase;font-weight:600;margin-bottom:4px;}
+  .page-title{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:700;text-transform:uppercase;line-height:1;}
+  .page-meta{font-size:13px;color:var(--text-muted);margin-top:6px;}
+
+  .accordion{max-width:900px;margin:24px auto;padding:0 20px 60px;}
+  .acc-item{background:#161d1b;border:1px solid var(--border);border-radius:8px;margin-bottom:12px;overflow:hidden;}
+  .acc-head{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;cursor:pointer;background:#1a2320;transition:background 0.15s;}
+  .acc-head:hover{background:#1e2a27;}
+  .acc-title{display:flex;align-items:center;gap:12px;}
+  .acc-num{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--black);background:var(--teal);width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .acc-name{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;}
+  .acc-sub{font-size:12px;color:var(--text-muted);margin-top:2px;}
+  .acc-chevron{font-size:12px;color:var(--text-muted);transition:transform 0.25s;flex-shrink:0;}
+  .acc-item.open .acc-chevron{transform:rotate(180deg);}
+  .acc-body{max-height:0;overflow:hidden;transition:max-height 0.3s ease;}
+  .acc-item.open .acc-body{max-height:2400px;}
+  .acc-body-inner{padding:20px;border-top:1px solid var(--border);}
+  .acc-body-inner iframe{width:100%;border:none;border-radius:6px;background:#fff;display:block;}
+
+  .deadline-note{display:flex;align-items:center;gap:8px;background:rgba(94,207,207,0.08);border:1px solid rgba(94,207,207,0.25);border-radius:6px;padding:10px 14px;font-size:12px;color:var(--teal);margin-bottom:16px;}
+
+  .lb-table-wrap{overflow-x:auto;}
+  table.lb{border-collapse:separate;border-spacing:0;width:100%;font-size:13px;}
+  table.lb th{background:#1a2320;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;padding:10px 14px;text-align:left;border-bottom:2px solid rgba(255,255,255,0.15);}
+  table.lb td{background:#161d1b;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.06);}
+  table.lb tr:hover td{background:#1e2a27;}
+  .lb-pos{font-family:'Barlow Condensed',sans-serif;font-weight:700;width:40px;}
+  .lb-pos.p1{color:#E8B84B;}.lb-pos.p2{color:#C0C0C0;}.lb-pos.p3{color:#cd7f32;}
+  .lb-pts{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;color:var(--green);text-align:right;}
+  .lb-loading,.lb-empty{padding:20px;text-align:center;color:var(--text-muted);font-size:13px;}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-left">
+    <a href="index.html" class="nav-logo">
+      <img src="TRANSPARENT.png" alt="F1XL - UK Casual F1 League Racing on Xbox, PlayStation and PC">
+    </a>
+  </div>
+  <div class="nav-links">
+    <div class="nav-item"><a href="index.html">Home</a></div>
+    <div class="nav-item">
+      <button>Standings <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown">
+        <a href="standings.html">Current Season</a>
+        <a href="results.html">Results</a>
+        <a href="past-seasons.html">Past Seasons</a>
+        <a href="asr.html">All Star Race</a>
+      </div>
+    </div>
+    <div class="nav-item"><a href="teams.html">Teams</a></div>
+    <div class="nav-item">
+      <button>Race Tickets <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown">
+        <a href="submit-ticket.html">Submit Ticket</a>
+        <a href="ticket-outcomes.html">Ticket Outcomes</a>
+        <a href="drivers-licence.html">Drivers Licence</a>
+      </div>
+    </div>
+    <div class="nav-item"><a href="schedule.html">Schedule</a></div>
+    <div class="nav-item">
+      <button>History <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown">
+        <a href="hall-of-fame.html">Hall of Fame</a>
+        <a href="hall-of-records.html">Hall of Records</a>
+        <a href="track-records.html">Track Records</a>
+      </div>
+    </div>
+    <div class="nav-item"><a href="predictor.html" class="active">Predictor</a></div>
+    <div class="nav-item"><a href="applications.html">Applications</a></div>
+    <div class="nav-item"><a href="league-rules.html">League Rules</a></div>
+    <div class="nav-item"><a href="merch.html">Merch</a></div>
+    <div class="nav-item"><a href="music.html">Music</a></div>
+  </div>
+  <button class="nav-hamburger" id="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></button>
+</nav>
+<div class="mobile-menu" id="mobile-menu">
+  <a href="index.html">Home</a>
+  <div class="mob-section">Standings</div>
+  <a href="standings.html">Current Season</a>
+  <a href="results.html">Results</a>
+  <a href="past-seasons.html">Past Seasons</a>
+  <a href="asr.html">All Star Race</a>
+  <a href="teams.html">Teams</a>
+  <div class="mob-section">Race Tickets</div>
+  <a href="submit-ticket.html">Submit Ticket</a>
+  <a href="ticket-outcomes.html">Ticket Outcomes</a>
+  <a href="drivers-licence.html">Drivers Licence</a>
+  <a href="schedule.html">Schedule</a>
+  <div class="mob-section">History</div>
+  <a href="hall-of-fame.html">Hall of Fame</a>
+  <a href="hall-of-records.html">Hall of Records</a>
+  <a href="track-records.html">Track Records</a>
+  <a href="predictor.html">Predictor</a>
+  <a href="applications.html">Applications</a>
+  <a href="league-rules.html">League Rules</a>
+</div>
+
+<div class="page-header">
+  <div class="page-eyebrow">Season 28</div>
+  <div class="page-title">Predictor</div>
+  <div class="page-meta">Register once, submit picks every round, climb the leaderboard.</div>
+</div>
+
+<div class="accordion">
+
+  <div class="deadline-note">⏱ Picks close 8:00pm (race start is 9:00pm) — submit before then to be counted.</div>
+
+  <div class="acc-item open" id="acc-register">
+    <div class="acc-head" onclick="toggleAcc('acc-register')">
+      <div class="acc-title">
+        <div class="acc-num">1</div>
+        <div>
+          <div class="acc-name">Register</div>
+          <div class="acc-sub">One-time sign up — do this before your first prediction</div>
+        </div>
+      </div>
+      <div class="acc-chevron">▼</div>
+    </div>
+    <div class="acc-body">
+      <div class="acc-body-inner">
+        <iframe src="https://docs.google.com/forms/d/e/1FAIpQLScVO60jX8_uwjNE3T1kkoqi9jI5LAWPKdEfNVRgJq3m3oNRhg/viewform?embedded=true" height="520" loading="lazy">Loading…</iframe>
+      </div>
+    </div>
+  </div>
+
+  <div class="acc-item" id="acc-picks">
+    <div class="acc-head" onclick="toggleAcc('acc-picks')">
+      <div class="acc-title">
+        <div class="acc-num">2</div>
+        <div>
+          <div class="acc-name">Submit Your Picks</div>
+          <div class="acc-sub">Every round, for all 4 divisions — before 8:00pm</div>
+        </div>
+      </div>
+      <div class="acc-chevron">▼</div>
+    </div>
+    <div class="acc-body">
+      <div class="acc-body-inner">
+        <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSdcNGXLMxa4I8svhTwvU0S2yjgyIUYlke8KTjY8rgtRMVjLsg/viewform?embedded=true" height="1400" loading="lazy">Loading…</iframe>
+      </div>
+    </div>
+  </div>
+
+  <div class="acc-item" id="acc-leaderboard">
+    <div class="acc-head" onclick="toggleAcc('acc-leaderboard')">
+      <div class="acc-title">
+        <div class="acc-num">3</div>
+        <div>
+          <div class="acc-name">Leaderboard</div>
+          <div class="acc-sub">Season-long totals, updated after every round is scored</div>
+        </div>
+      </div>
+      <div class="acc-chevron">▼</div>
+    </div>
+    <div class="acc-body">
+      <div class="acc-body-inner">
+        <div class="lb-table-wrap">
+          <table class="lb" id="lb-table" style="display:none;">
+            <thead><tr><th>Pos</th><th>Player</th><th style="text-align:right;">Points</th></tr></thead>
+            <tbody id="lb-body"></tbody>
+          </table>
+          <div class="lb-loading" id="lb-status">Loading leaderboard…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function toggleMenu(){
+  document.getElementById('hamburger').classList.toggle('open');
+  document.getElementById('mobile-menu').classList.toggle('open');
+}
+
+function toggleAcc(id){
+  const item=document.getElementById(id);
+  const wasOpen=item.classList.contains('open');
+  document.querySelectorAll('.acc-item').forEach(el=>el.classList.remove('open'));
+  if(!wasOpen) item.classList.add('open');
+}
+
+function csv(text){
+  const rows=[]; let cells=[],cur='',inQ=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i],n=text[i+1];
+    if(c==='"'){if(!inQ)inQ=true;else if(n==='"'){cur+='"';i++;}else inQ=false;}
+    else if(c===','&&!inQ){cells.push(cur);cur='';}
+    else if((c==='\n'||(c==='\r'&&n==='\n'))&&!inQ){if(c==='\r')i++;cells.push(cur);cur='';if(cells.some(x=>x.trim()))rows.push(cells);cells=[];}
+    else cur+=c;
+  }
+  cells.push(cur);if(cells.some(x=>x.trim()))rows.push(cells);
+  return rows;
+}
+
+const LEADERBOARD_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRPvnEMdhTvyNaDprsTlH1IrLRj3rMcuwTnOGrB2Aiigv48lLbImIsG_LiPPQVnkqUBZDL2mKT5sY6Q/pub?gid=748214951&single=true&output=csv";
+
+async function loadLeaderboard(){
+  const statusEl=document.getElementById('lb-status');
+  const tableEl=document.getElementById('lb-table');
+  const bodyEl=document.getElementById('lb-body');
+  try{
+    const res=await fetch(LEADERBOARD_CSV_URL);
+    const text=await res.text();
+    const rows=csv(text);
+    // Sorted Player/Points pair sits in columns D (idx 3) and E (idx 4) of the Leaderboard tab
+    const entries=rows
+      .map(r=>({name:(r[3]||'').trim(), points:parseFloat(r[4])}))
+      .filter(r=>r.name && !isNaN(r.points));
+
+    if(entries.length===0){
+      statusEl.textContent='No submissions scored yet — check back after the next round.';
+      return;
+    }
+
+    bodyEl.innerHTML='';
+    entries.forEach((e,i)=>{
+      const pos=i+1;
+      const posClass=pos===1?'p1':pos===2?'p2':pos===3?'p3':'';
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td class="lb-pos ${posClass}">${pos}</td><td>${e.name}</td><td class="lb-pts">${e.points}</td>`;
+      bodyEl.appendChild(tr);
+    });
+    statusEl.style.display='none';
+    tableEl.style.display='table';
+  }catch(err){
+    statusEl.textContent='Couldn\'t load the leaderboard right now — try refreshing.';
+  }
+}
+
+loadLeaderboard();
+</script>
+
+</body>
+</html>
