@@ -74,6 +74,15 @@
   .lb-pos.p1{color:#E8B84B;}.lb-pos.p2{color:#C0C0C0;}.lb-pos.p3{color:#cd7f32;}
   .lb-pts{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;color:var(--green);text-align:right;}
   .lb-loading,.lb-empty{padding:20px;text-align:center;color:var(--text-muted);font-size:13px;}
+
+  .registered-toggle-row{margin-top:14px;padding-top:14px;border-top:1px solid var(--border);}
+  .registered-toggle{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-muted);cursor:pointer;}
+  .registered-toggle input{width:15px;height:15px;cursor:pointer;flex-shrink:0;}
+  .refresh-note{font-size:12px;color:var(--teal);margin-bottom:12px;}
+  .refresh-note a{color:var(--teal);text-decoration:underline;}
+  .already-registered-banner{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px;color:var(--text-muted);padding:4px 2px;}
+  .already-registered-banner button{background:none;border:1px solid var(--border2);color:var(--text-muted);font-size:11px;padding:5px 10px;border-radius:5px;cursor:pointer;font-family:'Barlow',sans-serif;}
+  .already-registered-banner button:hover{color:var(--text);border-color:var(--text-muted);}
 </style>
 </head>
 <body>
@@ -159,7 +168,7 @@
         <div class="acc-num">1</div>
         <div>
           <div class="acc-name">Register</div>
-          <div class="acc-sub">One-time sign up — do this before your first prediction</div>
+          <div class="acc-sub" id="register-sub">One-time sign up — do this before your first prediction</div>
         </div>
       </div>
       <div class="acc-chevron">▼</div>
@@ -167,6 +176,12 @@
     <div class="acc-body">
       <div class="acc-body-inner">
         <iframe src="https://docs.google.com/forms/d/e/1FAIpQLScVO60jX8_uwjNE3T1kkoqi9jI5LAWPKdEfNVRgJq3m3oNRhg/viewform?embedded=true" height="520" loading="lazy">Loading…</iframe>
+        <div class="registered-toggle-row">
+          <label class="registered-toggle">
+            <input type="checkbox" id="registered-checkbox" onchange="handleRegisteredToggle(this.checked)">
+            I've already registered — hide this on this device
+          </label>
+        </div>
       </div>
     </div>
   </div>
@@ -184,6 +199,7 @@
     </div>
     <div class="acc-body">
       <div class="acc-body-inner">
+        <div class="refresh-note">Just registered? <a href="javascript:location.reload()">Refresh this page</a> first so your name shows up below.</div>
         <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSdcNGXLMxa4I8svhTwvU0S2yjgyIUYlke8KTjY8rgtRMVjLsg/viewform?embedded=true" height="1400" loading="lazy">Loading…</iframe>
       </div>
     </div>
@@ -227,6 +243,43 @@ function toggleAcc(id){
   document.querySelectorAll('.acc-item').forEach(el=>el.classList.remove('open'));
   if(!wasOpen) item.classList.add('open');
 }
+
+const REGISTERED_KEY='f1xl_predictor_registered';
+
+function handleRegisteredToggle(checked){
+  if(checked){
+    localStorage.setItem(REGISTERED_KEY,'true');
+  } else {
+    localStorage.removeItem(REGISTERED_KEY);
+  }
+  applyRegisteredState();
+}
+
+function applyRegisteredState(){
+  const isRegistered = localStorage.getItem(REGISTERED_KEY) === 'true';
+  const registerBody = document.querySelector('#acc-register .acc-body-inner');
+  const registerSub = document.getElementById('register-sub');
+  const registerItem = document.getElementById('acc-register');
+  const picksItem = document.getElementById('acc-picks');
+
+  if(isRegistered){
+    registerSub.textContent = "You've marked this device as registered";
+    // Replace the form/iframe view with a compact banner, keep the checkbox logic reachable via "undo"
+    if(!document.getElementById('already-registered-banner')){
+      registerBody.innerHTML = `
+        <div class="already-registered-banner" id="already-registered-banner">
+          <span>✓ Registered on this device</span>
+          <button onclick="handleRegisteredToggle(false)">Not you? Show registration form</button>
+        </div>`;
+    }
+    registerItem.classList.remove('open');
+    picksItem.classList.add('open');
+  } else {
+    registerSub.textContent = "One-time sign up — do this before your first prediction";
+  }
+}
+
+document.addEventListener('DOMContentLoaded', applyRegisteredState);
 
 function csv(text){
   const rows=[]; let cells=[],cur='',inQ=false;
