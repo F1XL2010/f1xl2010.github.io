@@ -1581,7 +1581,7 @@ async function loadCoolStats() {
           const out = [];
           for (let i = hi + 1; i < rows.length; i++) {
             const name = cs(rows[i], 0).trim();
-            if (!name) break;
+            if (!name) continue; // unfilled seat (e.g. no Tier 2 driver yet) — skip, don't stop
             out.push({
               name,
               team:    cs(rows[i], colTeam).trim(),
