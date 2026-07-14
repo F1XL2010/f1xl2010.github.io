@@ -774,16 +774,36 @@ async function loadDrivers() {
       }
     }
 
-    // Collect all data rows first, then sort by points
+    // Collect all data rows first, then sort by points, with an F1-style
+    // countback tiebreaker for equal points: most wins breaks the tie first,
+    // then most 2nd-place finishes, then 3rds, and so on. Otherwise everyone
+    // tied at 0 points just stays "frozen" in the sheet's original team-
+    // alphabetical order, even though they did finish in different positions.
+    const MAX_POS = 30; // generous upper bound on grid size
+    function countbackArray(row){
+      const counts = new Array(MAX_POS).fill(0);
+      races.forEach(rc => {
+        const v = parseInt(cs(row, rc.col));
+        if (!isNaN(v) && v>=1 && v<=MAX_POS) counts[v-1]++;
+      });
+      return counts;
+    }
+    function compareCountback(a,b){
+      for (let i=0; i<MAX_POS; i++){
+        if (b[i] !== a[i]) return b[i]-a[i]; // more finishes at this position wins the tie
+      }
+      return 0;
+    }
     const dataRows = [];
     for (let i=hIdx+1; i<rows.length; i++) {
       const row = rows[i];
       const driver = cs(row,2);
       if (!driver) continue;
       const pts = ptsCol>=0 ? parseFloat(cs(row,ptsCol)) || 0 : 0;
-      dataRows.push({row, pts});
+      const countback = countbackArray(row);
+      dataRows.push({row, pts, countback});
     }
-    dataRows.sort((a,b) => b.pts - a.pts);
+    dataRows.sort((a,b) => b.pts - a.pts || compareCountback(a.countback,b.countback));
 
     // Body
     let bHtml = '';
@@ -1581,6 +1601,11 @@ async function loadCoolStats() {
           const out = [];
           for (let i = hi + 1; i < rows.length; i++) {
             const name = cs(rows[i], 0).trim();
+            // "CALCULATIONS" marks the start of a separate grid/finish-position
+            // block further down the sheet that reuses these same column
+            // positions for unrelated per-round data — must stop here, not
+            // just skip blanks, or those numbers get misread as extra stats.
+            if (name.toLowerCase() === 'calculations') break;
             if (!name) continue; // unfilled seat (e.g. no Tier 2 driver yet) — skip, don't stop
             out.push({
               name,
