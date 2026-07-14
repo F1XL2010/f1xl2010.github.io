@@ -534,7 +534,7 @@ function render(r,rows){
     const race=extractSection(rows,'Race',true);
     const winner=race.find(x=>x.pos==='1');
     html+=header(r,circuit,winner,sc,rf,false);
-    html+=`<div class="results-grid">${qTable(quali,'Qualifying',meta.wQuali)}${rTable(race,'Race',meta.wRace)}</div>`;
+    html+=`<div class="results-grid">${qTable(quali,'Qualifying',meta.wQuali,circuit)}${rTable(race,'Race',meta.wRace,circuit)}</div>`;
   } else {
     const sq=extractSection(rows,'Sprint Qualifying',false);
     const sr=extractSection(rows,'Sprint Race',true); // Sprint race — is a race, FL col just won't have data
@@ -543,9 +543,9 @@ function render(r,rows){
     const winner=mr.find(x=>x.pos==='1');
     html+=header(r,circuit,winner,sc,rf,true);
     html+=`<div class="section-label">Sprint</div>`;
-    html+=`<div class="results-grid">${qTable(sq,'Sprint Qualifying',meta.wSprintQuali)}${srTable(sr,'Sprint Race',meta.wSprintRace)}</div>`;
+    html+=`<div class="results-grid">${qTable(sq,'Sprint Qualifying',meta.wSprintQuali,circuit)}${srTable(sr,'Sprint Race',meta.wSprintRace,circuit)}</div>`;
     html+=`<div class="section-label">Grand Prix</div>`;
-    html+=`<div class="results-grid">${qTable(mq,'Qualifying',meta.wQuali)}${rTable(mr,'Race',meta.wRace)}</div>`;
+    html+=`<div class="results-grid">${qTable(mq,'Qualifying',meta.wQuali,circuit)}${rTable(mr,'Race',meta.wRace,circuit)}</div>`;
   }
   document.getElementById('content').innerHTML=html;
 }
@@ -618,9 +618,24 @@ function header(r,circuit,winner,sc,rf,isSprint){
   </div>`;
 }
 
-function weatherIcon(w){
+// These tracks are always run at night on the real calendar, so we override
+// the weather icon for them regardless of the recorded weather text — there's
+// no separate day/night field in the sheets, this is a track-based assumption.
+const NIGHT_RACE_TRACKS = ['bahrain','singapore','las vegas','saudi arabia','qatar','abu dhabi'];
+function isNightRace(circuit){
+  if(!circuit) return false;
+  const c = circuit.toLowerCase();
+  return NIGHT_RACE_TRACKS.some(t=>c.includes(t));
+}
+
+function weatherIcon(w, circuit){
   if(!w) return '';
   const wl=w.toLowerCase();
+  if(isNightRace(circuit)){
+    if(wl.includes('rain')||wl.includes('wet')) return '🌧️🌙';
+    if(wl.includes('cloud')||wl.includes('overcast')) return '☁️🌙';
+    return '🌙'; // clear (or unmatched) night weather
+  }
   if(wl.includes('rain')||wl.includes('wet')) return '🌧';
   if(wl.includes('cloud')) return '⛅';
   if(wl.includes('sun')||wl==='sun') return '☀️';
@@ -628,9 +643,9 @@ function weatherIcon(w){
   return '🌤';
 }
 
-function weatherBadge(w){
+function weatherBadge(w, circuit){
   if(!w) return '';
-  return`<span style="font-size:11px;color:var(--text-faint);margin-left:6px;">${weatherIcon(w)} ${w}</span>`;
+  return`<span style="font-size:11px;color:var(--text-faint);margin-left:6px;">${weatherIcon(w,circuit)} ${w}</span>`;
 }
 
 function tyreColor(t){
@@ -650,9 +665,9 @@ function tyreBadge(t){
   return parts.map(p=>`<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${tyreColor(p.trim())};margin-left:3px;vertical-align:middle;" title="${p.trim()}"></span>`).join('');
 }
 
-function qTable(data,title,weather){
+function qTable(data,title,weather,circuit){
   if(!data||!data.length)return box(title,'<div style="padding:12px;font-size:12px;color:var(--text-faint);">No data</div>');
-  const titleHtml = weather ? title+weatherBadge(weather) : title;
+  const titleHtml = weather ? title+weatherBadge(weather,circuit) : title;
   let r=`<table class="rt"><thead><tr><th>Pos</th><th>#</th><th>Driver / Team</th><th>Time</th><th>Tyre</th></tr></thead><tbody>`;
   data.forEach(d=>{
     const dnf=isDNF(d.pos);
@@ -670,7 +685,7 @@ function qTable(data,title,weather){
   return box(titleHtml, r+`</tbody></table>`);
 }
 
-function rTable(data,title,weather){
+function rTable(data,title,weather,circuit){
   if(!data||!data.length)return box(title,'<div style="padding:12px;font-size:12px;color:var(--text-faint);">No data</div>');
   let r=`<table class="rt"><thead><tr><th>Pos</th><th>#</th><th>Driver</th><th>Stops</th><th>Gap</th><th>Pts</th></tr></thead><tbody>`;
   data.forEach(d=>{
@@ -689,10 +704,10 @@ function rTable(data,title,weather){
       <td><span class="rpts${pts===0?' z':''}">${d.pts||'0'}</span></td>
     </tr>`;
   });
-  return box(weather?title+weatherBadge(weather):title, r+`</tbody></table>`);
+  return box(weather?title+weatherBadge(weather,circuit):title, r+`</tbody></table>`);
 }
 
-function srTable(data,title,weather){
+function srTable(data,title,weather,circuit){
   // Sprint race table - no FL column
   if(!data||!data.length)return box(title,'<div style="padding:12px;font-size:12px;color:var(--text-faint);">No data</div>');
   let r=`<table class="rt"><thead><tr><th>Pos</th><th>#</th><th>Driver</th><th>Stops</th><th>Gap</th><th>Pts</th></tr></thead><tbody>`;
@@ -711,7 +726,7 @@ function srTable(data,title,weather){
       <td><span class="rpts${pts===0?' z':''}">${d.pts||'0'}</span></td>
     </tr>`;
   });
-  return box(weather?title+weatherBadge(weather):title, r+`</tbody></table>`);
+  return box(weather?title+weatherBadge(weather,circuit):title, r+`</tbody></table>`);
 }
 
 function box(title,inner){
