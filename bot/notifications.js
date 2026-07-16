@@ -179,14 +179,38 @@ function isSunday8pm() {
   return local.getUTCDay() === 0 && local.getUTCHours() === 20 && local.getUTCMinutes() < 10;
 }
 
+// The calendar's date column exports from Sheets in UK DD/MM/YYYY display
+// format. Date.parse() assumes non-ISO strings are US MM/DD/YYYY — it either
+// fails outright when the day is >12, or silently swaps day/month when the
+// day is <=12. Parse the UK format explicitly instead.
+function parseUKDate(dateStr) {
+  const m = dateStr.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (!m) return NaN;
+  const day = parseInt(m[1], 10), month = parseInt(m[2], 10), year = parseInt(m[3], 10);
+  if (month < 1 || month > 12 || day < 1 || day > 31) return NaN;
+  return Date.UTC(year, month - 1, day);
+}
+
 async function getLatestTrack(sc) {
   try {
     const rows = await fetchCSV(sc['d1_sheet_id'], sc['d1_calendar_gid']);
     let lastTrack = '';
+    let lastDate = -Infinity;
+    const now = Date.now();
     for (let i = 1; i < rows.length; i++) {
-      const track = (rows[i][3] || '').trim();
-      const date  = (rows[i][2] || '').trim();
-      if (track && date) lastTrack = track;
+      const track   = (rows[i][3] || '').trim();
+      const dateStr = (rows[i][2] || '').trim();
+      if (!track || !dateStr) continue;
+      const parsed = parseUKDate(dateStr);
+      // Only count rounds that have actually happened — skip future rounds
+      // still sitting pre-filled in the calendar (e.g. the season finale).
+      // If a date can't be parsed, fall back to treating it as "most recent
+      // filled row so far" rather than silently skipping it.
+      if (!isNaN(parsed)) {
+        if (parsed <= now && parsed > lastDate) { lastDate = parsed; lastTrack = track; }
+      } else {
+        lastTrack = track;
+      }
     }
     return lastTrack || 'latest race';
   } catch(e) { return 'latest race'; }
