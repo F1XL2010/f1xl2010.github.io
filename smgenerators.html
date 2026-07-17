@@ -621,18 +621,20 @@ async function coPopulate() {
       const rows = parseCSV(text);
       let hi = -1;
       for (let i = 0; i < rows.length; i++) {
-        const v0 = (rows[i][0]||'').toLowerCase().trim();
-        const v1 = (rows[i][1]||'').toLowerCase().trim();
-        if (v0 === 'pos' || v1 === 'team') { hi = i; break; }
+        if (rows[i].some(c => (c||'').toLowerCase().trim() === 'pos')) { hi = i; break; }
       }
       if (hi >= 0) {
         const hd = rows[hi];
+        // This sheet's headers (Pos/Team/Points/Gap/team principal) sit in
+        // columns D/F/H/J/L, not A/B — find each by its actual header text
+        // rather than assuming a fixed position.
+        let teamCol = hd.findIndex(v => (v||'').toLowerCase().trim() === 'team');
         let ptsCol = hd.findIndex(v => (v||'').toLowerCase().trim() === 'points');
         if (ptsCol < 0) ptsCol = 3;
         let tpCol  = hd.findIndex(v => (v||'').toLowerCase().includes('principal') || (v||'').toLowerCase() === 'owner');
         let gapCol = hd.findIndex(v => (v||'').toLowerCase().trim() === 'gap');
         for (let i = hi + 1; i < rows.length; i++) {
-          const team = (rows[i][1]||'').trim() || (rows[i][0]||'').trim();
+          const team = teamCol >= 0 ? (rows[i][teamCol]||'').trim() : '';
           const pts  = parseFloat((rows[i][ptsCol]||'0').replace(/,/g,'')) || 0;
           const tp   = tpCol >= 0 ? (rows[i][tpCol]||'').trim() : '';
           const gap  = gapCol >= 0 ? (rows[i][gapCol]||'').trim() : '';
