@@ -212,19 +212,29 @@ async function loadConfig() {
   const text = await fetchCSV(CONFIG_SHEET_ID, CONFIG_GID);
   const rows = parseCSV(text);
   const map = {};
+  let extraHeaders = [];
   for (const r of rows) {
     const k = (r[0]||'').trim().toLowerCase().replace(/^"|"$/g,'');
     const v = (r[1]||'').trim().replace(/^"|"$/g,'');
-    if (k && v && k !== 'key') map[k] = v;
+    if (['tab gid from this document','new seasons','past seasons','key'].includes(k)) {
+      extraHeaders = r.slice(2).map(h => (h||'').replace(/^"|"$/g,'').trim().toLowerCase()).filter(h => h);
+      continue;
+    }
+    if (!k || !v || k === 'value' || k === 'hardcoded - dont touch') continue;
+    map[k] = v;
+    extraHeaders.forEach((hdr, i) => {
+      const extra = (r[2+i]||'').replace(/^"|"$/g,'').trim();
+      if (extra) map[k+'__'+hdr] = extra;
+    });
   }
   return map;
 }
 
 async function getSeasonConfig(cfg) {
-  let latest = 0, latestGid = null;
+  let latest = 0, latestGid = null, latestKey = null;
   for (const k of Object.keys(cfg)) {
     const m = k.match(/^s(\d+)_gid$/);
-    if (m) { const n = parseInt(m[1]); if (n > latest) { latest = n; latestGid = cfg[k]; } }
+    if (m) { const n = parseInt(m[1]); if (n > latest) { latest = n; latestGid = cfg[k]; latestKey = k; } }
   }
   if (!latestGid) return { season: latest, sc: {} };
   const text = await fetchCSV(CONFIG_SHEET_ID, latestGid);
@@ -234,6 +244,12 @@ async function getSeasonConfig(cfg) {
     const k = (r[0]||'').trim().toLowerCase().replace(/^"|"$/g,'');
     const v = (r[1]||'').trim().replace(/^"|"$/g,'');
     if (k && v) sc[k] = v;
+  }
+  // overall_gid / w_totals_gid live in the extra columns tied to this
+  // season's row on the main config sheet, not inside the season tab itself.
+  if (latestKey) {
+    if (cfg[latestKey+'__overall_gid'])  sc['overall_gid']  = cfg[latestKey+'__overall_gid'];
+    if (cfg[latestKey+'__w_totals_gid']) sc['w_totals_gid'] = cfg[latestKey+'__w_totals_gid'];
   }
   return { season: latest, sc };
 }
