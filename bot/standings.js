@@ -166,7 +166,7 @@ async function main() {
     const standRows=[];
     for (let i=hIdx+1;i<rows.length;i++) {
       const pos=(rows[i][0]||'').trim(),driver=(rows[i][2]||'').trim(),team=(rows[i][3]||'').trim();
-      if (!pos||!driver) break;
+      if (!driver) continue; // unfilled seat (e.g. no Tier 2 driver yet) — skip, don't stop
       let pts='';
       for (let c=rows[i].length-1;c>=4;c--) { if((rows[i][c]||'').trim()){pts=rows[i][c].trim();break;} }
       standRows.push({pos,driver,team,pts});
