@@ -650,6 +650,11 @@ async function coPopulate() {
       }
     }
 
+    // Sort by points descending — neither branch above sorts the sheet's
+    // own row order, so without this it just renders in whatever order
+    // the sheet happens to list teams (e.g. alphabetical), not by standing.
+    window._coRows.sort((a,b) => b.pts - a.pts);
+
     const label = isOverall ? 'Overall Constructors' : `Division ${view} Constructors`;
     showStatus('co-status', `✓ Loaded ${label} — ${window._coRows.length} teams`, 'ok');
     document.getElementById('co-output').style.display = 'block';
