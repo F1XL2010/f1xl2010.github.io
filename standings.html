@@ -1142,7 +1142,7 @@ function psTeamSlug(team){
 
 function buildOverallConstTable(rows){
   if(!rows) return '<div class="div-loading">No data available.</div>';
-  let start=-1, posCol=-1, teamCol=-1, ptsCol=-1, gapCol=-1, tpCol=-1;
+  let start=-1, posCol=-1, teamCol=-1, ptsCol=-1, gapCol=-1, tpCol=-1, principalTeamCol=-1;
   for(let i=0;i<rows.length;i++){
     const r=rows[i];
     const posIdx=r.findIndex(v=>(v||'').trim().toLowerCase().startsWith('pos'));
@@ -1152,13 +1152,29 @@ function buildOverallConstTable(rows){
       if(teamCol<0) teamCol=posIdx+1;
       ptsCol=r.findIndex(v=>(v||'').trim().toLowerCase()==='points');
       gapCol=r.findIndex(v=>(v||'').trim().toLowerCase()==='gap');
-      for(let c=r.length-1;c>=0;c--){
-        if((r[c]||'').trim()){ tpCol=c; break; }
-      }
+      tpCol=r.findIndex(v=>(v||'').trim().toLowerCase().includes('principal'));
+      // The clean "team" column next to the principal list is a SEPARATE,
+      // independently-ordered reference table — it is NOT row-aligned with
+      // the ranked Pos/Team/Points table above it. Find its own column via
+      // the LAST 'team' header match (the ranked table's is the first).
+      r.forEach((v,ci)=>{ if((v||'').trim().toLowerCase()==='team') principalTeamCol=ci; });
       start=i+1; break;
     }
   }
   if(start<0||teamCol<0||ptsCol<0) return '<div class="div-loading">Could not parse data.</div>';
+
+  // Build a team-name -> principal lookup from that static reference table,
+  // independent of row position, since it isn't sorted the same way as the
+  // ranked standings rows above it.
+  const principalMap = {};
+  if(tpCol>=0 && principalTeamCol>=0){
+    for(let i=start;i<rows.length;i++){
+      const refTeam = (rows[i][principalTeamCol]||'').trim();
+      const refPrincipal = (rows[i][tpCol]||'').trim();
+      if(refTeam && refPrincipal) principalMap[refTeam.toLowerCase()] = refPrincipal;
+    }
+  }
+
   const data=[];
   for(let i=start;i<rows.length;i++){
     const r=rows[i];
@@ -1169,11 +1185,12 @@ function buildOverallConstTable(rows){
     const gapRaw=(gapCol>=0?(r[gapCol]||'').trim():'')||'';
     const gapNum = parseFloat(gapRaw);
     const gap = !isNaN(gapNum) && gapNum !== 0 ? String(Math.round(gapNum)) : (gapRaw || '');
-    const tpRaw=(tpCol>=0?(r[tpCol]||'').trim():'')||'';
-    // Ignore numeric values in TP column (likely gap/points bleed)
-    const tpFromSheet = (!tpRaw || !isNaN(parseFloat(tpRaw))) ? '' : tpRaw;
-    // Fall back to teamOwners lookup
-    const tpFinal = tpFromSheet || (typeof teamOwners !== 'undefined' ? (teamOwners[t.toLowerCase()] || '') : '');
+    // Match this ranked row's team against the principal lookup by name
+    // (substring match, since this column's text can include sponsor
+    // branding, e.g. "Racing Bulls Racing Bull") rather than by row position.
+    const tKey = t.toLowerCase();
+    const matchedName = Object.keys(principalMap).find(name => tKey.includes(name) || name.includes(tKey));
+    const tpFinal = matchedName ? principalMap[matchedName] : (typeof teamOwners !== 'undefined' ? (teamOwners[tKey] || '') : '');
     const tpDisplay = tpFinal.toLowerCase()==='reserve'?'RESERVE':tpFinal;
     data.push({team:t, pts, gap, tp:tpDisplay});
   }

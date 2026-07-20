@@ -633,12 +633,28 @@ async function coPopulate() {
         if (ptsCol < 0) ptsCol = 3;
         let tpCol  = hd.findIndex(v => (v||'').toLowerCase().includes('principal') || (v||'').toLowerCase() === 'owner');
         let gapCol = hd.findIndex(v => (v||'').toLowerCase().trim() === 'gap');
+        // The clean "team" column next to team principal is a SEPARATE,
+        // independently-ordered static reference table — not row-aligned
+        // with the ranked Pos/Team/Points rows. Find its own column via the
+        // LAST 'team' header match (the ranked table's own is the first).
+        let principalTeamCol = -1;
+        hd.forEach((v,ci) => { if ((v||'').toLowerCase().trim() === 'team') principalTeamCol = ci; });
+        const principalMap = {};
+        if (tpCol >= 0 && principalTeamCol >= 0) {
+          for (let i = hi + 1; i < rows.length; i++) {
+            const refTeam = (rows[i][principalTeamCol]||'').trim();
+            const refTp   = (rows[i][tpCol]||'').trim();
+            if (refTeam && refTp) principalMap[refTeam.toLowerCase()] = refTp;
+          }
+        }
         for (let i = hi + 1; i < rows.length; i++) {
           const team = teamCol >= 0 ? (rows[i][teamCol]||'').trim() : '';
           const pts  = parseFloat((rows[i][ptsCol]||'0').replace(/,/g,'')) || 0;
-          const tp   = tpCol >= 0 ? (rows[i][tpCol]||'').trim() : '';
           const gap  = gapCol >= 0 ? (rows[i][gapCol]||'').trim() : '';
           if (!team) break;
+          const tKey = team.toLowerCase();
+          const matchedName = Object.keys(principalMap).find(name => tKey.includes(name) || name.includes(tKey));
+          const tp = matchedName ? principalMap[matchedName] : '';
           window._coRows.push({ team, pts, tp, gap, isOverall: true });
         }
       }
