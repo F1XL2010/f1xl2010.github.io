@@ -981,7 +981,7 @@ async function loadStats() {
         if (v==='points per race'||v.includes('per race'))  cols.ppr=c;
         if (v.includes('avg finish')||v.includes('average finish')) cols.avgFin=c;
         if (v.includes('avg grid')||v.includes('average grid'))     cols.avgGrid=c;
-        if (v.includes('avg pos gained')||v.includes('pos gained')||v.includes('gained')) cols.avgGain=c;
+        if ((v.includes('avg pos gained')||v.includes('pos gained')||v.includes('gained')) && !v.includes('sprint') && cols.avgGain===undefined) cols.avgGain=c;
         if (v==='races started'||v.includes('started'))  cols.started=c;
         if (v==='races finished'||v.includes('finished')) cols.finished=c;
         if (v==='dnf')                                   cols.dnfs=c;
@@ -1076,7 +1076,7 @@ async function loadTeamStats() {
     // Try to find columns by header name
     for (let c=0; c<hRow.c.length; c++) {
       const v = cs(hRow,c).toLowerCase();
-      if (v.includes('wins')) cols.wins=c;
+      if (v.includes('wins') && !v.includes('sprint')) cols.wins=c;
       if (v.includes('podiums')) cols.pods=c;
       if (v.includes('average finishing')||v.includes('avg finish')) cols.avgFin=c;
       if (v.includes('average points')||v.includes('avg points')) cols.avgPts=c;
