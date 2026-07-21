@@ -48,22 +48,36 @@
   .page-title{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:700;text-transform:uppercase;line-height:1;}
   .page-meta{font-size:13px;color:var(--text-muted);margin-top:6px;}
 
-  .accordion{max-width:900px;margin:24px auto;padding:0 20px 60px;}
-  .acc-item{background:#161d1b;border:1px solid var(--border);border-radius:8px;margin-bottom:12px;overflow:hidden;}
-  .acc-head{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;cursor:pointer;background:#1a2320;transition:background 0.15s;}
-  .acc-head:hover{background:#1e2a27;}
-  .acc-title{display:flex;align-items:center;gap:12px;}
-  .acc-num{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--black);background:var(--teal);width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-  .acc-name{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;}
-  .acc-sub{font-size:12px;color:var(--text-muted);margin-top:2px;}
-  .acc-chevron{font-size:12px;color:var(--text-muted);transition:transform 0.25s;flex-shrink:0;}
-  .acc-item.open .acc-chevron{transform:rotate(180deg);}
-  .acc-body{max-height:0;overflow:hidden;transition:max-height 0.3s ease;}
-  .acc-item.open .acc-body{max-height:2400px;}
-  .acc-body-inner{padding:20px;border-top:1px solid var(--border);}
-  .acc-body-inner iframe{width:100%;border:none;border-radius:6px;background:#fff;display:block;}
+  .predictor-layout{max-width:1200px;margin:24px auto;padding:0 20px 60px;display:grid;grid-template-columns:1.6fr 1fr;gap:20px;align-items:start;}
+  @media(max-width:900px){.predictor-layout{grid-template-columns:1fr;}}
 
-  .deadline-note{display:flex;align-items:center;gap:8px;background:rgba(94,207,207,0.08);border:1px solid rgba(94,207,207,0.25);border-radius:6px;padding:10px 14px;font-size:12px;color:var(--teal);margin-bottom:16px;}
+  .lb-card{background:#161d1b;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+  .lb-card-head{padding:18px 20px;background:#1a2320;border-bottom:1px solid var(--border);}
+  .lb-card-name{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;}
+  .lb-card-sub{font-size:12px;color:var(--text-muted);margin-top:2px;}
+  .lb-card-body{padding:4px 0;}
+
+  .action-panel{background:#161d1b;border:1px solid var(--border);border-radius:8px;padding:20px;position:sticky;top:76px;}
+  .action-panel-title{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:14px;}
+  .action-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;background:#1a2320;border:1px solid var(--border2);border-radius:7px;padding:16px 18px;margin-bottom:12px;cursor:pointer;transition:background 0.15s,border-color 0.15s;text-align:left;}
+  .action-btn:last-child{margin-bottom:0;}
+  .action-btn:hover{background:#1e2a27;border-color:var(--teal);}
+  .action-btn-label{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text);}
+  .action-btn-sub{font-size:11px;color:var(--text-muted);margin-top:2px;}
+  .action-btn-badge{background:var(--green);color:#08120c;font-size:10px;font-weight:700;letter-spacing:0.5px;padding:3px 8px;border-radius:20px;text-transform:uppercase;flex-shrink:0;}
+  .action-btn-arrow{color:var(--text-faint);font-size:16px;flex-shrink:0;}
+
+  .modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:400;padding:24px;overflow-y:auto;}
+  .modal-backdrop.open{display:flex;justify-content:center;align-items:flex-start;}
+  .modal-box{background:#161d1b;border:1px solid var(--border2);border-radius:10px;max-width:640px;width:100%;margin-top:20px;overflow:hidden;}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;background:#1a2320;border-bottom:1px solid var(--border);}
+  .modal-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;}
+  .modal-close{background:none;border:none;color:var(--text-muted);font-size:22px;line-height:1;cursor:pointer;padding:4px 8px;}
+  .modal-close:hover{color:var(--text);}
+  .modal-body{padding:20px;}
+  .modal-body iframe{width:100%;border:none;border-radius:6px;background:#fff;display:block;}
+
+  .deadline-note{display:flex;align-items:center;gap:8px;background:rgba(94,207,207,0.08);border:1px solid rgba(94,207,207,0.25);border-radius:6px;padding:10px 14px;font-size:12px;color:var(--teal);margin-bottom:16px;grid-column:1 / -1;}
 
   .lb-table-wrap{overflow-x:auto;}
   table.lb{border-collapse:separate;border-spacing:0;width:100%;font-size:13px;}
@@ -158,77 +172,77 @@
   <div class="page-meta">Register once, submit picks every round, climb the leaderboard.</div>
 </div>
 
-<div class="accordion">
+<div class="predictor-layout">
 
   <div class="deadline-note">⏱ Picks close 8:00pm (race start is 9:00pm) — submit before then to be counted.</div>
 
-  <div class="acc-item open" id="acc-register">
-    <div class="acc-head" onclick="toggleAcc('acc-register')">
-      <div class="acc-title">
-        <div class="acc-num">1</div>
-        <div>
-          <div class="acc-name">Register</div>
-          <div class="acc-sub" id="register-sub">One-time sign up — do this before your first prediction</div>
-        </div>
-      </div>
-      <div class="acc-chevron">▼</div>
+  <div class="lb-card">
+    <div class="lb-card-head">
+      <div class="lb-card-name">Leaderboard</div>
+      <div class="lb-card-sub">Season-long totals, updated after every round is scored</div>
     </div>
-    <div class="acc-body">
-      <div class="acc-body-inner">
-        <iframe src="https://docs.google.com/forms/d/e/1FAIpQLScVO60jX8_uwjNE3T1kkoqi9jI5LAWPKdEfNVRgJq3m3oNRhg/viewform?embedded=true" height="520" loading="lazy">Loading…</iframe>
-        <div class="registered-toggle-row">
-          <label class="registered-toggle">
-            <input type="checkbox" id="registered-checkbox" onchange="handleRegisteredToggle(this.checked)">
-            I've already registered — hide this on this device
-          </label>
-        </div>
+    <div class="lb-card-body">
+      <div class="lb-table-wrap">
+        <table class="lb" id="lb-table" style="display:none;">
+          <thead><tr><th>Pos</th><th>Player</th><th>Discord</th><th style="text-align:right;">Points</th></tr></thead>
+          <tbody id="lb-body"></tbody>
+        </table>
+        <div class="lb-loading" id="lb-status">Loading leaderboard…</div>
       </div>
     </div>
   </div>
 
-  <div class="acc-item" id="acc-picks">
-    <div class="acc-head" onclick="toggleAcc('acc-picks')">
-      <div class="acc-title">
-        <div class="acc-num">2</div>
-        <div>
-          <div class="acc-name">Submit Your Picks</div>
-          <div class="acc-sub">Every round, for all 4 divisions — before 8:00pm</div>
-        </div>
+  <div class="action-panel">
+    <div class="action-panel-title">Get Involved</div>
+
+    <button class="action-btn" id="btn-register" onclick="openModal('register')">
+      <div>
+        <div class="action-btn-label">Register</div>
+        <div class="action-btn-sub" id="register-sub">One-time sign up</div>
       </div>
-      <div class="acc-chevron">▼</div>
+      <span id="register-badge-slot"><span class="action-btn-arrow">↗</span></span>
+    </button>
+
+    <button class="action-btn" onclick="openModal('picks')">
+      <div>
+        <div class="action-btn-label">Submit Picks</div>
+        <div class="action-btn-sub">Every round, all 4 divisions — before 8:00pm</div>
+      </div>
+      <span class="action-btn-arrow">↗</span>
+    </button>
+  </div>
+
+</div>
+
+<div class="modal-backdrop" id="modal-register" onclick="if(event.target===this)closeModal('register')">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-title">Register</div>
+      <button class="modal-close" onclick="closeModal('register')">&times;</button>
     </div>
-    <div class="acc-body">
-      <div class="acc-body-inner">
-        <div class="refresh-note">Just registered? <a href="javascript:location.reload()">Refresh this page</a> first so your name shows up below.</div>
-        <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSdcNGXLMxa4I8svhTwvU0S2yjgyIUYlke8KTjY8rgtRMVjLsg/viewform?embedded=true" height="1400" loading="lazy">Loading…</iframe>
+    <div class="modal-body" id="modal-register-body">
+      <iframe src="https://docs.google.com/forms/d/e/1FAIpQLScVO60jX8_uwjNE3T1kkoqi9jI5LAWPKdEfNVRgJq3m3oNRhg/viewform?embedded=true" height="520" loading="lazy">Loading…</iframe>
+      <div class="registered-toggle-row">
+        <label class="registered-toggle">
+          <input type="checkbox" id="registered-checkbox" onchange="handleRegisteredToggle(this.checked)">
+          I've already registered — hide this on this device
+        </label>
       </div>
     </div>
   </div>
+</div>
 
-  <div class="acc-item" id="acc-leaderboard">
-    <div class="acc-head" onclick="toggleAcc('acc-leaderboard')">
-      <div class="acc-title">
-        <div class="acc-num">3</div>
-        <div>
-          <div class="acc-name">Leaderboard</div>
-          <div class="acc-sub">Season-long totals, updated after every round is scored</div>
-        </div>
-      </div>
-      <div class="acc-chevron">▼</div>
+<div class="modal-backdrop" id="modal-picks" onclick="if(event.target===this)closeModal('picks')">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-title">Submit Picks</div>
+      <button class="modal-close" onclick="closeModal('picks')">&times;</button>
     </div>
-    <div class="acc-body">
-      <div class="acc-body-inner">
-        <div class="lb-table-wrap">
-          <table class="lb" id="lb-table" style="display:none;">
-            <thead><tr><th>Pos</th><th>Player</th><th>Discord</th><th style="text-align:right;">Points</th></tr></thead>
-            <tbody id="lb-body"></tbody>
-          </table>
-          <div class="lb-loading" id="lb-status">Loading leaderboard…</div>
-        </div>
-      </div>
+    <div class="modal-body">
+      <div class="refresh-note">Just registered? <a href="javascript:location.reload()">Refresh this page</a> first so your name shows up below.</div>
+      <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSdcNGXLMxa4I8svhTwvU0S2yjgyIUYlke8KTjY8rgtRMVjLsg/viewform?embedded=true" height="1400" loading="lazy">Loading…</iframe>
     </div>
   </div>
-
 </div>
 
 <script>
@@ -237,12 +251,17 @@ function toggleMenu(){
   document.getElementById('mobile-menu').classList.toggle('open');
 }
 
-function toggleAcc(id){
-  const item=document.getElementById(id);
-  const wasOpen=item.classList.contains('open');
-  document.querySelectorAll('.acc-item').forEach(el=>el.classList.remove('open'));
-  if(!wasOpen) item.classList.add('open');
+function openModal(name){
+  document.getElementById('modal-'+name).classList.add('open');
 }
+function closeModal(name){
+  document.getElementById('modal-'+name).classList.remove('open');
+}
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape'){
+    document.querySelectorAll('.modal-backdrop.open').forEach(m => m.classList.remove('open'));
+  }
+});
 
 const REGISTERED_KEY='f1xl_predictor_registered';
 
@@ -257,25 +276,20 @@ function handleRegisteredToggle(checked){
 
 function applyRegisteredState(){
   const isRegistered = localStorage.getItem(REGISTERED_KEY) === 'true';
-  const registerBody = document.querySelector('#acc-register .acc-body-inner');
+  const modalBody = document.getElementById('modal-register-body');
   const registerSub = document.getElementById('register-sub');
-  const registerItem = document.getElementById('acc-register');
-  const picksItem = document.getElementById('acc-picks');
+  const badgeSlot = document.getElementById('register-badge-slot');
 
   if(isRegistered){
-    registerSub.textContent = "You've marked this device as registered";
-    // Replace the form/iframe view with a compact banner, keep the checkbox logic reachable via "undo"
+    registerSub.textContent = "Registered on this device";
+    badgeSlot.innerHTML = '<span class="action-btn-badge">✓ Done</span>';
     if(!document.getElementById('already-registered-banner')){
-      registerBody.innerHTML = `
+      modalBody.innerHTML = `
         <div class="already-registered-banner" id="already-registered-banner">
           <span>✓ Registered on this device</span>
           <button onclick="handleRegisteredToggle(false)">Not you? Show registration form</button>
         </div>`;
     }
-    registerItem.classList.remove('open');
-    picksItem.classList.add('open');
-  } else {
-    registerSub.textContent = "One-time sign up — do this before your first prediction";
   }
 }
 
