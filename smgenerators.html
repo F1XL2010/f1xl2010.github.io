@@ -379,7 +379,7 @@ async function rcPopulate() {
           const team   = (sRows[i][3]||'').trim();
           const pts    = parseFloat((sRows[i][ptsCol]||'0').replace(/,/g,'')) || 0;
           const gap    = gapCol >= 0 ? (sRows[i][gapCol]||'').trim() : '';
-          if (!driver) break;
+          if (!driver) continue; // unfilled seat (e.g. no Tier 2 driver yet) — skip, don't stop
           window._rcStandingsRows.push({ driver, team, pts, gap });
         }
         // Sort by points descending and limit to top 10
