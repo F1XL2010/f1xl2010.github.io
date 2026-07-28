@@ -323,11 +323,19 @@ async function rcPopulate() {
       const rText = await fetchCSV(sheetId, rTabGid);
       const rRows = parseCSV(rText);
 
-      // Find main race header — "Pos" where row above says "Race" or after row 20
-      let raceHdr = -1;
-      for (let i = 20; i < rRows.length; i++) {
-        if ((rRows[i][0]||'').trim().toLowerCase() === 'pos') { raceHdr = i; break; }
+      // Sprint-round tabs have 4 sections stacked vertically: Sprint Quali
+      // (~row8), Sprint Race (~row36), Quali (~row65), Race (~row93).
+      // Non-sprint tabs only have Quali (~row8) and Race (~row36).
+      // Search each section within its own row range so we don't
+      // accidentally grab the wrong one.
+      function findPosHeader(start, end) {
+        for (let i = start; i < Math.min(end, rRows.length); i++) {
+          if ((rRows[i][0]||'').trim().toLowerCase() === 'pos') return i;
+        }
+        return -1;
       }
+
+      const raceHdr = isSprintRound ? findPosHeader(90, 120) : findPosHeader(20, 65);
       if (raceHdr >= 0) {
         for (let i = raceHdr + 1; i < Math.min(raceHdr + 11, rRows.length); i++) {
           const pos    = (rRows[i][0]||'').trim();
@@ -339,14 +347,12 @@ async function rcPopulate() {
         }
       }
 
-      // For sprint rounds, also find sprint race section (header before row 20)
+      // Sprint Race section — only 8 grid slots score points (8 down to 1),
+      // not the usual top 10.
       if (isSprintRound) {
-        let sprintHdr = -1;
-        for (let i = 0; i < 20; i++) {
-          if ((rRows[i][0]||'').trim().toLowerCase() === 'pos') { sprintHdr = i; break; }
-        }
+        const sprintHdr = findPosHeader(20, 65);
         if (sprintHdr >= 0) {
-          for (let i = sprintHdr + 1; i < Math.min(sprintHdr + 11, rRows.length); i++) {
+          for (let i = sprintHdr + 1; i < Math.min(sprintHdr + 9, rRows.length); i++) {
             const pos    = (rRows[i][0]||'').trim();
             const driver = (rRows[i][3]||'').trim();
             const team   = (rRows[i][4]||'').trim();
@@ -421,7 +427,7 @@ function rcGetData() {
 
   const mode = (isResults || isSprint) ? 'race' : 'standings';
   const divLabel = isSprint
-    ? `Division ${div} — Sprint Results Top 10`
+    ? `Division ${div} — Sprint Results Top 8`
     : isResults
       ? `Division ${div} — Race Results Top 10`
       : `Division ${div} — Driver Standings Top 10`;
