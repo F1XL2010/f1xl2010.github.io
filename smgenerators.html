@@ -784,10 +784,11 @@ async function runGenerate(data, canvas, filename, barId, labelId, statusId) {
   recorder.start(100);
 
   const numRows        = (data.rows || []).length;
-  const flipStart      = T_EXIT_START_OFFSET + (numRows + 1) * T_EXIT_GAP + T_EXIT_DUR + T_FLIP_OFFSET;
+  const exitStartOffset = getExitStartOffset(numRows);
+  const flipStart      = exitStartOffset + (numRows + 1) * T_EXIT_GAP + T_EXIT_DUR + T_FLIP_OFFSET;
   const boxStart       = flipStart + T_FLIP_GAP + T_FLIP_DUR + T_BOX_OFFSET;
   // End after last row fully exits (stagger + exit duration) + hold
-  const lastRowExitEnd = T_EXIT_START_OFFSET + (numRows * T_EXIT_GAP) + T_EXIT_DUR;
+  const lastRowExitEnd = exitStartOffset + (numRows * T_EXIT_GAP) + T_EXIT_DUR;
   const TOTAL_DUR      = lastRowExitEnd + T_HOLD_END;
   const totalFrames    = Math.ceil(TOTAL_DUR * FPS);
   const msPerFrame     = 1000 / FPS;
@@ -922,7 +923,14 @@ async function tbPreloadLogos(rows) {
 // ── Render ────────────────────────────────────────────────────────
 const FPS=30, W=1440, H=2560;
 const T_HEADER=1.2, T_ROW_START=4.1, T_ROW_GAP=0.18, T_HOLD=4.5;
-const T_EXIT_START_OFFSET = T_ROW_START + (12 * T_ROW_GAP) + 0.6 + T_HOLD;
+// Exit timing should scale with however many rows actually entered, not
+// assume a fixed 12 every time — otherwise fewer-row tables (e.g. an
+// 8-row sprint result) sit in an unnecessarily long static hold before
+// the exit animation begins, compared to a full 10-row table.
+function getExitStartOffset(numRows) {
+  return T_ROW_START + (numRows * T_ROW_GAP) + 0.6 + T_HOLD;
+}
+const T_EXIT_START_OFFSET = getExitStartOffset(10); // fallback default for any code path without row count in scope
 const T_EXIT_GAP  = 0.15;
 const T_EXIT_DUR  = 0.9;
 const T_FLIP_OFFSET = 1.2;
@@ -977,7 +985,7 @@ function tbRenderFrame(ctx, data, t) {
 
   // ── Header — staggered animation, slower slide ──
   // Lines 2+3 fade out when flip phase starts (flip takes over rendering them)
-  const flipPhaseStart2 = T_EXIT_START_OFFSET + (data.rows.length + 1) * T_EXIT_GAP + T_EXIT_DUR + T_FLIP_OFFSET;
+  const flipPhaseStart2 = getExitStartOffset(data.rows.length) + (data.rows.length + 1) * T_EXIT_GAP + T_EXIT_DUR + T_FLIP_OFFSET;
   const headerLines = [
     { text:`SEASON ${data.season}`,             size:56*S, dir:1,  delay:0.05, color:'#ffffff', permanent:true },
     { text:`${data.gp.toUpperCase()} GRAND PRIX`, size:36*S, dir:-1, delay:0.30, color:'#ffffff', permanent:false },
@@ -1031,7 +1039,7 @@ function tbRenderFrame(ctx, data, t) {
   // ── Table rows + exit — single draw per row ──
   const maxPts = Math.max(...data.rows.map(r=>r.pts), 1);
   const posColW = 56*S;
-  const exitPhaseStart = T_EXIT_START_OFFSET;
+  const exitPhaseStart = getExitStartOffset(data.rows.length);
 
   // Division label — top row of table, no background, same slide animation as col header
   const divLabelY = ROW_START_Y - ROW_SPACING*1.5;
@@ -1187,7 +1195,7 @@ function tbRenderFrame(ctx, data, t) {
   });
 
   // ── FLIP PHASE — GP name and Round/Date/Time flip to next race ──
-  const flipPhaseStart = T_EXIT_START_OFFSET + (data.rows.length + 1) * T_EXIT_GAP + T_EXIT_DUR + T_FLIP_OFFSET;
+  const flipPhaseStart = getExitStartOffset(data.rows.length) + (data.rows.length + 1) * T_EXIT_GAP + T_EXIT_DUR + T_FLIP_OFFSET;
   const hasNextRace = data.nextGP && data.nextRound;
 
   // Calculate actual header Y positions to match flip positions
