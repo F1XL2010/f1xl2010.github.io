@@ -804,6 +804,7 @@ async function loadDrivers() {
       dataRows.push({row, pts, countback});
     }
     dataRows.sort((a,b) => b.pts - a.pts || compareCountback(a.countback,b.countback));
+    const leaderPts = dataRows.length ? dataRows[0].pts : 0;
 
     // Body
     let bHtml = '';
@@ -862,7 +863,7 @@ async function loadDrivers() {
       const pole = poleCol>=0 ? cs(row,poleCol) : '';
       const fl   = flCol>=0   ? cs(row,flCol)   : '';
       const pts  = ptsCol>=0  ? cs(row,ptsCol)  : '';
-      const gap  = gapCol>=0  ? cs(row,gapCol)  : '';
+      const gap  = gapCol>=0  ? (ri===0 ? '' : String(leaderPts - dataRows[ri].pts)) : '';
 
       if (poleCol>=0) rHtml += `<td class="st-end"><span class="st-end-cell st-pole ${!pole||pole==='0'?'zero':''}">${pole||'—'}</span></td>`;
       if (flCol>=0)   rHtml += `<td class="st-end"><span class="st-end-cell st-fl ${!fl||fl==='0'?'zero':''}">${fl||'—'}</span></td>`;
