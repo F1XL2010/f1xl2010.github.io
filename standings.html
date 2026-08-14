@@ -1201,10 +1201,10 @@ function buildOverallConstTable(rows){
   const tdStyle = 'padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.06);border-right:1px solid rgba(255,255,255,0.06);';
   const thStyle = 'padding:8px 12px;background:#1a2320;color:rgba(255,255,255,0.5);font-family:\'Barlow Condensed\',sans-serif;font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;border-bottom:2px solid rgba(232,184,75,0.5);border-right:1px solid rgba(255,255,255,0.07);';
   let html = '<div class="st-wrap"><table class="standings-table" style="width:100%;"><thead><tr>';
-  html += '<th style="'+thStyle+'">Pos</th>';
+  html += '<th style="'+thStyle+'text-align:center;">Pos</th>';
   html += '<th style="'+thStyle+'text-align:left;">Team / Principal</th>';
-  html += '<th style="'+thStyle+'">Points</th>';
-  html += '<th style="'+thStyle+'">Gap</th>';
+  html += '<th style="'+thStyle+'text-align:center;">Points</th>';
+  html += '<th style="'+thStyle+'text-align:center;">Gap</th>';
   html += '</tr></thead><tbody>';
 
   const leader = data.length ? Math.floor(data[0].pts) : 0;
@@ -1220,13 +1220,13 @@ function buildOverallConstTable(rows){
     const gapNum = idx===0 ? '—' : '-'+(leader - Math.floor(d.pts));
     const tpDisplay = d.tp && d.tp.toLowerCase()==='reserve' ? 'RESERVE' : d.tp;
     html += '<tr>';
-    html += '<td style="'+tdStyle+rowBg+'"><span style="font-family:\'Barlow Condensed\',sans-serif;font-size:15px;font-weight:700;color:'+pc+';">'+pos+'</span></td>';
+    html += '<td style="'+tdStyle+rowBg+'text-align:center;"><span style="font-family:\'Barlow Condensed\',sans-serif;font-size:15px;font-weight:700;color:'+pc+';">'+pos+'</span></td>';
     html += '<td class="has-logo" style="'+tdStyle+teamBg+logoStyle+'">';
     html += '<div class="ps-driver-cell">';
     html += '<span class="ps-driver-name">'+(tpDisplay ? 'Team Principal · '+tpDisplay : '&nbsp;')+'</span>';
     html += '</div></td>';
-    html += '<td style="'+tdStyle+rowBg+'text-align:right;"><span style="font-family:\'Barlow Condensed\',sans-serif;font-size:16px;font-weight:700;color:#3DCC47;">'+Math.floor(d.pts)+'</span></td>';
-    html += '<td style="'+tdStyle+rowBg+'text-align:right;color:rgba(255,255,255,0.6);">'+gapNum+'</td>';
+    html += '<td style="'+tdStyle+rowBg+'text-align:center;"><span style="font-family:\'Barlow Condensed\',sans-serif;font-size:16px;font-weight:700;color:#3DCC47;">'+Math.floor(d.pts)+'</span></td>';
+    html += '<td style="'+tdStyle+rowBg+'text-align:center;color:rgba(255,255,255,0.6);">'+gapNum+'</td>';
     html += '</tr>';
   });
   html += '</tbody></table></div>';
