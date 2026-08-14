@@ -405,6 +405,43 @@ function verdictLabel(penalty, points) {
   return penalty;
 }
 
+function getPriorRacePoints(tickets) {
+  const priorPoints = new Map();
+
+  tickets.forEach((row, rowIndex) => {
+    const race = (row[COLS.race] || '').trim();
+    const division = (row[COLS.division] || '').trim();
+    const ticketNumber = parseInt(row[COLS.ticketNum]) || rowIndex;
+    const drivers = [
+      {
+        name: (row[COLS.submitter] || '').trim(),
+        pointsAdded: parseFloat(row[COLS.submitterOutcome]) || 0,
+        resultingPoints: parseFloat(row[COLS.submitterPoints]) || 0
+      },
+      {
+        name: (row[COLS.offender] || '').trim(),
+        pointsAdded: parseFloat(row[COLS.offenderOutcome]) || 0,
+        resultingPoints: parseFloat(row[COLS.offenderPoints]) || 0
+      }
+    ];
+
+    drivers.forEach(driver => {
+      if (!driver.name) return;
+      const key = `${race}|${division}|${driver.name.toLowerCase()}`;
+      const existing = priorPoints.get(key);
+      if (!existing || ticketNumber < existing.ticketNumber) {
+        const points = Math.max(0, driver.resultingPoints - driver.pointsAdded);
+        priorPoints.set(key, {
+          ticketNumber,
+          points: Math.round(points * 100) / 100
+        });
+      }
+    });
+  });
+
+  return priorPoints;
+}
+
 function renderTickets() {
   const filtered = getFiltered();
   const content = document.getElementById('content');
@@ -413,6 +450,8 @@ function renderTickets() {
     content.innerHTML = '<div class="empty-msg">No tickets found for this division</div>';
     return;
   }
+
+  const priorRacePoints = getPriorRacePoints(allTickets);
 
   // Group by season then by race
   const seasonOrder = [];
@@ -491,6 +530,10 @@ function renderTickets() {
       const offenderOutcome = (row[COLS.offenderOutcome] || '').trim();
       const offenderPoints = (row[COLS.offenderPoints] || '0').trim();
       const offenderPenalty = (row[COLS.offenderPenalty] || '').trim();
+      const submitterPointsAdded = parseFloat(submitterOutcome) || 0;
+      const offenderPointsAdded = parseFloat(offenderOutcome) || 0;
+      const submitterPriorPoints = priorRacePoints.get(`${race}|${div}|${submitter.toLowerCase()}`)?.points ?? 0;
+      const offenderPriorPoints = priorRacePoints.get(`${race}|${div}|${offender.toLowerCase()}`)?.points ?? 0;
 
       // Evidence links - trim whitespace and check for http
       const evLinks = [row[COLS.ev1], row[COLS.ev2], row[COLS.ev3], row[COLS.ev4]]
@@ -571,18 +614,18 @@ function renderTickets() {
               <div class="outcome-box">
                 <div class="outcome-role">Submitter</div>
                 <div class="outcome-driver">${submitter}</div>
-                <div class="outcome-penalty">${submitterOutcome || 'No action'}</div>
-                <div class="outcome-pts ${parseFloat(submitterPoints) > 0 ? 'pts-added' : 'pts-none'}">
-                  ${parseFloat(submitterPoints) > 0 ? `+${submitterPoints} licence pts` : 'No points added'}
+                <div class="outcome-pts ${submitterPointsAdded > 0 ? 'pts-added' : 'pts-none'}">
+                  ${submitterPointsAdded > 0 ? `+${submitterOutcome} licence points` : 'No points added'}
                 </div>
+                <div class="outcome-penalty">Points Prior to Race: ${submitterPriorPoints}</div>
               </div>
               <div class="outcome-box">
                 <div class="outcome-role">Offender</div>
                 <div class="outcome-driver">${offender}</div>
-                <div class="outcome-penalty">${offenderOutcome || penalty || 'No action'}</div>
-                <div class="outcome-pts ${parseFloat(offenderPoints) > 0 ? 'pts-added' : 'pts-none'}">
-                  ${parseFloat(offenderPoints) > 0 ? `+${offenderPoints} licence pts` : 'No points added'}
+                <div class="outcome-pts ${offenderPointsAdded > 0 ? 'pts-added' : 'pts-none'}">
+                  ${offenderPointsAdded > 0 ? `+${offenderOutcome} licence points` : 'No points added'}
                 </div>
+                <div class="outcome-penalty">Points Prior to Race: ${offenderPriorPoints}</div>
               </div>
             </div>
           </div>
