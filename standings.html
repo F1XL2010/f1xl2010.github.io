@@ -966,7 +966,7 @@ async function loadStats() {
     let html = '';
 
     // Find header row and map columns by name
-    let hIdx = 0;
+    let hIdx = -1;
     let cols = {};
     for (let i=0; i<rows.length; i++) {
       const row = rows[i];
@@ -988,8 +988,10 @@ async function loadStats() {
         if (v==='dnf')                                   cols.dnfs=c;
         if (v==='reliability %'||v==='reliability')      cols.rel=c;
       }
-      if (cols.driver !== undefined) break;
+      if (cols.driver !== undefined) { hIdx = i; break; }
     }
+
+    if (hIdx < 0) hIdx = 0;
 
     // Fallbacks matching Driver Stats Calc Sheet column order
     if (cols.driver===undefined)   cols.driver=0;
@@ -1010,6 +1012,7 @@ async function loadStats() {
     for (let i=hIdx+1; i<rows.length; i++) {
       const row = rows[i];
       const driver = cs(row, cols.driver);
+      if (driver.toLowerCase()==='calculations') break;
       if (!driver || driver.toLowerCase()==='driver') continue;
 
       const wins     = parseFloat(cs(row,cols.wins))||0;
@@ -1022,9 +1025,14 @@ async function loadStats() {
       const started  = parseFloat(cs(row,cols.started))||0;
       const dnfs     = parseFloat(cs(row,cols.dnfs))||0;
       const relStr   = cs(row,cols.rel);
-      const rel      = parseFloat(relStr)||0;
-      const relClass = rel>=85?'':rel>=60?'mid':'low';
+      const relRaw   = parseFloat(relStr);
+      const rel      = Number.isFinite(relRaw) ? (relRaw <= 1 ? relRaw * 100 : relRaw) : null;
+      const relWidth = rel === null ? 0 : Math.max(0, Math.min(100, rel));
+      const relText  = rel === null ? '—' : `${Math.round(rel * 10) / 10}%`;
+      const relClass = rel!==null && rel>=85?'':rel!==null && rel>=60?'mid':'low';
 
+      const avgFinNum = avgFin ? parseFloat(avgFin) : null;
+      const avgFinStr = avgFinNum!==null && !isNaN(avgFinNum) ? avgFinNum.toFixed(1) : '—';
       const gainNum  = avgGain ? parseFloat(avgGain) : null;
       const gainStr  = gainNum!==null && !isNaN(gainNum) ? (gainNum>0?'+':'')+gainNum.toFixed(1) : '—';
       const gainCls  = gainNum!==null && !isNaN(gainNum) ? (gainNum>0?'good':gainNum<0?'bad':'') : '';
@@ -1042,16 +1050,16 @@ async function loadStats() {
           <div class="stat-metric"><div class="stat-metric-val">${pods}</div><div class="stat-metric-lbl">Podiums</div></div>
           <div class="stat-metric"><div class="stat-metric-val">${poles}</div><div class="stat-metric-lbl">Poles</div></div>
           <div class="stat-metric"><div class="stat-metric-val">${fl}</div><div class="stat-metric-lbl">Fastest laps</div></div>
-          <div class="stat-metric"><div class="stat-metric-val">${avgFin!==''?parseFloat(avgFin).toFixed(1):'—'}</div><div class="stat-metric-lbl">Avg finish</div></div>
+          <div class="stat-metric"><div class="stat-metric-val">${avgFinStr}</div><div class="stat-metric-lbl">Avg finish</div></div>
           <div class="stat-metric"><div class="stat-metric-val ${gainCls}">${gainStr}</div><div class="stat-metric-lbl">Avg gained</div></div>
         </div>
         <div>
           <div class="stat-rel-header">
             <div class="stat-rel-lbl">Reliability</div>
-            <div class="stat-rel-val">${relStr||'—'}</div>
+            <div class="stat-rel-val">${relText}</div>
           </div>
           <div class="stat-rel-bar">
-            <div class="stat-rel-fill ${relClass}" style="width:${rel}%"></div>
+            <div class="stat-rel-fill ${relClass}" style="width:${relWidth}%"></div>
           </div>
         </div>
       </div>`;
