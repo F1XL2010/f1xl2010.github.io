@@ -1,0 +1,1788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="description" content="F1XL next-generation website test environment. Not live championship data.">
+<meta name="robots" content="noindex,nofollow,noarchive,nosnippet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>F1XL NEXT TEST · Season 1000 Standings</title>
+  <link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="/favicon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green:#3DCC47;--teal:#5ECFCF;--red:#E10600;--black:#111816;--dark:#161d1b;--dark2:#1a2320;--dark3:#1e2a27;
+    --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+    --text:#ffffff;--text-muted:rgba(255,255,255,0.60);--text-faint:rgba(255,255,255,0.30);
+    --p1-bg:#FFD700;--p1-text:#5a3e00;--p2-bg:#C0C0C0;--p2-text:#2a2a2a;
+    --p3-bg:#cd7f32;--p3-text:#fff;--p46-bg:#1a4a1a;--p46-text:#7dcc7d;
+    --p710-bg:#0f2e1a;--p710-text:#4aaa6a;--dnf-bg:#3a0a0a;--dnf-text:#ff6b6b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:#111816;background-image:url('../images/backgrounds/background_standings.webp');background-size:cover;background-position:center;background-attachment:fixed;color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;}
+  body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(17,24,22,0.5);z-index:0;pointer-events:none;}
+  body>*{position:relative;z-index:1;}
+
+    nav{background:rgba(17,24,22,0.97);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;backdrop-filter:blur(8px);}
+  .nav-left{display:flex;align-items:center;flex-shrink:0;}
+  .nav-logo{display:flex;align-items:center;height:40px;text-decoration:none;}
+  .nav-logo img{height:34px;width:auto;display:block;}
+  .nav-links{display:flex;align-items:stretch;height:56px;}
+  .nav-item{position:relative;display:flex;align-items:stretch;}
+  .nav-item>a,.nav-item>button{color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:500;letter-spacing:0.5px;padding:0 13px;display:flex;align-items:center;gap:4px;border-bottom:2px solid transparent;border-top:none;border-left:none;border-right:none;background:none;cursor:pointer;font-family:'Barlow',sans-serif;text-transform:uppercase;transition:color 0.2s;white-space:nowrap;}
+  .nav-item>a:hover,.nav-item>button:hover{color:var(--text);}
+  .nav-item>a.active,.nav-item>button.active{color:var(--text);border-bottom-color:var(--green);}
+  .nav-chevron{font-size:8px;opacity:0.5;transition:transform 0.2s;}
+  .nav-item:hover .nav-chevron{transform:rotate(180deg);}
+  .nav-dropdown{display:none;position:absolute;top:100%;left:0;background:#141a18;border:1px solid var(--border2);border-top:2px solid var(--green);border-radius:0 0 6px 6px;min-width:180px;padding:6px 0;z-index:300;}
+  .nav-item:hover .nav-dropdown{display:block;}
+  .nav-dropdown a{display:block;padding:9px 16px;color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;transition:color 0.15s,background 0.15s;white-space:nowrap;}
+  .nav-dropdown a:hover{color:var(--text);background:rgba(255,255,255,0.05);}
+  .nav-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:8px;background:none;border:none;}
+  .nav-hamburger span{display:block;width:22px;height:2px;background:var(--text-muted);border-radius:2px;transition:all 0.25s;}
+  .nav-hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+  .nav-hamburger.open span:nth-child(2){opacity:0;}
+  .nav-hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+  .mobile-menu{display:none;position:fixed;top:56px;left:0;right:0;background:#141a18;border-bottom:1px solid var(--border2);z-index:199;padding:12px 0;max-height:calc(100vh - 56px);overflow-y:auto;}
+  .mobile-menu.open{display:block;}
+  .mob-section{font-size:10px;letter-spacing:2px;color:var(--text-faint);padding:12px 24px 4px;text-transform:uppercase;}
+  .mobile-menu a{display:block;padding:10px 24px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;}
+  .mobile-menu a:hover{color:var(--text);}
+  @media(max-width:900px){.nav-links{display:none;}.nav-hamburger{display:flex;}}/* PAGE HEADER */
+  .page-header{background:#161d1b;border-bottom:1px solid var(--border);padding:24px;}
+  .page-eyebrow{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:2.5px;color:var(--teal);text-transform:uppercase;font-weight:600;margin-bottom:4px;}
+  .page-title{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:700;text-transform:uppercase;line-height:1;}
+  .page-meta{font-size:13px;color:var(--text-muted);margin-top:6px;}
+
+  /* DIVISION SELECTOR */
+  .div-selector{padding:20px;display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+  @media(min-width:600px){.div-selector{grid-template-columns:repeat(4,1fr);}}
+  .div-card{background:#1a2320;border:1px solid var(--border);border-radius:8px;padding:16px;cursor:pointer;transition:border-color 0.2s,background 0.2s;}
+  .div-card:hover{background:#1e2a27;border-color:rgba(255,255,255,0.15);}
+  .div-card-season{font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--teal);margin-bottom:4px;}
+  .div-card-name{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;text-transform:uppercase;color:var(--text);margin-bottom:10px;}
+  .div-card-lbl{font-size:10px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px;}
+  .div-card-leader{font-size:14px;font-weight:500;color:var(--text);margin-bottom:2px;}
+  .div-card-team{font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:8px;}
+  .div-card-pts{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;color:var(--green);line-height:1;}
+  .div-card-pts-lbl{font-size:10px;color:rgba(255,255,255,0.4);}
+  .div-card-arrow{color:var(--green);font-size:11px;margin-top:10px;display:block;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;text-transform:uppercase;}
+
+  /* DIVISION VIEW */
+  .div-view{display:none;background:#111816;}
+  .div-view.active{display:block;}
+  .div-back{display:flex;align-items:center;gap:8px;padding:12px 24px;border-bottom:1px solid var(--border);cursor:pointer;background:none;border-top:none;border-left:none;border-right:none;color:var(--text-muted);font-family:'Barlow',sans-serif;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;transition:color 0.2s;width:100%;text-align:left;}
+  .div-back:hover{color:var(--text);}
+  .div-view-header{padding:14px 24px;background:#161d1b;border-bottom:1px solid var(--border);display:flex;align-items:baseline;gap:12px;}
+  .div-view-title{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;text-transform:uppercase;}
+  .div-view-meta{font-size:12px;color:var(--text-muted);}
+
+  /* INNER TABS */
+  .inner-tabs{display:flex;background:#1a2320;border-bottom:1px solid var(--border);}
+  .inner-tab{padding:12px 20px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;background:none;border-top:none;border-left:none;border-right:none;transition:color 0.2s;}
+  .inner-tab:hover{color:var(--text);}
+  .inner-tab.active{color:var(--text);border-bottom-color:var(--green);}
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;}
+
+  /* LEGEND */
+  .legend{display:flex;flex-wrap:wrap;gap:8px;padding:10px 24px;background:#1a2320;border-bottom:1px solid rgba(255,255,255,0.07);}
+  .legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-muted);}
+  .legend-dot{width:18px;height:14px;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;}
+  .scroll-hint{display:none;padding:8px 24px;font-size:11px;color:var(--text-faint);}
+  @media(max-width:768px){.scroll-hint{display:block;}}
+
+  /* TABLE */
+  .table-wrap{overflow-x:auto;overflow-y:auto;max-height:calc(100vh - 260px);}
+  .standings-table{border-collapse:separate;border-spacing:0;font-size:12px;white-space:nowrap;width:100%;}
+  .standings-table th{position:sticky;top:0;z-index:5;background:#1a2320;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;padding:0;border-bottom:2px solid rgba(255,255,255,0.15);border-right:1px solid rgba(255,255,255,0.07);}
+  .standings-table td{background:#161d1b;color:#fff;padding:0;border-bottom:1px solid rgba(255,255,255,0.06);border-right:1px solid rgba(255,255,255,0.06);}
+  .standings-table tr:hover td:not(.has-logo){background:#1e2a27!important;}
+  .standings-table tr:hover td.has-logo{box-shadow:inset 0 0 0 9999px rgba(30,42,39,0.35);}
+  .st-pos{position:sticky;left:0;z-index:3;width:38px;min-width:38px;}
+  .standings-table th.st-pos{z-index:8;background:#1a2320;}
+  .standings-table td.st-pos{background:#161d1b;}
+  .st-driver{position:sticky;left:38px;z-index:3;min-width:170px;text-align:left;}
+  .standings-table th.st-driver{z-index:8;background:#1a2320;text-align:left;}
+  .standings-table td.st-driver{background:#161d1b;max-width:170px;background-size:cover;background-position:center;background-repeat:no-repeat;}
+  .standings-table tr:hover td.st-pos{background-color:#1e2a27!important;}
+  .standings-table tr:hover td.st-driver:not(.has-logo){background-color:#1e2a27!important;}
+  .standings-table tr:hover td.st-driver.has-logo{box-shadow:inset 0 0 0 9999px rgba(30,42,39,0.35);}
+  .st-driver-cell{position:relative;z-index:1;padding:5px 8px;display:flex;flex-direction:column;gap:1px;}
+  .st-pos-cell{padding:10px 5px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:#fff;text-align:center;display:block;}
+  .st-pos-cell.p1{color:#E8B84B;}.st-pos-cell.p2{color:#C0C0C0;}.st-pos-cell.p3{color:#cd7f32;}
+  .st-pos-header{padding:8px 5px;display:block;text-align:center;}
+  .st-driver-header{padding:8px 10px;display:block;}
+  .st-driver-name{font-size:13px;font-weight:500;color:#fff;}
+  .st-driver-team{font-size:10px;color:rgba(255,255,255,0.5);}
+  .st-race{width:38px;min-width:38px;text-align:center;}
+  .st-race-header{height:100px;display:flex;flex-direction:column;justify-content:space-between;align-items:center;padding:5px 2px;box-sizing:border-box;position:relative;overflow:hidden;}
+  .st-race-header::after{content:'';position:absolute;inset:0;background:rgba(17,24,22,0.65);z-index:0;}
+  .st-race-round,.st-race-name{position:relative;z-index:1;}
+  .st-race-round{font-size:13px;font-weight:700;color:#fff;letter-spacing:0.5px;}
+  .st-race-name{font-size:13px;font-weight:700;color:#fff;line-height:1;display:block;text-align:center;margin-top:2px;}
+  .st-sprint-first{border-left:2px solid rgba(100,160,255,0.5)!important;border-top:2px solid rgba(100,160,255,0.5)!important;}
+  .st-sprint-last{border-right:2px solid rgba(100,160,255,0.5)!important;border-top:2px solid rgba(100,160,255,0.5)!important;}
+  .st-result{width:38px;min-width:38px;height:40px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:600;vertical-align:middle;}
+  .st-ri{width:38px;height:40px;display:flex;align-items:center;justify-content:center;}
+  .st-ri.r1{background:#FFD700;color:#5a3e00;}
+  .st-ri.r2{background:#C0C0C0;color:#222;}
+  .st-ri.r3{background:#cd7f32;color:#fff;}
+  .st-ri.r46{background:#1a4a1a;color:#7dcc7d;}
+  .st-ri.r710{background:#0f2e1a;color:#4aaa6a;}
+  .st-ri.rdnf{background:#3a0a0a;color:#ff6b6b;font-size:10px;}
+  .st-ri.rout{color:rgba(255,255,255,0.15);}
+  .st-end{min-width:44px;text-align:center;font-family:'Barlow Condensed',sans-serif;}
+  .st-end-header{padding:8px 8px;display:block;}
+  .st-end-cell{padding:10px 8px;display:block;}
+  .st-pole{color:#E8B84B;font-size:14px;font-weight:600;}.st-pole.zero{color:rgba(255,255,255,0.2);}
+  .st-fl{color:#9146FF;font-size:14px;font-weight:600;}.st-fl.zero{color:rgba(255,255,255,0.2);}
+  .st-pts{color:#fff;font-size:16px;font-weight:700;}
+  .st-gap{color:rgba(255,255,255,0.7);font-size:13px;}.st-gap.leader{color:rgba(255,255,255,0.3);font-size:11px;}
+
+  /* CONSTRUCTORS */
+  .constructors-list{padding:16px 24px;}
+  .con-row{display:flex;align-items:center;gap:12px;padding:14px 16px;background:#1a2320;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;}
+  .con-pos{width:28px;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--text-faint);flex-shrink:0;text-align:center;}
+  .con-pos.p1{color:#E8B84B;}.con-pos.p2{color:#9EA3A8;}.con-pos.p3{color:#cd7f32;}
+  .con-bar{width:4px;height:36px;border-radius:2px;flex-shrink:0;}
+  .con-info{flex:1;}
+  .con-name{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;}
+  .con-sub{font-size:11px;color:var(--text-faint);margin-top:3px;}
+  .con-right{text-align:right;flex-shrink:0;}
+  .con-pts{font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;}
+  .con-gap{font-size:11px;color:var(--text-faint);margin-top:2px;}
+
+  /* STATS */
+  .stats-grid{padding:16px 24px;display:grid;grid-template-columns:1fr;gap:10px;}
+  .cs-card{flex-shrink:0;background:#1a2320;border:1px solid var(--border2);border-radius:8px;padding:14px 16px;min-width:200px;max-width:240px;display:flex;flex-direction:column;gap:10px;}
+  .cs-card-title{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--teal);margin-bottom:2px;}
+  .cs-card-sub{font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:6px;}
+  .cs-row{display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+  .cs-row:last-child{border-bottom:none;}
+  .cs-row-pos{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;width:16px;text-align:center;flex-shrink:0;color:rgba(255,255,255,0.4);}
+  .cs-row-pos.gold{color:var(--gold);}
+  .cs-row-name{flex:1;font-size:12px;color:var(--text);}
+  .cs-row-sub{font-size:10px;color:rgba(255,255,255,0.35);}
+  .cs-row-val{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:var(--green);}
+  .cs-dots{display:flex;gap:3px;align-items:center;}
+  .cs-dot{width:22px;height:22px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;}
+  .cs-h2h-item{display:flex;flex-direction:column;gap:4px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+  .cs-h2h-item:last-child{border-bottom:none;}
+  .cs-h2h-team-label{font-size:10px;color:rgba(255,255,255,0.4);display:flex;align-items:center;gap:6px;}
+  .cs-h2h-bar{height:6px;border-radius:3px;overflow:hidden;display:flex;background:rgba(255,255,255,0.07);margin:3px 0;}
+  .cs-h2h-a{background:var(--green);} .cs-h2h-b{background:rgba(255,255,255,0.2);}
+  .cs-h2h-names{display:flex;justify-content:space-between;font-size:11px;}
+  @media(min-width:600px){.stats-grid{grid-template-columns:repeat(2,1fr);}}
+  .stat-card{background:#1a2320;border:1px solid var(--border);border-radius:8px;padding:14px 16px;}
+  .stat-card-header{display:flex;align-items:center;gap:8px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+  .stat-card-bar{width:3px;height:18px;border-radius:1px;flex-shrink:0;}
+  .stat-card-name{font-size:14px;font-weight:500;color:var(--text);}
+  .stat-card-sub{font-size:11px;color:var(--text-faint);margin-top:1px;}
+  .stat-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px;}
+  .stat-metric{background:#1e2a27;border-radius:4px;padding:8px 6px;text-align:center;}
+  .stat-metric-val{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;color:var(--text);}
+  .stat-metric-val.good{color:#4aaa6a;}.stat-metric-val.bad{color:#ff6b6b;}
+  .stat-metric-lbl{font-size:9px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.3px;margin-top:2px;}
+  .stat-rel-header{display:flex;justify-content:space-between;margin-bottom:4px;}
+  .stat-rel-lbl{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;}
+  .stat-rel-val{font-size:10px;color:var(--text-muted);font-weight:500;}
+  .stat-rel-bar{height:4px;background:#1e2a27;border-radius:2px;overflow:hidden;}
+  .stat-rel-fill{height:100%;border-radius:2px;background:#4aaa6a;}
+  .stat-rel-fill.mid{background:#E8B84B;}.stat-rel-fill.low{background:#ff6b6b;}
+
+  /* LOADING */
+  .loading-msg{text-align:center;padding:32px;color:var(--text-muted);font-size:13px;}
+
+  /* FOOTER */
+  footer{background:#161d1b;border-top:1px solid var(--border);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:40px;}
+  .footer-logo{background:var(--green);color:#000;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;padding:4px 9px;border-radius:3px;}
+  .footer-text{font-size:12px;color:var(--text-faint);}
+</style>
+<meta name="theme-color" content="#111816">
+</head>
+<body>
+
+<nav>
+  <div class="nav-left">
+    <a href="index.html" class="nav-logo">
+      <img src="../TRANSPARENT.png" alt="F1XL next-generation website test environment">
+    </a>
+  </div>
+  <div class="nav-links">
+    <div class="nav-item"><a href="index.html">Home</a></div>
+    <div class="nav-item"><a class="active" href="standings.html">Standings</a></div>
+    <div class="nav-item"><a href="results.html">Results</a></div>
+    <div class="nav-item"><a href="old-seasons.html">Past Seasons</a></div>
+    <div class="nav-item"><a href="teams.html">Teams</a></div>
+    <div class="nav-item"><a href="schedule.html">Schedule</a></div>
+    <div class="nav-item"><a href="drivers-licence.html">Licence</a></div>
+    <div class="nav-item"><a href="ticket-outcomes.html">Tickets</a></div>
+  </div>
+  <button class="nav-hamburger" id="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></button>
+</nav>
+<div class="mobile-menu" id="mobile-menu">
+  <a href="index.html">Home</a>
+  <a href="standings.html">Standings</a>
+  <a href="results.html">Results</a>
+  <a href="old-seasons.html">Past Seasons</a>
+  <a href="teams.html">Teams</a>
+  <a href="schedule.html">Schedule</a>
+  <a href="drivers-licence.html">Licence</a>
+  <a href="ticket-outcomes.html">Tickets</a>
+</div>
+
+<div id="standings-test-banner" style="background:#5a3e00;color:#fff3bf;border-bottom:1px solid #e8b84b;padding:10px 24px;text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:.7px;">
+  F1XL NEXT TEST · SEASON 1000 · NOT THE LIVE CHAMPIONSHIP
+</div>
+
+<div class="page-header">
+  <div class="page-eyebrow" id="page-season-eyebrow">Current Season</div>
+  <div class="page-title">Standings</div>
+  <div class="page-meta">Select a division to view full standings, constructors and driver stats</div>
+</div>
+
+<!-- DIVISION SELECTOR -->
+<div id="overall-constructors" style="background:#1a2320;border-bottom:1px solid rgba(232,184,75,0.3);">
+  <div style="padding:16px 24px 0;">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#E8B84B;margin-bottom:12px;">Overall Constructors Championship</div>
+    <div style="display:flex;gap:0;border-bottom:1px solid rgba(255,255,255,0.1);margin-bottom:0;">
+      <button id="oc-tab-standings" onclick="switchOCTab('standings')" style="padding:8px 16px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;background:none;border:none;border-bottom:2px solid var(--green);color:#fff;cursor:pointer;">Standings</button>
+      <button id="oc-tab-weekly" onclick="switchOCTab('weekly')" style="padding:8px 16px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;background:none;border:none;border-bottom:2px solid transparent;color:rgba(255,255,255,0.5);cursor:pointer;">Weekly Points</button>
+      <button id="oc-tab-coolstats" onclick="switchOCTab('coolstats')" style="padding:8px 16px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;background:none;border:none;border-bottom:2px solid transparent;color:rgba(255,255,255,0.5);cursor:pointer;">Cool Stats</button>
+
+    </div>
+  </div>
+  <div id="oc-panel-standings"><div id="overall-constructors-table"><div class="loading-msg" style="padding:16px 0 16px 24px;">Loading...</div></div></div>
+  <div id="oc-panel-weekly" style="display:none;"><div class="loading-msg" style="padding:16px 24px;">Loading weekly points...</div></div>
+  <div id="oc-panel-coolstats" style="display:none;"><div id="cool-stats-cards" style="display:flex;gap:12px;overflow-x:auto;padding:16px 24px;"><div class="loading-msg">Loading...</div></div></div>
+
+</div>
+<div id="selector-view" style="background:#111816;">
+  <div class="div-selector" id="div-selector">
+    <div class="loading-msg" style="grid-column:1/-1">Loading...</div>
+  </div>
+</div>
+
+<!-- DIVISION VIEW -->
+<div class="div-view" id="div-view">
+  <button class="div-back" onclick="showSelector()">← All divisions</button>
+  <div class="div-view-header">
+    <div class="div-view-title" id="div-view-title"></div>
+    <div class="div-view-meta" id="div-view-meta"></div>
+  </div>
+  <div class="inner-tabs" id="inner-tabs">
+    <button class="inner-tab active" onclick="showTab('drivers',this)">Drivers</button>
+    <button class="inner-tab" onclick="showTab('constructors',this)">Constructors</button>
+    <button class="inner-tab" onclick="showTab('stats',this)">Driver Stats</button>
+    <button class="inner-tab" onclick="showTab('teamstats',this)">Team Stats</button>
+
+  </div>
+
+  <div class="tab-panel active" id="tab-drivers">
+
+    <div class="scroll-hint">← Scroll to see all races →</div>
+    <div class="table-wrap">
+      <table class="standings-table"><thead><tr id="drivers-header"></tr></thead><tbody id="drivers-body"></tbody></table>
+    </div>
+  </div>
+
+  <div class="tab-panel" id="tab-constructors">
+    <div class="constructors-list" id="constructors-list">
+      <div class="loading-msg">Loading constructors...</div>
+    </div>
+  </div>
+
+  <div class="tab-panel" id="tab-stats">
+    <div class="stats-grid" id="stats-grid">
+      <div class="loading-msg" style="grid-column:1/-1">Loading stats...</div>
+    </div>
+  </div>
+
+  <div class="tab-panel" id="tab-teamstats">
+    <div class="constructors-list" id="teamstats-list">
+      <div class="loading-msg">Loading team stats...</div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="footer-logo">F1XL</div>
+    <div class="footer-text">F1 League · F1 Sim Racing on Xbox, PlayStation and PC. Casual Racing on F1 26</div>
+  </div>
+  <div class="footer-text">f1xl.co.uk</div>
+</footer>
+
+<script src="config.js?v=20260823-config-v3"></script>
+<script>
+// Divisions and sheet IDs loaded from config at runtime
+let divisions = [];
+let currentDiv = null;
+let seasonConfig = null;
+let driverTeams = {};
+let teamOwners = {};
+
+// The next-generation website has its own configuration file and never reads
+// the current live Website Config.
+const F1XL_STANDINGS_TEST_MODE = true;
+
+const teamColors = (typeof TEAM_COLOURS !== 'undefined') ? TEAM_COLOURS : {
+  'McLaren':'#EF8733','Mclaren':'#EF8733','Mercedes':'#75F1D3',
+  'Red Bull Racing':'#4570C0','Red Bull':'#4570C0',
+  'Ferrari':'#D52E37','Williams':'#3267D4',
+  'Racing Bull':'#7091F8','Racing Bulls':'#7091F8','RB':'#7091F8',
+  'Aston Martin':'#4B9774','Haas':'#DFE1E2','Audi':'#EB4526',
+  'Alpine':'#479FE2','Cadillac':'#AAAADD','Reserve':'#ffffff'
+};
+
+const raceFlags = {
+  'Ita':'🇮🇹','Italy':'🇮🇹','Bel':'🇧🇪','Belgium':'🇧🇪','Abu':'🇦🇪','Abu Dhabi':'🇦🇪',
+  'Jap':'🇯🇵','Japan':'🇯🇵','Chi':'🇨🇳','China':'🇨🇳','Qat':'🇶🇦','Qatar':'🇶🇦',
+  'Sau':'🇸🇦','Saudi Arabia':'🇸🇦','Aus':'🇦🇹','Austria':'🇦🇹','Bri':'🇬🇧','Britain':'🇬🇧',
+  'Can':'🇨🇦','Canada':'🇨🇦','Sin':'🇸🇬','Singapore':'🇸🇬','Hun':'🇭🇺','Hungary':'🇭🇺',
+  'Bra':'🇧🇷','Brazil':'🇧🇷','Aze':'🇦🇿','Azerbaijan':'🇦🇿','Net':'🇳🇱','Netherlands':'🇳🇱',
+  'Bah':'🇧🇭','Bahrain':'🇧🇭','Mon':'🇲🇨','Monaco':'🇲🇨','Spa':'🇪🇸','Spain':'🇪🇸',
+  'Mex':'🇲🇽','Mexico':'🇲🇽','USA':'🇺🇸','Mia':'🇺🇸','Miami':'🇺🇸','Aus2':'🇦🇺','Australia':'🇦🇺'
+};
+
+
+
+async function fetchSheet(sheetId, gid) {
+  const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const text = await res.text();
+  if (text.includes('<!DOCTYPE') || text.includes('<html')) throw new Error('Sheet not published to web');
+  return parseCSV(text);
+}
+
+function parseCSV(text) {
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  const rows = lines.map(line => {
+    const cells = [];
+    let current = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"' && !inQuotes) { inQuotes = true; }
+      else if (ch === '"' && inQuotes) {
+        if (line[i+1] === '"') { current += '"'; i++; }
+        else { inQuotes = false; }
+      } else if (ch === ',' && !inQuotes) {
+        cells.push(current.trim());
+        current = '';
+      } else { current += ch; }
+    }
+    cells.push(current.trim());
+    return { c: cells.map(v => ({ v: v === '' ? null : v })) };
+  });
+  return { rows };
+}
+
+function cv(row, col) {
+  if (!row || !row.c || !row.c[col]) return null;
+  const cell = row.c[col];
+  return (cell.v === null || cell.v === undefined) ? null : cell.v;
+}
+function cs(row, col) {
+  const v = cv(row, col);
+  return v === null ? '' : String(v).trim();
+}
+
+function buildSelector() {
+  const el = document.getElementById('div-selector');
+  el.innerHTML = divisions.map((d,i) => {
+    const avail = d.sheetId !== null;
+    const divNum = parseInt(d.id.replace('D',''));
+    const hex = DIVISION_COLOURS[divNum] || '#ffffff';
+    const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+    const boxStyle = `background:rgba(${r},${g},${b},0.35);border-color:rgba(${r},${g},${b},0.6);`;
+    const badgeStyle = `background:${hex};`;
+    return `<div class="div-card" onclick="${avail?`openDiv(${i})`:''}" style="${!avail?'opacity:0.35;cursor:not-allowed;':''}${boxStyle}">
+      <div class="div-card-season" style="display:flex;align-items:center;gap:8px;">
+        <span style="${badgeStyle}color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;padding:2px 7px;border-radius:3px;">${d.id}</span>
+        <span>F1XL · S${d.season||''}</span>
+      </div>
+      <div class="div-card-name">${d.name}</div>
+      ${avail ? `
+        <div class="div-card-lbl">Championship leader</div>
+        <div class="div-card-leader">${d.leader||'—'}</div>
+        <div class="div-card-team">${d.leaderTeam||''}</div>
+        <div class="div-card-pts">${d.leaderPts||'—'} <span class="div-card-pts-lbl">pts</span></div>
+        <span class="div-card-arrow">View full standings →</span>
+      ` : '<div style="font-size:12px;color:var(--text-faint);margin-top:8px;">Coming soon</div>'}
+    </div>`;
+  }).join('');
+}
+
+async function openDiv(idx) {
+  currentDiv = divisions[idx];
+  const divNum = parseInt(currentDiv.id.replace('D',''));
+  const hex = DIVISION_COLOURS[divNum] || '#ffffff';
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  const header = document.getElementById('div-view-header');
+  if(header) header.style.cssText += `background:rgba(${r},${g},${b},0.15);border-bottom-color:rgba(${r},${g},${b},0.4);`;
+  const title = document.getElementById('div-view-title');
+  if(title) title.style.color = hex;
+  const innerTabs = document.getElementById('inner-tabs');
+  if(innerTabs){
+    innerTabs.style.background = `rgba(${r},${g},${b},0.18)`;
+    innerTabs.style.borderBottomColor = `rgba(${r},${g},${b},0.4)`;
+    innerTabs.querySelectorAll('.inner-tab.active').forEach(t => t.style.borderBottomColor = hex);
+  }
+  // Store current div colour for tab switching
+  innerTabs && (innerTabs.dataset.divColour = hex);
+  document.getElementById('selector-view').style.display = 'none';
+  document.getElementById('div-view').classList.add('active');
+  document.getElementById('div-view-title').textContent = currentDiv.name;
+  document.getElementById('div-view-meta').textContent = 'Loading...';
+
+  document.querySelectorAll('.inner-tab').forEach((t,i) => {
+    t.classList.toggle('active', i===0);
+    t.style.borderBottomColor = i===0 ? hex : 'transparent';
+  });
+
+  // Colour table headers
+  document.querySelectorAll('.standings-table th').forEach(th => {
+    const br=Math.round(r*0.35+26), bg=Math.round(g*0.35+29), bb=Math.round(b*0.35+27);
+    th.style.background = `rgb(${br},${bg},${bb})`;
+    th.style.borderBottomColor = `rgba(${r},${g},${b},0.7)`;
+  });
+  document.querySelectorAll('.tab-panel').forEach((p,i) => p.classList.toggle('active', i===0));
+  document.getElementById('drivers-header').innerHTML = '';
+  document.getElementById('drivers-body').innerHTML = '<tr><td colspan="30"><div class="loading-msg">Loading driver standings...</div></td></tr>';
+  document.getElementById('constructors-list').innerHTML = '<div class="loading-msg">Loading constructors...</div>';
+  document.getElementById('stats-grid').innerHTML = '<div class="loading-msg" style="grid-column:1/-1">Loading stats...</div>';
+  document.getElementById('teamstats-list').innerHTML = '<div class="loading-msg">Loading team stats...</div>';
+
+  await Promise.all([loadDrivers(), loadConstructors(), loadStats(), loadTeamStats()]);
+}
+
+function showSelector() {
+  document.getElementById('div-view').classList.remove('active');
+  document.getElementById('selector-view').style.display = '';
+}
+
+function showTab(name, btn) {
+  const innerTabs = document.getElementById('inner-tabs');
+  const divColour = innerTabs ? innerTabs.dataset.divColour : null;
+  document.querySelectorAll('.inner-tab').forEach(t => { t.classList.remove('active'); t.style.borderBottomColor = 'transparent'; });
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  if(divColour) btn.style.borderBottomColor = divColour;
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+function rClass(v) {
+  if (v === null || v === '') return 'rout';
+  const s = String(v).trim().toUpperCase();
+  if (s === 'DNF' || s === 'DSQ' || s === 'DNS') return 'rdnf';
+  const n = parseInt(v);
+  if (isNaN(n)) return 'rout';
+  if (n===1) return 'r1'; if (n===2) return 'r2'; if (n===3) return 'r3';
+  if (n>=4&&n<=6) return 'r46'; if (n>=7&&n<=10) return 'r710';
+  return '';
+}
+function pClass(p){return p===1?'p1':p===2?'p2':p===3?'p3':'';}
+
+const NAT_TO_ISO = {
+  'Britain':'gb','England':'gb','Wales':'gb','Scotland':'gb','Northern Ireland':'gb',
+  'USA':'us','United States':'us','United States Virgin Islands':'vi',
+  'Netherlands':'nl','Germany':'de','France':'fr','Italy':'it','Spain':'es',
+  'Belgium':'be','Austria':'at','Australia':'au','Japan':'jp','Canada':'ca',
+  'Brazil':'br','Mexico':'mx','Monaco':'mc','Singapore':'sg','Hungary':'hu',
+  'Azerbaijan':'az','Saudi Arabia':'sa','Qatar':'qa','Abu Dhabi':'ae',
+  'United Arab Emirates':'ae','China':'cn','South Korea':'kr','Romania':'ro',
+  'South Africa':'za','Ireland':'ie','Portugal':'pt','Sweden':'se',
+  'Finland':'fi','Denmark':'dk','Norway':'no','Poland':'pl','Russia':'ru',
+  'Turkey':'tr','Greece':'gr','Switzerland':'ch','Czech Republic':'cz',
+  'Slovakia':'sk','Croatia':'hr','Serbia':'rs','Ukraine':'ua','Israel':'il',
+  'India':'in','Pakistan':'pk','New Zealand':'nz','Argentina':'ar','Chile':'cl',
+  'Colombia':'co','Peru':'pe','Venezuela':'ve','Ecuador':'ec','Uruguay':'uy',
+  'Costa Rica':'cr','Panama':'pa','Guatemala':'gt','Honduras':'hn',
+  'El Salvador':'sv','Nicaragua':'ni','Bolivia':'bo','Paraguay':'py',
+  'Jamaica':'jm','Trinidad and Tobago':'tt','Barbados':'bb','Cuba':'cu',
+  'Haiti':'ht','Dominican Republic':'do','Puerto Rico':'pr',
+  'Egypt':'eg','Nigeria':'ng','Kenya':'ke','Ghana':'gh','Ethiopia':'et',
+  'Tanzania':'tz','Uganda':'ug','Rwanda':'rw','Morocco':'ma','Tunisia':'tn',
+  'Algeria':'dz','Libya':'ly','Sudan':'sd','Senegal':'sn','Cameroon':'cm',
+  'Ivory Coast':'ci','Zimbabwe':'zw','Zambia':'zm','Mozambique':'mz',
+  'Madagascar':'mg','Namibia':'na','Botswana':'bw','Mauritius':'mu',
+  'Thailand':'th','Vietnam':'vn','Indonesia':'id','Malaysia':'my',
+  'Philippines':'ph','Myanmar':'mm','Cambodia':'kh','Bangladesh':'bd',
+  'Sri Lanka':'lk','Nepal':'np','Pakistan':'pk','Iran':'ir','Iraq':'iq',
+  'Saudi Arabia':'sa','Kuwait':'kw','Bahrain':'bh','Oman':'om','Yemen':'ye',
+  'Jordan':'jo','Lebanon':'lb','Syria':'sy','Cyprus':'cy','Malta':'mt',
+  'Iceland':'is','Luxembourg':'lu','Liechtenstein':'li','Andorra':'ad',
+  'San Marino':'sm','Vatican':'va','Kosovo':'xk','Bosnia and Herzegovina':'ba',
+  'Macedonia':'mk','Albania':'al','Montenegro':'me','Moldova':'md',
+  'Belarus':'by','Latvia':'lv','Lithuania':'lt','Estonia':'ee',
+  'Georgia':'ge','Armenia':'am','Azerbaijan':'az','Kazakhstan':'kz',
+  'Uzbekistan':'uz','Kyrgyzstan':'kg','Tajikistan':'tj','Turkmenistan':'tm',
+  'Mongolia':'mn','China':'cn','Hong Kong':'hk','Taiwan':'tw',
+};
+
+function natToFlag(nat) {
+  if(!nat || !nat.trim()) return '';
+  const THREE_TO_TWO = {
+    'GBR':'gb','ENG':'gb','SCO':'gb','WAL':'gb','NIR':'gb',
+    'USA':'us','CAN':'ca','AUS':'au','NZL':'nz','IRL':'ie',
+    'FRA':'fr','DEU':'de','GER':'de','ESP':'es','ITA':'it',
+    'NLD':'nl','BEL':'be','PRT':'pt','SWE':'se','NOR':'no',
+    'DNK':'dk','FIN':'fi','CHE':'ch','AUT':'at','POL':'pl',
+    'CZE':'cz','SVK':'sk','HUN':'hu','ROU':'ro','BGR':'bg',
+    'HRV':'hr','SRB':'rs','SVN':'si','GRC':'gr','TUR':'tr',
+    'RUS':'ru','UKR':'ua','BLR':'by','KAZ':'kz','GEO':'ge',
+    'ARM':'am','AZE':'az','LTU':'lt','LVA':'lv','EST':'ee',
+    'BRA':'br','ARG':'ar','COL':'co','CHL':'cl','MEX':'mx',
+    'PER':'pe','VEN':'ve','URY':'uy','ECU':'ec','BOL':'bo',
+    'PRY':'py','GTM':'gt','CRI':'cr','PAN':'pa','HND':'hn',
+    'SLV':'sv','NIC':'ni','DOM':'do','CUB':'cu','JAM':'jm',
+    'TTO':'tt','BHS':'bs','BRB':'bb',
+    'CHN':'cn','JPN':'jp','KOR':'kr','IND':'in','PAK':'pk',
+    'BGD':'bd','LKA':'lk','THA':'th','VNM':'vn','IDN':'id',
+    'MYS':'my','PHL':'ph','SGP':'sg','MMR':'mm','KHM':'kh',
+    'LAO':'la','HKG':'hk','TWN':'tw','MNG':'mn',
+    'SAU':'sa','UAE':'ae','QAT':'qa','KWT':'kw','BHR':'bh',
+    'OMN':'om','YEM':'ye','IRQ':'iq','IRN':'ir','ISR':'il',
+    'JOR':'jo','LBN':'lb','SYR':'sy','PSE':'ps',
+    'ZAF':'za','NGA':'ng','KEN':'ke','EGY':'eg','ETH':'et',
+    'GHA':'gh','TZA':'tz','UGA':'ug','ZWE':'zw','MOZ':'mz',
+    'AGO':'ao','CMR':'cm','SEN':'sn','CIV':'ci','MDG':'mg',
+    'MAR':'ma','TUN':'tn','DZA':'dz','LBY':'ly','SDN':'sd',
+    'ISL':'is','MLT':'mt','CYP':'cy','LUX':'lu','MCO':'mc',
+    'AND':'ad','SMR':'sm','LIE':'li','ALB':'al','MKD':'mk',
+    'MNE':'me','BIH':'ba','XKX':'xk','KOS':'xk',
+    'MEX':'mx','VEN':'ve',
+  };
+  const code = nat.trim().toUpperCase();
+  const iso = THREE_TO_TWO[code] || code.toLowerCase().slice(0,2);
+  return `<img class="td-driver-flag" src="images/smallflags/${iso}.svg" alt="${nat}" onerror="this.style.display='none'" style="width:18px;height:12px;object-fit:cover;border-radius:1px;vertical-align:middle;margin-right:4px;">`;
+}
+
+const PLATFORM_ICONS = {
+  'Xbox':    'images/platform_xbox.png',
+  'PS':      'images/platform_PS.png',
+  'PC':      'images/platform_PC.png',
+};
+const CONTROLLER_ICONS = {
+  'Wheel':    'images/controller_wheel.png',
+  'Gamepad':  'images/controller_gamepad.png',
+};
+
+function driverIcon(src, alt){
+  if(!src) return '';
+  return `<span style="display:inline-flex;align-items:center;justify-content:center;width:25px;height:25px;background:#1e2a27;border:1px solid rgba(255,255,255,0.2);border-radius:4px;vertical-align:middle;margin-left:4px;"><img src="${src}" alt="${alt}" title="${alt}" onerror="this.parentElement.style.display='none'" style="width:16px;height:16px;object-fit:contain;"></span>`;
+}
+
+let _driverInfoMap = {};
+
+async function loadDriverInfo(sheetId, gid){
+  if(!gid) return;
+  try{
+    const table = await fetchSheet(sheetId, gid);
+    const rows = table.rows;
+    // Find header row - look for 'Driver' in col A
+    let hIdx = -1;
+    for(let i=0;i<rows.length;i++){
+      const v = cs(rows[i],0).toLowerCase();
+      if(v==='driver'||v==='name'){ hIdx=i; break; }
+    }
+    if(hIdx<0) hIdx = 1;
+
+    // Col A(0)=driver, Col C(2)=nat code, Col F(5)=platform, Col G(6)=controller
+    for(let i=hIdx+1;i<rows.length;i++){
+      const r = rows[i];
+      const driver = cs(r,0).trim();
+      if(!driver) continue;
+      _driverInfoMap[driver.toLowerCase()] = {
+        nat:        cs(r,2).trim(),
+        platform:   cs(r,5).trim(),
+        controller: cs(r,6).trim(),
+      };
+    }
+
+    // Parse Team Principal section — col J(9)=TP name, col K(10)=team name
+    let tpStart = -1;
+    for(let i=0;i<rows.length;i++){
+      if(cs(rows[i],9).toLowerCase()==='team principal'){ tpStart=i+2; break; }
+    }
+    if(tpStart>=0){
+      for(let i=tpStart;i<rows.length;i++){
+        const tp = cs(rows[i],9).trim();
+        const team = cs(rows[i],10).trim().toLowerCase();
+        if(!tp || !team) continue;
+        teamOwners[team] = tp;
+      }
+    }
+  } catch(e){ console.warn('Driver info load failed:', e.message); }
+}
+
+async function loadDrivers() {
+  try {
+    const table = await fetchSheet(currentDiv.sheetId, currentDiv.gids.drivers);
+    const rows = table.rows;
+
+    // Load driver info (nationality, platform, controller)
+    _driverInfoMap = {};
+    const infoGid = currentDiv.gids.teamInfo;
+    if(infoGid) await loadDriverInfo(currentDiv.sheetId, infoGid);
+
+    // Find header row containing "Pos"
+    let hIdx = -1;
+    for (let i=0; i<rows.length; i++) {
+      if (cs(rows[i],0)==='Pos') { hIdx=i; break; }
+    }
+    if (hIdx<0) throw new Error('Header not found');
+
+    const hRow = rows[hIdx];
+    // Find circuit name row - it has country names in race cols (col 4+)
+    // It's typically 4 rows before the header row
+    let nameRow = null;
+    for (let i=Math.max(0,hIdx-5); i<hIdx; i++) {
+      const v = cs(rows[i], 4);
+      if (v && isNaN(parseFloat(v)) && v.length > 2) { nameRow = rows[i]; break; }
+    }
+    if (!nameRow) nameRow = rows[Math.max(0,hIdx-4)];
+
+    // Map race columns — stop once we've passed the Gap column
+    const races = [];
+    let poleCol=-1, flCol=-1, ptsCol=-1, gapCol=-1;
+    for (let c=4; c<hRow.c.length; c++) {
+      const h = cs(hRow,c);
+      if (!h) continue;
+      if (h==='Pole'){poleCol=c;continue;}
+      if (h==='F/L'){flCol=c;continue;}
+      if (h==='Points'){ptsCol=c;continue;}
+      if (h==='Gap'){gapCol=c;continue;}
+      // Stop processing once we've found Points — anything after is hidden calc cols
+      if (ptsCol>=0) break;
+      const sprint = h.toLowerCase().includes('(s)') || h.toLowerCase().includes('(r)');
+      const sprintRace = h.toLowerCase().includes('(r)');
+      const circuitName = nameRow ? cs(nameRow,c) : '';
+      const short = circuitName || h.replace(/\(s\)/i,'').replace(/\(r\)/i,'').trim();
+      // Only include race columns up to the number of rounds in this season
+      const rMatch = h.match(/R(\d+)/i);
+      const rNum = rMatch ? parseInt(rMatch[1]) : 999;
+      if (rNum <= (currentDiv.numRounds || 21)) races.push({col:c, label:h, short:short.trim(), sprint:sprint, sprintRace:sprintRace});
+    }
+
+    // Identify sprint pairs - R(s) col followed by R(R) col
+    // Mark sprint pairs for border grouping
+    const sprintPairs = new Set();
+    for (let i=0; i<races.length; i++) {
+      if (races[i].sprint && i+1<races.length && races[i+1].sprintRace) {
+        sprintPairs.add(i);   // sprint quali
+        sprintPairs.add(i+1); // sprint race
+      }
+    }
+
+    // Country to ISO for flag backgrounds
+    const CIRCUIT_TO_ISO = {
+      'Italy':'it','Belgium':'be','Abu Dhabi':'ae','Japan':'jp','China':'cn',
+      'Qatar':'qa','Saudi Arabia':'sa','Austria':'at','Britain':'gb','Canada':'ca',
+      'Singapore':'sg','Australia':'au','Hungary':'hu','Brazil':'br',
+      'Azerbaijan':'az','Netherlands':'nl','Bahrain':'bh','Monaco':'mc',
+      'Spain':'es','Mexico':'mx','USA':'us','Miami':'us','Las Vegas':'us',
+      'France':'fr','Portugal':'pt','Russia':'ru','Vietnam':'vn',
+      'United States':'us','Great Britain':'gb',
+    };
+
+    // Header HTML
+    let hHtml = `<th class="st-pos"><span class="st-pos-header">Pos</span></th>
+      <th class="st-driver"><span class="st-driver-header">Driver</span></th>`;
+
+    races.forEach((r, idx) => {
+      const isFirst = sprintPairs.has(idx) && r.sprint && !r.sprintRace;
+      const isLast  = sprintPairs.has(idx) && r.sprintRace;
+      const sc = isFirst ? 'st-sprint-first' : isLast ? 'st-sprint-last' : '';
+      if (r.sprintRace) {
+        // Sprint race col — same flag as sprint quali col
+        const roundNum = r.label.replace(/\(r\)/i,'').trim();
+        const prevRace = idx > 0 ? races[idx-1] : null;
+        const countryKey = prevRace ? (prevRace.short||prevRace.label).toLowerCase().replace(/[^a-z ]/g,'').replace(/ /g,'_').trim() : '';
+        const bgImg = countryKey ? `images/vertflags/vertical_${countryKey}.webp` : '';
+        const bgStyleAttr = bgImg ? `style="background-image:url('${bgImg}');background-size:cover;background-position:center;"` : '';
+        hHtml += `<th class="st-race ${sc}"><div class="st-race-header" ${bgStyleAttr}>
+          <span class="st-race-round">${roundNum}<span style="font-size:8px;">(R)</span></span>
+          <span class="st-race-name">${prevRace ? (prevRace.short||prevRace.label).slice(0,3).toUpperCase() : ''}</span>
+        </div></th>`;
+      } else {
+        const roundNum = r.label.replace(/\(s\)/i,'').trim();
+        const sprintSuffix = r.sprint ? `<span style="font-size:8px;color:rgba(130,170,255,0.9);">(S)</span>` : '';
+        const countryKey = (r.short||r.label).toLowerCase().replace(/[^a-z ]/g,'').replace(/ /g,'_').trim();
+        const bgImg = countryKey ? `images/vertflags/vertical_${countryKey}.webp` : '';
+        const bgStyleAttr = bgImg ? `style="background-image:url('${bgImg}');background-size:cover;background-position:center;"` : '';
+        hHtml += `<th class="st-race ${sc}"><div class="st-race-header" ${bgStyleAttr}>
+          <span class="st-race-round">${roundNum}${sprintSuffix}</span>
+          <span class="st-race-name">${(r.short||r.label).slice(0,3).toUpperCase()}</span>
+        </div></th>`;
+      }
+    });
+    if (poleCol>=0) hHtml += `<th class="st-end"><span class="st-end-header">Pole</span></th>`;
+    if (flCol>=0)   hHtml += `<th class="st-end"><span class="st-end-header">F/L</span></th>`;
+    if (ptsCol>=0)  hHtml += `<th class="st-end"><span class="st-end-header">Pts</span></th>`;
+    if (gapCol>=0)  hHtml += `<th class="st-end"><span class="st-end-header">Gap</span></th>`;
+
+    document.getElementById('drivers-header').innerHTML = hHtml;
+    // Apply division colour to headers
+    if(currentDiv){
+      const divNum = parseInt((currentDiv.id||'').replace('D',''));
+      const hex = DIVISION_COLOURS[divNum];
+      if(hex){
+        const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+        document.querySelectorAll('.standings-table th').forEach(th=>{
+          const br=Math.round(r*0.35+26), bg=Math.round(g*0.35+29), bb=Math.round(b*0.35+27);
+          th.style.background=`rgb(${br},${bg},${bb})`;
+          th.style.borderBottomColor=`rgba(${r},${g},${b},0.7)`;
+        });
+      }
+    }
+
+    // Collect all data rows first, then sort by points, with an F1-style
+    // countback tiebreaker for equal points: most wins breaks the tie first,
+    // then most 2nd-place finishes, then 3rds, and so on. Otherwise everyone
+    // tied at 0 points just stays "frozen" in the sheet's original team-
+    // alphabetical order, even though they did finish in different positions.
+    const MAX_POS = 30; // generous upper bound on grid size
+    function countbackArray(row){
+      const counts = new Array(MAX_POS).fill(0);
+      races.forEach(rc => {
+        const v = parseInt(cs(row, rc.col));
+        if (!isNaN(v) && v>=1 && v<=MAX_POS) counts[v-1]++;
+      });
+      return counts;
+    }
+    function compareCountback(a,b){
+      for (let i=0; i<MAX_POS; i++){
+        if (b[i] !== a[i]) return b[i]-a[i]; // more finishes at this position wins the tie
+      }
+      return 0;
+    }
+    const dataRows = [];
+    for (let i=hIdx+1; i<rows.length; i++) {
+      const row = rows[i];
+      const driver = cs(row,2);
+      if (!driver) continue;
+      const pts = ptsCol>=0 ? parseFloat(cs(row,ptsCol)) || 0 : 0;
+      const countback = countbackArray(row);
+      dataRows.push({row, pts, countback});
+    }
+    dataRows.sort((a,b) => b.pts - a.pts || compareCountback(a.countback,b.countback));
+    const leaderPts = dataRows.length ? dataRows[0].pts : 0;
+
+    // Body
+    let bHtml = '';
+    let rounds = 0;
+    let firstDriver = true;
+
+    for (let ri=0; ri<dataRows.length; ri++) {
+      const {row} = dataRows[ri];
+      const pos = ri+1;
+      const driver = cs(row,2);
+
+      const nat = cs(row,1);
+      const teamRaw = cs(row,3).trim();
+      const team = teamRaw || driverTeams[driver.toLowerCase()] || '';
+      const color = teamColors[team] || teamColors[Object.keys(teamColors).find(k=>k.toLowerCase()===team.toLowerCase())||''] || '#555';
+      const posN = pos;
+      const pc = pClass(posN);
+
+      // Driver info lookup (flag, platform, controller)
+      const dInfo = _driverInfoMap[driver.toLowerCase()] || {};
+      const flagHtml = natToFlag(dInfo.nat || nat);
+      const platformHtml = driverIcon(PLATFORM_ICONS[dInfo.platform], dInfo.platform||'');
+      const controllerHtml = driverIcon(CONTROLLER_ICONS[dInfo.controller], dInfo.controller||'');
+
+      if (firstDriver) {
+        races.forEach(r => {
+          const v = cs(row,r.col).trim();
+          // Count as completed if non-sprint col has a numeric value or DNF
+          if (!r.sprint && v && v !== '' && (parseInt(v) > 0 || ['DNF','DNS','DSQ'].includes(v.toUpperCase()))) rounds++;
+        });
+        firstDriver = false;
+      }
+
+      const teamSlug = (team||'').toLowerCase().replace(/\s+/g,'').replace(/[^a-z0-9]/g,'');
+      const logoStyle = teamSlug ? `background-image:linear-gradient(rgba(22,29,27,0.5),rgba(22,29,27,0.5)),url('../images/teamlogos/thinlogo_${teamSlug}.webp');` : '';
+      const hasLogo = teamSlug ? ' has-logo' : '';
+      const teamSpan = teamSlug ? '' : `<span class="st-driver-team">${team||''}</span>`;
+
+      let rHtml = `<tr>
+        <td class="st-pos"><span class="st-pos-cell ${pc}">${pos}</span></td>
+        <td class="st-driver${hasLogo}" style="${logoStyle}"><div class="st-driver-cell">
+          <span class="st-driver-name">${flagHtml}${driver}</span>
+          ${teamSpan}
+        </div></td>`;
+
+      races.forEach((r, idx) => {
+        const v = cs(row, r.col);
+        const val = v && v.trim() ? v.trim() : '';
+        const rc = rClass(val);
+        const isFirst = sprintPairs.has(idx) && r.sprint && !r.sprintRace;
+        const isLast  = sprintPairs.has(idx) && r.sprintRace;
+        const sc = isFirst ? 'st-sprint-first' : isLast ? 'st-sprint-last' : '';
+        rHtml += `<td class="st-result ${sc}"><div class="st-ri ${rc}">${val}</div></td>`;
+      });
+
+      const pole = poleCol>=0 ? cs(row,poleCol) : '';
+      const fl   = flCol>=0   ? cs(row,flCol)   : '';
+      const pts  = ptsCol>=0  ? cs(row,ptsCol)  : '';
+      const gap  = gapCol>=0  ? (ri===0 ? '' : String(leaderPts - dataRows[ri].pts)) : '';
+
+      if (poleCol>=0) rHtml += `<td class="st-end"><span class="st-end-cell st-pole ${!pole||pole==='0'?'zero':''}">${pole||'—'}</span></td>`;
+      if (flCol>=0)   rHtml += `<td class="st-end"><span class="st-end-cell st-fl ${!fl||fl==='0'?'zero':''}">${fl||'—'}</span></td>`;
+      if (ptsCol>=0)  rHtml += `<td class="st-end"><span class="st-end-cell st-pts">${pts||'—'}</span></td>`;
+      if (gapCol>=0)  rHtml += `<td class="st-end"><span class="st-end-cell st-gap ${!gap||gap==='0'?'leader':''}">${gap||'—'}</span></td>`;
+
+      rHtml += '</tr>';
+      bHtml += rHtml;
+    }
+
+    document.getElementById('drivers-body').innerHTML = bHtml;
+    document.getElementById('div-view-meta').textContent = `${rounds} rounds completed`;
+
+  } catch(e) {
+    document.getElementById('drivers-body').innerHTML = '<tr><td colspan="30"><div class="loading-msg">Could not load data: ' + e.message + '</div></td></tr>';
+    console.error('Drivers error:', e);
+  }
+}
+
+async function loadConstructors() {
+  try {
+    const conTable = await fetchSheet(currentDiv.sheetId, currentDiv.gids.constructors);
+    const rows = conTable.rows;
+
+    // Find header row dynamically
+    let hIdx = -1;
+    for (let i=0; i<rows.length; i++) {
+      if (rows[i].c.some(c => (c.v||'').toString().trim().toLowerCase() === 'team')) { hIdx=i; break; }
+    }
+    if (hIdx<0) throw new Error('Header not found');
+    const hRow = rows[hIdx];
+    const posCol = hRow.c.findIndex(c => (c.v||'').toString().trim().toLowerCase() === 'pos');
+    const teamCol = hRow.c.findIndex(c => (c.v||'').toString().trim().toLowerCase() === 'team');
+    const ptsCol = hRow.c.findIndex(c => (c.v||'').toString().trim().toLowerCase() === 'points');
+    if (teamCol<0 || ptsCol<0) throw new Error('Columns not found');
+
+    const teams = [];
+    for (let i=hIdx+1; i<rows.length; i++) {
+      const row = rows[i];
+      const team = cs(row,teamCol).trim();
+      const ptsRaw = cs(row,ptsCol).trim();
+      if (!team || !ptsRaw) continue;
+      const pts = Math.floor(parseFloat(ptsRaw)) || 0;
+      teams.push({pos: posCol>=0 ? parseInt(cs(row,posCol)) : 0, team, pts});
+    }
+
+    // Sort by points descending and calculate gaps
+    teams.sort((a,b) => b.pts - a.pts);
+    const leader = teams.length ? teams[0].pts : 0;
+
+    const conTableStyle = `width:100%;max-width:560px;border-collapse:collapse;`;
+    const thStyle = `text-align:left;padding:5px 10px;font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.4);border-bottom:1px solid rgba(255,255,255,0.12);background:#1e2a27;`;
+    const tdStyle = `padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.05);font-size:13px;color:#fff;vertical-align:middle;background:#1a2320;`;
+
+    let html = `<div style="padding:16px 24px;"><table style="${conTableStyle}">
+      <thead><tr>
+        <th style="${thStyle}width:36px;">Pos</th>
+        <th style="${thStyle}">Team</th>
+        <th style="${thStyle}text-align:right;">Pts</th>
+        <th style="${thStyle}text-align:right;">Gap</th>
+        <th style="${thStyle}text-align:right;">+/-</th>
+      </tr></thead><tbody>`;
+
+    teams.forEach((d, i) => {
+      const color = teamColors[d.team] || teamColors[Object.keys(teamColors).find(k=>k.toLowerCase()===d.team.toLowerCase())||''] || '#555';
+      const r=parseInt(color.slice(1,3),16)||85, g=parseInt(color.slice(3,5),16)||85, b=parseInt(color.slice(5,7),16)||85;
+      const posNum = i+1;
+      const pc = posNum===1?'#E8B84B':posNum===2?'#C0C0C0':posNum===3?'#cd7f32':'rgba(255,255,255,0.5)';
+      const gl = i===0 ? '—' : `-${leader - d.pts}`;
+      const ga = i===0 ? '—' : `-${teams[i-1].pts - d.pts}`;
+      const rowBg = `background:rgba(${r},${g},${b},0.15);`;
+      const teamCellBg = `background:rgba(${r},${g},${b},0.25);border-left:3px solid ${color};`;
+      const slug = d.team.toLowerCase().replace(/\s+/g,'').replace(/[^a-z0-9]/g,'');
+      const logoStyle2 = slug ? `background-image:linear-gradient(rgba(22,29,27,0.5),rgba(22,29,27,0.5)),url('../images/teamlogos/thinlogo_${slug}.webp');background-size:cover;background-position:center;` : '';
+      const ownerName = teamOwners[d.team.toLowerCase()] || '';
+      const ownerDisplay = ownerName && ownerName.toLowerCase()==='reserve' ? 'RESERVE' : ownerName;
+      html += `<tr>
+        <td style="${tdStyle}${rowBg}"><span style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:${pc};">${posNum}</span></td>
+        <td class="${slug?'has-logo':''}" style="${tdStyle}${teamCellBg}${logoStyle2}"><div class="ps-driver-cell">
+          <span class="ps-driver-name">&nbsp;</span>
+        </div></td>
+        <td style="${tdStyle}${rowBg}text-align:right;"><span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#3DCC47;">${d.pts}</span></td>
+        <td style="${tdStyle}${rowBg}text-align:right;color:rgba(255,255,255,0.6);">${gl}</td>
+        <td style="${tdStyle}${rowBg}text-align:right;color:rgba(255,255,255,0.4);font-size:12px;">${ga}</td>
+      </tr>`;
+    });
+
+    html += '</tbody></table></div>';
+    document.getElementById('constructors-list').innerHTML = html || '<div class="loading-msg">No data found</div>';
+  } catch(e) {
+    document.getElementById('constructors-list').innerHTML = `<div class="loading-msg">Could not load constructors: ${e.message}</div>`;
+    console.error('Constructors error:', e);
+  }
+}
+
+async function loadStats() {
+  try {
+    const table = await fetchSheet(currentDiv.sheetId, currentDiv.gids.driverStats);
+    const rows = table.rows;
+    let html = '';
+
+    // Find header row and map columns by name
+    let hIdx = -1;
+    let cols = {};
+    for (let i=0; i<rows.length; i++) {
+      const row = rows[i];
+      if (!row.c) continue;
+      for (let c=0; c<row.c.length; c++) {
+        const v = cs(row,c).toLowerCase().trim();
+        if (v==='driver')                                cols.driver=c;
+        if (v==='wins'||v.includes('total wins'))        cols.wins=c;
+        if (v==='podiums'||v.includes('total podiums'))  cols.pods=c;
+        if (v==='poles'||v.includes('total poles'))      cols.poles=c;
+        if (v==='fastest laps'||v.includes('fastest'))   cols.fl=c;
+        if (v==='total points'||v.includes('total points')) cols.totalPts=c;
+        if (v==='points per race'||v.includes('per race'))  cols.ppr=c;
+        if (v.includes('avg finish')||v.includes('average finish')) cols.avgFin=c;
+        if (v.includes('avg grid')||v.includes('average grid'))     cols.avgGrid=c;
+        if ((v.includes('avg pos gained')||v.includes('pos gained')||v.includes('gained')) && !v.includes('sprint') && cols.avgGain===undefined) cols.avgGain=c;
+        if (v==='races started'||v.includes('started'))  cols.started=c;
+        if (v==='races finished'||v.includes('finished')) cols.finished=c;
+        if (v==='dnf')                                   cols.dnfs=c;
+        if (v==='reliability %'||v==='reliability')      cols.rel=c;
+      }
+      if (cols.driver !== undefined) { hIdx = i; break; }
+    }
+
+    if (hIdx < 0) hIdx = 0;
+
+    // Fallbacks matching Driver Stats Calc Sheet column order
+    if (cols.driver===undefined)   cols.driver=0;
+    if (cols.wins===undefined)     cols.wins=3;
+    if (cols.pods===undefined)     cols.pods=4;
+    if (cols.poles===undefined)    cols.poles=5;
+    if (cols.fl===undefined)       cols.fl=6;
+    if (cols.totalPts===undefined) cols.totalPts=7;
+    if (cols.ppr===undefined)      cols.ppr=8;
+    if (cols.avgFin===undefined)   cols.avgFin=9;
+    if (cols.avgGrid===undefined)  cols.avgGrid=10;
+    if (cols.avgGain===undefined)  cols.avgGain=11;
+    if (cols.started===undefined)  cols.started=16;
+    if (cols.finished===undefined) cols.finished=17;
+    if (cols.dnfs===undefined)     cols.dnfs=18;
+    if (cols.rel===undefined)      cols.rel=20;
+
+    for (let i=hIdx+1; i<rows.length; i++) {
+      const row = rows[i];
+      const driver = cs(row, cols.driver);
+      if (driver.toLowerCase()==='calculations') break;
+      // The generated workbooks place a second "Driver" header before the
+      // calculation block.  Stop there so those source rows are not rendered
+      // as a second, empty set of driver cards.
+      if (driver.toLowerCase()==='driver') break;
+      if (!driver) continue;
+
+      const wins     = parseFloat(cs(row,cols.wins))||0;
+      const pods     = parseFloat(cs(row,cols.pods))||0;
+      const poles    = parseFloat(cs(row,cols.poles))||0;
+      const fl       = parseFloat(cs(row,cols.fl))||0;
+      const avgFin   = cs(row,cols.avgFin);
+      const avgGain  = cs(row,cols.avgGain);
+      const ppr      = cs(row,cols.ppr);
+      const started  = parseFloat(cs(row,cols.started))||0;
+      const dnfs     = parseFloat(cs(row,cols.dnfs))||0;
+      const relStr   = cs(row,cols.rel);
+      const relRaw   = parseFloat(relStr);
+      const rel      = Number.isFinite(relRaw) ? (relRaw <= 1 ? relRaw * 100 : relRaw) : null;
+      const relWidth = rel === null ? 0 : Math.max(0, Math.min(100, rel));
+      const relText  = rel === null ? '—' : `${Math.round(rel * 10) / 10}%`;
+      const relClass = rel!==null && rel>=85?'':rel!==null && rel>=60?'mid':'low';
+
+      const avgFinNum = avgFin ? parseFloat(avgFin) : null;
+      const avgFinStr = avgFinNum!==null && !isNaN(avgFinNum) ? avgFinNum.toFixed(1) : '—';
+      const gainNum  = avgGain ? parseFloat(avgGain) : null;
+      const gainStr  = gainNum!==null && !isNaN(gainNum) ? (gainNum>0?'+':'')+gainNum.toFixed(1) : '—';
+      const gainCls  = gainNum!==null && !isNaN(gainNum) ? (gainNum>0?'good':gainNum<0?'bad':'') : '';
+
+      html += `<div class="stat-card">
+        <div class="stat-card-header">
+          <div class="stat-card-bar" style="background:var(--green)"></div>
+          <div>
+            <div class="stat-card-name">${driver}</div>
+            <div class="stat-card-sub">${started} races · ${dnfs} DNF${dnfs!==1?'s':''}</div>
+          </div>
+        </div>
+        <div class="stat-metrics">
+          <div class="stat-metric"><div class="stat-metric-val">${wins}</div><div class="stat-metric-lbl">Wins</div></div>
+          <div class="stat-metric"><div class="stat-metric-val">${pods}</div><div class="stat-metric-lbl">Podiums</div></div>
+          <div class="stat-metric"><div class="stat-metric-val">${poles}</div><div class="stat-metric-lbl">Poles</div></div>
+          <div class="stat-metric"><div class="stat-metric-val">${fl}</div><div class="stat-metric-lbl">Fastest laps</div></div>
+          <div class="stat-metric"><div class="stat-metric-val">${avgFinStr}</div><div class="stat-metric-lbl">Avg finish</div></div>
+          <div class="stat-metric"><div class="stat-metric-val ${gainCls}">${gainStr}</div><div class="stat-metric-lbl">Avg gained</div></div>
+        </div>
+        <div>
+          <div class="stat-rel-header">
+            <div class="stat-rel-lbl">Reliability</div>
+            <div class="stat-rel-val">${relText}</div>
+          </div>
+          <div class="stat-rel-bar">
+            <div class="stat-rel-fill ${relClass}" style="width:${relWidth}%"></div>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    document.getElementById('stats-grid').innerHTML = html || '<div class="loading-msg" style="grid-column:1/-1">No stats available</div>';
+  } catch(e) {
+    document.getElementById('stats-grid').innerHTML = '<div class="loading-msg" style="grid-column:1/-1">Could not load stats</div>';
+    console.error('Stats error:', e);
+  }
+}
+
+async function loadTeamStats() {
+  try {
+    const table = await fetchSheet(currentDiv.sheetId, currentDiv.gids.teamStats);
+    const rows = table.rows;
+    let html = '';
+
+    // Header is row 0: Driver, Wins, Podiums, Avg Finish, Avg Points, Avg Grid, Avg Pos Gained
+    const hRow = rows[0];
+    let cols = { name:0, wins:1, pods:2, avgFin:3, avgPts:4, avgGrid:5, avgGain:6 };
+
+    // Try to find columns by header name
+    for (let c=0; c<hRow.c.length; c++) {
+      const v = cs(hRow,c).toLowerCase();
+      if (v.includes('wins') && !v.includes('sprint')) cols.wins=c;
+      if (v.includes('podiums')) cols.pods=c;
+      if (v.includes('average finishing')||v.includes('avg finish')) cols.avgFin=c;
+      if (v.includes('average points')||v.includes('avg points')) cols.avgPts=c;
+      if (v.includes('average grid')||v.includes('avg grid')) cols.avgGrid=c;
+      if (v.includes('gained')) cols.avgGain=c;
+    }
+
+    for (let i=1; i<rows.length; i++) {
+      const row = rows[i];
+      const team = cs(row, cols.name);
+      if (!team) continue;
+
+      const wins    = parseFloat(cs(row,cols.wins))||0;
+      const pods    = parseFloat(cs(row,cols.pods))||0;
+      const avgFin  = cs(row,cols.avgFin);
+      const avgPts  = cs(row,cols.avgPts);
+      const avgGain = cs(row,cols.avgGain);
+      const color   = teamColors[team] || '#555';
+
+      const metric = value => {
+        const number = parseFloat(value);
+        return Number.isFinite(number) ? number.toFixed(1) : '—';
+      };
+
+      const gainNum  = parseFloat(avgGain);
+      const gainStr  = !isNaN(gainNum) ? (gainNum>0?'+':'')+gainNum.toFixed(1) : '—';
+      const gainCls  = !isNaN(gainNum) ? (gainNum>0?'good':gainNum<0?'bad':'') : '';
+
+      const tr2=parseInt(color.slice(1,3),16)||85, tg2=parseInt(color.slice(3,5),16)||85, tb2=parseInt(color.slice(5,7),16)||85;
+      html += `<div class="con-row" style="align-items:flex-start;flex-wrap:wrap;gap:8px;background:rgba(${tr2},${tg2},${tb2},0.15);border-left:3px solid ${color};border-radius:6px;padding:10px 12px;">
+        <div class="con-info" style="flex:1;min-width:140px;">
+          <div class="con-name">${team}</div>
+          <div class="con-sub" style="margin-top:4px;">${wins} win${wins!==1?'s':''} · ${pods} podium${pods!==1?'s':''}</div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;min-width:200px;flex:1;">
+          <div class="stat-metric" style="background:#1e2a27;border-radius:4px;padding:8px 6px;text-align:center;">
+            <div class="stat-metric-val">${metric(avgFin)}</div>
+            <div class="stat-metric-lbl">Avg finish</div>
+          </div>
+          <div class="stat-metric" style="background:#1e2a27;border-radius:4px;padding:8px 6px;text-align:center;">
+            <div class="stat-metric-val">${metric(avgPts)}</div>
+            <div class="stat-metric-lbl">Avg pts</div>
+          </div>
+          <div class="stat-metric" style="background:#1e2a27;border-radius:4px;padding:8px 6px;text-align:center;">
+            <div class="stat-metric-val ${gainCls}">${gainStr}</div>
+            <div class="stat-metric-lbl">Avg gained</div>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    document.getElementById('teamstats-list').innerHTML = html || '<div class="loading-msg">No team stats found</div>';
+  } catch(e) {
+    document.getElementById('teamstats-list').innerHTML = `<div class="loading-msg">Could not load team stats: ${e.message}</div>`;
+    console.error('Team stats error:', e);
+  }
+}
+
+function toggleMenu(){
+  document.getElementById('hamburger').classList.toggle('open');
+  document.getElementById('mobile-menu').classList.toggle('open');
+}
+
+function psTeamSlug(team){
+  if(!team) return '';
+  return team.toLowerCase().replace(/\s+/g,'').replace(/[^a-z0-9]/g,'');
+}
+
+function buildOverallConstTable(rows){
+  if(!rows) return '<div class="div-loading">No data available.</div>';
+  const textValue = value => String(value == null ? '' : value).trim();
+  let start=-1, posCol=-1, teamCol=-1, ptsCol=-1, gapCol=-1, tpCol=-1, principalTeamCol=-1;
+  for(let i=0;i<rows.length;i++){
+    const r=rows[i];
+    const posIdx=r.findIndex(v=>textValue(v).toLowerCase().startsWith('pos'));
+    if(posIdx>=0){
+      posCol=posIdx;
+      teamCol=r.findIndex(v=>textValue(v).toLowerCase()==='team');
+      if(teamCol<0) teamCol=posIdx+1;
+      ptsCol=r.findIndex(v=>textValue(v).toLowerCase()==='points');
+      gapCol=r.findIndex(v=>textValue(v).toLowerCase()==='gap');
+      tpCol=r.findIndex(v=>textValue(v).toLowerCase().includes('principal'));
+      // The clean "team" column next to the principal list is a SEPARATE,
+      // independently-ordered reference table — it is NOT row-aligned with
+      // the ranked Pos/Team/Points table above it. Find its own column via
+      // the LAST 'team' header match (the ranked table's is the first).
+      r.forEach((v,ci)=>{ if(textValue(v).toLowerCase()==='team') principalTeamCol=ci; });
+      start=i+1; break;
+    }
+  }
+  if(start<0||teamCol<0||ptsCol<0) return '<div class="div-loading">Could not parse data.</div>';
+
+  // Build a team-name -> principal lookup from that static reference table,
+  // independent of row position, since it isn't sorted the same way as the
+  // ranked standings rows above it.
+  const principalMap = {};
+  if(tpCol>=0 && principalTeamCol>=0){
+    for(let i=start;i<rows.length;i++){
+      const refTeam = textValue(rows[i][principalTeamCol]);
+      const refPrincipal = textValue(rows[i][tpCol]);
+      if(refTeam && refPrincipal) principalMap[refTeam.toLowerCase()] = refPrincipal;
+    }
+  }
+
+  const data=[];
+  for(let i=start;i<rows.length;i++){
+    const r=rows[i];
+    let t=textValue(r[teamCol]);
+    if(!t) t=textValue(r[teamCol+1]);
+    if(!t||t.startsWith('#')) { if(!t && data.length > 0) break; continue; }
+    const pts=Math.floor(parseFloat(textValue(r[ptsCol]).replace(/,/g,''))||0);
+    const gapRaw=(gapCol>=0?textValue(r[gapCol]):'')||'';
+    const gapNum = parseFloat(gapRaw);
+    const gap = !isNaN(gapNum) && gapNum !== 0 ? String(Math.round(gapNum)) : (gapRaw || '');
+    // Match this ranked row's team against the principal lookup by name
+    // (substring match, since this column's text can include sponsor
+    // branding, e.g. "Racing Bulls Racing Bull") rather than by row position.
+    const tKey = t.toLowerCase();
+    const matchedName = Object.keys(principalMap).find(name => tKey.includes(name) || name.includes(tKey));
+    const tpFinal = matchedName ? principalMap[matchedName] : (typeof teamOwners !== 'undefined' ? (teamOwners[tKey] || '') : '');
+    const tpDisplay = tpFinal.toLowerCase()==='reserve'?'RESERVE':tpFinal;
+    data.push({team:t, pts, gap, tp:tpDisplay});
+  }
+  data.sort((a,b)=>b.pts-a.pts);
+  if(!data.length) return '<div class="div-loading">No data found.</div>';
+
+  const tdStyle = 'padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.06);border-right:1px solid rgba(255,255,255,0.06);';
+  const thStyle = 'padding:8px 12px;background:#1a2320;color:rgba(255,255,255,0.5);font-family:\'Barlow Condensed\',sans-serif;font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;border-bottom:2px solid rgba(232,184,75,0.5);border-right:1px solid rgba(255,255,255,0.07);';
+  let html = '<div class="st-wrap"><table class="standings-table" style="width:100%;"><thead><tr>';
+  html += '<th style="'+thStyle+'text-align:center;">Pos</th>';
+  html += '<th style="'+thStyle+'text-align:left;">Team / Principal</th>';
+  html += '<th style="'+thStyle+'text-align:center;">Points</th>';
+  html += '<th style="'+thStyle+'text-align:center;">Gap</th>';
+  html += '</tr></thead><tbody>';
+
+  const leader = data.length ? Math.floor(data[0].pts) : 0;
+  data.forEach((d,idx)=>{
+    const pos=idx+1;
+    const pc=pos===1?'#E8B84B':pos===2?'#C0C0C0':pos===3?'#cd7f32':'rgba(255,255,255,0.5)';
+    const slug=psTeamSlug(d.team);
+    const color = (typeof TEAM_COLOURS !== 'undefined') ? (TEAM_COLOURS[d.team] || TEAM_COLOURS[Object.keys(TEAM_COLOURS).find(k=>k.toLowerCase()===d.team.toLowerCase())||''] || '#555') : '#555';
+    const r2=parseInt(color.slice(1,3),16)||85, g2=parseInt(color.slice(3,5),16)||85, b2=parseInt(color.slice(5,7),16)||85;
+    const rowBg = 'background:rgba('+r2+','+g2+','+b2+',0.1);';
+    const teamBg = 'background:rgba('+r2+','+g2+','+b2+',0.2);border-left:3px solid '+color+';';
+    const logoStyle = slug ? 'background-image:linear-gradient(rgba(22,29,27,0.5),rgba(22,29,27,0.5)),url(\'../images/teamlogos/thinlogo_'+slug+'.webp\');background-size:cover;background-position:center;' : '';
+    const gapNum = idx===0 ? '—' : '-'+(leader - Math.floor(d.pts));
+    const tpDisplay = d.tp && d.tp.toLowerCase()==='reserve' ? 'RESERVE' : d.tp;
+    html += '<tr>';
+    html += '<td style="'+tdStyle+rowBg+'text-align:center;"><span style="font-family:\'Barlow Condensed\',sans-serif;font-size:15px;font-weight:700;color:'+pc+';">'+pos+'</span></td>';
+    html += '<td class="has-logo" style="'+tdStyle+teamBg+logoStyle+'">';
+    html += '<div class="ps-driver-cell">';
+    html += '<span class="ps-driver-name">'+(tpDisplay ? 'Team Principal · '+tpDisplay : '&nbsp;')+'</span>';
+    html += '</div></td>';
+    html += '<td style="'+tdStyle+rowBg+'text-align:center;"><span style="font-family:\'Barlow Condensed\',sans-serif;font-size:16px;font-weight:700;color:#3DCC47;">'+Math.floor(d.pts)+'</span></td>';
+    html += '<td style="'+tdStyle+rowBg+'text-align:center;color:rgba(255,255,255,0.6);">'+gapNum+'</td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+  return html;
+}
+
+async function loadOverallConstructors() {
+  const el = document.getElementById('overall-constructors-table');
+  try {
+    // Ensure driver info (including team principals) is loaded
+    if(Object.keys(teamOwners).length === 0 && currentDiv && currentDiv.sheetId && currentDiv.gids && currentDiv.gids.teamInfo){
+      await loadDriverInfo(currentDiv.sheetId, currentDiv.gids.teamInfo);
+    }
+    // Fetch team owners and driver-team mapping from teams sheet
+    // teamOwners and driverTeams are module-level vars
+    try {
+      const currentSeason = await getCurrentSeason();
+      const teamsTable = F1XL_STANDINGS_TEST_MODE
+        ? await fetchSheet(seasonConfig.master_team_sheet_id, seasonConfig.master_team_sheet)
+        : await fetchSheet('1VdV1CEefr4nct-_KZPu9xBzbFMHY3nHVbShm9RBnX0c', '1278748961');
+      // Find title case team name from teamColors
+      const teamNameMap = {};
+      Object.keys(teamColors).forEach(t => { teamNameMap[t.toLowerCase()] = t; });
+      for (let i=1; i<teamsTable.rows.length; i++) {
+        const row = teamsTable.rows[i];
+        const season = cs(row,0).trim();
+        if (!F1XL_STANDINGS_TEST_MODE && season !== String(currentSeason)) continue;
+        const teamColumn = F1XL_STANDINGS_TEST_MODE ? 0 : 1;
+        const ownerColumn = F1XL_STANDINGS_TEST_MODE ? 4 : 2;
+        const teamRaw = cs(row,teamColumn).trim().toLowerCase();
+        const owner = cs(row,ownerColumn).trim();
+        const teamDisplay = teamNameMap[teamRaw] || cs(row,teamColumn).trim();
+        if (teamRaw && owner) teamOwners[teamRaw] = owner;
+        // Map all drivers in this row to this team
+        for (let c=F1XL_STANDINGS_TEST_MODE ? row.c.length : 3; c<row.c.length; c++) {
+          const driver = cs(row,c).trim().toLowerCase();
+          if (driver) driverTeams[driver] = teamDisplay;
+        }
+      }
+    } catch(e) { /* teams fetch optional */ }
+
+    // Use Overall sheet's Overall Standings tab for aggregated constructor points
+    const overallUrl = seasonConfig['overall_gid'];
+    const teamPoints = {};
+    let overallCsvRows = null;
+    let overallCsvHasTeams = false;
+
+    if (overallUrl) {
+      try {
+        const mId = overallUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
+        const mGid = overallUrl.match(/gid=(\d+)/);
+        if (mId && mGid) {
+          const csvUrl = `https://docs.google.com/spreadsheets/d/${mId[1]}/export?format=csv&gid=${mGid[1]}`;
+          const res = await fetch(csvUrl);
+          const text = await res.text();
+          const csvRows = text.split(/\r?\n/).map(l=>l.split(',').map(v=>v.replace(/^"|"$/g,'').trim()));
+          overallCsvRows = csvRows;
+          // Find header row
+          let hIdx=-1, posCol=-1, teamCol=-1, ptsCol=-1, tpCol=-1;
+          for(let i=0;i<csvRows.length;i++){
+            const r=csvRows[i];
+            const posIdx=r.findIndex(v=>(v||'').toLowerCase().startsWith('pos'));
+            if(posIdx>=0){
+              posCol=posIdx;
+              teamCol=r.findIndex(v=>(v||'').toLowerCase()==='team');
+              if(teamCol<0) teamCol=posIdx+1;
+              ptsCol=r.findIndex(v=>(v||'').toLowerCase()==='points');
+              // TP is last non-blank header
+              for(let c=r.length-1;c>=0;c--){ if((r[c]||'').trim()){ tpCol=c; break; } }
+              hIdx=i; break;
+            }
+          }
+          if(hIdx>=0 && teamCol>=0 && ptsCol>=0){
+            for(let i=hIdx+1;i<csvRows.length;i++){
+              const r=csvRows[i];
+              const team=(r[teamCol]||'').trim();
+              const ptsRaw=(r[ptsCol]||'').trim().replace(/,/g,'');
+              if(!team||!ptsRaw) continue;
+              const pts=Math.floor(parseFloat(ptsRaw))||0;
+              if(pts) teamPoints[team]=(teamPoints[team]||0)+pts;
+              overallCsvHasTeams = true;
+              if(tpCol>=0){ const tp=(r[tpCol]||'').trim(); if(tp && isNaN(parseFloat(tp))) teamOwners[team.toLowerCase()]=tp; }
+            }
+          }
+        }
+      } catch(e) { /* fall through to division fetch */ }
+    }
+
+    // Fallback: fetch from individual division constructors tabs
+    if (!Object.keys(teamPoints).length) {
+      const results = await Promise.all(
+        divisions.filter(d => d.sheetId).map(async (div) => {
+          try {
+            const table = await fetchSheet(div.sheetId, div.gids.constructors);
+            return {div: div.name, rows: table.rows};
+          } catch(e) { return null; }
+        })
+      );
+      for (const result of results) {
+        if (!result) continue;
+        const rows = result.rows;
+        let hIdx = -1;
+        for (let i=0; i<rows.length; i++) {
+          if (rows[i].c.some(c => (c.v||'').toString().trim().toLowerCase() === 'team')) { hIdx=i; break; }
+        }
+        if (hIdx < 0) continue;
+        const hRow = rows[hIdx];
+        const teamCol = hRow.c.findIndex(c => (c.v||'').toString().trim().toLowerCase() === 'team');
+        const ptsCol = hRow.c.findIndex(c => (c.v||'').toString().trim().toLowerCase() === 'points');
+        if (teamCol < 0 || ptsCol < 0) continue;
+        for (let i=hIdx+1; i<rows.length; i++) {
+          const team = cs(rows[i], teamCol).trim();
+          const ptsRaw = cs(rows[i], ptsCol).trim();
+          if (!team || !ptsRaw) continue;
+          const pts = Math.floor(parseFloat(ptsRaw)) || 0;
+          teamPoints[team] = (teamPoints[team]||0) + pts;
+        }
+      }
+    }
+
+    // Sort by points descending
+    const sorted = Object.entries(teamPoints)
+      .sort((a,b) => b[1]-a[1]);
+
+    if (!sorted.length) {
+      el.innerHTML = '<div style="font-size:13px;color:var(--text-faint);padding:8px 0;">No data available</div>';
+      return;
+    }
+
+    if(!F1XL_STANDINGS_TEST_MODE && overallCsvRows && overallCsvRows.length && overallCsvHasTeams){
+      el.innerHTML = buildOverallConstTable(overallCsvRows);
+    } else if(Object.keys(teamPoints).length){
+      // Fallback: build minimal rows from teamPoints
+      const fallbackRows = [['','','','Pos','Team','','Points','','Gap']];
+      Object.entries(teamPoints).sort((a,b)=>b[1]-a[1]).forEach(([t,p],i)=>{
+        fallbackRows.push(['','','',i+1,t,'',p,'','']);
+      });
+      el.innerHTML = buildOverallConstTable(fallbackRows);
+    }
+
+  } catch(e) {
+    el.innerHTML = '<div style="font-size:13px;color:var(--text-faint);padding:8px 0;">Could not load overall standings</div>';
+    console.error('Overall constructors error:', e);
+  }
+}
+
+
+function switchOCTab(tab) {
+  ['standings','weekly','coolstats'].forEach(t => {
+    const btn = document.getElementById('oc-tab-'+t);
+    const panel = document.getElementById('oc-panel-'+t);
+    if (!btn || !panel) return;
+    const active = t === tab;
+    btn.style.borderBottomColor = active ? 'var(--green)' : 'transparent';
+    btn.style.color = active ? '#fff' : 'rgba(255,255,255,0.5)';
+    panel.style.display = active ? '' : 'none';
+  });
+  if (tab === 'weekly' && !window._ocWeeklyLoaded) { loadOCWeekly(); window._ocWeeklyLoaded = true; }
+  if (tab === 'coolstats' && !window._coolStatsLoaded) { loadCoolStats(); window._coolStatsLoaded = true; }
+}
+
+async function loadOCWeekly() {
+  const el = document.getElementById('oc-panel-weekly');
+  el.innerHTML = '<div class="loading-msg" style="padding:16px 24px;">Loading weekly points...</div>';
+  try {
+    // Use the Overall sheet's Weekly Totals tab (same source as past seasons accordion)
+    const overallUrl = seasonConfig['overall_gid'];
+    const wtGid = seasonConfig['w_totals_gid'];
+
+    if (!overallUrl || !wtGid) {
+      el.innerHTML = '<div class="loading-msg" style="padding:16px 24px;">No weekly totals data configured.</div>';
+      return;
+    }
+
+    // Extract sheet ID from full URL
+    const mId = overallUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
+    const osid = mId ? mId[1] : null;
+    if (!osid) { el.innerHTML = '<div class="loading-msg" style="padding:16px 24px;">Invalid overall sheet URL.</div>'; return; }
+
+    const table = await fetchSheet(osid, wtGid);
+    const rows = table.rows;
+
+    // Find header row with 'Round' in col 0
+    let hIdx = -1;
+    for (let i=0; i<rows.length; i++) {
+      if (cs(rows[i],0).toLowerCase() === 'round') { hIdx=i; break; }
+    }
+    if (hIdx < 0) { el.innerHTML = '<div class="loading-msg" style="padding:16px 24px;">Could not parse weekly data.</div>'; return; }
+
+    // Round numbers from header cols 1+
+    const roundNums = [];
+    for (let c=1; c<rows[hIdx].c.length; c++) {
+      const v = cs(rows[hIdx],c);
+      if (v) roundNums.push({col:c, num:parseInt(v)});
+    }
+
+    // Team data rows
+    const teamRows = rows.slice(hIdx+1).filter(r => cs(r,0).trim());
+
+    // Build roundData array matching original format
+    const roundData = roundNums.map(rn => {
+      const combined = {};
+      teamRows.forEach(r => {
+        const team = cs(r,0).trim();
+        const pts = Math.floor(parseFloat(cs(r,rn.col))||0);
+        if (team && pts > 0) combined[team] = pts;
+      });
+      return {round: rn.num, pts: combined};
+    }).filter(rd => Object.keys(rd.pts).length > 0);
+
+    if (!roundData.length) { el.innerHTML='<div class="loading-msg" style="padding:16px 24px;">No data available</div>'; return; }
+
+    // Get all teams sorted by total points
+    const teamTotals = {};
+    roundData.forEach(rd => Object.entries(rd.pts).forEach(([t,p]) => { teamTotals[t]=(teamTotals[t]||0)+p; }));
+    const allTeams = Object.keys(teamTotals).sort((a,b) => teamTotals[b]-teamTotals[a]);
+    const rounds = roundData.map(r=>r.round);
+
+    // Find max points per round for gold highlight
+    const roundMax = roundData.map(r => Math.max(...Object.values(r.pts)));
+
+    // Build table
+    const thBase = `font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:6px 8px;text-align:center;position:sticky;top:0;background:#1e2a27;color:rgba(255,255,255,0.7);border-bottom:1px solid rgba(255,255,255,0.12);border-right:1px solid rgba(255,255,255,0.07);white-space:nowrap;`;
+    const tdBase = `padding:6px 8px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.05);border-right:1px solid rgba(255,255,255,0.07);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:600;background:#1a2320;`;
+
+    let html = `<div style="overflow-x:auto;overflow-y:auto;max-height:320px;padding:0 0 16px;">
+    <table style="border-collapse:separate;border-spacing:0;min-width:100%;font-size:12px;white-space:nowrap;">
+    <thead><tr>
+      <th style="${thBase}position:sticky;left:0;z-index:12;text-align:left;min-width:120px;">Team</th>`;
+    rounds.forEach(r => { html += `<th style="${thBase}width:36px;">R${r}</th>`; });
+    html += `<th style="${thBase}min-width:50px;color:#3DCC47;">Total</th></tr></thead><tbody>`;
+
+    allTeams.forEach(team => {
+      const color = teamColors[team] || teamColors[Object.keys(teamColors).find(k=>k.toLowerCase()===team.toLowerCase())||''] || '#555';
+      let total = 0;
+      html += `<tr><td style="${tdBase}position:sticky;left:0;z-index:2;text-align:left;background:#1a2320;">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div style="width:3px;height:14px;background:${color};border-radius:1px;flex-shrink:0;"></div>
+          <span style="font-size:12px;color:#fff;">${team}</span>
+        </div></td>`;
+      roundData.forEach((rd, ri) => {
+        const pts = rd.pts[team] || 0;
+        total += pts;
+        const isMax = pts > 0 && pts === roundMax[ri];
+        const bg = isMax ? 'background:#5a3e00;color:#FFD700;' : pts > 0 ? 'color:#fff;' : 'color:rgba(255,255,255,0.2);';
+        html += `<td style="${tdBase}${bg}">${pts||'—'}</td>`;
+      });
+      html += `<td style="${tdBase}color:#3DCC47;font-size:15px;">${total}</td></tr>`;
+    });
+
+    html += '</tbody></table></div>';
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = `<div class="loading-msg" style="padding:16px 24px;">Could not load weekly data: ${e.message}</div>`;
+    console.error('Weekly error:', e);
+  }
+}
+
+async function loadOCChart() {
+  const el = document.getElementById('oc-panel-chart');
+  el.innerHTML = '<div class="loading-msg" style="padding:16px 24px;">Building chart...</div>';
+  try {
+    // Use the Overall sheet's Weekly Totals tab
+    const overallUrl = seasonConfig['overall_gid'];
+    const wtGid = seasonConfig['w_totals_gid'];
+    if (!overallUrl || !wtGid) { el.innerHTML='<div class="loading-msg" style="padding:16px 24px;">No weekly totals data configured.</div>'; return; }
+    const mId = overallUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
+    const osid = mId ? mId[1] : null;
+    if (!osid) { el.innerHTML='<div class="loading-msg" style="padding:16px 24px;">Invalid overall sheet URL.</div>'; return; }
+
+    const table = await fetchSheet(osid, wtGid);
+    const rows = table.rows;
+    let hIdx = -1;
+    for (let i=0; i<rows.length; i++) {
+      if (cs(rows[i],0).toLowerCase() === 'round') { hIdx=i; break; }
+    }
+    if (hIdx < 0) { el.innerHTML='<div class="loading-msg" style="padding:16px 24px;">Could not parse weekly data.</div>'; return; }
+    const roundNums = [];
+    for (let c=1; c<rows[hIdx].c.length; c++) {
+      const v = cs(rows[hIdx],c);
+      if (v) roundNums.push({col:c, num:parseInt(v)});
+    }
+    const teamRows = rows.slice(hIdx+1).filter(r => cs(r,0).trim());
+    const roundData = roundNums.map(rn => {
+      const combined = {};
+      teamRows.forEach(r => {
+        const team = cs(r,0).trim();
+        const pts = Math.floor(parseFloat(cs(r,rn.col))||0);
+        if (team && pts > 0) combined[team] = pts;
+      });
+      return {round: rn.num, pts: combined};
+    }).filter(rd => Object.keys(rd.pts).length > 0);
+
+    if (!roundData.length) { el.innerHTML='<div class="loading-msg" style="padding:16px 24px;">No data available</div>'; return; }
+
+    // Build cumulative totals
+    const allTeams = [...new Set(roundData.flatMap(r=>Object.keys(r.pts)))].sort();
+    const cumulative = {}; // team -> [cumPts after each round]
+    allTeams.forEach(t => { cumulative[t] = []; });
+    const runningTotal = {};
+    roundData.forEach(rd => {
+      allTeams.forEach(t => {
+        runningTotal[t] = (runningTotal[t]||0) + (rd.pts[t]||0);
+        cumulative[t].push(runningTotal[t]);
+      });
+    });
+
+    // Calculate positions after each round
+    const positions = {}; // team -> [position after each round]
+    allTeams.forEach(t => { positions[t] = []; });
+    roundData.forEach((rd, ri) => {
+      const sorted = [...allTeams].sort((a,b) => (cumulative[b][ri]||0) - (cumulative[a][ri]||0));
+      sorted.forEach((t, pos) => { positions[t].push(pos+1); });
+    });
+
+    // SVG chart
+    const W = 800, H = 300, PL = 10, PR = 90, PT = 20, PB = 30;
+    const CW = W - PL - PR, CH = H - PT - PB;
+    const numTeams = allTeams.length;
+    const rounds = roundData.map(r=>r.round);
+    const xStep = rounds.length > 1 ? CW / (rounds.length-1) : CW;
+    const yStep = CH / (numTeams - 1 || 1);
+
+    const x = (ri) => PL + ri * xStep;
+    const y = (pos) => PT + (pos-1) * yStep;
+
+    let svgLines = '', svgLabels = '', svgDots = '';
+
+    allTeams.forEach(team => {
+      const color = teamColors[team] || teamColors[Object.keys(teamColors).find(k=>k.toLowerCase()===team.toLowerCase())||''] || '#888';
+      const pos = positions[team];
+      if (!pos.length) return;
+      // Line
+      let d = `M ${x(0)} ${y(pos[0])}`;
+      for (let i=1; i<pos.length; i++) d += ` L ${x(i)} ${y(pos[i])}`;
+      svgLines += `<path d="${d}" stroke="${color}" stroke-width="2.5" fill="none" opacity="0.9"/>`;
+      // Dots at each point
+      pos.forEach((p,i) => {
+        svgDots += `<circle cx="${x(i)}" cy="${y(p)}" r="3" fill="${color}"/>`;
+      });
+      // Label at end
+      const lastPos = pos[pos.length-1];
+      svgLabels += `<text x="${x(pos.length-1)+8}" y="${y(lastPos)+4}" fill="${color}" font-size="10" font-family="Barlow Condensed,sans-serif" font-weight="600">${team}</text>`;
+    });
+
+    // Round labels on X axis
+    let xLabels = '';
+    rounds.forEach((r,i) => {
+      xLabels += `<text x="${x(i)}" y="${PT+CH+18}" text-anchor="middle" fill="rgba(255,255,255,0.4)" font-size="9" font-family="Barlow Condensed,sans-serif">R${r}</text>`;
+    });
+
+    // Position labels on Y axis
+    let yLabels = '';
+    for (let p=1; p<=numTeams; p++) {
+      yLabels += `<text x="${PL-4}" y="${y(p)+4}" text-anchor="end" fill="rgba(255,255,255,0.3)" font-size="9" font-family="Barlow Condensed,sans-serif">${p}</text>`;
+    }
+
+    const svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;background:#161d1b;">
+      ${svgLines}${svgDots}${svgLabels}${xLabels}${yLabels}
+    </svg>`;
+
+    el.innerHTML = `<div style="padding:12px 16px 16px;">${svg}</div>`;
+  } catch(e) {
+    el.innerHTML = `<div class="loading-msg" style="padding:16px 24px;">Could not load chart: ${e.message}</div>`;
+    console.error('Chart error:', e);
+  }
+}
+
+async function loadCoolStats() {
+  const cards = document.getElementById('cool-stats-cards');
+  cards.innerHTML = '<div class="loading-msg">Loading...</div>';
+
+  try {
+    // Fetch Driver Stats Calc Sheet from every division in parallel
+    const allDrivers = (await Promise.all(
+      divisions.map(async div => {
+        if (!div.sheetId || !div.gids.driverStats) return [];
+        try {
+          const t = await fetchSheet(div.sheetId, div.gids.driverStats);
+          const rows = t.rows;
+          // Find header row — "Driver" in col 0
+          let hi = -1;
+          for (let i = 0; i < rows.length; i++) {
+            if (cs(rows[i], 0).toLowerCase() === 'driver') { hi = i; break; }
+          }
+          if (hi < 0 || !rows[hi].c) return [];
+          const hdr = rows[hi];
+          const fc = name => hdr.c.findIndex(c => (c.v||'').toString().trim().toLowerCase().includes(name));
+          const colTeam    = fc('team');
+          const colTier    = fc('tier');
+          const colWins    = fc('win');
+          const colPodiums = fc('podium');
+          const colPoles   = fc('pole');
+          const colFL      = fc('fastest');
+          const colPts     = fc('total points');
+          const out = [];
+          for (let i = hi + 1; i < rows.length; i++) {
+            const name = cs(rows[i], 0).trim();
+            // "CALCULATIONS" marks the start of a separate grid/finish-position
+            // block further down the sheet that reuses these same column
+            // positions for unrelated per-round data — must stop here, not
+            // just skip blanks, or those numbers get misread as extra stats.
+            if (name.toLowerCase() === 'calculations') break;
+            if (!name) continue; // unfilled seat (e.g. no Tier 2 driver yet) — skip, don't stop
+            out.push({
+              name,
+              team:    cs(rows[i], colTeam).trim(),
+              tier:    cs(rows[i], colTier).trim(),
+              wins:    parseInt(cs(rows[i], colWins))    || 0,
+              podiums: parseInt(cs(rows[i], colPodiums)) || 0,
+              poles:   parseInt(cs(rows[i], colPoles))   || 0,
+              fl:      parseInt(cs(rows[i], colFL))      || 0,
+              pts:     Math.floor(parseFloat(cs(rows[i], colPts)) || 0),
+              div:     div.name
+            });
+          }
+          return out;
+        } catch(e) { return []; }
+      })
+    )).flat();
+
+    if (!allDrivers.length) {
+      cards.innerHTML = '<div class="loading-msg">No stats available yet.</div>';
+      return;
+    }
+
+    const top5 = (arr, key) => [...arr].filter(d => d[key] > 0).sort((a,b) => b[key] - a[key]).slice(0, 5);
+
+    const buildCard = (title, sub, arr, key) => {
+      if (!arr.length) return '';
+      let html = `<div class="cs-card"><div><div class="cs-card-title">${title}</div><div class="cs-card-sub">${sub}</div></div>`;
+      arr.forEach((d, i) => {
+        const color = teamColors[d.team] || '#555';
+        const gold = i === 0 ? 'gold' : '';
+        html += `<div class="cs-row">
+          <span class="cs-row-pos ${gold}">${i+1}</span>
+          <div style="width:3px;height:14px;background:${color};border-radius:1px;flex-shrink:0;"></div>
+          <div style="flex:1;min-width:0;">
+            <div class="cs-row-name">${d.name}</div>
+            <div class="cs-row-sub">${d.team} · ${d.div}</div>
+          </div>
+          <span class="cs-row-val">${d[key]}</span>
+        </div>`;
+      });
+      return html + '</div>';
+    };
+
+    cards.innerHTML = [
+      buildCard('Most Wins',         'All divisions', top5(allDrivers, 'wins'),    'wins'),
+      buildCard('Most Podiums',      'All divisions', top5(allDrivers, 'podiums'), 'podiums'),
+      buildCard('Most Poles',        'All divisions', top5(allDrivers, 'poles'),   'poles'),
+      buildCard('Most Fastest Laps', 'All divisions', top5(allDrivers, 'fl'),      'fl'),
+      buildCard('Most Points',       'All divisions', top5(allDrivers, 'pts'),     'pts'),
+      buildCard('Top Tier 2',        'By points · all divisions', top5(allDrivers.filter(d => d.tier.toLowerCase().includes('2')), 'pts'), 'pts'),
+    ].join('') || '<div class="loading-msg">No stats available yet.</div>';
+
+  } catch(e) {
+    cards.innerHTML = `<div class="loading-msg">Could not load stats: ${e.message}</div>`;
+    console.error('Cool stats error:', e);
+  }
+}
+
+
+async function initStandings() {
+  try {
+    const requestedSeason = new URLSearchParams(window.location.search).get('season');
+    const currentSeason = requestedSeason || await getCurrentSeason();
+    seasonConfig = requestedSeason ? await loadSeasonConfig(requestedSeason) : await getCurrentSeasonConfig();
+    await loadReferenceTeamColours();
+
+    if (!seasonConfig) {
+      document.getElementById('div-selector').innerHTML = '<div class="loading-msg">Could not load season config.</div>';
+      return;
+    }
+
+    const divisionSetting = String(seasonConfig['divisions'] == null ? '' : seasonConfig['divisions']).trim();
+    if (!divisionSetting) {
+      document.getElementById('div-selector').innerHTML = '<div class="loading-msg">Season setup is under way. Divisions have not been confirmed yet.</div>';
+      document.getElementById('overall-constructors-table').innerHTML = '';
+      document.getElementById('oc-panel-weekly').innerHTML = '';
+      document.getElementById('cool-stats-cards').innerHTML = '';
+      return;
+    }
+    const numDivisions = parseInt(divisionSetting, 10);
+
+    // Build divisions array from config
+    divisions = [];
+    for (let d = 1; d <= numDivisions; d++) {
+      const sheetId = seasonConfig[`d${d}_sheet_id`];
+      const hasStandings = seasonConfig[`d${d}_has_standings`] === 'yes';
+      // Count rounds from config
+      let numRounds = 0;
+      for (let r=1; r<=21; r++) {
+        if (seasonConfig[`d${d}_r${r}_gid`]) numRounds++;
+        else break;
+      }
+      divisions.push({
+        id: `D${d}`,
+        name: `Division ${d}`,
+        sheetId: hasStandings ? sheetId : null,
+        gids: {
+          drivers:      seasonConfig[`d${d}_driver_results_gid`],
+          constructors: seasonConfig[`d${d}_constructors_gid`],
+          driverStats:  seasonConfig[`d${d}_driver_stats_gid`],
+          teamStats:    seasonConfig[`d${d}_team_stats_gid`],
+          teamInfo:     seasonConfig[`d${d}_team_info_gid`],
+        },
+        season: currentSeason,
+        numRounds: numRounds
+      });
+    }
+
+    // Load leader data for each division to populate splash cards
+    await Promise.all(divisions.map(async (div, i) => {
+      if (!div.sheetId) return;
+      try {
+        const table = await fetchSheet(div.sheetId, div.gids.drivers);
+        const rows = table.rows;
+        // Find header row
+        let hIdx = -1;
+        for (let r=0; r<rows.length; r++) {
+          if (cs(rows[r],0)==='Pos') { hIdx=r; break; }
+        }
+        if (hIdx < 0) return;
+        // Find points column
+        const hRow = rows[hIdx];
+        let ptsCol = -1;
+        for (let c=4; c<hRow.c.length; c++) {
+          if (cs(hRow,c)==='Points') { ptsCol=c; break; }
+        }
+        // Get leader - find row with highest points
+        let leaderRow = null;
+        let maxPts = -1;
+        for(let r=hIdx+1; r<rows.length; r++){
+          const driver = cs(rows[r], 2);
+          if (!driver || driver === 'Driver') continue;
+          const pts = parseFloat(cs(rows[r], ptsCol)) || 0;
+          if (pts > maxPts) { maxPts = pts; leaderRow = rows[r]; }
+        }
+        if(!leaderRow) leaderRow = rows[hIdx+1];
+        if (!leaderRow) return;
+        divisions[i].leader = cs(leaderRow, 2) || '—';
+        divisions[i].leaderTeam = cs(leaderRow, 3) || '';
+        divisions[i].leaderPts = ptsCol >= 0 ? cs(leaderRow, ptsCol) || '—' : '—';
+      } catch(e) {
+        divisions[i].leader = '—';
+        divisions[i].leaderPts = '—';
+      }
+    }));
+
+    // Update season heading
+    const eyebrow = document.getElementById('page-season-eyebrow');
+    if (eyebrow && currentSeason) eyebrow.textContent = 'Season ' + currentSeason;
+    const testBanner = document.getElementById('standings-test-banner');
+    if (testBanner && currentSeason) testBanner.textContent = 'F1XL NEXT TEST · SEASON ' + currentSeason + ' · NOT THE LIVE CHAMPIONSHIP';
+
+    buildSelector();
+
+    // Load driver info (TP data) before rendering overall constructors
+    const d1 = divisions.find(d => d.sheetId && d.gids && d.gids.teamInfo);
+    if(d1) await loadDriverInfo(d1.sheetId, d1.gids.teamInfo);
+
+    loadOverallConstructors();
+  } catch(e) {
+    console.error('Init failed:', e);
+    document.getElementById('div-selector').innerHTML = '<div class="loading-msg">Could not load standings.</div>';
+  }
+}
+
+initStandings();
+</script>
+</body>
+</html>
