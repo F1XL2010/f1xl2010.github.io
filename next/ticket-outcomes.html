@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow,noarchive,nosnippet">
+<meta name="description" content="F1XL next-generation website ticket outcomes test. Not live championship data.">
+<title>F1XL NEXT TEST · Ticket Outcomes</title>
+<link rel="icon" href="../favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="../favicon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green:#3DCC47;--teal:#5ECFCF;--red:#E10600;--black:#111816;--dark:#161d1b;--dark2:#1a2320;--dark3:#1e2a27;
+    --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+    --text:#ffffff;--text-muted:rgba(255,255,255,0.60);--text-faint:rgba(255,255,255,0.30);
+    --green:#4aaa6a;--amber:#E8B84B;--red-soft:#ff6b6b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:#111816;background-image:url('../images/backgrounds/background_ticketoutcomes.webp');background-size:cover;background-position:center;background-attachment:fixed;color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;}
+  body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(17,24,22,0.72);z-index:0;pointer-events:none;}
+  body>*{position:relative;z-index:1;}
+
+    nav{background:rgba(17,24,22,0.97);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;backdrop-filter:blur(8px);}
+  .nav-left{display:flex;align-items:center;flex-shrink:0;}
+  .nav-logo{display:flex;align-items:center;height:40px;text-decoration:none;}
+  .nav-logo img{height:34px;width:auto;display:block;}
+  .nav-links{display:flex;align-items:stretch;height:56px;}
+  .nav-item{position:relative;display:flex;align-items:stretch;}
+  .nav-item>a,.nav-item>button{color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:500;letter-spacing:0.5px;padding:0 13px;display:flex;align-items:center;gap:4px;border-bottom:2px solid transparent;border-top:none;border-left:none;border-right:none;background:none;cursor:pointer;font-family:'Barlow',sans-serif;text-transform:uppercase;transition:color 0.2s;white-space:nowrap;}
+  .nav-item>a:hover,.nav-item>button:hover{color:var(--text);}
+  .nav-item>a.active,.nav-item>button.active{color:var(--text);border-bottom-color:var(--green);}
+  .nav-chevron{font-size:8px;opacity:0.5;transition:transform 0.2s;}
+  .nav-item:hover .nav-chevron{transform:rotate(180deg);}
+  .nav-dropdown{display:none;position:absolute;top:100%;left:0;background:#141a18;border:1px solid var(--border2);border-top:2px solid var(--green);border-radius:0 0 6px 6px;min-width:180px;padding:6px 0;z-index:300;}
+  .nav-item:hover .nav-dropdown{display:block;}
+  .nav-dropdown a{display:block;padding:9px 16px;color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;transition:color 0.15s,background 0.15s;white-space:nowrap;}
+  .nav-dropdown a:hover{color:var(--text);background:rgba(255,255,255,0.05);}
+  .nav-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:8px;background:none;border:none;}
+  .nav-hamburger span{display:block;width:22px;height:2px;background:var(--text-muted);border-radius:2px;transition:all 0.25s;}
+  .nav-hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+  .nav-hamburger.open span:nth-child(2){opacity:0;}
+  .nav-hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+  .mobile-menu{display:none;position:fixed;top:56px;left:0;right:0;background:#141a18;border-bottom:1px solid var(--border2);z-index:199;padding:12px 0;max-height:calc(100vh - 56px);overflow-y:auto;}
+  .mobile-menu.open{display:block;}
+  .mob-section{font-size:10px;letter-spacing:2px;color:var(--text-faint);padding:12px 24px 4px;text-transform:uppercase;}
+  .mobile-menu a{display:block;padding:10px 24px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;}
+  .mobile-menu a:hover{color:var(--text);}
+  @media(max-width:900px){.nav-links{display:none;}.nav-hamburger{display:flex;}}/* PAGE HEADER */
+  .page-header{background:var(--dark);border-bottom:1px solid var(--border);padding:24px;}
+  .page-eyebrow{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:2.5px;color:var(--teal);text-transform:uppercase;font-weight:600;margin-bottom:4px;}
+  .page-title{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:700;text-transform:uppercase;line-height:1;}
+  .page-meta{font-size:13px;color:var(--text-muted);margin-top:6px;}
+
+  /* FILTERS */
+  .filters{padding:16px 24px;display:flex;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--border);background:var(--dark2);}
+  .filter-btn{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:6px 14px;border-radius:4px;border:1px solid var(--border2);background:none;color:var(--text-muted);cursor:pointer;transition:all 0.2s;}
+  .filter-btn:hover{color:var(--text);border-color:rgba(255,255,255,0.35);}
+  .filter-btn.active{background:var(--green);border-color:var(--green);color:#000;}
+  .filter-btn{position:relative;}
+  .filter-new-dot{position:absolute;top:-4px;right:-4px;width:8px;height:8px;border-radius:50%;background:#ff6b6b;border:1px solid #111816;}
+
+  /* CONTENT */
+  .content{padding:20px 24px;max-width:900px;}
+
+  /* SEASON GROUP */
+  .season-group{margin-bottom:16px;}
+  .season-header{display:flex;align-items:center;gap:12px;padding:14px 20px;background:#111815;border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:background 0.2s;user-select:none;}
+  .season-header:hover{background:#161d1b;}
+  .season-header.open{border-radius:8px 8px 0 0;border-bottom-color:transparent;}
+  .season-name{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text);}
+  .season-meta{font-size:12px;color:var(--text-muted);margin-top:2px;}
+  .season-chevron{font-size:16px;color:var(--text-faint);transition:transform 0.25s;}
+  .season-chevron.open{transform:rotate(180deg);}
+  .season-body{display:none;border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;padding:12px;background:#131a18;}
+  .season-body.open{display:block;}
+
+  /* RACE GROUP */
+  .race-group{margin-bottom:12px;}
+  .race-header{display:flex;align-items:center;gap:12px;padding:14px 18px;background:#1a2320;border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:background 0.2s;user-select:none;}
+  .race-header:hover{background:#1e2a27;}
+  .race-header.open{border-radius:8px 8px 0 0;border-bottom-color:transparent;}
+  .race-header-left{flex:1;}
+  .race-name{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text);}
+  .race-meta{font-size:12px;color:var(--text-muted);margin-top:2px;}
+  .race-chevron{font-size:14px;color:var(--text-faint);transition:transform 0.25s;}
+  .race-chevron.open{transform:rotate(180deg);}
+  .race-body{display:none;border:1px solid var(--border);background:#161d1b;border-top:none;border-radius:0 0 8px 8px;overflow:hidden;}
+  .race-body.open{display:block;}
+
+  /* TICKET CARD */
+  .ticket{border-bottom:1px solid var(--border);padding:16px 18px;}
+  .ticket:last-child{border-bottom:none;}
+  .ticket-header{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px;cursor:pointer;}
+  .ticket-num{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--text-faint);flex-shrink:0;margin-top:1px;}
+  .ticket-parties{flex:1;}
+  .ticket-vs{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .ticket-driver{font-size:13px;font-weight:500;color:var(--text);}
+  .ticket-team{font-size:11px;color:var(--text-faint);}
+  .ticket-vs-label{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;}
+  .ticket-div{font-size:11px;color:var(--text-faint);margin-top:3px;}
+  .ticket-verdict{flex-shrink:0;text-align:right;}
+  .verdict-badge{display:inline-block;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:0.5px;padding:4px 10px;border-radius:4px;text-transform:uppercase;}
+  .verdict-nfa{background:rgba(74,170,106,0.15);color:var(--green);border:1px solid rgba(74,170,106,0.25);}
+  .verdict-warning{background:rgba(232,184,75,0.15);color:var(--amber);border:1px solid rgba(232,184,75,0.25);}
+  .verdict-penalty{background:rgba(225,6,0,0.15);color:#ff6b6b;border:1px solid rgba(225,6,0,0.25);}
+  .verdict-ban{background:rgba(225,6,0,0.3);color:#ff4444;border:1px solid rgba(225,6,0,0.4);}
+
+  /* TICKET DETAIL */
+  .ticket-detail{display:none;margin-top:0;}
+  .ticket-detail.open{display:block;}
+  .detail-section{margin-bottom:12px;}
+  .detail-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-faint);font-weight:500;margin-bottom:5px;}
+  .detail-text{font-size:13px;color:var(--text-muted);line-height:1.6;background:#1e2a27;border-radius:4px;padding:10px 12px;}
+  .evidence-links{display:flex;flex-wrap:wrap;gap:6px;}
+  .evidence-link{font-size:11px;padding:4px 10px;background:#1e2a27;border:1px solid var(--border2);border-radius:4px;color:rgba(100,160,255,0.8);text-decoration:none;transition:border-color 0.2s;}
+  .evidence-link:hover{border-color:rgba(100,160,255,0.4);color:rgba(100,160,255,1);}
+  .outcome-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .outcome-box{background:#1e2a27;border-radius:4px;padding:10px 12px;}
+  .outcome-role{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-faint);margin-bottom:4px;}
+  .outcome-driver{font-size:13px;font-weight:500;color:var(--text);margin-bottom:4px;}
+  .outcome-penalty{font-size:12px;color:var(--text-muted);}
+  .outcome-pts{font-size:11px;margin-top:3px;}
+  .pts-added{color:#ff6b6b;}
+  .pts-none{color:var(--text-faint);}
+  .expand-btn{font-size:11px;color:var(--text-faint);cursor:pointer;text-transform:uppercase;letter-spacing:0.5px;margin-top:8px;display:inline-block;transition:color 0.2s;}
+  .expand-btn:hover{color:var(--text-muted);}
+
+  /* LOADING / EMPTY */
+  .loading-msg{text-align:center;padding:48px 24px;color:var(--text-muted);font-size:14px;}
+  .empty-msg{text-align:center;padding:32px 24px;color:var(--text-faint);font-size:13px;}
+
+  /* FOOTER */
+  footer{background:var(--dark);border-top:1px solid var(--border);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:40px;}
+  .footer-logo{background:var(--green);color:#000;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;padding:4px 9px;border-radius:3px;}
+  .footer-text{font-size:12px;color:var(--text-faint);}
+</style>
+<meta name="theme-color" content="#111816">
+</head>
+<body>
+
+<nav>
+  <div class="nav-left">
+    <a href="index.html" class="nav-logo">
+      <img src="../TRANSPARENT.png" alt="F1XL next-generation website test environment">
+    </a>
+  </div>
+  <div class="nav-links">
+    <div class="nav-item"><a href="index.html">Home</a></div>
+    <div class="nav-item">
+      <button>Standings <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown">
+        <a href="standings.html">Current Season</a>
+        <a href="results.html">Results</a>
+        <a href="old-seasons.html">Past Seasons</a>
+        <a href="../asr.html">All Star Race</a>
+      </div>
+    </div>
+    <div class="nav-item"><a href="teams.html">Teams</a></div>
+    <div class="nav-item">
+      <button class="active">Race Tickets <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown">
+        <a href="../submit-ticket.html">Submit Ticket</a>
+        <a href="ticket-outcomes.html">Ticket Outcomes</a>
+        <a href="drivers-licence.html">Drivers Licence</a>
+      </div>
+    </div>
+    <div class="nav-item"><a href="schedule.html">Schedule</a></div>
+    <div class="nav-item">
+      <button>History <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown">
+        <a href="../hall-of-fame.html">Hall of Fame</a>
+        <a href="../hall-of-records.html">Hall of Records</a>
+        <a href="../track-records.html">Track Records</a>
+      </div>
+    </div>
+    <div class="nav-item"><a href="../applications.html">Applications</a></div>
+    <div class="nav-item"><a href="../league-rules.html">League Rules</a></div>
+    <div class="nav-item"><a href="../merch.html">Merch</a></div>
+    <div class="nav-item"><a href="../music.html">Music</a></div>
+  </div>
+  <button class="nav-hamburger" id="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></button>
+</nav>
+<div style="background:#5a3e00;color:#fff3bf;border-bottom:1px solid #e8b84b;padding:10px 24px;text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:.7px;">F1XL NEXT TEST · PERMANENT TICKET OUTCOMES SOURCE · NOT THE LIVE WEBSITE</div>
+<div class="mobile-menu" id="mobile-menu">
+  <a href="index.html">Home</a>
+  <div class="mob-section">Standings</div>
+  <a href="standings.html">Current Season</a>
+  <a href="results.html">Results</a>
+  <a href="old-seasons.html">Past Seasons</a>
+  <a href="../asr.html">All Star Race</a>
+  <a href="teams.html">Teams</a>
+  <div class="mob-section">Race Tickets</div>
+  <a href="../submit-ticket.html">Submit Ticket</a>
+  <a href="ticket-outcomes.html">Ticket Outcomes</a>
+  <a href="drivers-licence.html">Drivers Licence</a>
+  <a href="schedule.html">Schedule</a>
+  <div class="mob-section">History</div>
+  <a href="../hall-of-fame.html">Hall of Fame</a>
+  <a href="../hall-of-records.html">Hall of Records</a>
+  <a href="../track-records.html">Track Records</a>
+  <a href="../applications.html">Applications</a>
+  <a href="../league-rules.html">League Rules</a>
+  <a href="../merch.html">Merch</a>
+  <a href="../music.html">Music</a>
+</div>
+
+<div class="page-header">
+  <div class="page-eyebrow">F1XL NEXT TEST</div>
+  <div class="page-title">Ticket Outcomes</div>
+  <div class="page-meta" id="page-meta">Loading...</div>
+</div>
+
+<div class="filters" id="filters" style="display:none;">
+  <button class="filter-btn active" id="filter-all" onclick="filterDiv('all', this)">All Divisions</button>
+</div>
+
+<div class="content" id="content">
+  <div class="loading-msg">Loading ticket outcomes...</div>
+</div>
+
+<footer>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="footer-logo">F1XL</div>
+    <div class="footer-text">F1 League · F1 Sim Racing on Xbox, PlayStation and PC. Casual Racing on F1 26</div>
+  </div>
+  <div class="footer-text">f1xl.co.uk</div>
+</footer>
+
+<script src="config.js?v=20260823-config-v4"></script>
+<script>
+// Sheet ID and GID loaded from config at runtime
+let SHEET_ID = '1018L2jzNseasQVfNNoZCh_fDUbMIQ93EP2ahJvNc6F0';
+let GID = '1683645163';
+
+// Column indices (0-based) based on what we see in the sheet:
+// A=Race, B=Ticket#, C=Division, D=Submitter, E=SubmitterTeam,
+// F=Offender, G=OffenderTeam, H=Description,
+// I=Ev1, J=Ev2, K=Ev3, L=Ev4,
+// M=DefenceComments, N=DEv1, O=DEv2, P=DEv3, Q=DEv4,
+// R=DriverPunished, S=Points, T=Penalty, U=Evaluation,
+// V=SubmitterOutcome, W=SubmitterPoints, X=SubmitterPenalty,
+// Y=OffenderOutcome, Z=OffenderPoints, AA=OffenderPenalty
+
+const COLS = {
+  race:0, ticketNum:1, division:2, submitter:3, submitterTeam:4,
+  offender:5, offenderTeam:6, description:7,
+  ev1:8, ev2:9, ev3:10, ev4:11,
+  defence:12, dev1:13, dev2:14, dev3:15, dev4:16,
+  driverPunished:17, points:18, penalty:19, evaluation:20,
+  submitterOutcome:21, submitterPoints:22, submitterPenalty:23,
+  offenderOutcome:24, offenderPoints:25, offenderPenalty:26,
+  appealed:27, appealInfo:28, appealEvidence:29, appealOutcome:30, appealVerdict:31
+};
+
+let allTickets = [];
+let currentFilter = 'all';
+
+async function loadTickets() {
+  try{const cfg=await loadConfig();if(cfg.active_test_season&&cfg.test_tickets_ready!=='yes'){document.getElementById('content').textContent='Season '+cfg.active_test_season+' tickets are not connected yet.';return;}}catch(e){document.getElementById('content').textContent='Test website configuration could not be loaded.';return;}
+  try {
+    // Load sheet ID and GID from config if available
+    const [cfgSheet, cfgGid] = await Promise.all([
+      getConfigValue('ticket_outcomes_sheet'),
+      getConfigValue('ticket_outcomes_gid')
+    ]);
+    if (cfgSheet) SHEET_ID = cfgSheet;
+    if (cfgGid) GID = cfgGid;
+
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${GID}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text = await res.text();
+    if (text.includes('<!DOCTYPE') || text.includes('<html')) throw new Error('Sheet not published to web');
+
+    const rows = parseCSV(text);
+
+    // Skip header row, collect valid data rows
+    // A valid row must have a race name starting with S (e.g. S27 Singapore)
+    // and a submitter name and ticket number
+    allTickets = [];
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      const race = (row[COLS.race] || '').trim();
+      const ticketNum = (row[COLS.ticketNum] || '').trim();
+      const driver = (row[COLS.submitter] || '').trim();
+      if (!race || !driver) continue;
+      if (ticketNum && isNaN(parseInt(ticketNum))) continue;
+      allTickets.push(row);
+    }
+
+    document.getElementById('filters').style.display = 'flex';
+
+    // Build division buttons dynamically
+    const divisions = [...new Set(allTickets.map(r => (r[COLS.division]||'').trim()).filter(Boolean))].sort();
+    const filtersEl = document.getElementById('filters');
+    // Remove any existing division buttons (keep All Divisions)
+    filtersEl.querySelectorAll('.filter-btn:not(#filter-all)').forEach(b => b.remove());
+
+    // Load last-seen ticket counts from localStorage
+    const lastSeen = JSON.parse(localStorage.getItem('f1xl_tickets_seen') || '{}');
+
+    divisions.forEach(div => {
+      const divTickets = allTickets.filter(r => (r[COLS.division]||'').trim() === div);
+      const maxTicket = Math.max(...divTickets.map(r => parseInt(r[COLS.ticketNum])||0));
+      const lastSeenMax = lastSeen[div] || 0;
+      const hasNew = maxTicket > lastSeenMax;
+
+      const btn = document.createElement('button');
+      btn.className = 'filter-btn';
+      btn.id = 'filter-div-' + div;
+      btn.onclick = function(){ filterDiv(div, this); };
+      btn.innerHTML = `Division ${div}${hasNew ? '<span class="filter-new-dot"></span>' : ''}`;
+      if(typeof DIVISION_COLOURS !== 'undefined' && DIVISION_COLOURS[div]){
+        const hex = DIVISION_COLOURS[div];
+        const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+        btn.style.borderColor = `rgba(${r},${g},${b},0.6)`;
+        btn.style.color = hex;
+        btn._divColor = hex;
+        btn._divRGB = `${r},${g},${b}`;
+      }
+      filtersEl.appendChild(btn);
+    });
+
+    updateMeta();
+    renderTickets();
+
+  } catch(e) {
+    document.getElementById('content').innerHTML = `<div class="loading-msg">Could not load ticket data: ${e.message}</div>`;
+    console.error(e);
+  }
+}
+
+function parseCSV(text) {
+  // Full character-by-character parser that handles multiline quoted cells
+  const rows = [];
+  let cells = [];
+  let current = '';
+  let inQuotes = false;
+  let i = 0;
+
+  while (i < text.length) {
+    const ch = text[i];
+    const next = text[i + 1];
+
+    if (ch === '"') {
+      if (!inQuotes) {
+        inQuotes = true;
+      } else if (next === '"') {
+        current += '"';
+        i++;
+      } else {
+        inQuotes = false;
+      }
+    } else if (ch === ',' && !inQuotes) {
+      cells.push(current);
+      current = '';
+    } else if ((ch === '\n' || (ch === '\r' && next === '\n')) && !inQuotes) {
+      if (ch === '\r') i++;
+      cells.push(current);
+      current = '';
+      if (cells.some(c => c.trim())) rows.push(cells);
+      cells = [];
+    } else {
+      current += ch;
+    }
+    i++;
+  }
+
+  // Handle last row
+  cells.push(current);
+  if (cells.some(c => c.trim())) rows.push(cells);
+
+  return rows;
+}
+
+function getFiltered() {
+  if (currentFilter === 'all') return allTickets;
+  return allTickets.filter(row => (row[COLS.division] || '').trim() === currentFilter);
+}
+
+function updateMeta() {
+  const filtered = getFiltered();
+  const races = [...new Set(filtered.map(r => r[COLS.race]))].length;
+  document.getElementById('page-meta').textContent =
+    `${filtered.length} ticket${filtered.length !== 1 ? 's' : ''} across ${races} race${races !== 1 ? 's' : ''}`;
+}
+
+function verdictClass(penalty) {
+  if (!penalty) return 'verdict-nfa';
+  const p = penalty.toLowerCase();
+  if (p === 'no further action' || p === 'nfa') return 'verdict-nfa';
+  if (p.includes('ban')) return 'verdict-ban';
+  if (p.includes('warning')) return 'verdict-warning';
+  return 'verdict-penalty';
+}
+
+function verdictLabel(penalty, points) {
+  if (!penalty || penalty.toLowerCase() === 'no further action' || penalty.toLowerCase() === 'nfa') return 'No Further Action';
+  if (penalty.toLowerCase().includes('ban')) return penalty;
+  if (penalty.toLowerCase().includes('warning')) return 'Warning';
+  return penalty;
+}
+
+function getPriorRacePoints(tickets) {
+  const priorPoints = new Map();
+
+  tickets.forEach((row, rowIndex) => {
+    const race = (row[COLS.race] || '').trim();
+    const division = (row[COLS.division] || '').trim();
+    const ticketNumber = parseInt(row[COLS.ticketNum]) || rowIndex;
+    const drivers = [
+      {
+        name: (row[COLS.submitter] || '').trim(),
+        pointsAdded: parseFloat(row[COLS.submitterOutcome]) || 0,
+        resultingPoints: parseFloat(row[COLS.submitterPoints]) || 0
+      },
+      {
+        name: (row[COLS.offender] || '').trim(),
+        pointsAdded: parseFloat(row[COLS.offenderOutcome]) || 0,
+        resultingPoints: parseFloat(row[COLS.offenderPoints]) || 0
+      }
+    ];
+
+    drivers.forEach(driver => {
+      if (!driver.name) return;
+      const key = `${race}|${division}|${driver.name.toLowerCase()}`;
+      const existing = priorPoints.get(key);
+      if (!existing || ticketNumber < existing.ticketNumber) {
+        const points = Math.max(0, driver.resultingPoints - driver.pointsAdded);
+        priorPoints.set(key, {
+          ticketNumber,
+          points: Math.round(points * 100) / 100
+        });
+      }
+    });
+  });
+
+  return priorPoints;
+}
+
+function renderTickets() {
+  const filtered = getFiltered();
+  const content = document.getElementById('content');
+
+  if (filtered.length === 0) {
+    content.innerHTML = '<div class="empty-msg">No tickets found for this division</div>';
+    return;
+  }
+
+  const priorRacePoints = getPriorRacePoints(allTickets);
+
+  // Group by season then by race
+  const seasonOrder = [];
+  const bySeasonRace = {};
+  filtered.forEach(row => {
+    const race = (row[COLS.race] || '').trim();
+    const match = race.match(/^S(\d+)/i);
+    const season = match ? `Season ${match[1]}` : 'Other';
+    if (!bySeasonRace[season]) { bySeasonRace[season] = { raceOrder: [], byRace: {} }; seasonOrder.push(season); }
+    const s = bySeasonRace[season];
+    if (!s.byRace[race]) { s.byRace[race] = []; s.raceOrder.push(race); }
+    s.byRace[race].push(row);
+  });
+
+  // Most recent season first; within each season most recent race first
+  seasonOrder.reverse();
+  seasonOrder.forEach(s => bySeasonRace[s].raceOrder.reverse());
+
+  let html = '';
+  let globalRaceIdx = 0;
+
+  seasonOrder.forEach((season, sIdx) => {
+    const { raceOrder, byRace } = bySeasonRace[season];
+    const seasonTickets = raceOrder.reduce((n, r) => n + byRace[r].length, 0);
+    const seasonPenalties = raceOrder.reduce((n, r) => n + byRace[r].filter(t => {
+      const p = (t[COLS.penalty] || '').toLowerCase();
+      return p && p !== 'no further action' && p !== 'nfa' && p !== '0';
+    }).length, 0);
+
+    html += `<div class="season-group" id="season-${sIdx}">
+      <div class="season-header" onclick="toggleSeason(${sIdx})" id="season-header-${sIdx}">
+        <div style="flex:1">
+          <div class="season-name">${season}</div>
+          <div class="season-meta">${raceOrder.length} race${raceOrder.length !== 1 ? 's' : ''} · ${seasonTickets} ticket${seasonTickets !== 1 ? 's' : ''} · ${seasonPenalties} penalt${seasonPenalties !== 1 ? 'ies' : 'y'}</div>
+        </div>
+        <div class="season-chevron" id="season-chevron-${sIdx}">▼</div>
+      </div>
+      <div class="season-body" id="season-body-${sIdx}">`;
+
+    raceOrder.forEach(race => {
+      const rIdx = globalRaceIdx++;
+      const tickets = byRace[race];
+      const totalPenalties = tickets.filter(t => {
+        const p = (t[COLS.penalty] || '').toLowerCase();
+        return p && p !== 'no further action' && p !== 'nfa' && p !== '0';
+      }).length;
+
+      html += `<div class="race-group" id="race-${rIdx}">
+      <div class="race-header" onclick="toggleRace(${rIdx})" id="race-header-${rIdx}">
+        <div class="race-header-left">
+          <div class="race-name">${race}</div>
+          <div class="race-meta">${tickets.length} ticket${tickets.length !== 1 ? 's' : ''} · ${totalPenalties} penalt${totalPenalties !== 1 ? 'ies' : 'y'}</div>
+        </div>
+        <div class="race-chevron" id="race-chevron-${rIdx}">▼</div>
+      </div>
+      <div class="race-body" id="race-body-${rIdx}">`;
+
+    tickets.forEach((row, tIdx) => {
+      const ticketId = `t-${rIdx}-${tIdx}`;
+      const num = (row[COLS.ticketNum] || '').trim();
+      const div = (row[COLS.division] || '').trim();
+      const submitter = (row[COLS.submitter] || '').trim();
+      const submitterTeam = (row[COLS.submitterTeam] || '').trim();
+      const offender = (row[COLS.offender] || '').trim();
+      const offenderTeam = (row[COLS.offenderTeam] || '').trim();
+      const description = (row[COLS.description] || '').trim();
+      const penalty = (row[COLS.penalty] || '').trim();
+      const points = (row[COLS.points] || '').trim();
+      const evaluation = (row[COLS.evaluation] || '').trim();
+      const defence = (row[COLS.defence] || '').trim();
+      const driverPunished = (row[COLS.driverPunished] || '').trim();
+
+      const submitterOutcome = (row[COLS.submitterOutcome] || '').trim();
+      const submitterPoints = (row[COLS.submitterPoints] || '0').trim();
+      const submitterPenalty = (row[COLS.submitterPenalty] || '').trim();
+      const offenderOutcome = (row[COLS.offenderOutcome] || '').trim();
+      const offenderPoints = (row[COLS.offenderPoints] || '0').trim();
+      const offenderPenalty = (row[COLS.offenderPenalty] || '').trim();
+      const submitterPointsAdded = parseFloat(submitterOutcome) || 0;
+      const offenderPointsAdded = parseFloat(offenderOutcome) || 0;
+      const submitterPriorPoints = priorRacePoints.get(`${race}|${div}|${submitter.toLowerCase()}`)?.points ?? 0;
+      const offenderPriorPoints = priorRacePoints.get(`${race}|${div}|${offender.toLowerCase()}`)?.points ?? 0;
+
+      // Evidence links - trim whitespace and check for http
+      const evLinks = [row[COLS.ev1], row[COLS.ev2], row[COLS.ev3], row[COLS.ev4]]
+        .map(e => (e || '').trim())
+        .filter(e => e.startsWith('http'));
+      const devLinks = [row[COLS.dev1], row[COLS.dev2], row[COLS.dev3], row[COLS.dev4]]
+        .map(e => (e || '').trim())
+        .filter(e => e.startsWith('http'));
+
+      const appealed = (row[COLS.appealed] || '').trim().toLowerCase() === 'yes';
+      const appealInfo = (row[COLS.appealInfo] || '').trim();
+      const appealEvidence = (row[COLS.appealEvidence] || '').trim();
+      const appealOutcome = (row[COLS.appealOutcome] || '').trim();
+      const appealVerdict = (row[COLS.appealVerdict] || '').trim();
+
+      // Collapsed header always shows original penalty from col T, unchanged
+      const vc = verdictClass(penalty);
+      const vl = verdictLabel(penalty, points);
+
+      html += `<div class="ticket">
+        <div class="ticket-header" onclick="toggleTicket('${ticketId}')">
+          <div class="ticket-num">#${num}</div>
+          <div class="ticket-parties">
+            <div class="ticket-vs">
+              <div>
+                <div class="ticket-driver">${submitter}</div>
+                <div class="ticket-team">${submitterTeam}</div>
+              </div>
+              <div class="ticket-vs-label">vs</div>
+              <div>
+                <div class="ticket-driver">${offender}</div>
+                <div class="ticket-team">${offenderTeam}</div>
+              </div>
+            </div>
+            <div class="ticket-div">Division ${div}</div>
+          </div>
+          <div class="ticket-verdict">
+            <div class="verdict-badge ${vc}">${vl}</div>
+            ${driverPunished ? `<div style="font-size:11px;color:var(--text-muted);margin-top:4px;text-align:center;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.5px;">${driverPunished}</div>` : ''}
+            ${appealed ? `<div style="font-size:10px;background:rgba(232,184,75,0.15);color:#E8B84B;border:1px solid rgba(232,184,75,0.25);border-radius:3px;padding:2px 7px;margin-top:4px;text-align:center;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.5px;text-transform:uppercase;">Appealed</div>` : ''}
+            ${points && points !== '0' ? `<div style="font-size:11px;color:var(--text-faint);margin-top:4px;text-align:right;">${points} pts</div>` : ''}
+          </div>
+        </div>
+
+        <div class="ticket-detail" id="${ticketId}">
+          ${description ? `<div class="detail-section">
+            <div class="detail-label">Ticket description</div>
+            <div class="detail-text">${description}</div>
+          </div>` : ''}
+
+          ${evLinks.length > 0 ? `<div class="detail-section">
+            <div class="detail-label">Evidence</div>
+            <div class="evidence-links">
+              ${evLinks.map((e,i) => `<a href="${e.trim()}" target="_blank" class="evidence-link">Video ${i+1} ↗</a>`).join('')}
+            </div>
+          </div>` : ''}
+
+          ${defence ? `<div class="detail-section">
+            <div class="detail-label">Defence</div>
+            <div class="detail-text">${defence}</div>
+          </div>` : ''}
+
+          ${devLinks.length > 0 ? `<div class="detail-section">
+            <div class="detail-label">Defence evidence</div>
+            <div class="evidence-links">
+              ${devLinks.map((e,i) => `<a href="${e.trim()}" target="_blank" class="evidence-link">Video ${i+1} ↗</a>`).join('')}
+            </div>
+          </div>` : ''}
+
+          ${evaluation ? `<div class="detail-section">
+            <div class="detail-label">Stewards evaluation</div>
+            <div class="detail-text" style="border-left:3px solid var(--red);padding-left:14px;">${evaluation}</div>
+          </div>` : ''}
+
+          <div class="detail-section">
+            <div class="detail-label">Outcomes</div>
+            <div class="outcome-grid">
+              <div class="outcome-box">
+                <div class="outcome-role">Submitter</div>
+                <div class="outcome-driver">${submitter}</div>
+                <div class="outcome-pts ${submitterPointsAdded > 0 ? 'pts-added' : 'pts-none'}">
+                  ${submitterPointsAdded > 0 ? `+${submitterOutcome} licence points` : 'No points added'}
+                </div>
+                <div class="outcome-penalty">Points Prior to Race: ${submitterPriorPoints}</div>
+              </div>
+              <div class="outcome-box">
+                <div class="outcome-role">Offender</div>
+                <div class="outcome-driver">${offender}</div>
+                <div class="outcome-pts ${offenderPointsAdded > 0 ? 'pts-added' : 'pts-none'}">
+                  ${offenderPointsAdded > 0 ? `+${offenderOutcome} licence points` : 'No points added'}
+                </div>
+                <div class="outcome-penalty">Points Prior to Race: ${offenderPriorPoints}</div>
+              </div>
+            </div>
+          </div>
+
+          ${appealed ? `<div class="detail-section">
+            <div class="detail-label" style="color:#E8B84B;">Appeal</div>
+            ${appealInfo
+              ? `<div class="detail-text" style="border-left:3px solid #E8B84B;padding-left:14px;">${appealInfo}</div>`
+              : ''}
+            ${appealEvidence
+              ? `<div style="margin-top:6px;">
+                  <span style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;">Appeal evidence</span>
+                  <div style="margin-top:4px;">${appealEvidence.split(/\s+/).filter(s=>s.startsWith('http')).map((url,i)=>`<a href="${url}" target="_blank" rel="noopener" style="display:inline-block;margin-right:6px;font-size:11px;color:#E8B84B;text-decoration:none;border:1px solid rgba(232,184,75,0.3);border-radius:3px;padding:2px 8px;">Video ${i+1}</a>`).join('') || `<span class="detail-text">${appealEvidence}</span>`}</div>
+                </div>`
+              : ''}
+            <div style="margin-top:8px;display:flex;align-items:center;gap:8px;">
+              <span style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;">Appeal decision</span>
+              ${appealVerdict
+                ? `<span class="verdict-badge ${verdictClass(appealVerdict)}">${verdictLabel(appealVerdict,'')}</span>`
+                : `<span style="font-size:11px;background:rgba(232,184,75,0.15);color:#E8B84B;border:1px solid rgba(232,184,75,0.25);border-radius:4px;padding:4px 10px;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.5px;text-transform:uppercase;">Pending</span>`}
+            </div>
+            <div style="margin-top:8px;">
+              <div class="detail-label" style="color:#E8B84B;margin-bottom:4px;">Appeals team comments</div>
+              ${appealOutcome
+                ? `<div class="detail-text" style="border-left:3px solid #E8B84B;padding-left:14px;">${appealOutcome}</div>`
+                : `<div class="detail-text" style="border-left:3px solid #E8B84B;padding-left:14px;color:var(--text-faint);">Appeal outcome pending</div>`}
+            </div>
+          </div>` : ''}
+        </div>
+      </div>`;
+    });
+
+      html += `</div></div>`;
+    });
+
+    html += `</div></div>`;
+  });
+
+  content.innerHTML = html;
+
+  // Open the most recent season and its first race by default
+  if (seasonOrder.length > 0) {
+    toggleSeason(0);
+    toggleRace(0);
+  }
+}
+
+function toggleSeason(idx) {
+  const body = document.getElementById(`season-body-${idx}`);
+  const header = document.getElementById(`season-header-${idx}`);
+  const chevron = document.getElementById(`season-chevron-${idx}`);
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  header.classList.toggle('open', !isOpen);
+  chevron.classList.toggle('open', !isOpen);
+}
+
+function toggleRace(idx) {
+  const body = document.getElementById(`race-body-${idx}`);
+  const header = document.getElementById(`race-header-${idx}`);
+  const chevron = document.getElementById(`race-chevron-${idx}`);
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  header.classList.toggle('open', !isOpen);
+  chevron.classList.toggle('open', !isOpen);
+}
+
+function toggleTicket(id) {
+  const detail = document.getElementById(id);
+  detail.classList.toggle('open');
+}
+
+function filterDiv(div, btn) {
+  // Mark this division's tickets as seen
+  if (div !== 'all') {
+    const divTickets = allTickets.filter(r => (r[COLS.division]||'').trim() === div);
+    const maxTicket = Math.max(...divTickets.map(r => parseInt(r[COLS.ticketNum])||0));
+    const lastSeen = JSON.parse(localStorage.getItem('f1xl_tickets_seen') || '{}');
+    lastSeen[div] = maxTicket;
+    localStorage.setItem('f1xl_tickets_seen', JSON.stringify(lastSeen));
+    // Remove dot from button
+    const dotEl = btn.querySelector('.filter-new-dot');
+    if (dotEl) dotEl.remove();
+  }
+  currentFilter = div;
+  document.querySelectorAll('.filter-btn').forEach(b => {
+    b.classList.remove('active');
+    if(b._divRGB) b.style.background = 'none';
+  });
+  btn.classList.add('active');
+  if(btn._divRGB){
+    btn.style.background = `rgba(${btn._divRGB},0.2)`;
+    btn.style.borderColor = btn._divColor;
+    btn.style.color = btn._divColor;
+  }
+  updateMeta();
+  renderTickets();
+}
+
+function toggleMenu(){
+  document.getElementById('hamburger').classList.toggle('open');
+  document.getElementById('mobile-menu').classList.toggle('open');
+}
+
+loadTickets();
+</script>
+</body>
+</html>
