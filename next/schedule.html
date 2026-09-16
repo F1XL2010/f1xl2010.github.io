@@ -279,6 +279,7 @@ const today = new Date(); today.setHours(0,0,0,0);
 
 function parseDate(s) {
   if (!s||!s.trim()) return null;
+  const iso=s.trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);if(iso)return new Date(+iso[1],+iso[2]-1,+iso[3]);
   const p=s.trim().split('/');
   if (p.length!==3) return null;
   return new Date(+p[2],+p[1]-1,+p[0]);
@@ -335,15 +336,16 @@ async function loadSchedule() {
       const date=parseDate(r2);
       // Skip if no date AND no circuit name
       if (!date && !r3) continue;
-      rounds.push({round:num, date, circuit:r3, isSprint:r1==='sprint', track:TRACKS[r3.toLowerCase()]||null});
+      rounds.push({round:num, date, circuit:r3, isSprint:r1.includes('sprint'), cancelled:(row[6]||'').trim()==='Cancelled', track:TRACKS[r3.toLowerCase()]||null});
     }
 
-    const completed=rounds.filter(r=>r.date&&r.date<today);
-    const upcoming=rounds.filter(r=>!r.date||r.date>=today);
+    const cancelled=rounds.filter(r=>r.cancelled);
+    const completed=rounds.filter(r=>!r.cancelled&&r.date&&r.date<today);
+    const upcoming=rounds.filter(r=>!r.cancelled&&(!r.date||r.date>=today));
     const next=upcoming[0]||null;
 
     document.getElementById('page-meta').textContent =
-      `${rounds.length} rounds · ${completed.length} completed · ${upcoming.length} remaining`;
+      `${rounds.length} rounds · ${completed.length} completed · ${upcoming.length} remaining${cancelled.length?` · ${cancelled.length} cancelled`:""}`;
 
     let html='';
 
@@ -375,6 +377,7 @@ async function loadSchedule() {
       [...completed].reverse().forEach(r=>{ html+=card(r, false, true); });
     }
 
+    if(cancelled.length){html+='<div class="section-title" style="margin-top:24px">Cancelled rounds</div>';cancelled.forEach(r=>{html+=card(r,false,false);});}
     // All Star
     if (allStars.length) {
       allStars.forEach(as=>{
@@ -431,6 +434,7 @@ function card(r, isNext, isCompleted) {
       <div class="round-badges">
         ${r.isSprint?`<div class="badge badge-sprint">Sprint</div>`:''}
         ${isCompleted?`<div class="badge badge-done">Completed</div>`:''}
+        ${r.cancelled?`<div class="badge badge-done">Cancelled</div>`:''}
         ${isNext?`<div class="badge badge-next"><div class="pulse"></div>Next</div>`:''}
       </div>
     </div>

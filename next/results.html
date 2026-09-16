@@ -241,6 +241,7 @@ function csv(text){
 
 function pd(s){
   if(!s||!s.trim())return null;
+  const iso=s.trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);if(iso)return new Date(+iso[1],+iso[2]-1,+iso[3]);
   const p=s.trim().split('/');
   if(p.length!==3)return null;
   return new Date(+p[2],+p[1]-1,+p[0]);
@@ -493,12 +494,13 @@ async function loadDivision(d) {
       if(isNaN(num)||num<1||num>25)continue;
       if(!r3&&!r2&&!RACE_GIDS[num-1])continue;
       const date=pd(r2);
-      const done=generatedHistorical ? !!RACE_GIDS[num-1] : !!(date&&date<today);
+      const cancelled=(row[6]||'').trim()==='Cancelled';
+      const done=!cancelled&&(generatedHistorical ? !!RACE_GIDS[num-1] : !!(date&&date<today));
       if(done)lastDone=rounds.length;
-      rounds.push({round:num,circuit:r3,date,isSprint:r1.includes('sprint'),sprintFormat:r1.includes('legacy')?'legacy':(r1.includes('modern')?'modern':''),gid:RACE_GIDS[num-1],done});
+      rounds.push({round:num,circuit:r3,date,cancelled,isSprint:r1.includes('sprint'),sprintFormat:r1.includes('legacy')?'legacy':(r1.includes('modern')?'modern':''),gid:RACE_GIDS[num-1],done});
     }
     const sel=document.getElementById('round-selector');
-    sel.innerHTML=rounds.map(r=>`<button class="round-btn${r.isSprint?' sprint':''}" id="rb${r.round}" onclick="selectRound(${r.round})">${r.isSprint?'⚡ ':''}R${r.round}${r.circuit?' · '+r.circuit:''}</button>`).join('');
+    sel.innerHTML=rounds.map(r=>`<button class="round-btn${r.isSprint?' sprint':''}" id="rb${r.round}" onclick="selectRound(${r.round})">${r.isSprint?'⚡ ':''}R${r.round}${r.circuit?' · '+r.circuit:''}${r.cancelled?' · Cancelled':''}</button>`).join('');
     const done=rounds.filter(r=>r.done).length;
     if(rounds.length) document.getElementById('page-meta').textContent=`Season ${_currentSeason} · Division ${d} · ${rounds.length} rounds · ${done} completed`;
     if(lastDone>=0)selectRound(rounds[lastDone].round);
@@ -514,6 +516,10 @@ async function selectRound(num){
   document.querySelectorAll('.round-btn').forEach(b=>b.classList.remove('active'));
   const btn=document.getElementById(`rb${num}`);
   if(btn)btn.classList.add('active');
+  if(r.cancelled){
+    document.getElementById('content').innerHTML='<div class="loading-msg">This race was cancelled.</div>';
+    return;
+  }
   if(!r.done){
     document.getElementById('content').innerHTML='<div class="loading-msg">This race has not yet taken place.</div>';
     return;
@@ -1161,7 +1167,7 @@ async function loadLegacyDivision(d){
 
   const sel = document.getElementById('round-selector');
   sel.innerHTML = rounds.map(r=>
-    `<button class="round-btn${r.isSprint?' sprint':''}" id="rb${r.round}" onclick="selectLegacyRound(${r.round})">${r.isSprint?'⚡ ':''}R${r.round}${r.circuit?' · '+r.circuit:''}</button>`
+    `<button class="round-btn${r.isSprint?' sprint':''}" id="rb${r.round}" onclick="selectLegacyRound(${r.round})">${r.isSprint?'⚡ ':''}R${r.round}${r.circuit?' · '+r.circuit:''}${r.cancelled?' · Cancelled':''}</button>`
   ).join('');
 
   if(rounds.length) document.getElementById('page-meta').textContent = `Season ${_currentSeason} · Division ${d} · ${rounds.length} rounds`;
