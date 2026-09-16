@@ -150,7 +150,7 @@
   </div>
   <button class="nav-hamburger" id="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></button>
 </nav>
-<div class="test-banner">F1XL TEST WEBSITE · PERMANENT LICENCE SOURCE · NOT THE LIVE CHAMPIONSHIP</div>
+<div class="test-banner">F1XL TEST WEBSITE · SEASON MASTER SNAPSHOT · NOT THE LIVE CHAMPIONSHIP</div>
 <div class="mobile-menu" id="mobile-menu">
   <a href="index.html">Home</a>
   <div class="mob-section">Standings</div>
@@ -184,30 +184,13 @@
   Licence points accumulate across the season. Points reset at season start unless carried over by stewards.
 </div>
 
-<div class="penalty-guide" id="penalty-guide">
+<div class="penalty-guide" id="penalty-guide" hidden>
   <button class="penalty-guide-toggle" onclick="toggleGuide()">
     <span>Penalty Points Guide</span>
     <span class="guide-chevron" id="guide-chevron">▼</span>
   </button>
   <div class="penalty-guide-body" id="guide-body">
-    <div class="penalty-cols">
-      <div class="penalty-col">
-        <div class="penalty-col-title">Offence Points</div>
-        <div class="penalty-row"><span class="penalty-code">W</span><span class="penalty-name">Warning</span><span class="penalty-pts">1.5 pts</span></div>
-        <div class="penalty-row"><span class="penalty-code">R</span><span class="penalty-name">Reprimand</span><span class="penalty-pts">3 pts</span></div>
-        <div class="penalty-row"><span class="penalty-code">Q</span><span class="penalty-name">Qualifying ban</span><span class="penalty-pts">3 pts</span></div>
-        <div class="penalty-row"><span class="penalty-code">C</span><span class="penalty-name">Chat box ban</span><span class="penalty-pts">3 pts</span></div>
-        <div class="penalty-row"><span class="penalty-code">P</span><span class="penalty-name">Party chat abuse</span><span class="penalty-pts">4.5 pts</span></div>
-        <div class="penalty-row"><span class="penalty-code">R</span><span class="penalty-name">Race ban</span><span class="penalty-pts">4.5 pts</span></div>
-      </div>
-      <div class="penalty-col">
-        <div class="penalty-col-title">Accumulated Thresholds</div>
-        <div class="penalty-row"><span class="penalty-name">Qualifying ban</span><span class="penalty-pts amber">9 pts</span></div>
-        <div class="penalty-row"><span class="penalty-name">Qualifying ban</span><span class="penalty-pts amber">12 pts</span></div>
-        <div class="penalty-row"><span class="penalty-name">Race ban</span><span class="penalty-pts red">15 pts</span></div>
-        <div class="penalty-row"><span class="penalty-name">Season ban</span><span class="penalty-pts red">18 pts</span></div>
-      </div>
-    </div>
+    <p>The season penalty guide will load with the licence information.</p>
   </div>
 </div>
 <div class="content">
@@ -237,7 +220,7 @@ let GID = '';
 // Divisions are laid out horizontally in the CSV:
 // D1: cols 0-2, D2: cols 4-6, D3: cols 8-10, D4: cols 12-14, D5: cols 16-18
 // (blank col separates each division)
-const DIV_COL_STARTS = [0, 4, 8, 12];
+let DIV_COL_STARTS = [];
 
 let allDivisions = [];
 let currentDiv = 0;
@@ -257,6 +240,8 @@ function parseCSV(text){
 
 function g(row, col){ return (row&&row[col]!==undefined)?(row[col]||'').trim():''; }
 
+function licenceEscape(value){return String(value==null?'':value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
 function ptsClass(pts){
   if(pts>=15) return 'pts-high';
   if(pts>=9)  return 'pts-mid';
@@ -274,19 +259,22 @@ async function init(){
     if (cfg['drivers_licence_summary_gid']) GID = cfg['drivers_licence_summary_gid'];
     if (cfg['drivers_licence_bans_gid']) BANS_GID = cfg['drivers_licence_bans_gid'];
     if (cfg['drivers_licence_penalty_guide_gid']) PENALTY_GID = cfg['drivers_licence_penalty_guide_gid'];
-    if(!SHEET_ID||!GID||!BANS_GID){document.getElementById('content').textContent='No TEST licence source has been configured.';return;}
+    if(!SHEET_ID||!GID||!BANS_GID||!PENALTY_GID){document.getElementById('content').textContent='No TEST licence source has been configured.';return;}
   } catch(e) {document.getElementById('content').textContent='TEST licence configuration could not be loaded.';return;}
   try{
     // Load summary and bans in parallel
-    const [summaryRes, bansRes] = await Promise.all([
+    const [summaryRes, bansRes, guideRes] = await Promise.all([
       fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${GID}`),
-      fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${BANS_GID}`)
+      fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${BANS_GID}`),
+      fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${PENALTY_GID}`)
     ]);
 
+    if(!summaryRes.ok||!bansRes.ok||!guideRes.ok)throw new Error('The published licence snapshot is unavailable.');
     const summaryText = await summaryRes.text();
     const bansText = await bansRes.text();
+    const guideText = await guideRes.text();
 
-    if(summaryText.includes('<!DOCTYPE')) throw new Error('Not published');
+    if([summaryText,bansText,guideText].some(t=>/<!doctype|<html/i.test(t))) throw new Error('Not published');
 
     const rows = parseCSV(summaryText);
     const bansRows = parseCSV(bansText);
@@ -313,6 +301,7 @@ async function init(){
 
     const headerRow = rows[divHeaderRow]||[];
     const divNames = [];
+    DIV_COL_STARTS = headerRow.map((v,i)=>/^Division\s+\d+$/i.test(String(v).trim())?i:-1).filter(i=>i>=0);
     for(let i=0;i<DIV_COL_STARTS.length;i++){
       const name = g(headerRow, DIV_COL_STARTS[i]);
       if(name.toLowerCase().includes('division')) divNames.push(name);
@@ -348,14 +337,21 @@ async function init(){
       const reason = g(row,6);
       if(!driver) continue;
       if(driver.toLowerCase()==='driver') continue;
-      if(!served) upcomingBans.push({div, driver, ban, race, incurred, reason});
+      if(!served || served.toLowerCase()==='no') upcomingBans.push({div, driver, ban, race, incurred, reason});
     }
 
+    if(!allDivisions.length)throw new Error('The published summary has no division headers.');
     renderUpcomingBans(upcomingBans);
+    const guideRows=parseCSV(guideText).slice(1).filter(r=>r.some(v=>v.trim()));
+    document.getElementById('guide-body').innerHTML='<table class="licence-table"><tbody>'+guideRows.map(r=>{
+      const values=Array.from({length:4},(_,i)=>g(r,i)),filled=values.filter(Boolean);
+      return filled.length===1?'<tr><td colspan="4">'+licenceEscape(filled[0])+'</td></tr>':'<tr>'+values.map(v=>'<td>'+licenceEscape(v)+'</td>').join('')+'</tr>';
+    }).join('')+'</tbody></table>';
+    document.getElementById('penalty-guide').hidden=false;
 
     const tabsEl = document.getElementById('div-tabs');
     tabsEl.innerHTML = allDivisions.map((d,i) =>
-      `<button class="div-tab${i===0?' active':''}" onclick="showDiv(${i},this)">${d.name}</button>`
+      `<button class="div-tab${i===0?' active':''}" onclick="showDiv(${i},this)">${licenceEscape(d.name)}</button>`
     ).join('');
 
     const total = allDivisions.reduce((s,d)=>s+d.drivers.length,0);
@@ -364,7 +360,7 @@ async function init(){
     showDiv(0, document.querySelector('.div-tab'));
 
   } catch(e){
-    document.getElementById('content').innerHTML = `<div class="loading-msg">Could not load: ${e.message}</div>`;
+    document.getElementById('content').innerHTML = `<div class="loading-msg">Could not load: ${licenceEscape(e.message)}</div>`;
   }
 }
 
@@ -372,16 +368,17 @@ function renderUpcomingBans(bans){
   const el = document.getElementById('upcoming-bans');
   if(!el) return;
   if(!bans.length){ el.style.display='none'; return; }
+  el.style.display='';
 
   let html = `<table class="licence-table">
     <thead><tr><th style="color:rgba(255,255,255,0.8);">Div</th><th style="color:rgba(255,255,255,0.8);">Driver</th><th style="color:rgba(255,255,255,0.8);">Ban</th><th style="color:rgba(255,255,255,0.8);">Race Incurred</th><th style="color:rgba(255,255,255,0.8);">Reason</th></tr></thead><tbody>`;
   bans.forEach(b=>{
     html+=`<tr>
-      <td><span class="pts-value" style="font-size:13px;">D${b.div}</span></td>
-      <td><span class="driver-name">${b.driver}</span></td>
-      <td><span style="color:#ff6b6b;font-size:12px;font-weight:500;">${b.ban}</span></td>
-      <td><span style="font-size:12px;color:var(--text-muted);">${b.incurred}</span></td>
-      <td><span style="font-size:12px;color:var(--text-faint);">${b.reason||'—'}</span></td>
+      <td><span class="pts-value" style="font-size:13px;">D${licenceEscape(b.div)}</span></td>
+      <td><span class="driver-name">${licenceEscape(b.driver)}</span></td>
+      <td><span style="color:#ff6b6b;font-size:12px;font-weight:500;">${licenceEscape(b.ban)}</span></td>
+      <td><span style="font-size:12px;color:var(--text-muted);">${licenceEscape(b.incurred)}</span></td>
+      <td><span style="font-size:12px;color:var(--text-faint);">${licenceEscape(b.reason||'—')}</span></td>
     </tr>`;
   });
   html += '</tbody></table>';
@@ -404,9 +401,9 @@ function renderTable(drivers){
     <thead><tr><th>Driver</th><th>Pts</th><th>Secs Added</th></tr></thead><tbody>`;
   drivers.forEach(d=>{
     html+=`<tr>
-      <td><span class="driver-name">${d.driver}</span></td>
+      <td><span class="driver-name">${licenceEscape(d.driver)}</span></td>
       <td><span class="pts-value ${ptsClass(d.pts)}">${d.pts}</span></td>
-      <td><span class="${d.secs>0?'secs-pos':'secs-value'}">${d.secs>0?'+'+d.secs+'s':'—'}</span></td>
+      <td><span class="${d.secs>0?'secs-pos':'secs-value'}">${d.secs===0?'—':(d.secs>0?'+':'')+d.secs+'s'}</span></td>
     </tr>`;
   });
   document.getElementById('content').innerHTML = html+'</tbody></table>';
