@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex,nofollow,noarchive,nosnippet">
+<meta name="description" content="F1XL TEST season schedule. Not live championship data.">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>F1XL TEST — Schedule</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green:#3DCC47;--teal:#5ECFCF;--red:#E10600;--black:#111816;--dark:#161d1b;--dark2:#1a2320;--dark3:#1e2a27;
+    --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+    --text:#ffffff;--text-muted:rgba(255,255,255,0.60);--text-faint:rgba(255,255,255,0.30);
+    --gold:#E8B84B;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background-color:#111816;background-image:url('../images/backgrounds/schedule_background.webp');background-size:cover;background-position:center;background-attachment:fixed;background-repeat:no-repeat;color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;}
+  body::before{content:'';position:fixed;inset:0;background:rgba(17,24,22,0.80);z-index:0;pointer-events:none;}
+  body>*{position:relative;z-index:1;}
+  nav{position:relative;z-index:200;background:rgba(9,9,9,0.97);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;}
+  .nav-left{display:flex;align-items:center;gap:14px;flex-shrink:0;}
+  .nav-logo{display:flex;align-items:center;height:40px;text-decoration:none;}
+  .nav-logo img{height:34px;width:auto;display:block;}
+  .nav-links{display:flex;align-items:stretch;height:56px;}
+  .nav-item{position:relative;display:flex;align-items:stretch;}
+  .nav-item>a,.nav-item>button{color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:500;letter-spacing:0.5px;padding:0 13px;display:flex;align-items:center;gap:4px;border-bottom:2px solid transparent;border-top:none;border-left:none;border-right:none;background:none;cursor:pointer;font-family:'Barlow',sans-serif;text-transform:uppercase;transition:color 0.2s;white-space:nowrap;}
+  .nav-item>a:hover,.nav-item>button:hover{color:var(--text);}
+  .nav-item>a.active,.nav-item>button.active{color:var(--text);border-bottom-color:var(--green);}
+  .nav-chevron{font-size:8px;opacity:0.5;transition:transform 0.2s;}
+  .nav-item:hover .nav-chevron{transform:rotate(180deg);}
+  .nav-dropdown{display:none;position:absolute;top:100%;left:0;background:#141414;border:1px solid var(--border2);border-top:2px solid var(--green);border-radius:0 0 6px 6px;min-width:180px;padding:6px 0;z-index:300;}
+  .nav-item:hover .nav-dropdown{display:block;}
+  .nav-dropdown a{display:block;padding:9px 16px;color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;transition:color 0.15s,background 0.15s;white-space:nowrap;}
+  .nav-dropdown a:hover{color:var(--text);background:rgba(255,255,255,0.05);}
+  .nav-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:8px;background:none;border:none;}
+  .nav-hamburger span{display:block;width:22px;height:2px;background:var(--text-muted);border-radius:2px;transition:all 0.25s;}
+  .nav-hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+  .nav-hamburger.open span:nth-child(2){opacity:0;}
+  .nav-hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+  .mobile-menu{display:none;position:fixed;top:56px;left:0;right:0;background:#141a18;border-bottom:1px solid var(--border2);z-index:199;padding:12px 0;max-height:calc(100vh - 56px);overflow-y:auto;}
+  .mobile-menu.open{display:block;}
+  .mob-section{font-size:10px;letter-spacing:2px;color:var(--text-faint);padding:12px 24px 4px;text-transform:uppercase;}
+  .mobile-menu a{display:block;padding:10px 24px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;}
+  .mobile-menu a:hover{color:var(--text);}
+  @media(max-width:900px){.nav-links{display:none;}.nav-title{display:none;}.nav-hamburger{display:flex;}}
+
+  .page-header{position:relative;z-index:1;background:rgba(22,29,27,0.85);border-bottom:1px solid var(--border);padding:24px;}
+  .page-eyebrow{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:2.5px;color:var(--teal);text-transform:uppercase;font-weight:600;margin-bottom:4px;}
+  .page-title{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:700;text-transform:uppercase;line-height:1;}
+  .page-meta{font-size:13px;color:rgba(255,255,255,0.75);margin-top:6px;}
+  .disclaimer{margin:16px 24px 0;padding:10px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);border-radius:6px;font-size:12px;color:rgba(255,255,255,0.75);}
+  .schedule{padding:20px 24px 48px;max-width:960px;}
+  .loading-msg{text-align:center;padding:48px;color:var(--text-muted);font-size:14px;}
+
+  /* NEXT RACE HERO */
+  .next-hero{position:relative;background:#1a2320;border:1px solid var(--border2);border-top:3px solid var(--green);border-radius:10px;padding:24px 24px 24px 24px;margin-bottom:28px;overflow:hidden;min-height:120px;background-size:cover;background-position:center;background-repeat:no-repeat;}
+  .next-hero::before{content:'';position:absolute;inset:0;background:rgba(17,24,22,0.55);z-index:0;}
+  .next-hero>*{position:relative;z-index:1;}
+  .next-hero-label{font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:3px;text-transform:uppercase;color:var(--red);font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+  .next-hero-name{font-family:'Barlow Condensed',sans-serif;font-size:64px;font-weight:900;text-transform:uppercase;line-height:1;margin-bottom:6px;}
+  .next-hero-circuit{font-size:15px;color:rgba(255,255,255,0.8);margin-bottom:8px;font-weight:500;}
+  .next-hero-date{font-size:17px;color:rgba(255,255,255,0.9);font-weight:500;}
+  .next-hero-badges{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;}
+  .next-hero-visual{position:absolute;right:0;top:0;bottom:0;width:200px;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+
+  .badge{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;padding:6px 12px;border-radius:4px;}
+  .badge-round{background:rgba(61,204,71,0.25);color:var(--green);border:1px solid rgba(61,204,71,0.5);display:inline-flex;align-items:center;gap:5px;}
+  .badge-sprint{background:rgba(100,150,255,0.3);color:rgba(160,190,255,1);border:1px solid rgba(100,150,255,0.5);}
+  .badge-done{background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.45);border:1px solid var(--border);}
+  .badge-allstar{background:rgba(232,184,75,0.12);color:var(--gold);border:1px solid rgba(232,184,75,0.25);}
+  .badge-next{background:rgba(61,204,71,0.25);color:var(--green);border:1px solid rgba(61,204,71,0.5);display:inline-flex;align-items:center;gap:4px;}
+  .pulse{width:6px;height:6px;background:var(--green);border-radius:50%;flex-shrink:0;animation:pulse 1.5s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(0.7);}}
+
+  .section-title{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+
+  /* ROUND CARD */
+  .round-card{display:flex;align-items:stretch;background:#1a2320;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;overflow:hidden;transition:border-color 0.2s,opacity 0.2s;}
+  .round-card:hover{border-color:rgba(255,255,255,0.35);}
+  .round-card.completed{opacity:0.48;}
+  .round-card.is-next{border-color:rgba(61,204,71,0.35);background:rgba(61,204,71,0.02);}
+  .round-card.allstar{border-color:rgba(232,184,75,0.3);background:rgba(232,184,75,0.03);}
+
+  .round-visual{width:72px;flex-shrink:0;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;background:rgba(61,204,71,0.15);border-right:2px solid var(--green);}
+  .round-body{position:relative;overflow:hidden;background-size:cover;background-position:center;background-repeat:no-repeat;}
+  .round-body::after{content:'';position:absolute;inset:0;background:rgba(17,24,22,0.78);z-index:0;pointer-events:none;}
+  .round-info,.round-badges{position:relative;z-index:1;}
+  .round-num{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:900;color:var(--green);line-height:1;text-align:center;}
+
+  .round-body{flex:1;padding:12px 16px;display:flex;align-items:center;gap:12px;}
+  .round-info{flex:1;}
+  .round-name{font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;line-height:1;margin-bottom:2px;}
+  .round-circuit-name{font-size:11px;color:rgba(255,255,255,0.45);margin-bottom:3px;}
+  .round-date{font-size:12px;color:rgba(255,255,255,0.35);}
+  .round-badges{display:flex;gap:5px;flex-wrap:wrap;margin-left:auto;align-items:center;}
+
+  /* ALLSTAR */
+  .allstar-card{display:flex;align-items:stretch;background:rgba(232,184,75,0.04);border:1px solid rgba(232,184,75,0.2);border-radius:8px;margin-top:24px;overflow:hidden;}
+  .allstar-visual{width:80px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:28px;background:rgba(232,184,75,0.06);border-right:1px solid rgba(232,184,75,0.15);}
+  .allstar-body{flex:1;padding:14px 16px;}
+  .allstar-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:3px;}
+  .allstar-name{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;text-transform:uppercase;color:var(--gold);}
+  .allstar-date{font-size:12px;color:rgba(255,255,255,0.4);margin-top:2px;}
+  .allstar-time{font-size:11px;color:rgba(232,184,75,0.55);margin-top:2px;}
+  .allstar-right{padding:14px 16px;display:flex;align-items:center;}
+
+  footer{background:#161d1b;border-top:1px solid var(--border);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+  .footer-logo{background:var(--green);color:#000;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;padding:4px 9px;border-radius:3px;}
+  .footer-text{font-size:12px;color:rgba(255,255,255,0.35);}
+</style>
+<meta name="theme-color" content="#111816">
+</head>
+<body>
+
+<nav>
+  <div class="nav-left">
+    <a href="index.html" class="nav-logo">
+      <img src="../TRANSPARENT.png" alt="F1XL - UK Casual F1 League Racing on Xbox, PlayStation and PC">
+    </a>
+  </div>
+  <div class="nav-links">
+    <div class="nav-item"><a href="index.html">Home</a></div>
+    <div class="nav-item">
+      <button>Standings <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown">
+        <a href="standings.html">Current Season</a>
+        <a href="results.html">Results</a>
+        <a href="old-seasons.html">Past Seasons</a>
+        <a href="../asr.html">All Star Race</a>
+      </div>
+    </div>
+    <div class="nav-item"><a href="teams.html">Teams</a></div>
+    <div class="nav-item">
+      <button>Race Tickets <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown">
+        <a href="../submit-ticket.html">Submit Ticket</a>
+        <a href="ticket-outcomes.html">Ticket Outcomes</a>
+        <a href="drivers-licence.html">Drivers Licence</a>
+      </div>
+    </div>
+    <div class="nav-item"><a href="schedule.html" class="active">Schedule</a></div>
+    <div class="nav-item">
+      <button>History <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown">
+        <a href="../hall-of-fame.html">Hall of Fame</a>
+        <a href="../hall-of-records.html">Hall of Records</a>
+        <a href="../track-records.html">Track Records</a>
+      </div>
+    </div>
+    <div class="nav-item"><a href="../applications.html">Applications</a></div>
+    <div class="nav-item"><a href="../league-rules.html">League Rules</a></div>
+    <div class="nav-item"><a href="../merch.html">Merch</a></div>
+    <div class="nav-item"><a href="../music.html">Music</a></div>
+  </div>
+  <button class="nav-hamburger" id="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></button>
+</nav>
+<div style="background:#5a3e00;color:#fff3bf;border-bottom:1px solid #e8b84b;padding:9px 20px;text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;">F1XL TEST WEBSITE · REBUILT DATA · NOT THE LIVE CHAMPIONSHIP</div>
+<div class="mobile-menu" id="mobile-menu">
+  <a href="index.html">Home</a>
+  <div class="mob-section">Standings</div>
+  <a href="standings.html">Current Season</a>
+  <a href="results.html">Results</a>
+  <a href="old-seasons.html">Past Seasons</a>
+  <a href="../asr.html">All Star Race</a>
+  <a href="teams.html">Teams</a>
+  <div class="mob-section">Race Tickets</div>
+  <a href="../submit-ticket.html">Submit Ticket</a>
+  <a href="ticket-outcomes.html">Ticket Outcomes</a>
+  <a href="drivers-licence.html">Drivers Licence</a>
+  <a href="schedule.html">Schedule</a>
+  <div class="mob-section">History</div>
+  <a href="../hall-of-fame.html">Hall of Fame</a>
+  <a href="../hall-of-records.html">Hall of Records</a>
+  <a href="../track-records.html">Track Records</a>
+  <a href="../applications.html">Applications</a>
+  <a href="../league-rules.html">League Rules</a>
+  <a href="../merch.html">Merch</a>
+  <a href="../music.html">Music</a>
+</div>
+
+<div class="page-header">
+  <div class="page-eyebrow">F1XL</div>
+  <div class="page-title" id="page-title">Season 27 Schedule</div>
+  <div class="page-meta" id="page-meta">Loading...</div>
+</div>
+<div class="disclaimer">All races start at 9:00pm BST unless otherwise announced on Discord.</div>
+
+<div class="schedule" id="schedule" style="position:relative;z-index:1;">
+  <div class="loading-msg">Loading schedule...</div>
+</div>
+
+<footer>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="footer-logo">F1XL</div>
+    <div class="footer-text">F1 League · F1 Sim Racing on Xbox, PlayStation and PC. Casual Racing on F1 26</div>
+  </div>
+  <div class="footer-text">f1xl.co.uk</div>
+</footer>
+
+<script src="config.js"></script>
+<script>
+let SHEET_ID = '17Exg9qlJPzQNUh6egWu7SJZhWJY9AEmDw81Ab38B42I';
+let GID = '0';
+
+const TRACKS = {
+  'italy':        { flag:'🇮🇹', name:'Autodromo Nazionale Monza', country:'Italy',
+    path:'M40,20 L40,60 L55,70 L55,55 L65,55 L65,70 L75,70 L75,30 L65,20 L55,20 L55,35 L45,35 L40,20' },
+  'belgium':      { flag:'🇧🇪', name:'Circuit de Spa-Francorchamps', country:'Belgium',
+    path:'M20,55 L30,40 L45,35 L60,40 L65,30 L72,38 L65,52 L55,57 L50,67 L38,67 L28,60 L20,55' },
+  'abu dhabi':    { flag:'🇦🇪', name:'Yas Marina Circuit', country:'UAE',
+    path:'M20,50 L20,33 L35,23 L57,23 L67,35 L67,47 L57,52 L45,52 L45,62 L57,62 L62,57 L67,62 L60,68 L38,68 L28,60 L20,50' },
+  'japan':        { flag:'🇯🇵', name:'Suzuka International Circuit', country:'Japan',
+    path:'M50,18 L62,30 L57,46 L43,46 L38,33 L45,22 L50,18 M43,46 L33,57 L33,67 L50,72 L62,67 L67,57 L57,46' },
+  'china':        { flag:'🇨🇳', name:'Shanghai International Circuit', country:'China',
+    path:'M25,42 L25,23 L62,23 L72,35 L67,47 L50,52 L50,62 L67,67 L72,60 M25,42 L30,57 L25,67 L37,72 L50,67 L50,52' },
+  'qatar':        { flag:'🇶🇦', name:'Lusail International Circuit', country:'Qatar',
+    path:'M50,13 A37,37 0 1,1 49,13 M50,13 L50,32' },
+  'saudi arabia': { flag:'🇸🇦', name:'Jeddah Corniche Circuit', country:'Saudi Arabia',
+    path:'M30,18 L30,67 L36,72 L42,67 L42,55 L47,50 L52,55 L52,67 L58,72 L63,67 L63,18 L57,13 L52,18 L52,30 L47,37 L42,30 L42,18 L36,13 L30,18' },
+  'austria':      { flag:'🇦🇹', name:'Red Bull Ring', country:'Austria',
+    path:'M35,62 L35,33 L47,23 L57,23 L67,35 L67,47 L57,52 L45,52 L45,62 L35,62' },
+  'britain':      { flag:'🇬🇧', name:'Silverstone Circuit', country:'Great Britain',
+    path:'M22,47 L22,30 L40,18 L62,18 L72,30 L72,47 L62,57 L55,52 L45,52 L38,57 L22,47' },
+  'canada':       { flag:'🇨🇦', name:'Circuit Gilles Villeneuve', country:'Canada',
+    path:'M42,18 L42,30 L28,30 L23,42 L23,57 L30,63 L42,63 L47,68 L57,68 L63,63 L63,50 L50,45 L50,33 L63,28 L63,18 L42,18' },
+  'singapore':    { flag:'🇸🇬', name:'Marina Bay Street Circuit', country:'Singapore',
+    path:'M23,52 L23,28 L35,18 L57,18 L67,30 L67,47 L57,52 L45,52 L45,63 L57,68 L67,62 M23,52 L28,63 L23,68 L35,72 L45,67 L45,52' },
+  'australia':    { flag:'🇦🇺', name:'Albert Park Circuit', country:'Australia',
+    path:'M50,18 A32,32 0 1,1 50,82 A32,32 0 1,1 50,18 M38,35 L50,28 L62,35 L62,55 L50,62 L38,55 Z' },
+  'hungary':      { flag:'🇭🇺', name:'Hungaroring', country:'Hungary',
+    path:'M23,57 L28,35 L45,23 L57,28 L63,47 L57,57 L45,62 L40,55 L40,45 L52,40 L52,52 L45,57 L33,57 L28,62 L23,57' },
+  'brazil':       { flag:'🇧🇷', name:'Autodromo José Carlos Pace', country:'Brazil',
+    path:'M28,57 L23,40 L28,23 L50,18 L67,30 L67,47 L57,57 L45,57 L38,63 L45,68 L62,68 L67,62' },
+  'azerbaijan':   { flag:'🇦🇿', name:'Baku City Circuit', country:'Azerbaijan',
+    path:'M18,52 L18,28 L28,18 L67,18 L72,25 L67,37 L33,37 L28,43 L28,58 L33,63 L67,63 L72,57 L72,52' },
+  'netherlands':  { flag:'🇳🇱', name:'Circuit Zandvoort', country:'Netherlands',
+    path:'M33,57 L22,45 L22,28 L35,18 L57,18 L68,30 L68,47 L57,57 L33,57' },
+  'bahrain':      { flag:'🇧🇭', name:'Bahrain International Circuit', country:'Bahrain',
+    path:'M23,62 L23,40 L28,28 L45,18 L62,25 L67,37 L62,53 L50,57 L45,52 L38,57 L38,67 L50,72 L63,67 L68,57' },
+  'monaco':       { flag:'🇲🇨', name:'Circuit de Monaco', country:'Monaco',
+    path:'M28,35 L28,55 L40,67 L60,67 L72,55 L72,35 L60,23 L40,23 L28,35' },
+  'spain':        { flag:'🇪🇸', name:'Madrid Street Circuit', country:'Spain',
+    path:'M23,52 L23,30 L35,18 L65,18 L72,30 L72,52 L65,62 L35,62 L23,52' },
+  'catalunya':    { flag:'🇪🇸', name:'Circuit de Barcelona-Catalunya', country:'Catalunya',
+    path:'M23,52 L23,30 L35,18 L65,18 L72,30 L72,52 L65,62 L35,62 L23,52' },
+  'mexico':       { flag:'🇲🇽', name:'Autodromo Hermanos Rodriguez', country:'Mexico',
+    path:'M28,57 L23,40 L30,23 L50,18 L70,23 L77,40 L70,57 L57,62 L57,52 L43,52 L43,62 L28,57' },
+  'usa':          { flag:'🇺🇸', name:'Circuit of the Americas', country:'USA',
+    path:'M23,67 L23,28 L35,18 L72,18 L72,42 L57,42 L57,57 L45,57 L45,42 L35,42 L35,67 L23,67' },
+  'miami':        { flag:'🇺🇸', name:'Miami International Autodrome', country:'USA',
+    path:'M23,67 L23,28 L35,18 L72,18 L72,42 L57,42 L57,57 L45,57 L45,42 L35,42 L35,67 L23,67' },
+  'rwanda':       { flag:'🇷🇼', name:'Kigali Circuit', country:'Rwanda',
+    path:'M35,22 L35,62 L50,72 L65,62 L65,22 L50,12 L35,22' },
+  'argentina':    { flag:'🇦🇷', name:'Autodromo Oscar Alfredo Galvez', country:'Argentina',
+    path:'M23,52 L23,28 L38,18 L62,18 L77,28 L77,52 L62,62 L38,62 L23,52' },
+  'france':       { flag:'🇫🇷', name:'Circuit Paul Ricard', country:'France',
+    path:'M23,57 L23,23 L77,23 L77,57 L60,57 L60,43 L40,43 L40,57 L23,57' },
+  'portugal':     { flag:'🇵🇹', name:'Autodromo Internacional do Algarve', country:'Portugal',
+    path:'M28,57 L23,40 L28,23 L50,18 L72,23 L77,40 L72,57 L50,62 L28,57' },
+  'thailand':     { flag:'🇹🇭', name:'Chang International Circuit', country:'Thailand',
+    path:'M28,52 L23,35 L35,18 L65,18 L77,35 L72,52 L60,62 L40,62 L28,52' },
+  'turkey':       { flag:'🇹🇷', name:'Istanbul Park', country:'Turkey',
+    path:'M23,57 L23,28 L50,18 L77,28 L77,57 L50,67 L23,57' },
+  'india':        { flag:'🇮🇳', name:'Buddh International Circuit', country:'India',
+    path:'M28,62 L23,40 L30,22 L52,17 L70,27 L75,45 L65,60 L50,65 L35,65 L28,62' },
+  'south korea':  { flag:'🇰🇷', name:'Korea International Circuit', country:'South Korea',
+    path:'M23,52 L23,28 L50,18 L77,28 L77,52 L65,62 L35,62 L23,52' },
+  'las vegas':    { flag:'🇺🇸', name:'Las Vegas Street Circuit', country:'Las Vegas',
+    path:'M23,67 L23,28 L35,18 L72,18 L72,42 L57,42 L57,57 L45,57 L45,42 L35,42 L35,67 L23,67' },
+  'imola':        { flag:'🇮🇹', name:'Autodromo Enzo e Dino Ferrari', country:'Imola',
+    path:'M40,20 L40,60 L55,70 L55,55 L65,55 L65,70 L75,70 L75,30 L65,20 L55,20 L55,35 L45,35 L40,20' },
+  'south africa': { flag:'🇿🇦', name:'Kyalami Circuit', country:'South Africa',
+    path:'M28,57 L23,40 L30,23 L50,18 L70,23 L77,40 L70,57 L50,62 L28,57' },
+};
+
+const today = new Date(); today.setHours(0,0,0,0);
+
+function parseDate(s) {
+  if (!s||!s.trim()) return null;
+  const p=s.trim().split('/');
+  if (p.length!==3) return null;
+  return new Date(+p[2],+p[1]-1,+p[0]);
+}
+
+function fmtDate(d) {
+  if (!d) return 'TBC';
+  const dy=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${dy[d.getDay()]} ${d.getDate()} ${mo[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+function circuitSVG(path, size=80) {
+  return `<svg viewBox="0 0 90 90" width="${size}" height="${size}"><polyline points="${path.replace(/[ML]/g,' ')}" fill="none" stroke="white" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+}
+
+function circuitPath(path, size=80) {
+  // Handle both L path and A arc commands
+  if (path.includes('A')) {
+    return `<svg viewBox="0 0 90 90" width="${size}" height="${size}"><path d="${path}" fill="none" stroke="white" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+  }
+  return `<svg viewBox="0 0 90 90" width="${size}" height="${size}"><polyline points="${path.replace(/[ML]/g,' ')}" fill="none" stroke="white" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+}
+
+async function loadSchedule() {
+  try {
+    const sc = await getCurrentSeasonConfig();
+    if (sc && sc['d1_sheet_id']) SHEET_ID = sc['d1_sheet_id'];
+    if (sc && sc['d1_calendar_gid']) GID = sc['d1_calendar_gid'];
+    const season = await getCurrentSeason();
+    if (season) {
+      document.getElementById('page-title').textContent = `Season ${season} Schedule`;
+      document.title = `F1XL — Season ${season} Schedule`;
+    }
+  } catch(e) {}
+  try {
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${GID}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text = await res.text();
+    if (text.includes('<!DOCTYPE')||text.includes('<html')) throw new Error('Sheet not published');
+    const rows = parseCSV(text);
+
+    const rounds=[], allStars=[];
+
+    for (let i=1;i<rows.length;i++) {
+      const row=rows[i];
+      const r0=(row[0]||'').trim(), r1=(row[1]||'').trim().toLowerCase();
+      const r2=(row[2]||'').trim(), r3=(row[3]||'').trim();
+      if (!r0) continue;
+      if (r0.toLowerCase().includes('all star')) { allStars.push({date:parseDate(r2)}); continue; }
+      const num=parseInt(r0);
+      if (isNaN(num)) continue;
+      const date=parseDate(r2);
+      // Skip if no date AND no circuit name
+      if (!date && !r3) continue;
+      rounds.push({round:num, date, circuit:r3, isSprint:r1==='sprint', track:TRACKS[r3.toLowerCase()]||null});
+    }
+
+    const completed=rounds.filter(r=>r.date&&r.date<today);
+    const upcoming=rounds.filter(r=>!r.date||r.date>=today);
+    const next=upcoming[0]||null;
+
+    document.getElementById('page-meta').textContent =
+      `${rounds.length} rounds · ${completed.length} completed · ${upcoming.length} remaining`;
+
+    let html='';
+
+    // Hero
+    if (next) {
+      const td=next.track;
+      const heroBg = td && td.country ? `style="background-image:url('${countryToImg(td.country)}')"` : '';
+      html+=`<div class="next-hero" ${heroBg}>
+        <div class="next-hero-label"><div class="pulse"></div>Next Race</div>
+        <div class="next-hero-name">${next.circuit} Grand Prix</div>
+        ${td?`<div class="next-hero-circuit">${td.name} · ${td.country}</div>`:''}
+        <div class="next-hero-date">${fmtDate(next.date)}</div>
+        <div class="next-hero-badges">
+          <div class="badge badge-round">Round ${next.round}</div>
+          ${next.isSprint?`<div class="badge badge-sprint">Sprint Weekend</div>`:''}
+        </div>
+      </div>`;
+    }
+
+    // Upcoming
+    if (upcoming.length) {
+      html+=`<div class="section-title">Upcoming Rounds</div>`;
+      upcoming.forEach(r=>{ html+=card(r, r===next, false); });
+    }
+
+    // Completed
+    if (completed.length) {
+      html+=`<div class="section-title" style="margin-top:24px;">Completed Rounds</div>`;
+      [...completed].reverse().forEach(r=>{ html+=card(r, false, true); });
+    }
+
+    // All Star
+    if (allStars.length) {
+      allStars.forEach(as=>{
+        const isPast=as.date&&as.date<today;
+        html+=`<div class="allstar-card" style="${isPast?'opacity:0.5':''}">
+          <div class="allstar-visual">⭐</div>
+          <div class="allstar-body">
+            <div class="allstar-label">Special Event</div>
+            <div class="allstar-name">All Star Race</div>
+            <div class="allstar-date">${fmtDate(as.date)}</div>
+            <div class="allstar-time">Starts 8:00pm BST</div>
+          </div>
+          <div class="allstar-right">
+            <div class="badge ${isPast?'badge-done':'badge-allstar'}">${isPast?'Completed':'Special Event'}</div>
+          </div>
+        </div>`;
+      });
+    }
+
+    document.getElementById('schedule').innerHTML=html;
+  } catch(e) {
+    document.getElementById('schedule').innerHTML=`<div class="loading-msg">Could not load schedule: ${e.message}</div>`;
+  }
+}
+
+function countryToImg(country) {
+  if (!country) return '';
+  const name = country.toLowerCase()
+    .replace('great britain', 'britain')
+    .replace('united arab emirates', 'abu_dhabi')
+    .replace('uae', 'abu_dhabi')
+    .replace('saudi arabia', 'saudi_arabia')
+    .replace('south korea', 'south_korea')
+    .replace('south africa', 'south_africa')
+    .replace('catalunya', 'spain')
+    .replace(' ', '_');
+  return `../images/largeflags/grunge_${name}.webp`;
+}
+
+function card(r, isNext, isCompleted) {
+  const td=r.track;
+  const bgImg = td && td.country ? countryToImg(td.country) : '';
+  const bgStyle = bgImg ? `style="background-image:url('${bgImg}')"` : '';
+  return `<div class="round-card ${isCompleted?'completed':''} ${isNext?'is-next':''}">
+    <div class="round-visual">
+      <div class="round-num">${r.round}</div>
+    </div>
+    <div class="round-body" ${bgStyle}>
+      <div class="round-info">
+        <div class="round-name">${r.circuit}</div>
+        ${td?`<div class="round-circuit-name">${td.name}</div>`:''}
+        <div class="round-date">${fmtDate(r.date)}</div>
+      </div>
+      <div class="round-badges">
+        ${r.isSprint?`<div class="badge badge-sprint">Sprint</div>`:''}
+        ${isCompleted?`<div class="badge badge-done">Completed</div>`:''}
+        ${isNext?`<div class="badge badge-next"><div class="pulse"></div>Next</div>`:''}
+      </div>
+    </div>
+  </div>`;
+}
+
+function parseCSV(text) {
+  const rows=[]; let cells=[],current='',inQ=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i],n=text[i+1];
+    if(c==='"'){if(!inQ)inQ=true;else if(n==='"'){current+='"';i++;}else inQ=false;}
+    else if(c===','&&!inQ){cells.push(current);current='';}
+    else if((c==='\n'||(c==='\r'&&n==='\n'))&&!inQ){if(c==='\r')i++;cells.push(current);current='';if(cells.some(x=>x.trim()))rows.push(cells);cells=[];}
+    else current+=c;
+  }
+  cells.push(current);if(cells.some(x=>x.trim()))rows.push(cells);
+  return rows;
+}
+
+function toggleMenu(){
+  document.getElementById('mobile-menu').classList.toggle('open');
+  document.getElementById('hamburger').classList.toggle('open');
+}
+
+loadSchedule();
+</script>
+</body>
+</html>
+

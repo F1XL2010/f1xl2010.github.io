@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="description" content="F1XL TEST teams view. Not live championship data.">
+<meta name="robots" content="noindex,nofollow,noarchive,nosnippet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teams | F1XL TEST</title>
+  <link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="/favicon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--green:#3DCC47;--teal:#5ECFCF;--red:#E10600;--black:#111816;--dark:#161d1b;--dark2:#1a2320;--dark3:#1e2a27;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);--text:#ffffff;--text-muted:rgba(255,255,255,0.60);--text-faint:rgba(255,255,255,0.30);--gold:#E8B84B;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:#111816;background-image:url('../images/backgrounds/background_teams.webp');background-size:cover;background-position:center;background-attachment:fixed;color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;}
+  body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(17,24,22,0.72);z-index:0;pointer-events:none;}
+  body>*{position:relative;z-index:1;}
+    nav{background:rgba(17,24,22,0.97);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;backdrop-filter:blur(8px);}
+  .nav-left{display:flex;align-items:center;flex-shrink:0;}
+  .nav-logo{display:flex;align-items:center;height:40px;text-decoration:none;}
+  .nav-logo img{height:34px;width:auto;display:block;}
+  .nav-links{display:flex;align-items:stretch;height:56px;}
+  .nav-item{position:relative;display:flex;align-items:stretch;}
+  .nav-item>a,.nav-item>button{color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:500;letter-spacing:0.5px;padding:0 13px;display:flex;align-items:center;gap:4px;border-bottom:2px solid transparent;border-top:none;border-left:none;border-right:none;background:none;cursor:pointer;font-family:'Barlow',sans-serif;text-transform:uppercase;transition:color 0.2s;white-space:nowrap;}
+  .nav-item>a:hover,.nav-item>button:hover{color:var(--text);}
+  .nav-item>a.active,.nav-item>button.active{color:var(--text);border-bottom-color:var(--green);}
+  .nav-chevron{font-size:8px;opacity:0.5;transition:transform 0.2s;}
+  .nav-item:hover .nav-chevron{transform:rotate(180deg);}
+  .nav-dropdown{display:none;position:absolute;top:100%;left:0;background:#141a18;border:1px solid var(--border2);border-top:2px solid var(--green);border-radius:0 0 6px 6px;min-width:180px;padding:6px 0;z-index:300;}
+  .nav-item:hover .nav-dropdown{display:block;}
+  .nav-dropdown a{display:block;padding:9px 16px;color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;transition:color 0.15s,background 0.15s;white-space:nowrap;}
+  .nav-dropdown a:hover{color:var(--text);background:rgba(255,255,255,0.05);}
+  .nav-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:8px;background:none;border:none;}
+  .nav-hamburger span{display:block;width:22px;height:2px;background:var(--text-muted);border-radius:2px;transition:all 0.25s;}
+  .nav-hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+  .nav-hamburger.open span:nth-child(2){opacity:0;}
+  .nav-hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+  .mobile-menu{display:none;position:fixed;top:56px;left:0;right:0;background:#141a18;border-bottom:1px solid var(--border2);z-index:199;padding:12px 0;max-height:calc(100vh - 56px);overflow-y:auto;}
+  .mobile-menu.open{display:block;}
+  .mob-section{font-size:10px;letter-spacing:2px;color:var(--text-faint);padding:12px 24px 4px;text-transform:uppercase;}
+  .mobile-menu a{display:block;padding:10px 24px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;}
+  .mobile-menu a:hover{color:var(--text);}
+  @media(max-width:900px){.nav-links{display:none;}.nav-hamburger{display:flex;}}
+  .page-header{background:#161d1b;border-bottom:1px solid var(--border);padding:24px;}
+  .page-eyebrow{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:2.5px;color:var(--teal);text-transform:uppercase;font-weight:600;margin-bottom:4px;}
+  .page-title{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:700;text-transform:uppercase;line-height:1;}
+  .page-meta{font-size:13px;color:var(--text-muted);margin-top:6px;}
+  .season-bar{background:#1a2320;border-bottom:1px solid var(--border);padding:12px 24px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+  .s-btn{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:5px 14px;border-radius:4px;border:1px solid rgba(255,255,255,0.25);background:none;color:rgba(255,255,255,0.85);cursor:pointer;transition:all 0.15s;}
+  .s-btn:hover{color:#fff;border-color:rgba(255,255,255,0.5);background:rgba(255,255,255,0.05);}
+  .s-btn.active{background:rgba(61,204,71,0.15);border-color:var(--green);color:var(--green);}
+  .section-label{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--teal);padding:20px 24px 10px;}
+  .section-divider{height:1px;background:var(--border);margin:4px 24px 0;}
+  .teams-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;padding:0 24px 20px;}
+  .team-card{background:#1a2320;border:1px solid var(--border);border-radius:8px;overflow:hidden;transition:border-color 0.2s;}
+  .team-card:hover{border-color:rgba(255,255,255,0.15);}
+  .team-card.is-champion{border-color:rgba(232,184,75,0.35);}
+  .team-card.is-overall-champion{border-color:#E8B84B;border-width:2px;box-shadow:0 0 12px rgba(232,184,75,0.25);}
+  .tc-header{border-bottom:1px solid var(--border);position:relative;z-index:1;}
+  .tc-header-img{width:100%;height:100%;position:absolute;top:0;left:0;object-fit:cover;object-position:center;z-index:0;}
+  .tc-header-content{position:relative;z-index:1;padding:12px 14px;display:flex;align-items:center;gap:10px;}
+  .team-card{position:relative;overflow:hidden;}
+  .team-card .tc-header-img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;z-index:0;opacity:0.18;}
+  .team-card .tc-header{background:none;border-bottom:1px solid var(--border);}
+  .team-card .tc-header-content{background:none;}
+  .team-card .tc-body{position:relative;z-index:1;}
+  .tc-bar{width:4px;height:38px;border-radius:2px;flex-shrink:0;}
+  .tc-name{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text);}
+  .tc-owner-row{display:flex;align-items:center;gap:5px;margin-top:2px;}
+  .tc-owner-lbl{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;}
+  .tc-owner{font-size:12px;font-weight:500;color:var(--text-muted);}
+  .tc-crown{font-size:13px;line-height:1;}
+  .tc-body{padding:10px 14px;}
+  .tc-div{margin-bottom:8px;}
+  .tc-div:last-child{margin-bottom:0;}
+  .tc-div-row{display:flex;align-items:center;gap:5px;margin-bottom:3px;}
+  .tc-div-lbl{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-faint);}
+  .tc-drivers{font-size:12px;color:var(--text-muted);line-height:1.5;}
+  .reserves-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;padding:0 24px 16px;}
+  .reserve-card{background:#161d1b;border:1px solid var(--border);border-radius:6px;padding:10px 14px;}
+  .rc-name{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;text-transform:uppercase;margin-bottom:6px;}
+  .rc-entry{margin-bottom:4px;}
+  .rc-div{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:1px;}
+  .rc-driver{font-size:12px;color:var(--text-muted);}
+  .retired-list{padding:0 24px 32px;display:flex;flex-wrap:wrap;gap:6px;}
+  .retired-pill{background:#161d1b;border:1px solid var(--border);border-radius:4px;padding:4px 10px;font-size:12px;color:var(--text-faint);}
+  .loading-msg{text-align:center;padding:48px;color:var(--text-muted);font-size:13px;}
+  footer{background:#161d1b;border-top:1px solid var(--border);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:20px;}
+  .footer-logo{background:var(--green);color:#000;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;padding:4px 9px;border-radius:3px;}
+  .footer-text{font-size:12px;color:var(--text-faint);}
+</style>
+<meta name="theme-color" content="#111816">
+</head>
+<body>
+<nav>
+  <div class="nav-left">
+    <a href="index.html" class="nav-logo">
+      <img src="../TRANSPARENT.png" alt="F1XL - UK Casual F1 League Racing on Xbox, PlayStation and PC">
+    </a>
+  </div>
+  <div class="nav-links">
+    <div class="nav-item"><a href="index.html">Home</a></div>
+    <div class="nav-item">
+      <button>Standings <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown">
+        <a href="standings.html">Current Season</a>
+        <a href="results.html">Results</a>
+        <a href="old-seasons.html">Past Seasons</a>
+        <a href="../asr.html">All Star Race</a>
+      </div>
+    </div>
+    <div class="nav-item"><a href="teams.html" class="active">Teams</a></div>
+    <div class="nav-item">
+      <button>Race Tickets <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown">
+        <a href="../submit-ticket.html">Submit Ticket</a>
+        <a href="ticket-outcomes.html">Ticket Outcomes</a>
+        <a href="drivers-licence.html">Drivers Licence</a>
+      </div>
+    </div>
+    <div class="nav-item"><a href="schedule.html">Schedule</a></div>
+    <div class="nav-item">
+      <button>History <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown">
+        <a href="../hall-of-fame.html">Hall of Fame</a>
+        <a href="../hall-of-records.html">Hall of Records</a>
+        <a href="../track-records.html">Track Records</a>
+      </div>
+    </div>
+    <div class="nav-item"><a href="../applications.html">Applications</a></div>
+    <div class="nav-item"><a href="../league-rules.html">League Rules</a></div>
+    <div class="nav-item"><a href="../merch.html">Merch</a></div>
+    <div class="nav-item"><a href="../music.html">Music</a></div>
+  </div>
+  <button class="nav-hamburger" id="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></button>
+</nav>
+<div style="background:#5a3e00;color:#fff3bf;border-bottom:1px solid #e8b84b;padding:9px 20px;text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;">F1XL TEST WEBSITE · REBUILT DATA · NOT THE LIVE CHAMPIONSHIP</div>
+<div class="mobile-menu" id="mobile-menu">
+  <a href="index.html">Home</a>
+  <div class="mob-section">Standings</div>
+  <a href="standings.html">Current Season</a>
+  <a href="results.html">Results</a>
+  <a href="old-seasons.html">Past Seasons</a>
+  <a href="../asr.html">All Star Race</a>
+  <a href="teams.html">Teams</a>
+  <div class="mob-section">Race Tickets</div>
+  <a href="../submit-ticket.html">Submit Ticket</a>
+  <a href="ticket-outcomes.html">Ticket Outcomes</a>
+  <a href="drivers-licence.html">Drivers Licence</a>
+  <a href="schedule.html">Schedule</a>
+  <div class="mob-section">History</div>
+  <a href="../hall-of-fame.html">Hall of Fame</a>
+  <a href="../hall-of-records.html">Hall of Records</a>
+  <a href="../track-records.html">Track Records</a>
+  <a href="../applications.html">Applications</a>
+  <a href="../league-rules.html">League Rules</a>
+  <a href="../merch.html">Merch</a>
+  <a href="../music.html">Music</a>
+</div>
+<div class="page-header">
+  <div class="page-eyebrow">F1XL &middot; Est. 2010</div>
+  <div class="page-title">Teams</div>
+  <div class="page-meta" id="page-meta">Loading...</div>
+</div>
+<div class="season-bar" id="season-bar"><div class="loading-msg" style="padding:4px 0;">Loading seasons...</div></div>
+<div style="padding:8px 24px;display:flex;gap:16px;flex-wrap:wrap;align-items:center;background:#161d1b;border-bottom:1px solid var(--border);">
+  <span style="font-size:11px;color:rgba(255,255,255,0.4);font-family:'Barlow Condensed',sans-serif;letter-spacing:0.5px;text-transform:uppercase;margin-right:4px;">Key:</span>
+  <span style="font-size:12px;color:rgba(255,255,255,0.65);">👑 Overall Champion (Team Principal)</span>
+  <span style="font-size:12px;color:rgba(255,255,255,0.65);">🏆 Division Driver Champion</span>
+  <span style="font-size:12px;color:rgba(255,255,255,0.65);">🪙 Division Constructor Champion</span>
+</div>
+<div id="teams-content"><div class="loading-msg">Loading...</div></div>
+<footer>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="footer-logo">F1XL</div>
+    <div class="footer-text">F1 League · F1 Sim Racing on Xbox, PlayStation and PC. Casual Racing on F1 26</div>
+  </div>
+  <div class="footer-text">f1xl.co.uk</div>
+</footer>
+<script src="config.js"></script>
+<script>
+const CROWN = '👑';   // Team Principal champion
+const TROPHY = '🏆';  // Driver champion
+const COIN = '🪙';    // Constructor champion
+const ALL_BADGES = [CROWN, TROPHY, COIN];
+const teamColors={'alpine':'#0090FF','aston martin':'#006F62','ferrari':'#DC0000','haas':'#B6BABD','mclaren':'#FF8700','mercedes':'#00D2BE','rb':'#1434CB','red bull':'#0600EF','sauber':'#900000','williams':'#005AFF','alpha tauri':'#1434CB','alfa romeo':'#900000','alfa romero':'#900000','force india':'#FF80C7','toro rosso':'#1434CB','renault':'#FFD700','lotus':'#FFB800','manor':'#FF0000'};
+function getColor(n){return teamColors[(n||'').toLowerCase()]||'#555';}
+function clean(s){
+  let r = s||'';
+  ALL_BADGES.forEach(b=>{ r=r.split(b).join(''); });
+  return r.trim();
+}
+function hasBadge(s, badge){ return (s||'').includes(badge); }
+function hasCrown(s){ return hasBadge(s, CROWN); }
+function hasTrophy(s){ return hasBadge(s, TROPHY); }
+function hasCoin(s){ return hasBadge(s, COIN); }
+function hasCrown(s){return (s||'').includes(CROWN);}
+function toggleMenu(){
+  document.getElementById('hamburger').classList.toggle('open');
+  document.getElementById('mobile-menu').classList.toggle('open');
+}
+function parseCSV(text){return text.split(/\r?\n/).map(line=>{const cells=[];let cur='',inQ=false;for(let i=0;i<line.length;i++){const c=line[i];if(c=='"'){inQ=!inQ;}else if(c==','&&!inQ){cells.push(cur.trim());cur='';}else cur+=c;}cells.push(cur.trim());return cells;});}
+function parseSheet(rows){
+  const seasons={};let sKey=null,resCol=-1,retCol=-1;
+  for(let i=0;i<rows.length;i++){
+    const row=rows[i];const f=(row[0]||'').trim();
+    if(f&&/^\d+\.?\d*$/.test(f)&&row.slice(1).some(v=>v.trim())){
+      sKey=f;seasons[sKey]={teams:[],resteams:[],resdrivers:[],retired:[]};const sd=seasons[sKey];
+      resCol=-1;retCol=-1;
+      row.forEach((v,ci)=>{if((v||'').trim().toUpperCase()==='RESERVES'&&resCol===-1)resCol=ci;});
+      const endCol=resCol>0?resCol:row.length;
+      for(let c=1;c<endCol;c+=3){const n=(row[c]||'').trim();if(n)sd.teams.push({name:n,color:getColor(n),owner:'',ownerChampion:false,divisions:[],col:c});}
+      continue;
+    }
+    if(!sKey||!seasons[sKey])continue;const sd=seasons[sKey];
+    if((row[1]||'').trim().toUpperCase()==='TEAM OWNER:'){
+      sd.teams.forEach(t=>{const r=(row[t.col+1]||'').trim();t.owner=clean(r);t.ownerChampion=hasCrown(r);});
+      retCol=-1;
+      row.forEach((v,ci)=>{if((v||'').trim().toLowerCase()==='retired'&&ci>30)retCol=ci;});
+      if(resCol>0){
+        const resEnd=retCol>0?retCol:row.length;
+        for(let c=resCol+1;c<resEnd;c++){
+          const n=(row[c]||'').trim();const u=n.toUpperCase();
+          if(n&&u!=='RESERVES'&&!u.startsWith('TEAM')&&!u.startsWith('TEAMS'))sd.resteams.push(n);
+        }
+      }
+      continue;
+    }
+    let isDivRow=false;
+    sd.teams.forEach(t=>{
+      const lbl=(row[t.col]||'').trim();const dm=lbl.match(/^DIVISION\s+(\d+)/i);
+      if(dm){isDivRow=true;const dn=parseInt(dm[1]);const dc=hasCoin(lbl);const d1r=(row[t.col+1]||'').trim();const d1=clean(d1r);const d1c=hasTrophy(d1r);t.divisions.push({div:dn,constructorChampion:dc,drivers:d1?[{name:d1,champion:d1c}]:[]});}
+    });
+    if(resCol>0){
+      const resLbl=(row[resCol]||'').trim();const resDm=resLbl.match(/^DIVISION\s+(\d+)/i);
+      if(resDm){
+        isDivRow=true;
+        const resEnd=retCol>0?retCol:row.length;
+        for(let c=resCol+1;c<resEnd;c++){
+          const v=clean((row[c]||'').trim());
+          if(v)sd.resdrivers.push(v);
+        }
+      }
+    }
+    if(retCol>0){
+      const retLbl=(row[retCol]||'').trim().toLowerCase();
+      if(retLbl!=='retired'){
+        for(let c=retCol+1;c<row.length;c++){
+          const v=clean((row[c]||'').trim());
+          if(v&&v.toLowerCase()!=='retired')sd.retired.push(v);
+        }
+      }
+    }
+    if(!isDivRow&&!(row[0]||'').trim()&&!(row[1]||'').trim()){
+      sd.teams.forEach(t=>{const r=(row[t.col+1]||'').trim();const d2=clean(r);if(d2&&t.divisions.length>0){const last=t.divisions[t.divisions.length-1];if(last.drivers.length<2)last.drivers.push({name:d2,champion:hasTrophy(r)});}});
+      if(resCol>0&&!(row[resCol]||'').trim()){
+        const resEnd=retCol>0?retCol:row.length;
+        for(let c=resCol+1;c<resEnd;c++){const v=clean((row[c]||'').trim());if(v)sd.resdrivers.push(v);}
+      }
+    }
+  }
+  return seasons;
+}
+
+
+function renderCard(t){
+  const isOverallChamp = t.ownerChampion;
+  const isAnyChamp = t.ownerChampion||t.divisions.some(d=>d.constructorChampion||d.drivers.some(dr=>dr.champion));
+  let divs='';
+  t.divisions.forEach(d=>{
+    const drvs=d.drivers.map(dr=>dr.name+(dr.champion?' '+TROPHY:'')).join(' &middot; ');
+    divs+='<div class="tc-div"><div class="tc-div-row"><span class="tc-div-lbl">Division '+d.div+'</span>'+(d.constructorChampion?'<span class="tc-crown">'+COIN+'</span>':'')+'</div><div class="tc-drivers">'+(drvs||'&mdash;')+'</div></div>';
+  });
+  const imgSlug = '../images/teamlogos/squarelogo_' + t.name.toLowerCase().replace(/\s+/g,'').replace(/[^a-z0-9]/g,'') + '.webp';
+  const imgTag = '<img class="tc-header-img" src="'+imgSlug+'" alt="" onerror="this.style.display=\'none\'">';
+  return '<div class="team-card'+(isOverallChamp?' is-overall-champion':(isAnyChamp?' is-champion':''))+'">'+imgTag+'<div class="tc-header"><div class="tc-header-content"><div class="tc-bar" style="background:'+t.color+'"></div><div><div class="tc-name">'+t.name+'</div><div class="tc-owner-row"><span class="tc-owner-lbl">Owner</span><span class="tc-owner">'+(t.owner||'&mdash;')+'</span>'+(t.ownerChampion?'<span class="tc-crown">'+CROWN+'</span>':'')+'</div></div></div></div><div class="tc-body">'+(divs||'<div style="font-size:12px;color:var(--text-faint)">No division data</div>')+'</div></div>';
+}
+function renderSeason(data,num){
+  let html='';
+  const teams=data.teams.filter(t=>t.name);
+  if(teams.length){html+='<div class="section-label">Season '+num+' &middot; Teams</div><div class="teams-grid">';teams.forEach(t=>{html+=renderCard(t);});html+='</div>';}
+  const resteams=(data.resteams||[]).filter(r=>r);
+  const resdrivers=(data.resdrivers||[]).filter(r=>r);
+  if(resteams.length||resdrivers.length){
+    html+='<div class="section-divider"></div><div class="section-label">Reserves</div>';
+    if(resteams.length){
+      html+='<div style="padding:0 24px 8px;display:flex;gap:8px;flex-wrap:wrap;">';
+      resteams.forEach(t=>{html+='<div style="background:#161d1b;border:1px solid var(--border);border-left:3px solid '+getColor(t)+';border-radius:4px;padding:5px 12px;font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);">'+t+'</div>';});
+      html+='</div>';
+    }
+    if(resdrivers.length){
+      html+='<div style="padding:0 24px 20px;display:flex;flex-wrap:wrap;gap:6px;">';
+      resdrivers.forEach(d=>{html+='<div class="retired-pill" style="color:var(--text-muted);">'+d+'</div>';});
+      html+='</div>';
+    }
+  }
+  const ret=(data.retired||[]).filter(r=>r);
+  if(ret.length){
+    html+='<div class="section-divider"></div><div class="section-label">Retired</div><div class="retired-list">';
+    ret.forEach(r=>{html+='<div class="retired-pill">'+r+'</div>';});
+    html+='</div>';
+  }
+  return html;
+}
+
+
+let allData={};
+// ── S28+ DATA TAB PARSER ─────────────────────────────────────────────────────
+function parseS28DataTab(rows, divNum) {
+  const teams = {};       // constructor teams
+  const reserveTeams = {}; // teams flagged as reserve
+  const freeAgents = [];
+  const retired = [];
+  const SKIP = ['driver','reserve','retired','platform','controller type','tier','team','#','team principal','name',''];
+
+  // The familiar Data adapter is the reliable source across rebuilt seasons:
+  // J=driver, M=team and N=tier. Build the teams from those rows first. This
+  // does not depend on the optional Team Principal heading, which older
+  // generated workbooks do not contain.
+  for (let i = 1; i < rows.length; i++) {
+    const driver = (rows[i][9]  || '').trim();
+    const team   = (rows[i][12] || '').trim();
+    const tier   = (rows[i][13] || '').trim();
+    if (!driver || SKIP.includes(driver.toLowerCase())) continue;
+    if (!team || SKIP.includes(team.toLowerCase())) continue;
+    if (!/^tier\s*[12]$/i.test(tier)) continue;
+    const key = team.toLowerCase();
+    const isReserve = key === 'reserve' || key.includes('reserve team');
+    const collection = isReserve ? reserveTeams : teams;
+    if (!collection[key]) collection[key] = { name: team, tp: '', tier1: '', tier2: '', div: divNum };
+    const target = collection[key];
+    if (tier.toLowerCase().includes('1')) target.tier1 = driver;
+    else if (tier.toLowerCase().includes('2')) target.tier2 = driver;
+  }
+
+  // Team Principal assignments use J=name and K=team beneath the driver
+  // block. Match K only against teams already proved by the roster above so
+  // unrelated reference tables in the same wide adapter cannot leak in.
+  for (let i = 1; i < rows.length; i++) {
+    const tp = (rows[i][9] || '').trim();
+    const team = (rows[i][10] || '').trim();
+    const key = team.toLowerCase();
+    const target = teams[key] || reserveTeams[key];
+    if (!target) continue;
+    if (tp && !SKIP.includes(tp.toLowerCase())) target.tp = tp;
+  }
+
+  // Step 3 — free agents from col P (index 15)
+  for (let i = 2; i < rows.length; i++) {
+    const v = (rows[i][15] || '').trim();
+    if (v && !SKIP.includes(v.toLowerCase())) freeAgents.push(v);
+  }
+
+  // Step 4 — retired from col T (index 19)
+  for (let i = 2; i < rows.length; i++) {
+    const v = (rows[i][19] || '').trim();
+    if (v && !SKIP.includes(v.toLowerCase())) retired.push(v);
+  }
+
+  return {
+    teams:         Object.values(teams),
+    reserveTeams:  Object.values(reserveTeams),
+    freeAgents:    freeAgents.filter(Boolean),
+    retired:       retired.filter(Boolean)
+  };
+}
+
+function renderS28Card(t) {
+  const color = getColor(t.name);
+  const imgSlug28 = '../images/teamlogos/squarelogo_' + t.name.toLowerCase().replace(/\s+/g,'').replace(/[^a-z0-9]/g,'') + '.webp';
+  return `<div class="team-card"><img class="tc-header-img" src="${imgSlug28}" alt="" onerror="this.style.display='none'">
+    <div class="tc-header">
+      <div class="tc-header-content">
+      <div class="tc-bar" style="background:${color}"></div>
+      <div>
+        <div class="tc-name">${t.name}</div>
+        <div class="tc-owner-row">
+          <span class="tc-owner-lbl">Team Principal</span>
+          <span class="tc-owner">${t.tp || '&mdash;'}</span>
+        </div>
+      </div>
+      </div>
+    </div>
+    <div class="tc-body">
+      <div class="tc-div">
+        <div class="tc-div-row"><span class="tc-div-lbl">Division ${t.div}</span></div>
+        <div class="tc-drivers">
+          <span style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">T1</span>
+          ${t.tier1 || '&mdash;'}<br>
+          <span style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">T2</span>
+          ${t.tier2 || '&mdash;'}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderS28Season(divDataArr, seasonNum) {
+  // Merge constructor teams across divisions
+  const teamMap = {};
+  divDataArr.forEach(divData => {
+    divData.teams.forEach(t => {
+      const key = t.name.toLowerCase();
+      if (!teamMap[key]) teamMap[key] = { ...t, divs: [] };
+      teamMap[key].divs.push({ div: t.div, tier1: t.tier1, tier2: t.tier2 });
+      if (t.tp && !teamMap[key].tp) teamMap[key].tp = t.tp;
+    });
+  });
+
+  const allTeams        = Object.values(teamMap).sort((a, b) => a.name.localeCompare(b.name));
+
+  // Merge reserve teams across divisions (same approach as constructor teams
+  // above) — dedup by name was previously dropping every division's reserve
+  // team except the first one encountered, since they share generic names
+  // like "Reserve" across every division.
+  const reserveTeamMap = {};
+  divDataArr.forEach(divData => {
+    (divData.reserveTeams || []).forEach(t => {
+      const key = t.name.toLowerCase();
+      if (!reserveTeamMap[key]) reserveTeamMap[key] = { ...t, divs: [] };
+      reserveTeamMap[key].divs.push({ div: t.div, tier1: t.tier1, tier2: t.tier2 });
+    });
+  });
+  const allReserveTeams = Object.values(reserveTeamMap);
+
+  const allFreeAgents   = [...new Set(divDataArr.flatMap(d => d.freeAgents))].filter(Boolean);
+  const allRetired      = [...new Set(divDataArr.flatMap(d => d.retired))].filter(Boolean);
+
+  const cardTemplate = (t, divsHtml) => {
+    const color = getColor(t.name);
+    const img = '../images/teamlogos/squarelogo_' + t.name.toLowerCase().replace(/\s+/g,'').replace(/[^a-z0-9]/g,'') + '.webp';
+    return `<div class="team-card">
+      <img class="tc-header-img" src="${img}" alt="" onerror="this.style.display='none'">
+      <div class="tc-header">
+        <div class="tc-header-content">
+          <div class="tc-bar" style="background:${color}"></div>
+          <div>
+            <div class="tc-name">${t.name}</div>
+            <div class="tc-owner-row"><span class="tc-owner-lbl">Team Principal</span><span class="tc-owner">${t.tp || '&mdash;'}</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="tc-body">${divsHtml}</div>
+    </div>`;
+  };
+
+  // ── Constructor teams ──
+  let html = `<div class="section-label">Season ${seasonNum} &middot; Teams</div><div class="teams-grid">`;
+  allTeams.forEach(t => {
+    let divsHtml = '';
+    t.divs.forEach(d => {
+      divsHtml += `<div class="tc-div">
+        <div class="tc-div-row"><span class="tc-div-lbl">Division ${d.div}</span></div>
+        <div class="tc-drivers">
+          <span style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">T1</span> ${d.tier1 || '&mdash;'}<br>
+          <span style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">T2</span> ${d.tier2 || '&mdash;'}
+        </div>
+      </div>`;
+    });
+    html += cardTemplate(t, divsHtml);
+  });
+  html += '</div>';
+
+  // ── Reserve Teams ──
+  if (allReserveTeams.length) {
+    html += `<div class="section-divider"></div>
+    <div class="section-label">Reserve Drivers</div>
+    <div class="section-sublabel" style="padding:0 24px 12px;font-size:12px;color:var(--text-faint);">Guaranteed race seat — no constructor assigned</div>
+    <div class="teams-grid">`;
+    allReserveTeams.forEach(t => {
+      let divsHtml = '';
+      t.divs.forEach(d => {
+        divsHtml += `<div class="tc-div">
+          <div class="tc-div-row"><span class="tc-div-lbl">Division ${d.div}</span></div>
+          <div class="tc-drivers">
+            <span style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">T1</span> ${d.tier1 || '&mdash;'}<br>
+            <span style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">T2</span> ${d.tier2 || '&mdash;'}
+          </div>
+        </div>`;
+      });
+      html += cardTemplate(t, divsHtml);
+    });
+    html += '</div>';
+  }
+
+  // ── Free Agents ──
+  if (allFreeAgents.length) {
+    html += `<div class="section-divider"></div>
+    <div class="section-label">Free Agents</div>
+    <div class="section-sublabel" style="padding:0 24px 12px;font-size:12px;color:var(--text-faint);">Part-time &amp; overflow drivers &mdash; not guaranteed a seat each week</div>
+    <div class="retired-list">`;
+    allFreeAgents.forEach(d => { html += `<div class="retired-pill">${d}</div>`; });
+    html += '</div>';
+  }
+
+  // ── Retired ──
+  if (allRetired.length) {
+    html += `<div class="section-divider"></div>
+    <div class="section-label">Retired</div>
+    <div class="retired-list">`;
+    allRetired.forEach(d => { html += `<div class="retired-pill">${d}</div>`; });
+    html += '</div>';
+  }
+  return html;
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+let s28Cache = null;
+
+async function init(){
+  try{
+    // The TEST site must enumerate and read the rebuilt season configs only.
+    // Pulling the live legacy teams master here would create a false match.
+    const configuredSeasons = await getAllSeasons();
+    const allNums = configuredSeasons.map(item=>String(item.season)).sort((a,b)=>parseFloat(b)-parseFloat(a));
+
+    if(!allNums.length){document.getElementById('teams-content').innerHTML='<div class="loading-msg">No data found.</div>';return;}
+    document.getElementById('season-bar').innerHTML=allNums.map(s=>`<button class="s-btn" onclick="showSeason('${s}')" id="sbtn-${s.replace('.','_')}">S${s}</button>`).join('');
+    showSeason(allNums[0]);
+    document.getElementById('page-meta').textContent=allNums.length+' seasons';
+  }catch(e){
+    document.getElementById('teams-content').innerHTML='<div class="loading-msg">Could not load: '+e.message+'</div>';
+    console.error(e);
+  }
+}
+
+async function showSeason(s){
+  document.querySelectorAll('.s-btn').forEach(b=>b.classList.remove('active'));
+  const btn=document.getElementById('sbtn-'+s.replace('.','_'));
+  if(btn)btn.classList.add('active');
+
+  // Check if this is a new-format season (has team_info gids in season config)
+  const sc = await loadSeasonConfig(parseFloat(s));
+  const hasNewFormat = sc && (sc['d1_team_info_gid'] || sc['d2_team_info_gid']);
+
+  if (hasNewFormat) {
+    document.getElementById('teams-content').innerHTML='<div class="loading-msg">Loading...</div>';
+    try {
+      // Fetch all divisions' team info tabs in parallel
+      const numDivs = parseInt(sc['divisions']) || 1;
+      const fetches = [];
+      for (let d = 1; d <= numDivs; d++) {
+        const gid = sc[`d${d}_team_info_gid`];
+        const sid = sc[`d${d}_sheet_id`];
+        if (gid && sid) {
+          fetches.push(
+            fetch(`https://docs.google.com/spreadsheets/d/${sid}/export?format=csv&gid=${gid}`)
+              .then(r => r.text())
+              .then(text => ({ div: d, rows: parseCSV(text) }))
+              .catch(() => null)
+          );
+        }
+      }
+      const results = (await Promise.all(fetches)).filter(Boolean);
+      const divDataArr = results.map(r => parseS28DataTab(r.rows, r.div));
+      document.getElementById('teams-content').innerHTML = renderS28Season(divDataArr, s);
+    } catch(e) {
+      document.getElementById('teams-content').innerHTML=`<div class="loading-msg">Could not load: ${e.message}</div>`;
+    }
+    return;
+  }
+
+  document.getElementById('teams-content').innerHTML='<div class="loading-msg">No TEST team information is configured for this season.</div>';
+}
+init();
+</script>
+</body>
+</html>
+

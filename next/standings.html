@@ -5,7 +5,7 @@
 <meta name="description" content="F1XL next-generation website test environment. Not live championship data.">
 <meta name="robots" content="noindex,nofollow,noarchive,nosnippet">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1XL NEXT TEST · Season 1000 Standings</title>
+<title>F1XL NEXT TEST · Season 27 Standings</title>
   <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -212,29 +212,43 @@
   </div>
   <div class="nav-links">
     <div class="nav-item"><a href="index.html">Home</a></div>
-    <div class="nav-item"><a class="active" href="standings.html">Standings</a></div>
-    <div class="nav-item"><a href="results.html">Results</a></div>
-    <div class="nav-item"><a href="old-seasons.html">Past Seasons</a></div>
+    <div class="nav-item"><button class="active">Standings <span class="nav-chevron">▼</span></button><div class="nav-dropdown"><a href="standings.html">Current Season</a><a href="results.html">Results</a><a href="old-seasons.html">Past Seasons</a><a href="../asr.html">All Star Race</a></div></div>
     <div class="nav-item"><a href="teams.html">Teams</a></div>
+    <div class="nav-item"><button>Race Tickets <span class="nav-chevron">▼</span></button><div class="nav-dropdown"><a href="../submit-ticket.html">Submit Ticket</a><a href="ticket-outcomes.html">Ticket Outcomes</a><a href="drivers-licence.html">Drivers Licence</a></div></div>
     <div class="nav-item"><a href="schedule.html">Schedule</a></div>
-    <div class="nav-item"><a href="drivers-licence.html">Licence</a></div>
-    <div class="nav-item"><a href="ticket-outcomes.html">Tickets</a></div>
+    <div class="nav-item"><button>History <span class="nav-chevron">▼</span></button><div class="nav-dropdown"><a href="../hall-of-fame.html">Hall of Fame</a><a href="../hall-of-records.html">Hall of Records</a><a href="../track-records.html">Track Records</a></div></div>
+    <div class="nav-item"><a href="../applications.html">Applications</a></div>
+    <div class="nav-item"><a href="../league-rules.html">League Rules</a></div>
+    <div class="nav-item"><a href="../merch.html">Merch</a></div>
+    <div class="nav-item"><a href="../music.html">Music</a></div>
   </div>
   <button class="nav-hamburger" id="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></button>
 </nav>
 <div class="mobile-menu" id="mobile-menu">
   <a href="index.html">Home</a>
-  <a href="standings.html">Standings</a>
+  <div class="mob-section">Standings</div>
+  <a href="standings.html">Current Season</a>
   <a href="results.html">Results</a>
   <a href="old-seasons.html">Past Seasons</a>
+  <a href="../asr.html">All Star Race</a>
   <a href="teams.html">Teams</a>
+  <div class="mob-section">Race Tickets</div>
+  <a href="../submit-ticket.html">Submit Ticket</a>
+  <a href="ticket-outcomes.html">Ticket Outcomes</a>
+  <a href="drivers-licence.html">Drivers Licence</a>
   <a href="schedule.html">Schedule</a>
-  <a href="drivers-licence.html">Licence</a>
-  <a href="ticket-outcomes.html">Tickets</a>
+  <div class="mob-section">History</div>
+  <a href="../hall-of-fame.html">Hall of Fame</a>
+  <a href="../hall-of-records.html">Hall of Records</a>
+  <a href="../track-records.html">Track Records</a>
+  <a href="../applications.html">Applications</a>
+  <a href="../league-rules.html">League Rules</a>
+  <a href="../merch.html">Merch</a>
+  <a href="../music.html">Music</a>
 </div>
 
 <div id="standings-test-banner" style="background:#5a3e00;color:#fff3bf;border-bottom:1px solid #e8b84b;padding:10px 24px;text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:.7px;">
-  F1XL NEXT TEST · SEASON 1000 · NOT THE LIVE CHAMPIONSHIP
+  F1XL NEXT TEST · SEASON 27 · NOT THE LIVE CHAMPIONSHIP
 </div>
 
 <div class="page-header">
@@ -560,17 +574,17 @@ function natToFlag(nat) {
   };
   const code = nat.trim().toUpperCase();
   const iso = THREE_TO_TWO[code] || code.toLowerCase().slice(0,2);
-  return `<img class="td-driver-flag" src="images/smallflags/${iso}.svg" alt="${nat}" onerror="this.style.display='none'" style="width:18px;height:12px;object-fit:cover;border-radius:1px;vertical-align:middle;margin-right:4px;">`;
+  return `<img class="td-driver-flag" src="../images/smallflags/${iso}.svg" alt="${nat}" onerror="this.style.display='none'" style="width:18px;height:12px;object-fit:cover;border-radius:1px;vertical-align:middle;margin-right:4px;">`;
 }
 
 const PLATFORM_ICONS = {
-  'Xbox':    'images/platform_xbox.png',
-  'PS':      'images/platform_PS.png',
-  'PC':      'images/platform_PC.png',
+  'Xbox':    '../images/platform_xbox.png',
+  'PS':      '../images/platform_PS.png',
+  'PC':      '../images/platform_PC.png',
 };
 const CONTROLLER_ICONS = {
-  'Wheel':    'images/controller_wheel.png',
-  'Gamepad':  'images/controller_gamepad.png',
+  'Wheel':    '../images/controller_wheel.png',
+  'Gamepad':  '../images/controller_gamepad.png',
 };
 
 function driverIcon(src, alt){
@@ -605,26 +619,39 @@ async function loadDriverInfo(sheetId, gid){
       };
     }
 
-    // Parse Team Principal section — col J(9)=TP name, col K(10)=team name
-    let tpStart = -1;
+    // Parse Team Principal section — col J(9)=TP name, col K(10)=team name.
+    // Older rebuilt adapters omit the heading, so constrain the lookup using
+    // the roster's proved team names rather than relying on a marker row.
+    const rosterTeams = new Set();
     for(let i=0;i<rows.length;i++){
-      if(cs(rows[i],9).toLowerCase()==='team principal'){ tpStart=i+2; break; }
+      const rosterTeam = cs(rows[i],12).trim().toLowerCase();
+      const tier = cs(rows[i],13).trim();
+      if(rosterTeam && /^tier\s*[12]$/i.test(tier)) rosterTeams.add(rosterTeam);
     }
-    if(tpStart>=0){
-      for(let i=tpStart;i<rows.length;i++){
-        const tp = cs(rows[i],9).trim();
-        const team = cs(rows[i],10).trim().toLowerCase();
-        if(!tp || !team) continue;
-        teamOwners[team] = tp;
-      }
+    for(let i=0;i<rows.length;i++){
+      const tp = cs(rows[i],9).trim();
+      const team = cs(rows[i],10).trim().toLowerCase();
+      if(!tp || !team || !rosterTeams.has(team)) continue;
+      teamOwners[team] = tp;
     }
   } catch(e){ console.warn('Driver info load failed:', e.message); }
 }
 
 async function loadDrivers() {
   try {
-    const table = await fetchSheet(currentDiv.sheetId, currentDiv.gids.drivers);
+    const [table, calendarTable] = await Promise.all([
+      fetchSheet(currentDiv.sheetId, currentDiv.gids.drivers),
+      currentDiv.gids.calendar ? fetchSheet(currentDiv.sheetId, currentDiv.gids.calendar).catch(()=>null) : Promise.resolve(null)
+    ]);
     const rows = table.rows;
+    const calendarNames = {};
+    if(calendarTable){
+      calendarTable.rows.forEach(row=>{
+        const round=parseInt(cs(row,0),10);
+        const circuit=cs(row,3).trim();
+        if(Number.isFinite(round)&&round>0&&circuit) calendarNames[round]=circuit;
+      });
+    }
 
     // Load driver info (nationality, platform, controller)
     _driverInfoMap = {};
@@ -662,11 +689,11 @@ async function loadDrivers() {
       if (ptsCol>=0) break;
       const sprint = h.toLowerCase().includes('(s)') || h.toLowerCase().includes('(r)');
       const sprintRace = h.toLowerCase().includes('(r)');
-      const circuitName = nameRow ? cs(nameRow,c) : '';
-      const short = circuitName || h.replace(/\(s\)/i,'').replace(/\(r\)/i,'').trim();
       // Only include race columns up to the number of rounds in this season
       const rMatch = h.match(/R(\d+)/i);
       const rNum = rMatch ? parseInt(rMatch[1]) : 999;
+      const circuitName = calendarNames[rNum] || (nameRow ? cs(nameRow,c) : '');
+      const short = circuitName || h.replace(/\(s\)/i,'').replace(/\(r\)/i,'').trim();
       if (rNum <= (currentDiv.numRounds || 21)) races.push({col:c, label:h, short:short.trim(), sprint:sprint, sprintRace:sprintRace});
     }
 
@@ -704,7 +731,7 @@ async function loadDrivers() {
         const roundNum = r.label.replace(/\(r\)/i,'').trim();
         const prevRace = idx > 0 ? races[idx-1] : null;
         const countryKey = prevRace ? (prevRace.short||prevRace.label).toLowerCase().replace(/[^a-z ]/g,'').replace(/ /g,'_').trim() : '';
-        const bgImg = countryKey ? `images/vertflags/vertical_${countryKey}.webp` : '';
+        const bgImg = countryKey ? `../images/vertflags/vertical_${countryKey}.webp` : '';
         const bgStyleAttr = bgImg ? `style="background-image:url('${bgImg}');background-size:cover;background-position:center;"` : '';
         hHtml += `<th class="st-race ${sc}"><div class="st-race-header" ${bgStyleAttr}>
           <span class="st-race-round">${roundNum}<span style="font-size:8px;">(R)</span></span>
@@ -714,7 +741,7 @@ async function loadDrivers() {
         const roundNum = r.label.replace(/\(s\)/i,'').trim();
         const sprintSuffix = r.sprint ? `<span style="font-size:8px;color:rgba(130,170,255,0.9);">(S)</span>` : '';
         const countryKey = (r.short||r.label).toLowerCase().replace(/[^a-z ]/g,'').replace(/ /g,'_').trim();
-        const bgImg = countryKey ? `images/vertflags/vertical_${countryKey}.webp` : '';
+        const bgImg = countryKey ? `../images/vertflags/vertical_${countryKey}.webp` : '';
         const bgStyleAttr = bgImg ? `style="background-image:url('${bgImg}');background-size:cover;background-position:center;"` : '';
         hHtml += `<th class="st-race ${sc}"><div class="st-race-header" ${bgStyleAttr}>
           <span class="st-race-round">${roundNum}${sprintSuffix}</span>
@@ -767,21 +794,35 @@ async function loadDrivers() {
       const row = rows[i];
       const driver = cs(row,2);
       if (!driver) continue;
+      const sourcePosRaw = parseInt(cs(row,0),10);
+      const sourcePos = Number.isFinite(sourcePosRaw)&&sourcePosRaw>0 ? sourcePosRaw : null;
       const pts = ptsCol>=0 ? parseFloat(cs(row,ptsCol)) || 0 : 0;
       const countback = countbackArray(row);
-      dataRows.push({row, pts, countback});
+      dataRows.push({row, sourcePos, pts, countback});
     }
-    dataRows.sort((a,b) => b.pts - a.pts || compareCountback(a.countback,b.countback));
+    dataRows.sort((a,b) => {
+      if(a.sourcePos!==null&&b.sourcePos!==null&&a.sourcePos!==b.sourcePos) return a.sourcePos-b.sourcePos;
+      if((a.sourcePos!==null)!==(b.sourcePos!==null)) return a.sourcePos!==null?-1:1;
+      return b.pts-a.pts || compareCountback(a.countback,b.countback);
+    });
     const leaderPts = dataRows.length ? dataRows[0].pts : 0;
 
     // Body
     let bHtml = '';
-    let rounds = 0;
-    let firstDriver = true;
+    const completedRounds = new Set();
+    races.forEach(race=>{
+      if(/\(s\)/i.test(race.label)) return;
+      const hasResult = dataRows.some(({row})=>{
+        const value = cs(row,race.col).trim().toUpperCase();
+        return /^\d+$/.test(value) || ['DNF','DNS','DSQ'].includes(value);
+      });
+      const match = race.label.match(/R(\d+)/i);
+      if(hasResult && match) completedRounds.add(parseInt(match[1],10));
+    });
 
     for (let ri=0; ri<dataRows.length; ri++) {
-      const {row} = dataRows[ri];
-      const pos = ri+1;
+      const {row,sourcePos} = dataRows[ri];
+      const pos = sourcePos || ri+1;
       const driver = cs(row,2);
 
       const nat = cs(row,1);
@@ -796,15 +837,6 @@ async function loadDrivers() {
       const flagHtml = natToFlag(dInfo.nat || nat);
       const platformHtml = driverIcon(PLATFORM_ICONS[dInfo.platform], dInfo.platform||'');
       const controllerHtml = driverIcon(CONTROLLER_ICONS[dInfo.controller], dInfo.controller||'');
-
-      if (firstDriver) {
-        races.forEach(r => {
-          const v = cs(row,r.col).trim();
-          // Count as completed if non-sprint col has a numeric value or DNF
-          if (!r.sprint && v && v !== '' && (parseInt(v) > 0 || ['DNF','DNS','DSQ'].includes(v.toUpperCase()))) rounds++;
-        });
-        firstDriver = false;
-      }
 
       const teamSlug = (team||'').toLowerCase().replace(/\s+/g,'').replace(/[^a-z0-9]/g,'');
       const logoStyle = teamSlug ? `background-image:linear-gradient(rgba(22,29,27,0.5),rgba(22,29,27,0.5)),url('../images/teamlogos/thinlogo_${teamSlug}.webp');` : '';
@@ -843,7 +875,7 @@ async function loadDrivers() {
     }
 
     document.getElementById('drivers-body').innerHTML = bHtml;
-    document.getElementById('div-view-meta').textContent = `${rounds} rounds completed`;
+    document.getElementById('div-view-meta').textContent = `${completedRounds.size} rounds completed`;
 
   } catch(e) {
     document.getElementById('drivers-body').innerHTML = '<tr><td colspan="30"><div class="loading-msg">Could not load data: ' + e.message + '</div></td></tr>';
@@ -878,8 +910,8 @@ async function loadConstructors() {
       teams.push({pos: posCol>=0 ? parseInt(cs(row,posCol)) : 0, team, pts});
     }
 
-    // Sort by points descending and calculate gaps
-    teams.sort((a,b) => b.pts - a.pts);
+    // Final/source position is authoritative; points are the safe fallback.
+    teams.sort((a,b) => (a.pos>0&&b.pos>0&&a.pos!==b.pos) ? a.pos-b.pos : b.pts-a.pts);
     const leader = teams.length ? teams[0].pts : 0;
 
     const conTableStyle = `width:100%;max-width:560px;border-collapse:collapse;`;
@@ -898,7 +930,7 @@ async function loadConstructors() {
     teams.forEach((d, i) => {
       const color = teamColors[d.team] || teamColors[Object.keys(teamColors).find(k=>k.toLowerCase()===d.team.toLowerCase())||''] || '#555';
       const r=parseInt(color.slice(1,3),16)||85, g=parseInt(color.slice(3,5),16)||85, b=parseInt(color.slice(5,7),16)||85;
-      const posNum = i+1;
+      const posNum = d.pos>0 ? d.pos : i+1;
       const pc = posNum===1?'#E8B84B':posNum===2?'#C0C0C0':posNum===3?'#cd7f32':'rgba(255,255,255,0.5)';
       const gl = i===0 ? '—' : `-${leader - d.pts}`;
       const ga = i===0 ? '—' : `-${teams[i-1].pts - d.pts}`;
@@ -911,7 +943,8 @@ async function loadConstructors() {
       html += `<tr>
         <td style="${tdStyle}${rowBg}"><span style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:${pc};">${posNum}</span></td>
         <td class="${slug?'has-logo':''}" style="${tdStyle}${teamCellBg}${logoStyle2}"><div class="ps-driver-cell">
-          <span class="ps-driver-name">&nbsp;</span>
+          <span class="ps-driver-name">${d.team}</span>
+          ${ownerDisplay?`<span class="ps-driver-team">Team Principal · ${ownerDisplay}</span>`:''}
         </div></td>
         <td style="${tdStyle}${rowBg}text-align:right;"><span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#3DCC47;">${d.pts}</span></td>
         <td style="${tdStyle}${rowBg}text-align:right;color:rgba(255,255,255,0.6);">${gl}</td>
@@ -961,6 +994,33 @@ async function loadStats() {
 
     if (hIdx < 0) hIdx = 0;
 
+    // Read Grand Prix finishes from the calculation table by heading rather
+    // than trusting fixed row offsets. Sprint finishes are deliberately not
+    // counted in the main-race reliability figures.
+    const gpResultsByDriver = new Map();
+    let calcHeaderIdx = -1;
+    let gpFinishCols = [];
+    for (let i=hIdx+1; i<rows.length; i++) {
+      const row = rows[i];
+      if (!row.c || cs(row,0).toLowerCase()!=='driver') continue;
+      const finishCols = [];
+      for (let c=1; c<row.c.length; c++) {
+        if (/^r\d+ finish$/i.test(cs(row,c))) finishCols.push(c);
+      }
+      if (finishCols.length) {
+        calcHeaderIdx = i;
+        gpFinishCols = finishCols;
+        break;
+      }
+    }
+    if (calcHeaderIdx >= 0) {
+      for (let i=calcHeaderIdx+1; i<rows.length; i++) {
+        const driver = cs(rows[i],0);
+        if (!driver) continue;
+        gpResultsByDriver.set(driver.toLowerCase(), gpFinishCols.map(c => cs(rows[i],c)));
+      }
+    }
+
     // Fallbacks matching Driver Stats Calc Sheet column order
     if (cols.driver===undefined)   cols.driver=0;
     if (cols.wins===undefined)     cols.wins=3;
@@ -994,11 +1054,25 @@ async function loadStats() {
       const avgFin   = cs(row,cols.avgFin);
       const avgGain  = cs(row,cols.avgGain);
       const ppr      = cs(row,cols.ppr);
-      const started  = parseFloat(cs(row,cols.started))||0;
-      const dnfs     = parseFloat(cs(row,cols.dnfs))||0;
+      let started  = parseFloat(cs(row,cols.started))||0;
+      let finished = parseFloat(cs(row,cols.finished))||0;
+      const sourceDnfs = parseFloat(cs(row,cols.dnfs))||0;
+      let dnfs = Math.min(sourceDnfs, Math.max(0, started - finished));
+      const gpResults = gpResultsByDriver.get(driver.toLowerCase());
+      if (gpResults) {
+        finished = gpResults.filter(value => {
+          const number = parseFloat(value);
+          return Number.isFinite(number) && number > 0;
+        }).length;
+        dnfs = gpResults.filter(value => value.toUpperCase()==='DNF').length;
+        const dsqs = gpResults.filter(value => value.toUpperCase()==='DSQ').length;
+        started = finished + dnfs + dsqs;
+      }
       const relStr   = cs(row,cols.rel);
       const relRaw   = parseFloat(relStr);
-      const rel      = Number.isFinite(relRaw) ? (relRaw <= 1 ? relRaw * 100 : relRaw) : null;
+      const rel      = gpResults
+        ? (started ? finished / started * 100 : null)
+        : (Number.isFinite(relRaw) ? (relRaw <= 1 ? relRaw * 100 : relRaw) : null);
       const relWidth = rel === null ? 0 : Math.max(0, Math.min(100, rel));
       const relText  = rel === null ? '—' : `${Math.round(rel * 10) / 10}%`;
       const relClass = rel!==null && rel>=85?'':rel!==null && rel>=60?'mid':'low';
@@ -1050,20 +1124,40 @@ async function loadTeamStats() {
     const rows = table.rows;
     let html = '';
 
-    // Header is row 0: Driver, Wins, Podiums, Avg Finish, Avg Points, Avg Grid, Avg Pos Gained
+    // Season 28+ has separate Tier 1/Tier 2 averages. Map the exact headings
+    // instead of falling back to the retired seven-column team-stats layout.
     const hRow = rows[0];
-    let cols = { name:0, wins:1, pods:2, avgFin:3, avgPts:4, avgGrid:5, avgGain:6 };
+    const cols = {};
 
-    // Try to find columns by header name
     for (let c=0; c<hRow.c.length; c++) {
       const v = cs(hRow,c).toLowerCase();
-      if (v.includes('wins') && !v.includes('sprint')) cols.wins=c;
-      if (v.includes('podiums')) cols.pods=c;
-      if (v.includes('average finishing')||v.includes('avg finish')) cols.avgFin=c;
-      if (v.includes('average points')||v.includes('avg points')) cols.avgPts=c;
-      if (v.includes('average grid')||v.includes('avg grid')) cols.avgGrid=c;
-      if (v.includes('gained')) cols.avgGain=c;
+      if (v==='team') cols.name=c;
+      if (v==='total points') cols.totalPts=c;
+      if (v==='wins') cols.wins=c;
+      if (v==='podiums') cols.pods=c;
+      if (v==='avg finish t1'||v==='average finish t1') cols.avgFinT1=c;
+      if (v==='avg finish t2'||v==='average finish t2') cols.avgFinT2=c;
+      if (v==='sprint wins') cols.sprintWins=c;
     }
+
+    if (cols.name===undefined || cols.wins===undefined || cols.pods===undefined) {
+      throw new Error('Team statistics headings were not recognised');
+    }
+
+    // Numeric headings are the per-round constructor totals. A round is
+    // complete once at least one team has scored, so this remains independent
+    // of the Sheet's currently unreliable Avg Points Per Race formula.
+    const roundColumns = [];
+    for (let c=0; c<hRow.c.length; c++) {
+      if (!/^\d+$/.test(cs(hRow,c))) continue;
+      const hasPoints = rows.slice(1).some(row => (parseFloat(cs(row,c))||0) > 0);
+      if (hasPoints) roundColumns.push(c);
+    }
+
+    const numberText = (value, decimals) => {
+      const number = parseFloat(value);
+      return Number.isFinite(number) ? number.toFixed(decimals) : '—';
+    };
 
     for (let i=1; i<rows.length; i++) {
       const row = rows[i];
@@ -1072,19 +1166,12 @@ async function loadTeamStats() {
 
       const wins    = parseFloat(cs(row,cols.wins))||0;
       const pods    = parseFloat(cs(row,cols.pods))||0;
-      const avgFin  = cs(row,cols.avgFin);
-      const avgPts  = cs(row,cols.avgPts);
-      const avgGain = cs(row,cols.avgGain);
+      const totalPts = parseFloat(cs(row,cols.totalPts));
+      const avgPts  = Number.isFinite(totalPts) && roundColumns.length ? totalPts / roundColumns.length : null;
+      const avgFinT1 = cs(row,cols.avgFinT1);
+      const avgFinT2 = cs(row,cols.avgFinT2);
+      const sprintWins = parseFloat(cs(row,cols.sprintWins))||0;
       const color   = teamColors[team] || '#555';
-
-      const metric = value => {
-        const number = parseFloat(value);
-        return Number.isFinite(number) ? number.toFixed(1) : '—';
-      };
-
-      const gainNum  = parseFloat(avgGain);
-      const gainStr  = !isNaN(gainNum) ? (gainNum>0?'+':'')+gainNum.toFixed(1) : '—';
-      const gainCls  = !isNaN(gainNum) ? (gainNum>0?'good':gainNum<0?'bad':'') : '';
 
       const tr2=parseInt(color.slice(1,3),16)||85, tg2=parseInt(color.slice(3,5),16)||85, tb2=parseInt(color.slice(5,7),16)||85;
       html += `<div class="con-row" style="align-items:flex-start;flex-wrap:wrap;gap:8px;background:rgba(${tr2},${tg2},${tb2},0.15);border-left:3px solid ${color};border-radius:6px;padding:10px 12px;">
@@ -1092,20 +1179,25 @@ async function loadTeamStats() {
           <div class="con-name">${team}</div>
           <div class="con-sub" style="margin-top:4px;">${wins} win${wins!==1?'s':''} · ${pods} podium${pods!==1?'s':''}</div>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;min-width:200px;flex:1;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:6px;min-width:0;flex:1 1 360px;">
           <div class="stat-metric" style="background:#1e2a27;border-radius:4px;padding:8px 6px;text-align:center;">
-            <div class="stat-metric-val">${metric(avgFin)}</div>
-            <div class="stat-metric-lbl">Avg finish</div>
+            <div class="stat-metric-val">${Number.isFinite(totalPts)?Math.floor(totalPts):'—'}</div>
+            <div class="stat-metric-lbl">Points</div>
           </div>
           <div class="stat-metric" style="background:#1e2a27;border-radius:4px;padding:8px 6px;text-align:center;">
-            <div class="stat-metric-val">${metric(avgPts)}</div>
-            <div class="stat-metric-lbl">Avg pts</div>
+            <div class="stat-metric-val">${numberText(avgPts,1)}</div>
+            <div class="stat-metric-lbl">Pts / round</div>
           </div>
           <div class="stat-metric" style="background:#1e2a27;border-radius:4px;padding:8px 6px;text-align:center;">
-            <div class="stat-metric-val ${gainCls}">${gainStr}</div>
-            <div class="stat-metric-lbl">Avg gained</div>
+            <div class="stat-metric-val">${numberText(avgFinT1,1)}</div>
+            <div class="stat-metric-lbl">Avg finish T1</div>
+          </div>
+          <div class="stat-metric" style="background:#1e2a27;border-radius:4px;padding:8px 6px;text-align:center;">
+            <div class="stat-metric-val">${numberText(avgFinT2,1)}</div>
+            <div class="stat-metric-lbl">Avg finish T2</div>
           </div>
         </div>
+        ${sprintWins ? `<div class="con-sub" style="flex-basis:100%;text-align:right;">${sprintWins} sprint win${sprintWins!==1?'s':''}</div>` : ''}
       </div>`;
     }
 
@@ -1209,7 +1301,8 @@ function buildOverallConstTable(rows){
     html += '<td style="'+tdStyle+rowBg+'text-align:center;"><span style="font-family:\'Barlow Condensed\',sans-serif;font-size:15px;font-weight:700;color:'+pc+';">'+pos+'</span></td>';
     html += '<td class="has-logo" style="'+tdStyle+teamBg+logoStyle+'">';
     html += '<div class="ps-driver-cell">';
-    html += '<span class="ps-driver-name">'+(tpDisplay ? 'Team Principal · '+tpDisplay : '&nbsp;')+'</span>';
+    html += '<span class="ps-driver-name">'+d.team+'</span>';
+    if(tpDisplay) html += '<span class="ps-driver-team">Team Principal · '+tpDisplay+'</span>';
     html += '</div></td>';
     html += '<td style="'+tdStyle+rowBg+'text-align:center;"><span style="font-family:\'Barlow Condensed\',sans-serif;font-size:16px;font-weight:700;color:#3DCC47;">'+Math.floor(d.pts)+'</span></td>';
     html += '<td style="'+tdStyle+rowBg+'text-align:center;color:rgba(255,255,255,0.6);">'+gapNum+'</td>';
@@ -1271,7 +1364,7 @@ async function loadOverallConstructors() {
           const csvRows = text.split(/\r?\n/).map(l=>l.split(',').map(v=>v.replace(/^"|"$/g,'').trim()));
           overallCsvRows = csvRows;
           // Find header row
-          let hIdx=-1, posCol=-1, teamCol=-1, ptsCol=-1, tpCol=-1;
+          let hIdx=-1, posCol=-1, teamCol=-1, ptsCol=-1;
           for(let i=0;i<csvRows.length;i++){
             const r=csvRows[i];
             const posIdx=r.findIndex(v=>(v||'').toLowerCase().startsWith('pos'));
@@ -1280,8 +1373,6 @@ async function loadOverallConstructors() {
               teamCol=r.findIndex(v=>(v||'').toLowerCase()==='team');
               if(teamCol<0) teamCol=posIdx+1;
               ptsCol=r.findIndex(v=>(v||'').toLowerCase()==='points');
-              // TP is last non-blank header
-              for(let c=r.length-1;c>=0;c--){ if((r[c]||'').trim()){ tpCol=c; break; } }
               hIdx=i; break;
             }
           }
@@ -1294,7 +1385,6 @@ async function loadOverallConstructors() {
               const pts=Math.floor(parseFloat(ptsRaw))||0;
               if(pts) teamPoints[team]=(teamPoints[team]||0)+pts;
               overallCsvHasTeams = true;
-              if(tpCol>=0){ const tp=(r[tpCol]||'').trim(); if(tp && isNaN(parseFloat(tp))) teamOwners[team.toLowerCase()]=tp; }
             }
           }
         }
@@ -1342,7 +1432,7 @@ async function loadOverallConstructors() {
       return;
     }
 
-    if(!F1XL_STANDINGS_TEST_MODE && overallCsvRows && overallCsvRows.length && overallCsvHasTeams){
+    if(overallCsvRows && overallCsvRows.length && overallCsvHasTeams){
       el.innerHTML = buildOverallConstTable(overallCsvRows);
     } else if(Object.keys(teamPoints).length){
       // Fallback: build minimal rows from teamPoints
@@ -1696,6 +1786,16 @@ async function initStandings() {
       document.getElementById('cool-stats-cards').innerHTML = '';
       return;
     }
+
+    // Archived workbooks intentionally do not retain weekly-total and Cool
+    // Stats exports. Keep the standalone historical view honest rather than
+    // presenting two empty current-season controls.
+    if(requestedSeason){
+      ['oc-tab-weekly','oc-tab-coolstats'].forEach(id=>{
+        const el=document.getElementById(id);
+        if(el) el.style.display='none';
+      });
+    }
     const numDivisions = parseInt(divisionSetting, 10);
 
     // Build divisions array from config
@@ -1705,7 +1805,7 @@ async function initStandings() {
       const hasStandings = seasonConfig[`d${d}_has_standings`] === 'yes';
       // Count rounds from config
       let numRounds = 0;
-      for (let r=1; r<=21; r++) {
+      for (let r=1; r<=22; r++) {
         if (seasonConfig[`d${d}_r${r}_gid`]) numRounds++;
         else break;
       }
@@ -1719,6 +1819,7 @@ async function initStandings() {
           driverStats:  seasonConfig[`d${d}_driver_stats_gid`],
           teamStats:    seasonConfig[`d${d}_team_stats_gid`],
           teamInfo:     seasonConfig[`d${d}_team_info_gid`],
+          calendar:     seasonConfig[`d${d}_calendar_gid`],
         },
         season: currentSeason,
         numRounds: numRounds
@@ -1743,13 +1844,15 @@ async function initStandings() {
         for (let c=4; c<hRow.c.length; c++) {
           if (cs(hRow,c)==='Points') { ptsCol=c; break; }
         }
-        // Get leader - find row with highest points
+        // Source position 1 is authoritative, including manual tie-breaks.
         let leaderRow = null;
         let maxPts = -1;
         for(let r=hIdx+1; r<rows.length; r++){
           const driver = cs(rows[r], 2);
           if (!driver || driver === 'Driver') continue;
+          const sourcePos = parseInt(cs(rows[r],0),10);
           const pts = parseFloat(cs(rows[r], ptsCol)) || 0;
+          if(sourcePos===1){leaderRow=rows[r];maxPts=pts;break;}
           if (pts > maxPts) { maxPts = pts; leaderRow = rows[r]; }
         }
         if(!leaderRow) leaderRow = rows[hIdx+1];
@@ -1766,6 +1869,7 @@ async function initStandings() {
     // Update season heading
     const eyebrow = document.getElementById('page-season-eyebrow');
     if (eyebrow && currentSeason) eyebrow.textContent = 'Season ' + currentSeason;
+    if(currentSeason) document.title = 'Standings | F1XL TEST · Season ' + currentSeason;
     const testBanner = document.getElementById('standings-test-banner');
     if (testBanner && currentSeason) testBanner.textContent = 'F1XL NEXT TEST · SEASON ' + currentSeason + ' · NOT THE LIVE CHAMPIONSHIP';
 
