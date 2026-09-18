@@ -105,6 +105,7 @@
   .verdict-nfa{background:rgba(74,170,106,0.15);color:var(--green);border:1px solid rgba(74,170,106,0.25);}
   .verdict-warning{background:rgba(232,184,75,0.15);color:var(--amber);border:1px solid rgba(232,184,75,0.25);}
   .verdict-penalty{background:rgba(225,6,0,0.15);color:#ff6b6b;border:1px solid rgba(225,6,0,0.25);}
+  .accumulated-flag{margin:8px 0 0;padding:7px 10px;border:1px solid #b98739;border-radius:4px;color:#f0cd84;background:rgba(232,184,75,.1);font-size:12px;line-height:1.5;white-space:pre-line;max-width:340px;text-align:left}
   .verdict-ban{background:rgba(225,6,0,0.3);color:#ff4444;border:1px solid rgba(225,6,0,0.4);}
 
   /* TICKET DETAIL */
@@ -231,8 +232,8 @@
 <script src="config.js?v=20260823-config-v4"></script>
 <script>
 // Sheet ID and GID loaded from config at runtime
-let SHEET_ID = '1018L2jzNseasQVfNNoZCh_fDUbMIQ93EP2ahJvNc6F0';
-let GID = '1683645163';
+let SHEET_ID = ''; // TEST configuration is required; never fall back to LIVE.
+let GID = '';
 
 // Column indices (0-based) based on what we see in the sheet:
 // A=Race, B=Ticket#, C=Division, D=Submitter, E=SubmitterTeam,
@@ -258,17 +259,18 @@ let allTickets = [];
 let currentFilter = 'all';
 
 async function loadTickets() {
-  try{const cfg=await loadConfig();if(cfg.active_test_season&&cfg.test_tickets_ready!=='yes'){document.getElementById('content').textContent='Season '+cfg.active_test_season+' tickets are not connected yet.';return;}}catch(e){document.getElementById('content').textContent='Test website configuration could not be loaded.';return;}
+  try{const cfg=await loadConfig();if(!cfg.active_test_season||cfg.test_tickets_ready!=='yes'){document.getElementById('content').textContent='Season '+cfg.active_test_season+' tickets are not connected yet.';return;}}catch(e){document.getElementById('content').textContent='Test website configuration could not be loaded.';return;}
   try {
     // Load sheet ID and GID from config if available
     const [cfgSheet, cfgGid] = await Promise.all([
       getConfigValue('ticket_outcomes_sheet'),
       getConfigValue('ticket_outcomes_gid')
     ]);
+    if (!cfgSheet || !cfgGid) throw new Error('The TEST ticket feed is not connected.');
     if (cfgSheet) SHEET_ID = cfgSheet;
     if (cfgGid) GID = cfgGid;
 
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${GID}`;
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${GID}&_=${Date.now()}`;
     const res = await fetch(url);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const text = await res.text();
@@ -287,7 +289,7 @@ async function loadTickets() {
       const driver = (row[COLS.submitter] || '').trim();
       if (!race || !driver) continue;
       if (ticketNum && isNaN(parseInt(ticketNum))) continue;
-      allTickets.push(row);
+      allTickets.push(row.map(value=>String(value||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))));
     }
 
     document.getElementById('filters').style.display = 'flex';
@@ -547,7 +549,7 @@ function renderTickets() {
       const appealOutcome = (row[COLS.appealOutcome] || '').trim();
       const appealVerdict = (row[COLS.appealVerdict] || '').trim();
 
-      // Collapsed header always shows original penalty from col T, unchanged
+      // The published row contains the latest final decision, including any appeal amendment.
       const vc = verdictClass(penalty);
       const vl = verdictLabel(penalty, points);
 
@@ -570,6 +572,7 @@ function renderTickets() {
           </div>
           <div class="ticket-verdict">
             <div class="verdict-badge ${vc}">${vl}</div>
+            ${row[32] ? `<div class="accumulated-flag"><strong>Accumulated points</strong><br>${row[32]}</div>` : ''}
             ${driverPunished ? `<div style="font-size:11px;color:var(--text-muted);margin-top:4px;text-align:center;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.5px;">${driverPunished}</div>` : ''}
             ${appealed ? `<div style="font-size:10px;background:rgba(232,184,75,0.15);color:#E8B84B;border:1px solid rgba(232,184,75,0.25);border-radius:3px;padding:2px 7px;margin-top:4px;text-align:center;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.5px;text-transform:uppercase;">Appealed</div>` : ''}
             ${points && points !== '0' ? `<div style="font-size:11px;color:var(--text-faint);margin-top:4px;text-align:right;">${points} pts</div>` : ''}

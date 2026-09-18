@@ -89,6 +89,7 @@
   footer{background:#161d1b;border-top:1px solid var(--border);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:20px;}
   .footer-logo{background:var(--green);color:#000;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;padding:4px 9px;border-radius:3px;}
   .footer-text{font-size:12px;color:var(--text-faint);}
+.movement-panel{margin:20px 24px;padding:18px;background:var(--dark);border:1px solid var(--border);border-radius:8px}.movement-panel h2{font-family:'Barlow Condensed',sans-serif;margin-bottom:12px}.movement-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:12px}.movement-card{padding:12px;background:var(--dark2);border-radius:6px;overflow-wrap:anywhere}.movement-card p{font-size:13px;margin-top:7px;color:var(--text-muted)}
 </style>
 <meta name="theme-color" content="#111816">
 </head>
@@ -164,6 +165,7 @@
   <div class="page-meta" id="page-meta">Loading...</div>
 </div>
 <div class="season-bar" id="season-bar"><div class="loading-msg" style="padding:4px 0;">Loading seasons...</div></div>
+<div style="padding:12px 24px"><a href="#driver-movements" style="color:var(--teal)">Driver movements ↓</a></div>
 <div style="padding:8px 24px;display:flex;gap:16px;flex-wrap:wrap;align-items:center;background:#161d1b;border-bottom:1px solid var(--border);">
   <span style="font-size:11px;color:rgba(255,255,255,0.4);font-family:'Barlow Condensed',sans-serif;letter-spacing:0.5px;text-transform:uppercase;margin-right:4px;">Key:</span>
   <span style="font-size:12px;color:rgba(255,255,255,0.65);">👑 Overall Champion (Team Principal)</span>
@@ -171,6 +173,7 @@
   <span style="font-size:12px;color:rgba(255,255,255,0.65);">🪙 Division Constructor Champion</span>
 </div>
 <div id="teams-content"><div class="loading-msg">Loading...</div></div>
+<section class="movement-panel" id="driver-movements" hidden aria-live="polite"></section>
 <footer>
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="footer-logo">F1XL</div>
@@ -179,6 +182,7 @@
   <div class="footer-text">f1xl.co.uk</div>
 </footer>
 <script src="config.js"></script>
+<script src="driver-movements.js"></script>
 <script>
 const CROWN = '👑';   // Team Principal champion
 const TROPHY = '🏆';  // Driver champion
@@ -526,6 +530,7 @@ async function init(){
 }
 
 async function showSeason(s){
+  if(window.F1XLDriverMovements)window.F1XLDriverMovements.show(s);
   document.querySelectorAll('.s-btn').forEach(b=>b.classList.remove('active'));
   const btn=document.getElementById('sbtn-'+s.replace('.','_'));
   if(btn)btn.classList.add('active');
