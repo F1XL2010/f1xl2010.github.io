@@ -1770,6 +1770,14 @@ async function initStandings() {
   try {
     const requestedSeason = new URLSearchParams(window.location.search).get('season');
     const currentSeason = requestedSeason || await getCurrentSeason();
+    if(!currentSeason){
+      document.getElementById('page-season-eyebrow').textContent='Between seasons';
+      document.querySelector('.page-title').textContent='Standings';
+      document.querySelector('.page-meta').textContent='The completed tables are available in Past Seasons. Current-season standings will return when the next season launches.';
+      document.getElementById('overall-constructors').style.display='none';
+      document.getElementById('selector-view').innerHTML='<div class="loading-msg" style="padding:48px 24px">There is no active season. <a href="old-seasons.html" style="color:var(--green)">Open Past Seasons</a></div>';
+      return;
+    }
     seasonConfig = requestedSeason ? await loadSeasonConfig(requestedSeason) : await getCurrentSeasonConfig();
     await loadReferenceTeamColours();
 
@@ -1787,15 +1795,6 @@ async function initStandings() {
       return;
     }
 
-    // Archived workbooks intentionally do not retain weekly-total and Cool
-    // Stats exports. Keep the standalone historical view honest rather than
-    // presenting two empty current-season controls.
-    if(requestedSeason){
-      ['oc-tab-weekly','oc-tab-coolstats'].forEach(id=>{
-        const el=document.getElementById(id);
-        if(el) el.style.display='none';
-      });
-    }
     const numDivisions = parseInt(divisionSetting, 10);
 
     // Build divisions array from config

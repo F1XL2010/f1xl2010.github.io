@@ -251,16 +251,16 @@
 
     <!-- QUICK BOXES -->
     <div class="quick-boxes">
-      <a href="standings.html" class="quick-box">
-        <div class="quick-box-label">Current</div>
-        <div class="quick-box-title">Standings</div>
+      <a href="standings.html" class="quick-box" id="home-standings-link">
+        <div class="quick-box-label" id="home-standings-label">Current</div>
+        <div class="quick-box-title" id="home-standings-title">Standings</div>
       </a>
       <a href="results.html" class="quick-box">
-        <div class="quick-box-label">Current</div>
+        <div class="quick-box-label" id="home-results-label">Current</div>
         <div class="quick-box-title">Results</div>
       </a>
       <a href="teams.html" class="quick-box">
-        <div class="quick-box-label">Current</div>
+        <div class="quick-box-label" id="home-teams-label">Current</div>
         <div class="quick-box-title">Teams</div>
       </a>
     </div>
@@ -286,16 +286,26 @@ async function init(){
   try {
     const config    = await loadConfig();
     const season    = await getCurrentSeason();
+    const contentSeason = await getContentSeason();
     const sc        = season ? await loadSeasonConfig(season) : null;
 
-    if(season){
+    if(contentSeason){
       const el = document.getElementById('stat-seasons');
-      if(el) el.innerHTML = `<span>${season}</span>`;
+      if(el) el.innerHTML = `<span>${contentSeason}</span>`;
     }
     const yr = new Date().getFullYear() - 2010;
     const statNums = document.querySelectorAll('.stat-num');
     if(statNums[1]) statNums[1].innerHTML = `<span>${yr}</span>`;
 
+    if(!season){
+      document.getElementById('badge-season-text').textContent = contentSeason ? `Season ${contentSeason} complete · Next season coming soon` : 'Next season coming soon';
+      document.getElementById('badge-season').classList.add('visible');
+      const standingsLink=document.getElementById('home-standings-link');standingsLink.href='old-seasons.html';
+      document.getElementById('home-standings-label').textContent=contentSeason?'Season '+contentSeason:'Archive';
+      document.getElementById('home-standings-title').textContent='Past standings';
+      document.getElementById('home-results-label').textContent=contentSeason?'Season '+contentSeason:'Archive';
+      document.getElementById('home-teams-label').textContent=contentSeason?'Season '+contentSeason:'Archive';
+    }
     // ── Sign-ups badge ──────────────────────────────────────────────────────
     const signupsVal = (config['signups_open'] || '').toLowerCase();
     if(signupsVal === 'yes' && season){

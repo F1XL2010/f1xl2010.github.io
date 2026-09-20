@@ -306,10 +306,17 @@ function circuitPath(path, size=80) {
 
 async function loadSchedule() {
   try {
+    const season = await getCurrentSeason();
+    if(!season){
+      document.getElementById('page-title').textContent='Next Season Schedule';
+      document.getElementById('page-meta').textContent='No active season';
+      document.querySelector('.disclaimer').style.display='none';
+      document.getElementById('schedule').innerHTML='<div class="loading-msg">The next season calendar has not been published yet.</div>';
+      return;
+    }
     const sc = await getCurrentSeasonConfig();
     if (sc && sc['d1_sheet_id']) SHEET_ID = sc['d1_sheet_id'];
     if (sc && sc['d1_calendar_gid']) GID = sc['d1_calendar_gid'];
-    const season = await getCurrentSeason();
     if (season) {
       document.getElementById('page-title').textContent = `Season ${season} Schedule`;
       document.title = `F1XL — Season ${season} Schedule`;

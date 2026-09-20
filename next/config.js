@@ -12,6 +12,7 @@ const F1XL_NEXT_FALLBACK = Object.freeze({
 });
 
 let nextMainCache=null, nextSeasonCache=null, nextConfigCache=null;
+let nextContentSeasonCache=null, nextContentConfigCache=null;
 const nextConfigBySeason={};
 function nextSplitCSVLine(line){const cells=[];let current='',quoted=false;for(let index=0;index<line.length;index+=1){const character=line[index];if(character==='"'){if(quoted&&line[index+1]==='"'){current+='"';index+=1;}else quoted=!quoted;}else if(character===','&&!quoted){cells.push(current.trim());current='';}else current+=character;}cells.push(current.trim());return cells;}
 function nextParseCSV(text){return text.split(/\r?\n/).filter(function(line){return line.trim();}).map(nextSplitCSVLine);}
@@ -32,7 +33,13 @@ async function loadConfig(){return nextLoadMain();}
 async function getCurrentSeason(){
   if(nextSeasonCache!==null)return nextSeasonCache;
   if(!F1XL_NEXT_CONFIG_SHEET_ID){nextSeasonCache=Number(F1XL_NEXT_FALLBACK.season);return nextSeasonCache;}
-  try{const main=await nextLoadMain();const explicit=String(main.active_test_season||'');if(/^\d+(?:\.5)?$/.test(explicit)&&main['s'+explicit.replace('.','_')+'_gid']){nextSeasonCache=Number(explicit);return nextSeasonCache;}const seasons=Object.keys(main).map(function(key){const match=key.match(/^s(\d+(?:_\d+)?)_gid$/);return match?Number(match[1].replace('_','.')):null;}).filter(function(value){return value!==null&&!Number.isNaN(value);}).sort(function(a,b){return b-a;});nextSeasonCache=seasons.length?seasons[0]:null;return nextSeasonCache;}catch(error){console.warn('TEST Website Config lookup failed; using local fallback.',error.message);nextSeasonCache=Number(F1XL_NEXT_FALLBACK.season);return nextSeasonCache;}
+  try{const main=await nextLoadMain();const phase=String(main.test_season_phase||'').toLowerCase();if(phase==='offseason'||phase==='postseason'){nextSeasonCache=null;return null;}const explicit=String(main.active_test_season||'');if(/^\d+(?:\.5)?$/.test(explicit)&&main['s'+explicit.replace('.','_')+'_gid']){nextSeasonCache=Number(explicit);return nextSeasonCache;}const seasons=Object.keys(main).map(function(key){const match=key.match(/^s(\d+(?:_\d+)?)_gid$/);return match?Number(match[1].replace('_','.')):null;}).filter(function(value){return value!==null&&!Number.isNaN(value);}).sort(function(a,b){return b-a;});nextSeasonCache=seasons.length?seasons[0]:null;return nextSeasonCache;}catch(error){console.warn('TEST Website Config lookup failed; using local fallback.',error.message);nextSeasonCache=Number(F1XL_NEXT_FALLBACK.season);return nextSeasonCache;}
+}
+
+async function getContentSeason(){
+  if(nextContentSeasonCache!==null)return nextContentSeasonCache||null;
+  const current=await getCurrentSeason();if(current){nextContentSeasonCache=current;return current;}
+  try{const main=await nextLoadMain();const completed=String(main.latest_completed_test_season||'');if(/^\d+(?:\.5)?$/.test(completed)&&main['s'+completed.replace('.','_')+'_gid']){nextContentSeasonCache=Number(completed);return nextContentSeasonCache;}const seasons=await getAllSeasons();nextContentSeasonCache=seasons.length?seasons[0].season:'';return nextContentSeasonCache||null;}catch(error){return null;}
 }
 
 async function getAllSeasons(){
@@ -56,6 +63,7 @@ async function getCurrentSeasonConfig(){
   if(!F1XL_NEXT_CONFIG_SHEET_ID){nextConfigCache=Object.assign({},F1XL_NEXT_FALLBACK);return nextConfigCache;}
   try{const season=await getCurrentSeason();if(!season)return null;nextConfigCache=await loadSeasonConfig(season);return nextConfigCache;}catch(error){console.warn('TEST season config lookup failed; using local fallback.',error.message);nextConfigCache=Object.assign({},F1XL_NEXT_FALLBACK);return nextConfigCache;}
 }
+async function getContentSeasonConfig(){if(nextContentConfigCache)return nextContentConfigCache;const season=await getContentSeason();if(!season)return null;nextContentConfigCache=await loadSeasonConfig(season);return nextContentConfigCache;}
 
 async function getConfigValue(key){if(!F1XL_NEXT_CONFIG_SHEET_ID)return null;try{const main=await nextLoadMain();return main[String(key).toLowerCase()]||null;}catch(error){return null;}}
 function getRaceGIDs(config,division){const gids=[];for(let round=1;round<=22;round+=1)gids.push(config['d'+division+'_r'+round+'_gid']||null);return gids;}

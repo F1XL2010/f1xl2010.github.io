@@ -377,7 +377,7 @@ async function init(){
   // Determine which season to show — param > current season > most recent
   let targetSeason = paramSeason;
   if(!targetSeason){
-    try { targetSeason = await getCurrentSeason(); } catch(e){}
+    try { targetSeason = await getContentSeason(); } catch(e){}
   }
   if(!targetSeason && _allSeasons.length) targetSeason = _allSeasons[0].season;
 
