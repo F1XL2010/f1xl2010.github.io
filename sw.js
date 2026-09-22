@@ -67,6 +67,13 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
 
+  // OAuth returns contain one-use codes. Never put these URLs or responses in
+  // the offline cache, and never serve a cached callback after a network error.
+  if (url.pathname === '/next/fap-google-return.html') {
+    event.respondWith(fetch(event.request, { cache: 'no-store' }));
+    return;
+  }
+
   // Always go to network for data sources
   if (NEVER_CACHE.some(domain => url.hostname.includes(domain))) {
     event.respondWith(fetch(event.request));

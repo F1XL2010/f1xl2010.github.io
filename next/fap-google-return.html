@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Cache-Control" content="no-store">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-ZXElDcEGqfxDHYugi6KLqPM30AnGfiB9fgv7URikG2w='; base-uri 'none'; form-action 'none'">
+  <title>Returning to F1XL</title>
+</head>
+<body>
+  <h1>F1XL Control Centre</h1>
+  <p id="status" role="status">Completing Google sign-in…</p>
+  <p><a id="restart" href="https://script.google.com/macros/s/AKfycbxJ9JnIwY39k4k8ouva8CPpa6EvQXeKUD1mNGc3JgaNLfVyiATX68925cKaEZDywf36IQ/exec?signin=1" rel="noreferrer" hidden>Start sign-in again</a></p>
+  <script>
+  (function(){
+    'use strict';
+    const fap='https://script.google.com/macros/s/AKfycbxJ9JnIwY39k4k8ouva8CPpa6EvQXeKUD1mNGc3JgaNLfVyiATX68925cKaEZDywf36IQ/exec';
+    const query=new URLSearchParams(window.location.search);
+    // Remove the code from this page's history before navigating. No analytics,
+    // remote assets, storage, token exchange, or configurable destination here.
+    window.history.replaceState(null,'',window.location.pathname);
+    try {
+      for(const key of ['state','code','error','iss'])if(query.getAll(key).length>1)throw new Error('Invalid Google sign-in response.');
+      const state=query.get('state'),code=query.get('code'),error=query.get('error'),iss=query.get('iss');
+      if(!/^[a-f0-9]{64}$/.test(state||'')||(iss&&iss!=='https://accounts.google.com'))throw new Error('Start sign-in from the FAP first.');
+      if(error)throw new Error('Google sign-in was cancelled. Start again from the FAP.');
+      if(!code||code.length>4096)throw new Error('Google did not return a sign-in response. Start again from the FAP.');
+      // Google account routing parameters stay here. The fragment is available
+      // to the FAP client, but is not sent to the Apps Script hosting router.
+      window.location.replace(fap+'?signin=1#google-return='+encodeURIComponent(JSON.stringify({state:state,code:code,iss:iss||''})));
+    }catch(e){
+      document.getElementById('status').textContent=e.message;
+      document.getElementById('restart').hidden=false;
+    }
+  }());
+  </script>
+</body>
+</html>
