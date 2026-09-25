@@ -257,6 +257,7 @@ const COLS = {
 
 let allTickets = [];
 let currentFilter = 'all';
+let accumulatedColumn = -1;
 
 async function loadTickets() {
   try{const cfg=await loadConfig();if(!cfg.active_test_season||cfg.test_tickets_ready!=='yes'){document.getElementById('content').textContent='Season '+cfg.active_test_season+' tickets are not connected yet.';return;}}catch(e){document.getElementById('content').textContent='Test website configuration could not be loaded.';return;}
@@ -277,6 +278,7 @@ async function loadTickets() {
     if (text.includes('<!DOCTYPE') || text.includes('<html')) throw new Error('Sheet not published to web');
 
     const rows = parseCSV(text);
+    accumulatedColumn=(rows[0]||[]).findIndex(value=>String(value||'').trim().toLowerCase()==='accumulated penalty indicators');
 
     // Skip header row, collect valid data rows
     // A valid row must have a race name starting with S (e.g. S27 Singapore)
@@ -572,7 +574,7 @@ function renderTickets() {
           </div>
           <div class="ticket-verdict">
             <div class="verdict-badge ${vc}">${vl}</div>
-            ${row[32] ? `<div class="accumulated-flag"><strong>Accumulated points</strong><br>${row[32]}</div>` : ''}
+            ${accumulatedColumn>=0 && row[accumulatedColumn] ? `<div class="accumulated-flag"><strong>Accumulated points</strong><br>${row[accumulatedColumn]}</div>` : ''}
             ${driverPunished ? `<div style="font-size:11px;color:var(--text-muted);margin-top:4px;text-align:center;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.5px;">${driverPunished}</div>` : ''}
             ${appealed ? `<div style="font-size:10px;background:rgba(232,184,75,0.15);color:#E8B84B;border:1px solid rgba(232,184,75,0.25);border-radius:3px;padding:2px 7px;margin-top:4px;text-align:center;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.5px;text-transform:uppercase;">Appealed</div>` : ''}
             ${points && points !== '0' ? `<div style="font-size:11px;color:var(--text-faint);margin-top:4px;text-align:right;">${points} pts</div>` : ''}
