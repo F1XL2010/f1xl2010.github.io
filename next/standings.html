@@ -338,6 +338,7 @@ let currentDiv = null;
 let seasonConfig = null;
 let driverTeams = {};
 let teamOwners = {};
+let teamTypes = {};
 
 // The next-generation website has its own configuration file and never reads
 // the current live Website Config.
@@ -805,6 +806,13 @@ async function loadDrivers() {
       if((a.sourcePos!==null)!==(b.sourcePos!==null)) return a.sourcePos!==null?-1:1;
       return b.pts-a.pts || compareCountback(a.countback,b.countback);
     });
+    // The source ranks equal points equally, while this page uses countback to
+    // put the tied drivers in a useful order. Use that displayed order for
+    // repeated source positions so the position column cannot show P11 twice.
+    const sourcePosCounts = new Map();
+    dataRows.forEach(({sourcePos}) => {
+      if(sourcePos!==null) sourcePosCounts.set(sourcePos, (sourcePosCounts.get(sourcePos)||0)+1);
+    });
     const leaderPts = dataRows.length ? dataRows[0].pts : 0;
 
     // Body
@@ -822,7 +830,7 @@ async function loadDrivers() {
 
     for (let ri=0; ri<dataRows.length; ri++) {
       const {row,sourcePos} = dataRows[ri];
-      const pos = sourcePos || ri+1;
+      const pos = sourcePos && sourcePosCounts.get(sourcePos)===1 ? sourcePos : ri+1;
       const driver = cs(row,2);
 
       const nat = cs(row,1);
@@ -938,13 +946,10 @@ async function loadConstructors() {
       const teamCellBg = `background:rgba(${r},${g},${b},0.25);border-left:3px solid ${color};`;
       const slug = d.team.toLowerCase().replace(/\s+/g,'').replace(/[^a-z0-9]/g,'');
       const logoStyle2 = slug ? `background-image:linear-gradient(rgba(22,29,27,0.5),rgba(22,29,27,0.5)),url('../images/teamlogos/thinlogo_${slug}.webp');background-size:cover;background-position:center;` : '';
-      const ownerName = teamOwners[d.team.toLowerCase()] || '';
-      const ownerDisplay = ownerName && ownerName.toLowerCase()==='reserve' ? 'RESERVE' : ownerName;
       html += `<tr>
         <td style="${tdStyle}${rowBg}"><span style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:${pc};">${posNum}</span></td>
         <td class="${slug?'has-logo':''}" style="${tdStyle}${teamCellBg}${logoStyle2}"><div class="ps-driver-cell">
           <span class="ps-driver-name">${d.team}</span>
-          ${ownerDisplay?`<span class="ps-driver-team">Team Principal · ${ownerDisplay}</span>`:''}
         </div></td>
         <td style="${tdStyle}${rowBg}text-align:right;"><span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#3DCC47;">${d.pts}</span></td>
         <td style="${tdStyle}${rowBg}text-align:right;color:rgba(255,255,255,0.6);">${gl}</td>
@@ -1271,7 +1276,9 @@ function buildOverallConstTable(rows){
     const matchedName = Object.keys(principalMap).find(name => tKey.includes(name) || name.includes(tKey));
     const tpFinal = matchedName ? principalMap[matchedName] : (typeof teamOwners !== 'undefined' ? (teamOwners[tKey] || '') : '');
     const tpDisplay = tpFinal.toLowerCase()==='reserve'?'RESERVE':tpFinal;
-    data.push({team:t, pts, gap, tp:tpDisplay});
+    const typeKey = matchedName || tKey;
+    const teamType = (typeof teamTypes !== 'undefined' ? (teamTypes[typeKey] || teamTypes[tKey] || '') : '').toLowerCase();
+    data.push({team:t, pts, gap, tp:tpDisplay, isFreeAgent:teamType.includes('free agent')});
   }
   data.sort((a,b)=>b.pts-a.pts);
   if(!data.length) return '<div class="div-loading">No data found.</div>';
@@ -1280,7 +1287,7 @@ function buildOverallConstTable(rows){
   const thStyle = 'padding:8px 12px;background:#1a2320;color:rgba(255,255,255,0.5);font-family:\'Barlow Condensed\',sans-serif;font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;border-bottom:2px solid rgba(232,184,75,0.5);border-right:1px solid rgba(255,255,255,0.07);';
   let html = '<div class="st-wrap"><table class="standings-table" style="width:100%;"><thead><tr>';
   html += '<th style="'+thStyle+'text-align:center;">Pos</th>';
-  html += '<th style="'+thStyle+'text-align:left;">Team / Principal</th>';
+  html += '<th style="'+thStyle+'text-align:left;">Team</th>';
   html += '<th style="'+thStyle+'text-align:center;">Points</th>';
   html += '<th style="'+thStyle+'text-align:center;">Gap</th>';
   html += '</tr></thead><tbody>';
@@ -1302,7 +1309,8 @@ function buildOverallConstTable(rows){
     html += '<td class="has-logo" style="'+tdStyle+teamBg+logoStyle+'">';
     html += '<div class="ps-driver-cell">';
     html += '<span class="ps-driver-name">'+d.team+'</span>';
-    if(tpDisplay) html += '<span class="ps-driver-team">Team Principal · '+tpDisplay+'</span>';
+    if(d.isFreeAgent) html += '<span class="ps-driver-team">Free agent team</span>';
+    else if(tpDisplay) html += '<span class="ps-driver-team">Team Principal · '+tpDisplay+'</span>';
     html += '</div></td>';
     html += '<td style="'+tdStyle+rowBg+'text-align:center;"><span style="font-family:\'Barlow Condensed\',sans-serif;font-size:16px;font-weight:700;color:#3DCC47;">'+Math.floor(d.pts)+'</span></td>';
     html += '<td style="'+tdStyle+rowBg+'text-align:center;color:rgba(255,255,255,0.6);">'+gapNum+'</td>';
@@ -1335,10 +1343,13 @@ async function loadOverallConstructors() {
         if (!F1XL_STANDINGS_TEST_MODE && season !== String(currentSeason)) continue;
         const teamColumn = F1XL_STANDINGS_TEST_MODE ? 0 : 1;
         const ownerColumn = F1XL_STANDINGS_TEST_MODE ? 4 : 2;
+        const typeColumn = F1XL_STANDINGS_TEST_MODE ? 5 : -1;
         const teamRaw = cs(row,teamColumn).trim().toLowerCase();
         const owner = cs(row,ownerColumn).trim();
+        const type = typeColumn >= 0 ? cs(row,typeColumn).trim().toLowerCase() : '';
         const teamDisplay = teamNameMap[teamRaw] || cs(row,teamColumn).trim();
         if (teamRaw && owner) teamOwners[teamRaw] = owner;
+        if (teamRaw && type) teamTypes[teamRaw] = type;
         // Map all drivers in this row to this team
         for (let c=F1XL_STANDINGS_TEST_MODE ? row.c.length : 3; c<row.c.length; c++) {
           const driver = cs(row,c).trim().toLowerCase();

@@ -52,9 +52,11 @@
   .round-btn.sprint.active{background:rgba(100,150,255,0.8);border-color:rgba(100,150,255,0.8);color:#fff;}
   .content{padding:20px 24px 48px;max-width:1100px;}
   .loading-msg{text-align:center;padding:48px;color:var(--text-muted);font-size:14px;}
-  .race-header{background:#1a2320;border:1px solid var(--border2);border-top:3px solid var(--green);border-radius:8px;margin-bottom:20px;overflow:hidden;background-size:cover;background-position:center;}
+  .race-header{background:#1a2320;border:1px solid var(--border2);border-top:3px solid var(--green);border-radius:8px;margin-bottom:20px;overflow:hidden;}
   .race-header.is-sprint{border-top-color:rgba(100,150,255,0.8);}
-  .race-header-inner{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+  .race-header-inner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;padding:16px 20px;}
+  .race-event{flex:1;min-width:180px;}
+  .race-flag{width:74px;height:48px;flex:0 0 74px;border:1px solid rgba(255,255,255,0.18);border-radius:4px;background-color:#111;background-repeat:no-repeat;background-position:center;background-size:contain;box-shadow:inset 0 0 18px rgba(0,0,0,0.3);}
   .race-title{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;text-transform:uppercase;line-height:1;}
   .race-subtitle{font-size:13px;color:var(--text-muted);margin-top:3px;}
   .race-badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
@@ -85,7 +87,7 @@
   .rgap{font-size:12px;color:var(--text-muted);}
   .rpts{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--green);}
   .rpts.z{color:var(--text-faint);}
-  .fl{width:8px;height:8px;background:var(--green);border-radius:50%;display:inline-block;margin-left:4px;vertical-align:middle;}
+  .fl{display:inline-block;margin-left:5px;padding:1px 4px;border-radius:3px;background:var(--green);color:#071009;font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:0.5px;line-height:1.2;vertical-align:middle;}
   .pen{font-size:10px;color:#ff6b6b;margin-left:3px;}
   .stops{font-size:10px;color:var(--text-faint);}
   footer{background:#161d1b;border-top:1px solid var(--border);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
@@ -634,11 +636,12 @@ function circuitToFlag(circuit){
 
 function header(r,circuit,winner,sc,rf,isSprint){
   const flagUrl = circuitToFlag(circuit);
-  const flagStyle = flagUrl ? `background-image:url('${flagUrl}');background-size:cover;background-position:center;` : '';
+  const flagStyle = flagUrl ? `background-image:url('${flagUrl}');` : '';
   const winnerTeam = winner && winner.team && winner.team !== 'undefined' ? winner.team : '';
-  return`<div class="race-header${isSprint?' is-sprint':''}" style="${flagStyle}">
-    <div class="race-header-inner" style="background:rgba(17,24,22,0.78);padding:16px 20px;border-radius:8px 8px 0 0;">
-      <div>
+  return`<div class="race-header${isSprint?' is-sprint':''}">
+    <div class="race-header-inner">
+      ${flagUrl?`<div class="race-flag" style="${flagStyle}" role="img" aria-label="${circuit} flag"></div>`:''}
+      <div class="race-event">
         <div class="race-title">${circuit} Grand Prix</div>
         <div class="race-subtitle">${fd(r.date)}</div>
         <div class="race-badges">
@@ -735,7 +738,7 @@ function rTable(data,title,weather,circuit){
       <td>${dnf?`<span class="pdnf">${d.pos}</span>`:`<span class="p ${posClass(d.pos)}">${d.pos}</span>`}</td>
       <td><span class="dnum">${d.num}</span></td>
       <td>
-        <span class="dname">${d.driver}</span>${hasFl?`<span class="fl" title="Fastest Lap"></span>`:''}${d.pen?`<span class="pen">+${d.pen}</span>`:''}
+        <span class="dname">${d.driver}</span>${hasFl?`<span class="fl" title="Fastest Lap" aria-label="Fastest Lap">FL</span>`:''}${d.pen?`<span class="pen">+${d.pen}</span>`:''}
         ${d.team?`<br><span class="stops">${d.team}</span>`:''}
       </td>
       <td><span class="stops">${d.stops||'—'}</span></td>
@@ -1038,7 +1041,7 @@ function legacyRTable(data, title){
     html += `<tr>
       <td>${dnf?`<span class="pdnf">${d.pos}</span>`:`<span class="p ${posClass(d.pos)}">${d.pos}</span>`}</td>
       <td><span class="dnum">${d.num}</span></td>
-      <td><span class="dname">${d.driver}</span>${hasFl?`<span class="fl" title="Fastest Lap"></span>`:''}${d.pen?`<span class="pen">+${d.pen}</span>`:''}
+      <td><span class="dname">${d.driver}</span>${hasFl?`<span class="fl" title="Fastest Lap" aria-label="Fastest Lap">FL</span>`:''}${d.pen?`<span class="pen">+${d.pen}</span>`:''}
         ${d.team?`<br>${legacyTeamBar(d.team)}<span class="stops">${d.team}</span>`:''}
       </td>
       <td><span class="stops">${d.stops||'—'}</span></td>
