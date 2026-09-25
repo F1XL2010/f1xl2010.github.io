@@ -52,11 +52,9 @@
   .round-btn.sprint.active{background:rgba(100,150,255,0.8);border-color:rgba(100,150,255,0.8);color:#fff;}
   .content{padding:20px 24px 48px;max-width:1100px;}
   .loading-msg{text-align:center;padding:48px;color:var(--text-muted);font-size:14px;}
-  .race-header{background:#1a2320;border:1px solid var(--border2);border-top:3px solid var(--green);border-radius:8px;margin-bottom:20px;overflow:hidden;}
+  .race-header{background:#1a2320;border:1px solid var(--border2);border-top:3px solid var(--green);border-radius:8px;margin-bottom:20px;overflow:hidden;background-size:cover;background-position:center;}
   .race-header.is-sprint{border-top-color:rgba(100,150,255,0.8);}
-  .race-header-inner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;padding:16px 20px;}
-  .race-event{flex:1;min-width:180px;}
-  .race-flag{width:74px;height:48px;flex:0 0 74px;border:1px solid rgba(255,255,255,0.18);border-radius:4px;background-color:#111;background-repeat:no-repeat;background-position:center;background-size:contain;box-shadow:inset 0 0 18px rgba(0,0,0,0.3);}
+  .race-header-inner{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;}
   .race-title{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;text-transform:uppercase;line-height:1;}
   .race-subtitle{font-size:13px;color:var(--text-muted);margin-top:3px;}
   .race-badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
@@ -636,12 +634,11 @@ function circuitToFlag(circuit){
 
 function header(r,circuit,winner,sc,rf,isSprint){
   const flagUrl = circuitToFlag(circuit);
-  const flagStyle = flagUrl ? `background-image:url('${flagUrl}');` : '';
+  const flagStyle = flagUrl ? `background-image:url('${flagUrl}');background-size:cover;background-position:center;` : '';
   const winnerTeam = winner && winner.team && winner.team !== 'undefined' ? winner.team : '';
-  return`<div class="race-header${isSprint?' is-sprint':''}">
-    <div class="race-header-inner">
-      ${flagUrl?`<div class="race-flag" style="${flagStyle}" role="img" aria-label="${circuit} flag"></div>`:''}
-      <div class="race-event">
+  return`<div class="race-header${isSprint?' is-sprint':''}" style="${flagStyle}">
+    <div class="race-header-inner" style="background:rgba(17,24,22,0.78);padding:16px 20px;border-radius:8px 8px 0 0;">
+      <div>
         <div class="race-title">${circuit} Grand Prix</div>
         <div class="race-subtitle">${fd(r.date)}</div>
         <div class="race-badges">
