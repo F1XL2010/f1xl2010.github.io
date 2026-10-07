@@ -406,6 +406,12 @@ function verdictLabel(penalty, points) {
   if (penalty.toLowerCase().includes('warning')) return 'Warning';
   return penalty;
 }
+function timeAdjustmentLabel(value) {
+  const text=String(value||'').trim();
+  if(!/^[+-]?\d+(?:\.\d+)?(?:\s*(?:s|sec|secs|seconds?))?$/i.test(text))return '';
+  const seconds=parseFloat(text);
+  return seconds<0?`${Math.abs(seconds)} seconds removed`:seconds>0?`${seconds} seconds added`:'';
+}
 
 function getPriorRacePoints(tickets) {
   const priorPoints = new Map();
@@ -621,6 +627,7 @@ function renderTickets() {
                   ${submitterPointsAdded > 0 ? `+${submitterOutcome} licence points` : 'No points added'}
                 </div>
                 <div class="outcome-penalty">Points Prior to Race: ${submitterPriorPoints}</div>
+                ${timeAdjustmentLabel(submitterPenalty)?`<div class="outcome-penalty">${timeAdjustmentLabel(submitterPenalty)}</div>`:''}
               </div>
               <div class="outcome-box">
                 <div class="outcome-role">Offender</div>
@@ -629,6 +636,7 @@ function renderTickets() {
                   ${offenderPointsAdded > 0 ? `+${offenderOutcome} licence points` : 'No points added'}
                 </div>
                 <div class="outcome-penalty">Points Prior to Race: ${offenderPriorPoints}</div>
+                ${timeAdjustmentLabel(offenderPenalty)?`<div class="outcome-penalty">${timeAdjustmentLabel(offenderPenalty)}</div>`:''}
               </div>
             </div>
           </div>
