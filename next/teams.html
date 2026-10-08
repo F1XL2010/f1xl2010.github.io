@@ -407,8 +407,10 @@ function renderS28Season(divDataArr, seasonNum) {
     divData.teams.forEach(t => {
       const key = t.name.toLowerCase();
       if (!teamMap[key]) teamMap[key] = { ...t, divs: [] };
-      teamMap[key].divs.push({ div: t.div, tier1: t.tier1, tier2: t.tier2 });
+      teamMap[key].divs.push({ div: t.div, tier1: t.tier1, tier2: t.tier2,
+        constructorChampion: t.constructorChampion, champion1: t.champion1, champion2: t.champion2 });
       if (t.tp && !teamMap[key].tp) teamMap[key].tp = t.tp;
+      if (t.ownerChampion) teamMap[key].ownerChampion = true;
     });
   });
 
@@ -434,14 +436,15 @@ function renderS28Season(divDataArr, seasonNum) {
   const cardTemplate = (t, divsHtml) => {
     const color = getColor(t.name);
     const img = '../images/teamlogos/squarelogo_' + t.name.toLowerCase().replace(/\s+/g,'').replace(/[^a-z0-9]/g,'') + '.webp';
-    return `<div class="team-card">
+    const anyChampion=t.ownerChampion||t.divs.some(d=>d.constructorChampion||d.champion1||d.champion2);
+    return `<div class="team-card${t.ownerChampion?' is-overall-champion':anyChampion?' is-champion':''}">
       <img class="tc-header-img" src="${img}" alt="" onerror="this.style.display='none'">
       <div class="tc-header">
         <div class="tc-header-content">
           <div class="tc-bar" style="background:${color}"></div>
           <div>
             <div class="tc-name">${t.name}</div>
-            <div class="tc-owner-row"><span class="tc-owner-lbl">Team Principal</span><span class="tc-owner">${t.tp || '&mdash;'}</span></div>
+            <div class="tc-owner-row"><span class="tc-owner-lbl">Team Principal</span><span class="tc-owner">${t.tp || '&mdash;'}</span>${t.ownerChampion?`<span class="tc-crown">${CROWN}</span>`:''}</div>
           </div>
         </div>
       </div>
@@ -455,10 +458,10 @@ function renderS28Season(divDataArr, seasonNum) {
     let divsHtml = '';
     t.divs.forEach(d => {
       divsHtml += `<div class="tc-div">
-        <div class="tc-div-row"><span class="tc-div-lbl">Division ${d.div}</span></div>
+        <div class="tc-div-row"><span class="tc-div-lbl">Division ${d.div}</span>${d.constructorChampion?`<span class="tc-crown">${COIN}</span>`:''}</div>
         <div class="tc-drivers">
-          <span style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">T1</span> ${d.tier1 || '&mdash;'}<br>
-          <span style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">T2</span> ${d.tier2 || '&mdash;'}
+          <span style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">T1</span> ${d.tier1 || '&mdash;'}${d.champion1?' '+TROPHY:''}<br>
+          <span style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">T2</span> ${d.tier2 || '&mdash;'}${d.champion2?' '+TROPHY:''}
         </div>
       </div>`;
     });
@@ -511,11 +514,39 @@ function renderS28Season(divDataArr, seasonNum) {
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 let s28Cache = null;
+let historicalAwardsPromise = null;
+let selectedTeamSeason = '';
+
+async function loadHistoricalAwards(){
+  if(!historicalAwardsPromise)historicalAwardsPromise=(async()=>{
+    const main=await loadConfig();
+    if(!main.legacy_teams_sheet_id)return {};
+    const response=await fetch(`https://docs.google.com/spreadsheets/d/${main.legacy_teams_sheet_id}/export?format=csv&gid=${main.legacy_teams_gid||'0'}`);
+    if(!response.ok)throw new Error('Historical awards returned HTTP '+response.status);
+    return parseSheet(parseCSV(await response.text()));
+  })().catch(error=>{console.warn('Historical team awards unavailable:',error.message);return {};});
+  return historicalAwardsPromise;
+}
+
+function applyHistoricalAwards(divisions, reference){
+  if(!reference)return;
+  const key=value=>clean(value).toLowerCase().replace(/\s+/g,' ').trim();
+  divisions.forEach(division=>division.teams.forEach(team=>{
+    const oldTeam=reference.teams.find(item=>key(item.name)===key(team.name));
+    if(!oldTeam)return;
+    team.ownerChampion=oldTeam.ownerChampion&&!!team.tp&&key(oldTeam.owner)===key(team.tp);
+    const oldDivision=oldTeam.divisions.find(item=>item.div===team.div);
+    if(!oldDivision)return;
+    team.constructorChampion=oldDivision.constructorChampion;
+    team.champion1=oldDivision.drivers.some(driver=>driver.champion&&key(driver.name)===key(team.tier1));
+    team.champion2=oldDivision.drivers.some(driver=>driver.champion&&key(driver.name)===key(team.tier2));
+  }));
+}
 
 async function init(){
   try{
-    // The TEST site must enumerate and read the rebuilt season configs only.
-    // Pulling the live legacy teams master here would create a false match.
+    // Rebuilt season configs remain the source of rosters. The historical
+    // reference supplies champion markers only, never teams or driver seats.
     const configuredSeasons = await getAllSeasons();
     const allNums = configuredSeasons.map(item=>String(item.season)).sort((a,b)=>parseFloat(b)-parseFloat(a));
 
@@ -530,6 +561,7 @@ async function init(){
 }
 
 async function showSeason(s){
+  selectedTeamSeason=String(s);
   if(window.F1XLDriverMovements)window.F1XLDriverMovements.show(s);
   document.querySelectorAll('.s-btn').forEach(b=>b.classList.remove('active'));
   const btn=document.getElementById('sbtn-'+s.replace('.','_'));
@@ -559,6 +591,12 @@ async function showSeason(s){
       }
       const results = (await Promise.all(fetches)).filter(Boolean);
       const divDataArr = results.map(r => parseS28DataTab(r.rows, r.div));
+      const current=await getCurrentSeason();
+      if(!current||Number(s)<Number(current)){
+        const awards=await loadHistoricalAwards();
+        applyHistoricalAwards(divDataArr,awards[String(s)]);
+      }
+      if(selectedTeamSeason!==String(s))return;
       document.getElementById('teams-content').innerHTML = renderS28Season(divDataArr, s);
     } catch(e) {
       document.getElementById('teams-content').innerHTML=`<div class="loading-msg">Could not load: ${e.message}</div>`;

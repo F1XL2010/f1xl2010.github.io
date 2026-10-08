@@ -779,7 +779,7 @@ function switchDivTab(id, tabKey){
     const divNum = parseInt(tabKey);
     if(!isNaN(divNum)){
       const s = parseFloat(_currentSeason||0);
-      if(s>=28) loadS28DivContent(id, divNum, _currentSeasonConfig);
+      if(isNextGeneratedSeason(_currentSeasonConfig)||s>=28) loadS28DivContent(id, divNum, _currentSeasonConfig);
       else if(s>=20) loadS20DivContent(id, divNum, _currentSeasonConfig);
       else loadDivContent(id, divNum, _currentSeasonConfig);
     }
@@ -1314,7 +1314,7 @@ async function renderS20plus(id, season, sc, body){
   }
   tabsHtml += '</div>';
 
-  body.insertAdjacentHTML('beforeend', '<div id="'+id+'-overall-slot"><div class="div-loading">Loading overall constructors...</div></div>' + tabsHtml + contentHtml);
+  body.insertAdjacentHTML('beforeend', '<div id="'+id+'-overall-slot">'+(sc.overall_gid?'<div class="div-loading">Loading overall constructors...</div>':'')+'</div>' + tabsHtml + contentHtml);
   setTimeout(_colourActiveTabs, 0);
   fetchAndInsertOverall(id, sc, body);
   await loadS20DivContent(id, 1, sc);
@@ -1730,7 +1730,7 @@ async function renderS28(id, season, sc, body){
   }
   tabsHtml += '</div>';
 
-  body.insertAdjacentHTML('beforeend', '<div id="'+id+'-overall-slot"><div class="div-loading">Loading overall constructors...</div></div>' + tabsHtml + contentHtml);
+  body.insertAdjacentHTML('beforeend', '<div id="'+id+'-overall-slot">'+(sc.overall_gid?'<div class="div-loading">Loading overall constructors...</div>':'')+'</div>' + tabsHtml + contentHtml);
   setTimeout(_colourActiveTabs, 0);
   await Promise.all([
     fetchAndInsertOverall(id, sc, body),
@@ -1833,13 +1833,12 @@ function buildS28Drivers(rows, calendarRows){
     roundCols.push({col:c, label:short, isSprint, isSprintRace, roundNumber});
   }
 
-  // A numeric championship position and a driver name define a public row.
+  // Recovered seasons can have race results without confirmed final positions.
   // Do not impose the former 30-row display cap: rebuilt seasons can contain
   // more entrants because of reserves and mid-season replacements.
   const dataRows = rows.slice(dataStart).filter(r=>{
-    const pos=parseInt((r[0]||'').trim(),10);
     const name=(r[2]||'').trim();
-    return Number.isFinite(pos)&&pos>0&&name&&name!=='CALCULATIONS'&&name!=='Driver';
+    return name&&name!=='CALCULATIONS'&&name!=='Driver'&&!name.startsWith('#');
   });
 
   // Trim trailing empty rounds
@@ -1881,7 +1880,7 @@ function buildS28Drivers(rows, calendarRows){
 
   sorted.forEach((r,idx)=>{
     const sourcePos = parseInt((r[0]||'').trim(),10);
-    const pos    = Number.isFinite(sourcePos) ? sourcePos : idx+1;
+    const pos    = Number.isFinite(sourcePos) ? sourcePos : '—';
     const driver = (r[2]||'').trim();
     const team   = (r[3]||'').trim();
     const ptsRaw  = parseFloat((r[ptsCol]||'0').trim())||0;
@@ -1937,12 +1936,13 @@ function buildS28Constructors(id, d, constRows, teamStatsRows){
         .map(r=>({
           pos:posCol>=0?parseInt((r[posCol]||'').trim(),10):NaN,
           team:(r[teamCol]||'').trim(),
-          pts:parseFloat((r[ptsCol]||'').trim())||0
+          pts:Number.isFinite(parseFloat((r[ptsCol]||'').trim()))?parseFloat(r[ptsCol]):null
         }))
         .filter(r=>r.team)
-        .sort((a,b)=>Number.isFinite(a.pos)&&Number.isFinite(b.pos)?a.pos-b.pos:b.pts-a.pts);
+        .sort((a,b)=>(Number.isFinite(a.pos)?a.pos:Infinity)-(Number.isFinite(b.pos)?b.pos:Infinity)||(b.pts??-Infinity)-(a.pts??-Infinity));
       if(data.length){
-        const leaderPoints = Math.floor(data[0].pts);
+        const hasPoints = data.some(row=>row.pts!==null);
+        const leaderPoints = data[0].pts===null?null:Math.floor(data[0].pts);
         constHtml = '<div style="display:flex;justify-content:center;padding:4px 0;"><div class="st-wrap st-wrap-narrow"><table class="standings-table"><thead><tr>';
         constHtml += '<th class="ps-st-pos"><span class="ps-pos-header">Pos</span></th>';
         constHtml += '<th class="ps-st-driver"><span class="ps-driver-header">Team / Principal</span></th>';
@@ -1950,12 +1950,12 @@ function buildS28Constructors(id, d, constRows, teamStatsRows){
         constHtml += '<th class="ps-result"><div class="ps-round-header">Gap</div></th>';
         constHtml += '</tr></thead><tbody>';
         data.forEach((d2,i)=>{
-          const pos=Number.isFinite(d2.pos)?d2.pos:i+1;
+          const pos=Number.isFinite(d2.pos)?d2.pos:hasPoints&&d2.pts!==null?i+1:'—';
           const pc=pos===1?'p1':pos===2?'p2':pos===3?'p3':'';
-          const gap=i===0?'—':'-'+(leaderPoints-Math.floor(d2.pts));
+          const gap=i===0||leaderPoints===null||d2.pts===null?'—':'-'+(leaderPoints-Math.floor(d2.pts));
           constHtml += '<tr><td class="ps-st-pos"><span class="ps-pos-cell '+pc+'">'+pos+'</span></td>';
           constHtml += psDriverCell(d2.team,d2.team);
-          constHtml += '<td class="ps-result"><span class="ps-pts">'+Math.floor(d2.pts)+'</span></td>';
+          constHtml += '<td class="ps-result"><span class="ps-pts">'+(d2.pts===null?'—':Math.floor(d2.pts))+'</span></td>';
           constHtml += '<td class="ps-result"><span style="font-size:12px;color:rgba(255,255,255,0.5);">'+gap+'</span></td>';
           constHtml += '</tr>';
         });
