@@ -162,7 +162,7 @@
     <div class="nav-item">
       <button class="active">Race Tickets <span class="nav-chevron">▼</span></button>
       <div class="nav-dropdown">
-        <a href="../submit-ticket.html">Submit Ticket</a>
+
         <a href="ticket-outcomes.html">Ticket Outcomes</a>
         <a href="drivers-licence.html">Drivers Licence</a>
       </div>
@@ -193,7 +193,7 @@
   <a href="../asr.html">All Star Race</a>
   <a href="teams.html">Teams</a>
   <div class="mob-section">Race Tickets</div>
-  <a href="../submit-ticket.html">Submit Ticket</a>
+
   <a href="ticket-outcomes.html">Ticket Outcomes</a>
   <a href="drivers-licence.html">Drivers Licence</a>
   <a href="schedule.html">Schedule</a>
@@ -258,6 +258,8 @@ const COLS = {
 let allTickets = [];
 let currentFilter = 'all';
 let accumulatedColumn = -1;
+let sessionColumn = -1;
+let caseIdColumn = -1;
 
 async function loadTickets() {
   try{const cfg=await loadConfig();if(!cfg.active_test_season||cfg.test_tickets_ready!=='yes'){document.getElementById('content').textContent='Season '+cfg.active_test_season+' tickets are not connected yet.';return;}}catch(e){document.getElementById('content').textContent='Test website configuration could not be loaded.';return;}
@@ -279,6 +281,9 @@ async function loadTickets() {
 
     const rows = parseCSV(text);
     accumulatedColumn=(rows[0]||[]).findIndex(value=>String(value||'').trim().toLowerCase()==='accumulated penalty indicators');
+
+    sessionColumn=(rows[0]||[]).findIndex(value=>String(value||'').trim().toLowerCase()==='session');
+    caseIdColumn=(rows[0]||[]).findIndex(value=>String(value||'').trim().toLowerCase()==='fap case id');
 
     // Skip header row, collect valid data rows
     // A valid row must have a race name starting with S (e.g. S27 Singapore)
@@ -303,13 +308,11 @@ async function loadTickets() {
     filtersEl.querySelectorAll('.filter-btn:not(#filter-all)').forEach(b => b.remove());
 
     // Load last-seen ticket counts from localStorage
-    const lastSeen = JSON.parse(localStorage.getItem('f1xl_tickets_seen') || '{}');
+    const lastSeen = readSeenTickets();
 
     divisions.forEach(div => {
       const divTickets = allTickets.filter(r => (r[COLS.division]||'').trim() === div);
-      const maxTicket = Math.max(...divTickets.map(r => parseInt(r[COLS.ticketNum])||0));
-      const lastSeenMax = lastSeen[div] || 0;
-      const hasNew = maxTicket > lastSeenMax;
+      const hasNew = divTickets.some(row=>!lastSeen.includes(ticketSeenKey(row)));
 
       const btn = document.createElement('button');
       btn.className = 'filter-btn';
@@ -413,42 +416,30 @@ function timeAdjustmentLabel(value) {
   return seconds<0?`${Math.abs(seconds)} seconds removed`:seconds>0?`${seconds} seconds added`:'';
 }
 
+// Only display a prior balance when the export supplies a usable cumulative
+// total. Older manual imports may have no verified balance; zero is not a default.
 function getPriorRacePoints(tickets) {
   const priorPoints = new Map();
-
-  tickets.forEach((row, rowIndex) => {
-    const race = (row[COLS.race] || '').trim();
-    const division = (row[COLS.division] || '').trim();
-    const ticketNumber = parseInt(row[COLS.ticketNum]) || rowIndex;
-    const drivers = [
-      {
-        name: (row[COLS.submitter] || '').trim(),
-        pointsAdded: parseFloat(row[COLS.submitterOutcome]) || 0,
-        resultingPoints: parseFloat(row[COLS.submitterPoints]) || 0
-      },
-      {
-        name: (row[COLS.offender] || '').trim(),
-        pointsAdded: parseFloat(row[COLS.offenderOutcome]) || 0,
-        resultingPoints: parseFloat(row[COLS.offenderPoints]) || 0
-      }
-    ];
-
-    drivers.forEach(driver => {
-      if (!driver.name) return;
-      const key = `${race}|${division}|${driver.name.toLowerCase()}`;
-      const existing = priorPoints.get(key);
-      if (!existing || ticketNumber < existing.ticketNumber) {
-        const points = Math.max(0, driver.resultingPoints - driver.pointsAdded);
-        priorPoints.set(key, {
-          ticketNumber,
-          points: Math.round(points * 100) / 100
-        });
-      }
+  tickets.forEach((row,rowIndex)=>{
+    const race=row[COLS.race], division=row[COLS.division], ticketNumber=parseInt(row[COLS.ticketNum])||rowIndex;
+    [[COLS.submitter,COLS.submitterOutcome,COLS.submitterPoints],[COLS.offender,COLS.offenderOutcome,COLS.offenderPoints]].forEach(([nameCol,addedCol,totalCol])=>{
+      const name=String(row[nameCol]||'').trim(),added=String(row[addedCol]||'').trim(),total=String(row[totalCol]||'').trim();
+      if(!name||!added||!total||!Number.isFinite(Number(added))||!Number.isFinite(Number(total))||Number(total)<Number(added))return;
+      const key=`${race}|${division}|${name.toLowerCase()}`,existing=priorPoints.get(key);
+      if(!existing||ticketNumber<existing.ticketNumber)priorPoints.set(key,{ticketNumber,points:Math.round((Number(total)-Number(added))*100)/100});
     });
   });
-
   return priorPoints;
 }
+function evidenceUrls(value){
+  return String(value||'').replace(/(https?:\/\/)/gi,'\n$1').split(/\s+/).filter(url=>/^https?:\/\//i.test(url));
+}
+function ticketSessionLabel(value){
+  const key=String(value||'').toLowerCase().replace(/[^a-z]/g,'');
+  return ({race:'Feature race',featurerace:'Feature race',qualifying:'Qualifying',sprint:'Sprint race',sprintrace:'Sprint race',sprintqualifying:'Sprint qualifying'})[key]||'';
+}
+function ticketSeenKey(row){return `${row[COLS.race]}|${caseIdColumn>=0&&row[caseIdColumn]||row[COLS.ticketNum]}`;}
+function readSeenTickets(){try{const v=JSON.parse(localStorage.getItem('f1xl_ticket_cases_seen')||'[]');return Array.isArray(v)?v:[];}catch(e){return [];}}
 
 function renderTickets() {
   const filtered = getFiltered();
@@ -540,16 +531,14 @@ function renderTickets() {
       const offenderPenalty = (row[COLS.offenderPenalty] || '').trim();
       const submitterPointsAdded = parseFloat(submitterOutcome) || 0;
       const offenderPointsAdded = parseFloat(offenderOutcome) || 0;
-      const submitterPriorPoints = priorRacePoints.get(`${race}|${div}|${submitter.toLowerCase()}`)?.points ?? 0;
-      const offenderPriorPoints = priorRacePoints.get(`${race}|${div}|${offender.toLowerCase()}`)?.points ?? 0;
+      const submitterPriorPoints = priorRacePoints.get(`${race}|${div}|${submitter.toLowerCase()}`)?.points;
+      const offenderPriorPoints = priorRacePoints.get(`${race}|${div}|${offender.toLowerCase()}`)?.points;
 
       // Evidence links - trim whitespace and check for http
       const evLinks = [row[COLS.ev1], row[COLS.ev2], row[COLS.ev3], row[COLS.ev4]]
-        .map(e => (e || '').trim())
-        .filter(e => e.startsWith('http'));
+        .flatMap(evidenceUrls);
       const devLinks = [row[COLS.dev1], row[COLS.dev2], row[COLS.dev3], row[COLS.dev4]]
-        .map(e => (e || '').trim())
-        .filter(e => e.startsWith('http'));
+        .flatMap(evidenceUrls);
 
       const appealed = (row[COLS.appealed] || '').trim().toLowerCase() === 'yes';
       const appealInfo = (row[COLS.appealInfo] || '').trim();
@@ -576,7 +565,7 @@ function renderTickets() {
                 <div class="ticket-team">${offenderTeam}</div>
               </div>
             </div>
-            <div class="ticket-div">Division ${div}</div>
+            <div class="ticket-div">Division ${div}${sessionColumn>=0&&ticketSessionLabel(row[sessionColumn])?` · <span class="ticket-session">${ticketSessionLabel(row[sessionColumn])}</span>`:''}</div>
           </div>
           <div class="ticket-verdict">
             <div class="verdict-badge ${vc}">${vl}</div>
@@ -626,7 +615,7 @@ function renderTickets() {
                 <div class="outcome-pts ${submitterPointsAdded > 0 ? 'pts-added' : 'pts-none'}">
                   ${submitterPointsAdded > 0 ? `+${submitterOutcome} licence points` : 'No points added'}
                 </div>
-                <div class="outcome-penalty">Points Prior to Race: ${submitterPriorPoints}</div>
+                ${submitterPriorPoints!==undefined?`<div class="outcome-penalty">Points prior to race: ${submitterPriorPoints}</div>`:''}
                 ${timeAdjustmentLabel(submitterPenalty)?`<div class="outcome-penalty">${timeAdjustmentLabel(submitterPenalty)}</div>`:''}
               </div>
               <div class="outcome-box">
@@ -635,7 +624,7 @@ function renderTickets() {
                 <div class="outcome-pts ${offenderPointsAdded > 0 ? 'pts-added' : 'pts-none'}">
                   ${offenderPointsAdded > 0 ? `+${offenderOutcome} licence points` : 'No points added'}
                 </div>
-                <div class="outcome-penalty">Points Prior to Race: ${offenderPriorPoints}</div>
+                ${offenderPriorPoints!==undefined?`<div class="outcome-penalty">Points prior to race: ${offenderPriorPoints}</div>`:''}
                 ${timeAdjustmentLabel(offenderPenalty)?`<div class="outcome-penalty">${timeAdjustmentLabel(offenderPenalty)}</div>`:''}
               </div>
             </div>
@@ -649,7 +638,7 @@ function renderTickets() {
             ${appealEvidence
               ? `<div style="margin-top:6px;">
                   <span style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;">Appeal evidence</span>
-                  <div style="margin-top:4px;">${appealEvidence.split(/\s+/).filter(s=>s.startsWith('http')).map((url,i)=>`<a href="${url}" target="_blank" rel="noopener" style="display:inline-block;margin-right:6px;font-size:11px;color:#E8B84B;text-decoration:none;border:1px solid rgba(232,184,75,0.3);border-radius:3px;padding:2px 8px;">Video ${i+1}</a>`).join('') || `<span class="detail-text">${appealEvidence}</span>`}</div>
+                  <div style="margin-top:4px;">${evidenceUrls(appealEvidence).map((url,i)=>`<a href="${url}" target="_blank" rel="noopener" style="display:inline-block;margin-right:6px;font-size:11px;color:#E8B84B;text-decoration:none;border:1px solid rgba(232,184,75,0.3);border-radius:3px;padding:2px 8px;">Video ${i+1}</a>`).join('') || `<span class="detail-text">${appealEvidence}</span>`}</div>
                 </div>`
               : ''}
             <div style="margin-top:8px;display:flex;align-items:center;gap:8px;">
@@ -713,10 +702,8 @@ function filterDiv(div, btn) {
   // Mark this division's tickets as seen
   if (div !== 'all') {
     const divTickets = allTickets.filter(r => (r[COLS.division]||'').trim() === div);
-    const maxTicket = Math.max(...divTickets.map(r => parseInt(r[COLS.ticketNum])||0));
-    const lastSeen = JSON.parse(localStorage.getItem('f1xl_tickets_seen') || '{}');
-    lastSeen[div] = maxTicket;
-    localStorage.setItem('f1xl_tickets_seen', JSON.stringify(lastSeen));
+    const lastSeen = [...new Set(readSeenTickets().concat(divTickets.map(ticketSeenKey)))];
+    try{localStorage.setItem('f1xl_ticket_cases_seen', JSON.stringify(lastSeen));}catch(e){}
     // Remove dot from button
     const dotEl = btn.querySelector('.filter-new-dot');
     if (dotEl) dotEl.remove();

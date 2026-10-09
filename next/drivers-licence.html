@@ -129,7 +129,7 @@
     <div class="nav-item">
       <button class="active">Race Tickets <span class="nav-chevron">▼</span></button>
       <div class="nav-dropdown">
-        <a href="../submit-ticket.html">Submit Ticket</a>
+
         <a href="ticket-outcomes.html">Ticket Outcomes</a>
         <a href="drivers-licence.html">Drivers Licence</a>
       </div>
@@ -160,7 +160,7 @@
   <a href="../asr.html">All Star Race</a>
   <a href="teams.html">Teams</a>
   <div class="mob-section">Race Tickets</div>
-  <a href="../submit-ticket.html">Submit Ticket</a>
+
   <a href="ticket-outcomes.html">Ticket Outcomes</a>
   <a href="drivers-licence.html">Drivers Licence</a>
   <a href="schedule.html">Schedule</a>
@@ -341,11 +341,15 @@ async function init(){
     }
 
     if(!allDivisions.length)throw new Error('The published summary has no division headers.');
-    renderUpcomingBans(upcomingBans);
+    // Reviews request an admin decision; they are not enforceable bans.
+    renderUpcomingBans(upcomingBans.filter(b=>!/admin review/i.test(b.ban)));
+    renderLicenceReviews(upcomingBans.filter(b=>/admin review/i.test(b.ban)));
     const guideRows=parseCSV(guideText).slice(1).filter(r=>r.some(v=>v.trim()));
     document.getElementById('guide-body').innerHTML='<table class="licence-table"><tbody>'+guideRows.map(r=>{
       const values=Array.from({length:4},(_,i)=>g(r,i)),filled=values.filter(Boolean);
-      return filled.length===1?'<tr><td colspan="4">'+licenceEscape(filled[0])+'</td></tr>':'<tr>'+values.map(v=>'<td>'+licenceEscape(v)+'</td>').join('')+'</tr>';
+      if(filled.length===1)return '<tr><td colspan="4" style="white-space:normal;line-height:1.5">'+licenceEscape(filled[0])+'</td></tr>';
+      if(filled.length===2&&!values[2]&&!values[3])return '<tr><th style="white-space:normal">'+licenceEscape(values[0])+'</th><td colspan="3" style="white-space:normal;line-height:1.5">'+licenceEscape(values[1])+'</td></tr>';
+      return '<tr>'+values.map(v=>'<td>'+licenceEscape(v)+'</td>').join('')+'</tr>';
     }).join('')+'</tbody></table>';
     document.getElementById('penalty-guide').hidden=false;
 
@@ -371,6 +375,14 @@ function publicBanReason(reason){
   return readable || (/\[Ticket\s/i.test(text)?'Ticket decision':'—');
 }
 
+function renderLicenceReviews(reviews){
+  const old=document.getElementById('licence-reviews');if(old)old.remove();
+  if(!reviews.length)return;
+  const box=document.createElement('div');box.id='licence-reviews';box.style.marginBottom='20px';
+  box.innerHTML='<div class="detail-label">Pending admin review</div>'+reviews.map(b=>'<p>'+licenceEscape(b.driver)+' · '+licenceEscape(publicBanReason(b.reason))+'</p>').join('');
+  document.getElementById('upcoming-bans').after(box);
+}
+
 function renderUpcomingBans(bans){
   const el = document.getElementById('upcoming-bans');
   if(!el) return;
@@ -384,7 +396,7 @@ function renderUpcomingBans(bans){
       <td><span class="pts-value" style="font-size:13px;">D${licenceEscape(b.div)}</span></td>
       <td><span class="driver-name">${licenceEscape(b.driver)}</span></td>
       <td><span style="color:#ff6b6b;font-size:12px;font-weight:500;">${licenceEscape(b.ban)}</span></td>
-      <td>${licenceEscape(b.race||'To be confirmed')}</td>
+      <td>${licenceEscape(b.race||(/qual/i.test(b.ban)?'Next participating qualifying':'Next participating race'))}</td>
       <td><span style="font-size:12px;color:var(--text-muted);">${licenceEscape(b.incurred)}</span></td>
       <td><span style="font-size:12px;color:var(--text-faint);">${licenceEscape(publicBanReason(b.reason))}</span></td>
     </tr>`;
