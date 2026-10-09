@@ -63,6 +63,8 @@
   .badge-sprint{background:rgba(100,150,255,0.15);color:rgba(130,170,255,0.9);border:1px solid rgba(100,150,255,0.2);}
   .badge-sc{background:rgba(232,184,75,0.12);color:var(--gold);border:1px solid rgba(232,184,75,0.25);}
   .badge-rf{background:rgba(225,6,0,0.12);color:#ff6b6b;border:1px solid rgba(225,6,0,0.25);}
+  .badge-event{display:inline-flex;align-items:center;gap:8px;font-size:12px;padding:5px 9px;letter-spacing:0.2px;}
+  .badge-event strong{font-size:14px;line-height:1;font-weight:700;white-space:nowrap;}
   .race-winner-label{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;}
   .race-winner-name{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--gold);}
   .race-winner-team{font-size:11px;color:var(--text-faint);}
@@ -325,6 +327,7 @@ function extractSection(rows, label, isRace){
 
 function getMeta(rows){
   let circuit='', sc='0', rf='0', isSprint=false, sprintFormat='', cancelled=false;
+  let sprintSc='', sprintRf='';
   let wQuali='', wRace='', wSprintQuali='', wSprintRace='';
   for(let i=0;i<Math.min(8,rows.length);i++){
     const row=rows[i]||[];
@@ -334,6 +337,10 @@ function getMeta(rows){
       if(v==='circuit') circuit=next;
       if(v==='safety cars'||v==='safety car') sc=next||'0';
       if(v==='red flag'||v==='red flags') rf=next||'0';
+      // Sprint metadata is stored in H3/H4; F3/F4 contain the labels and
+      // G is blank. Also accept adjacent values used by older exports.
+      if(v==='sprint safety car'||v==='sprint safety cars') sprintSc=next||(row[j+2]||'').trim();
+      if(v==='sprint red flag'||v==='sprint red flags') sprintRf=next||(row[j+2]||'').trim();
       if(v==='sprint') isSprint=next.toLowerCase()==='yes'||next.toLowerCase()==='y';
       if(v==='modern sprint'){isSprint=true;sprintFormat='modern';}
       if(v==='legacy sprint'){isSprint=true;sprintFormat='legacy';}
@@ -345,7 +352,7 @@ function getMeta(rows){
       if(v==='sprint race weather') wSprintRace=next||(row[j+2]||'').trim();
     }
   }
-  return{circuit, sc, rf, isSprint, sprintFormat, cancelled, wQuali, wRace, wSprintQuali, wSprintRace};
+  return{circuit, sc, rf, sprintSc, sprintRf, isSprint, sprintFormat, cancelled, wQuali, wRace, wSprintQuali, wSprintRace};
 }
 
 let _seasonCfg = null;
@@ -569,7 +576,7 @@ function render(r,rows){
     const sr=extractSection(rows,'Sprint Race',true);
     const fr=extractSection(rows,'Race',true);
     const winner=fr.find(x=>x.pos==='1');
-    html+=header(r,circuit,winner,sc,rf,true);
+    html+=header(r,circuit,winner,sc,rf,true,meta);
     html+=`<div class="section-label">Sprint</div>`;
     html+=`<div class="results-grid">${qTable(q,'Qualifying',meta.wQuali,circuit)}${srTable(sr,'Sprint Race',meta.wSprintRace,circuit)}</div>`;
     html+=`<div class="section-label">Grand Prix</div>`;
@@ -580,7 +587,7 @@ function render(r,rows){
     const mq=extractSection(rows,'Qualifying',false);
     const mr=extractSection(rows,'Race',true);
     const winner=mr.find(x=>x.pos==='1');
-    html+=header(r,circuit,winner,sc,rf,true);
+    html+=header(r,circuit,winner,sc,rf,true,meta);
     html+=`<div class="section-label">Sprint</div>`;
     html+=`<div class="results-grid">${qTable(sq,'Sprint Qualifying',meta.wSprintQuali,circuit)}${srTable(sr,'Sprint Race',meta.wSprintRace,circuit)}</div>`;
     html+=`<div class="section-label">Grand Prix</div>`;
@@ -632,7 +639,25 @@ function circuitToFlag(circuit){
   return '';
 }
 
-function header(r,circuit,winner,sc,rf,isSprint){
+function raceEventBadges(sc,rf,isSprint,sprintSc,sprintRf){
+  const events = [
+    {label:isSprint?'Race safety cars':'Safety cars',value:sc,style:'sc'},
+    {label:isSprint?'Race red flags':'Red flags',value:rf,style:'rf'}
+  ];
+  if(isSprint) events.push(
+    {label:'Sprint safety cars',value:sprintSc,style:'sc'},
+    {label:'Sprint red flags',value:sprintRf,style:'rf'}
+  );
+  return events.map(event=>{
+    const count=Number(event.value);
+    // Blank or unrecorded data is not a recorded zero. Only show events
+    // when the source supplies a positive whole-number count.
+    if(!Number.isSafeInteger(count)||count<=0)return '';
+    return `<div class="badge badge-${event.style} badge-event"><span>${event.label}</span><strong>×${count}</strong></div>`;
+  }).join('');
+}
+
+function header(r,circuit,winner,sc,rf,isSprint,meta={}){
   const flagUrl = circuitToFlag(circuit);
   const flagStyle = flagUrl ? `background-image:url('${flagUrl}');background-size:cover;background-position:center;` : '';
   const winnerTeam = winner && winner.team && winner.team !== 'undefined' ? winner.team : '';
@@ -644,8 +669,7 @@ function header(r,circuit,winner,sc,rf,isSprint){
         <div class="race-badges">
           <div class="badge badge-round">Round ${r.round}</div>
           ${isSprint?`<div class="badge badge-sprint">Sprint Weekend</div>`:''}
-          ${sc>0?`<div class="badge badge-sc">SC ×${sc}</div>`:''}
-          ${rf>0?`<div class="badge badge-rf">Red Flag ×${rf}</div>`:''}
+          ${raceEventBadges(sc,rf,isSprint,meta.sprintSc,meta.sprintRf)}
         </div>
       </div>
       ${winner?`<div>
