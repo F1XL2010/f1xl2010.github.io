@@ -368,7 +368,22 @@ const raceFlags = {
 
 
 
-async function fetchSheet(sheetId, gid) {
+// Share reads between the standings and stats panels during this page visit.
+// Failed reads are removed so a later attempt can retry; a reload reads afresh.
+const sheetReads = new Map();
+function fetchSheet(sheetId, gid) {
+  const key = `${sheetId}:${gid}`;
+  if (!sheetReads.has(key)) {
+    const read = fetchSheetUncached(sheetId, gid).catch(error => {
+      sheetReads.delete(key);
+      throw error;
+    });
+    sheetReads.set(key, read);
+  }
+  return sheetReads.get(key);
+}
+
+async function fetchSheetUncached(sheetId, gid) {
   const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -692,18 +707,18 @@ async function loadDrivers() {
     }
     if (!nameRow) nameRow = rows[Math.max(0,hIdx-4)];
 
-    // Map race columns — stop once we've passed the Gap column
+    // Read named summary columns even when hidden calculation columns occur
+    // between them (the current export places Raw Points before Gap).
     const races = [];
     let poleCol=-1, flCol=-1, ptsCol=-1, gapCol=-1;
     for (let c=4; c<hRow.c.length; c++) {
       const h = cs(hRow,c);
       if (!h) continue;
-      if (h==='Pole'){poleCol=c;continue;}
-      if (h==='F/L'){flCol=c;continue;}
-      if (h==='Points'){ptsCol=c;continue;}
-      if (h==='Gap'){gapCol=c;continue;}
-      // Stop processing once we've found Points — anything after is hidden calc cols
-      if (ptsCol>=0) break;
+      if (h==='Pole' && poleCol<0){poleCol=c;continue;}
+      if (h==='F/L' && flCol<0){flCol=c;continue;}
+      if (h==='Points' && ptsCol<0){ptsCol=c;continue;}
+      if (h==='Gap'){gapCol=c;break;}
+      if (ptsCol>=0) continue;
       const sprint = h.toLowerCase().includes('(s)') || h.toLowerCase().includes('(r)');
       const sprintRace = h.toLowerCase().includes('(r)');
       // Only include race columns up to the number of rounds in this season
@@ -908,36 +923,28 @@ async function loadDrivers() {
   }
 }
 
+function constructorStandings(rows) {
+  const hIdx = rows.findIndex(row => row.c && row.c.some(cell =>
+    String(cell.v || '').trim().toLowerCase() === 'team'));
+  if (hIdx < 0) throw new Error('Header not found');
+  const heading = rows[hIdx];
+  const column = name => heading.c.findIndex(cell =>
+    String(cell.v || '').trim().toLowerCase() === name);
+  const posCol = column('pos'), teamCol = column('team'), ptsCol = column('points');
+  if (teamCol < 0 || ptsCol < 0) throw new Error('Columns not found');
+  return rows.slice(hIdx + 1).filter(row => cs(row, teamCol)).map(row => {
+    const number = parseFloat(cs(row, ptsCol));
+    return {pos: posCol >= 0 ? parseInt(cs(row, posCol), 10) : 0,
+      team: cs(row, teamCol), pts: Number.isFinite(number) ? Math.floor(number) : null};
+  }).sort((a,b) => (a.pos>0&&b.pos>0&&a.pos!==b.pos) ? a.pos-b.pos : a.pts!==null&&b.pts!==null ? b.pts-a.pts : 0);
+}
+
 async function loadConstructors() {
   try {
     const conTable = await fetchSheet(currentDiv.sheetId, currentDiv.gids.constructors);
     const rows = conTable.rows;
 
-    // Find header row dynamically
-    let hIdx = -1;
-    for (let i=0; i<rows.length; i++) {
-      if (rows[i].c.some(c => (c.v||'').toString().trim().toLowerCase() === 'team')) { hIdx=i; break; }
-    }
-    if (hIdx<0) throw new Error('Header not found');
-    const hRow = rows[hIdx];
-    const posCol = hRow.c.findIndex(c => (c.v||'').toString().trim().toLowerCase() === 'pos');
-    const teamCol = hRow.c.findIndex(c => (c.v||'').toString().trim().toLowerCase() === 'team');
-    const ptsCol = hRow.c.findIndex(c => (c.v||'').toString().trim().toLowerCase() === 'points');
-    if (teamCol<0 || ptsCol<0) throw new Error('Columns not found');
-
-    const teams = [];
-    for (let i=hIdx+1; i<rows.length; i++) {
-      const row = rows[i];
-      const team = cs(row,teamCol).trim();
-      const ptsRaw = cs(row,ptsCol).trim();
-      if (!team) continue;
-      const number=parseFloat(ptsRaw);
-      const pts = Number.isFinite(number) ? Math.floor(number) : null;
-      teams.push({pos: posCol>=0 ? parseInt(cs(row,posCol)) : 0, team, pts});
-    }
-
-    // Final/source position is authoritative; points are the safe fallback.
-    teams.sort((a,b) => (a.pos>0&&b.pos>0&&a.pos!==b.pos) ? a.pos-b.pos : a.pts!==null&&b.pts!==null ? b.pts-a.pts : 0);
+    const teams = constructorStandings(rows);
     const leader = teams.length ? teams[0].pts : 0;
 
     const conTableStyle = `width:100%;max-width:560px;border-collapse:collapse;`;
@@ -983,9 +990,38 @@ async function loadConstructors() {
   }
 }
 
+function grandPrixResults(rows) {
+  const results = new Map();
+  const headerIndex = rows.findIndex(row => row.c && row.c.some(cell =>
+    String(cell.v || '').trim().toLowerCase() === 'driver'));
+  if (headerIndex < 0) return results;
+  const header = rows[headerIndex];
+  const driverCol = header.c.findIndex(cell => String(cell.v || '').trim().toLowerCase() === 'driver');
+  const pointsCol = header.c.findIndex(cell => String(cell.v || '').trim().toLowerCase() === 'points');
+  const finishCols = [];
+  // Later columns repeat the race headings for points calculations; these are
+  // not finishing positions and must not be counted as additional starts.
+  for (let c=0; c<(pointsCol >= 0 ? pointsCol : header.c.length); c++) {
+    // Rn is a normal feature race; Rn(R) is the feature in a sprint weekend.
+    // Rn(S), DNS and empty future rounds must not add Grand Prix starts.
+    if (/^R\d+(?:\s*\(R\))?$/i.test(cs(header,c))) finishCols.push(c);
+  }
+  if (!finishCols.length) return results;
+  for (const row of rows.slice(headerIndex + 1)) {
+    const driver = cs(row, driverCol).toLowerCase();
+    if (driver && driver !== 'driver' && driver !== 'calculations') {
+      results.set(driver, finishCols.map(c => cs(row,c)));
+    }
+  }
+  return results;
+}
+
 async function loadStats() {
   try {
-    const table = await fetchSheet(currentDiv.sheetId, currentDiv.gids.driverStats);
+    const [table, resultsTable] = await Promise.all([
+      fetchSheet(currentDiv.sheetId, currentDiv.gids.driverStats),
+      fetchSheet(currentDiv.sheetId, currentDiv.gids.drivers).catch(() => null)
+    ]);
     const rows = table.rows;
     let html = '';
 
@@ -1020,7 +1056,9 @@ async function loadStats() {
     // Read Grand Prix finishes from the calculation table by heading rather
     // than trusting fixed row offsets. Sprint finishes are deliberately not
     // counted in the main-race reliability figures.
-    const gpResultsByDriver = new Map();
+    // Public snapshots omit the private calculation block. Use the published
+    // feature-race columns, retaining the calculation block as a legacy fallback.
+    const gpResultsByDriver = resultsTable ? grandPrixResults(resultsTable.rows) : new Map();
     let calcHeaderIdx = -1;
     let gpFinishCols = [];
     for (let i=hIdx+1; i<rows.length; i++) {
@@ -1040,7 +1078,9 @@ async function loadStats() {
       for (let i=calcHeaderIdx+1; i<rows.length; i++) {
         const driver = cs(rows[i],0);
         if (!driver) continue;
-        gpResultsByDriver.set(driver.toLowerCase(), gpFinishCols.map(c => cs(rows[i],c)));
+        if (!gpResultsByDriver.has(driver.toLowerCase())) {
+          gpResultsByDriver.set(driver.toLowerCase(), gpFinishCols.map(c => cs(rows[i],c)));
+        }
       }
     }
 
@@ -1111,7 +1151,7 @@ async function loadStats() {
           <div class="stat-card-bar" style="background:var(--green)"></div>
           <div>
             <div class="stat-card-name">${driver}</div>
-            <div class="stat-card-sub">${started} Grand Prix starts · ${dnfs} DNF${dnfs!==1?'s':''}</div>
+            <div class="stat-card-sub">${started} ${gpResults ? 'Grand Prix starts' : 'race starts (including sprints)'} · ${dnfs} DNF${dnfs!==1?'s':''}</div>
           </div>
         </div>
         <div class="stat-metrics">
@@ -1143,7 +1183,10 @@ async function loadStats() {
 
 async function loadTeamStats() {
   try {
-    const table = await fetchSheet(currentDiv.sheetId, currentDiv.gids.teamStats);
+    const [table, standingsTable] = await Promise.all([
+      fetchSheet(currentDiv.sheetId, currentDiv.gids.teamStats),
+      fetchSheet(currentDiv.sheetId, currentDiv.gids.constructors).catch(() => null)
+    ]);
     const rows = table.rows;
     let html = '';
 
@@ -1182,14 +1225,23 @@ async function loadTeamStats() {
       return Number.isFinite(number) ? number.toFixed(decimals) : '—';
     };
 
-    for (let i=1; i<rows.length; i++) {
-      const row = rows[i];
+    const positions = new Map(standingsTable ? constructorStandings(standingsTable.rows)
+      .map((team, index) => [team.team.toLowerCase(), index]) : []);
+    const orderedRows = rows.slice(1).filter(row => cs(row,cols.name)).sort((a,b) => {
+      const aPos = positions.get(cs(a,cols.name).toLowerCase());
+      const bPos = positions.get(cs(b,cols.name).toLowerCase());
+      return (aPos ?? Infinity) - (bPos ?? Infinity) ||
+        (parseFloat(cs(b,cols.totalPts)) || 0) - (parseFloat(cs(a,cols.totalPts)) || 0) ||
+        cs(a,cols.name).localeCompare(cs(b,cols.name), 'en', {sensitivity:'base'});
+    });
+    for (const row of orderedRows) {
       const team = cs(row, cols.name);
       if (!team) continue;
 
       const wins    = parseFloat(cs(row,cols.wins))||0;
       const pods    = parseFloat(cs(row,cols.pods))||0;
-      const totalPts = parseFloat(cs(row,cols.totalPts));
+      const rawPoints = parseFloat(cs(row,cols.totalPts));
+      const totalPts = Number.isFinite(rawPoints) ? Math.floor(rawPoints) : NaN;
       const avgPts  = Number.isFinite(totalPts) && roundColumns.length ? totalPts / roundColumns.length : null;
       const avgFinT1 = cs(row,cols.avgFinT1);
       const avgFinT2 = cs(row,cols.avgFinT2);
@@ -1734,7 +1786,7 @@ async function loadCoolStats() {
             // block further down the sheet that reuses these same column
             // positions for unrelated per-round data — must stop here, not
             // just skip blanks, or those numbers get misread as extra stats.
-            if (name.toLowerCase() === 'calculations') break;
+            if (['calculations','driver'].includes(name.toLowerCase())) break;
             if (!name) continue; // unfilled seat (e.g. no Tier 2 driver yet) — skip, don't stop
             out.push({
               name,
@@ -1758,16 +1810,21 @@ async function loadCoolStats() {
       return;
     }
 
-    const top5 = (arr, key) => [...arr].filter(d => d[key] > 0).sort((a,b) => b[key] - a[key]).slice(0, 5);
+    const top5 = (arr, key) => [...arr].filter(d => d[key] > 0).sort((a,b) =>
+      b[key] - a[key] || a.div.localeCompare(b.div, 'en', {numeric:true}) ||
+      a.name.localeCompare(b.name, 'en', {sensitivity:'base'}) || a.name.localeCompare(b.name, 'en')
+    ).slice(0, 5);
 
     const buildCard = (title, sub, arr, key) => {
       if (!arr.length) return '';
       let html = `<div class="cs-card"><div><div class="cs-card-title">${title}</div><div class="cs-card-sub">${sub}</div></div>`;
       arr.forEach((d, i) => {
         const color = teamColors[d.team] || '#555';
-        const gold = i === 0 ? 'gold' : '';
+        const rank = arr.findIndex(other => other[key] === d[key]) + 1;
+        const tied = arr.some((other, index) => index !== i && other[key] === d[key]);
+        const gold = rank === 1 ? 'gold' : '';
         html += `<div class="cs-row">
-          <span class="cs-row-pos ${gold}">${i+1}</span>
+          <span class="cs-row-pos ${gold}">${tied ? '=' : ''}${rank}</span>
           <div style="width:3px;height:14px;background:${color};border-radius:1px;flex-shrink:0;"></div>
           <div style="flex:1;min-width:0;">
             <div class="cs-row-name">${d.name}</div>
