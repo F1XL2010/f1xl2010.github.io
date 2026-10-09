@@ -85,6 +85,15 @@
   .rc-driver{font-size:12px;color:var(--text-muted);}
   .retired-list{padding:0 24px 32px;display:flex;flex-wrap:wrap;gap:6px;}
   .retired-pill{background:#161d1b;border:1px solid var(--border);border-radius:4px;padding:4px 10px;font-size:12px;color:var(--text-faint);}
+  .free-agent-grid{grid-template-columns:repeat(auto-fill,minmax(280px,1fr));}
+  .free-agent-grid .tc-name{font-size:16px;}
+  .free-agent-grid .tc-header-content{padding:9px 12px;}
+  .free-agent-grid .tc-body{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:12px;}
+  .free-agent-grid .tc-div{margin:0;}
+  .tc-drivers,.rc-driver{overflow-wrap:anywhere;}
+  .vacant-seat{color:var(--text-faint);}
+  .reserve-tier{font-size:11px;color:var(--text-faint);margin-right:5px;}
+  @media(max-width:400px){.teams-grid{grid-template-columns:minmax(0,1fr);}}
   .loading-msg{text-align:center;padding:48px;color:var(--text-muted);font-size:13px;}
   footer{background:#161d1b;border-top:1px solid var(--border);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:20px;}
   .footer-logo{background:var(--green);color:#000;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;padding:4px 9px;border-radius:3px;}
@@ -311,29 +320,38 @@ function renderSeason(data,num){
 
 let allData={};
 // ── S28+ DATA TAB PARSER ─────────────────────────────────────────────────────
-function parseS28DataTab(rows, divNum) {
+function teamKey(value){return clean(String(value||'')).toLowerCase().replace(/\s+/g,' ').trim();}
+function teamDefinitions(rows){
+  const header=(rows[0]||[]).map(teamKey),name=header.indexOf('team'),principal=header.indexOf('team principal'),type=header.indexOf('team type');
+  if(name<0)throw new Error('Team information is missing its Team heading.');
+  return rows.slice(1).filter(row=>teamKey(row[name])).map(row=>({name:clean(row[name]),tp:principal<0?'':clean(row[principal]||''),type:type<0?'':String(row[type]||'').trim()}));
+}
+function parseS28DataTab(rows, divNum, definitions=[]) {
   const teams = {};       // constructor teams
-  const reserveTeams = {}; // teams flagged as reserve
-  const freeAgents = [];
+  const reserveTeams = {}; // Legacy property name for free-agent teams.
+  const reserves = [];
   const retired = [];
   const SKIP = ['driver','reserve','retired','platform','controller type','tier','team','#','team principal','name',''];
 
-  // The familiar Data adapter is the reliable source across rebuilt seasons:
-  // J=driver, M=team and N=tier. Build the teams from those rows first. This
-  // does not depend on the optional Team Principal heading, which older
-  // generated workbooks do not contain.
+  const known=new Map(definitions.map(team=>[teamKey(team.name),team]));
+  function ensureTeam(name){
+    const key=teamKey(name),definition=known.get(key),isFree=teamKey(definition?.type)==='free agent team'||(!teamKey(definition?.type)&&teamKey(definition?.tp)==='reserve');
+    const collection=isFree?reserveTeams:teams;
+    if(!collection[key])collection[key]={name:definition?.name||clean(name),tp:definition?.tp||'',tier1:'',tier2:'',div:divNum};
+    return collection[key];
+  }
+  // Explicit team types are authoritative. Seed even vacant teams in every
+  // division so an empty roster cannot make a configured team disappear.
+  definitions.forEach(team=>ensureTeam(team.name));
+  // J=driver, M=team and N=tier. Team/tier rows also prove empty seats.
   for (let i = 1; i < rows.length; i++) {
     const driver = (rows[i][9]  || '').trim();
     const team   = (rows[i][12] || '').trim();
     const tier   = (rows[i][13] || '').trim();
-    if (!driver || SKIP.includes(driver.toLowerCase())) continue;
     if (!team || SKIP.includes(team.toLowerCase())) continue;
     if (!/^tier\s*[12]$/i.test(tier)) continue;
-    const key = team.toLowerCase();
-    const isReserve = key === 'reserve' || key.includes('reserve team');
-    const collection = isReserve ? reserveTeams : teams;
-    if (!collection[key]) collection[key] = { name: team, tp: '', tier1: '', tier2: '', div: divNum };
-    const target = collection[key];
+    const target=ensureTeam(team);
+    if (!driver || SKIP.includes(driver.toLowerCase())) continue;
     if (tier.toLowerCase().includes('1')) target.tier1 = driver;
     else if (tier.toLowerCase().includes('2')) target.tier2 = driver;
   }
@@ -344,16 +362,20 @@ function parseS28DataTab(rows, divNum) {
   for (let i = 1; i < rows.length; i++) {
     const tp = (rows[i][9] || '').trim();
     const team = (rows[i][10] || '').trim();
-    const key = team.toLowerCase();
+    const key = teamKey(team);
     const target = teams[key] || reserveTeams[key];
     if (!target) continue;
-    if (tp && !SKIP.includes(tp.toLowerCase())) target.tp = tp;
+    if(known.has(key)&&['full team','free agent team'].includes(teamKey(known.get(key).type)))continue;
+    // Compatibility for old Data tabs: “Reserve” in the principal table
+    // marks a free-agent team; a blank principal alone does not.
+    if(teamKey(tp)==='reserve'&&teams[key]){reserveTeams[key]=teams[key];reserveTeams[key].tp='';delete teams[key];}
+    else if (tp && !SKIP.includes(tp.toLowerCase())) target.tp = clean(tp);
   }
 
-  // Step 3 — free agents from col P (index 15)
+  // P:S holds actual reserves, including their division and tier.
   for (let i = 2; i < rows.length; i++) {
     const v = (rows[i][15] || '').trim();
-    if (v && !SKIP.includes(v.toLowerCase())) freeAgents.push(v);
+    if (v && !SKIP.includes(v.toLowerCase())) reserves.push({name:clean(v),div:divNum,tier:clean(rows[i][18]||'')});
   }
 
   // Step 4 — retired from col T (index 19)
@@ -365,7 +387,7 @@ function parseS28DataTab(rows, divNum) {
   return {
     teams:         Object.values(teams),
     reserveTeams:  Object.values(reserveTeams),
-    freeAgents:    freeAgents.filter(Boolean),
+    reserves:      reserves,
     retired:       retired.filter(Boolean)
   };
 }
@@ -416,24 +438,22 @@ function renderS28Season(divDataArr, seasonNum) {
 
   const allTeams        = Object.values(teamMap).sort((a, b) => a.name.localeCompare(b.name));
 
-  // Merge reserve teams across divisions (same approach as constructor teams
-  // above) — dedup by name was previously dropping every division's reserve
-  // team except the first one encountered, since they share generic names
-  // like "Reserve" across every division.
+  // Merge free-agent team cards while retaining every division's seats.
   const reserveTeamMap = {};
   divDataArr.forEach(divData => {
     (divData.reserveTeams || []).forEach(t => {
       const key = t.name.toLowerCase();
       if (!reserveTeamMap[key]) reserveTeamMap[key] = { ...t, divs: [] };
-      reserveTeamMap[key].divs.push({ div: t.div, tier1: t.tier1, tier2: t.tier2 });
+      reserveTeamMap[key].divs.push({ div: t.div, tier1: t.tier1, tier2: t.tier2,
+        constructorChampion:t.constructorChampion,champion1:t.champion1,champion2:t.champion2 });
     });
   });
   const allReserveTeams = Object.values(reserveTeamMap);
 
-  const allFreeAgents   = [...new Set(divDataArr.flatMap(d => d.freeAgents))].filter(Boolean);
+  const allReserves = divDataArr.flatMap(d=>d.reserves||[]);
   const allRetired      = [...new Set(divDataArr.flatMap(d => d.retired))].filter(Boolean);
 
-  const cardTemplate = (t, divsHtml) => {
+  const cardTemplate = (t, divsHtml, compact=false) => {
     const color = getColor(t.name);
     const img = '../images/teamlogos/squarelogo_' + t.name.toLowerCase().replace(/\s+/g,'').replace(/[^a-z0-9]/g,'') + '.webp';
     const anyChampion=t.ownerChampion||t.divs.some(d=>d.constructorChampion||d.champion1||d.champion2);
@@ -444,7 +464,7 @@ function renderS28Season(divDataArr, seasonNum) {
           <div class="tc-bar" style="background:${color}"></div>
           <div>
             <div class="tc-name">${t.name}</div>
-            <div class="tc-owner-row"><span class="tc-owner-lbl">Team Principal</span><span class="tc-owner">${t.tp || '&mdash;'}</span>${t.ownerChampion?`<span class="tc-crown">${CROWN}</span>`:''}</div>
+            ${compact?'':`<div class="tc-owner-row"><span class="tc-owner-lbl">Team Principal</span><span class="tc-owner">${t.tp || '&mdash;'}</span>${t.ownerChampion?`<span class="tc-crown">${CROWN}</span>`:''}</div>`}
           </div>
         </div>
       </div>
@@ -460,8 +480,8 @@ function renderS28Season(divDataArr, seasonNum) {
       divsHtml += `<div class="tc-div">
         <div class="tc-div-row"><span class="tc-div-lbl">Division ${d.div}</span>${d.constructorChampion?`<span class="tc-crown">${COIN}</span>`:''}</div>
         <div class="tc-drivers">
-          <span style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">T1</span> ${d.tier1 || '&mdash;'}${d.champion1?' '+TROPHY:''}<br>
-          <span style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">T2</span> ${d.tier2 || '&mdash;'}${d.champion2?' '+TROPHY:''}
+          <span style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">T1</span> ${d.tier1 || '<span class="vacant-seat">Vacant</span>'}${d.champion1?' '+TROPHY:''}<br>
+          <span style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">T2</span> ${d.tier2 || '<span class="vacant-seat">Vacant</span>'}${d.champion2?' '+TROPHY:''}
         </div>
       </div>`;
     });
@@ -469,35 +489,37 @@ function renderS28Season(divDataArr, seasonNum) {
   });
   html += '</div>';
 
-  // ── Reserve Teams ──
+  // ── Free-agent teams: separate and less prominent than full teams ──
   if (allReserveTeams.length) {
     html += `<div class="section-divider"></div>
-    <div class="section-label">Reserve Drivers</div>
-    <div class="section-sublabel" style="padding:0 24px 12px;font-size:12px;color:var(--text-faint);">Guaranteed race seat — no constructor assigned</div>
-    <div class="teams-grid">`;
+    <div class="section-label">Free-agent teams</div>
+    <div class="teams-grid free-agent-grid">`;
     allReserveTeams.forEach(t => {
       let divsHtml = '';
       t.divs.forEach(d => {
         divsHtml += `<div class="tc-div">
-          <div class="tc-div-row"><span class="tc-div-lbl">Division ${d.div}</span></div>
+          <div class="tc-div-row"><span class="tc-div-lbl">Division ${d.div}</span>${d.constructorChampion?`<span class="tc-crown">${COIN}</span>`:''}</div>
           <div class="tc-drivers">
-            <span style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">T1</span> ${d.tier1 || '&mdash;'}<br>
-            <span style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">T2</span> ${d.tier2 || '&mdash;'}
+            <span style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">T1</span> ${d.tier1 || '<span class="vacant-seat">Vacant</span>'}${d.champion1?' '+TROPHY:''}<br>
+            <span style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">T2</span> ${d.tier2 || '<span class="vacant-seat">Vacant</span>'}${d.champion2?' '+TROPHY:''}
           </div>
         </div>`;
       });
-      html += cardTemplate(t, divsHtml);
+      html += cardTemplate(t, divsHtml, true);
     });
     html += '</div>';
   }
 
-  // ── Free Agents ──
-  if (allFreeAgents.length) {
+  // ── Reserve pool, grouped by division without losing tier information ──
+  if (allReserves.length) {
     html += `<div class="section-divider"></div>
-    <div class="section-label">Free Agents</div>
-    <div class="section-sublabel" style="padding:0 24px 12px;font-size:12px;color:var(--text-faint);">Part-time &amp; overflow drivers &mdash; not guaranteed a seat each week</div>
-    <div class="retired-list">`;
-    allFreeAgents.forEach(d => { html += `<div class="retired-pill">${d}</div>`; });
+    <div class="section-label">Reserve drivers</div>
+    <div class="reserves-grid">`;
+    [...new Set(allReserves.map(r=>r.div))].sort((a,b)=>a-b).forEach(div=>{
+      html+=`<div class="reserve-card"><div class="rc-name">Division ${div}</div>`;
+      allReserves.filter(r=>r.div===div).forEach(r=>{html+=`<div class="rc-entry rc-driver"><span class="reserve-tier">${r.tier||'Tier not recorded'}</span> ${r.name}</div>`;});
+      html+='</div>';
+    });
     html += '</div>';
   }
 
@@ -516,6 +538,21 @@ function renderS28Season(divDataArr, seasonNum) {
 let s28Cache = null;
 let historicalAwardsPromise = null;
 let selectedTeamSeason = '';
+const teamDefinitionCache=new Map();
+async function readTeamRows(sheetId,gid){
+  const response=await fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`);
+  if(!response.ok)throw new Error('Team information returned HTTP '+response.status);
+  const text=await response.text();
+  if(/<!doctype|<html/i.test(text))throw new Error('Team information is not publicly readable.');
+  return parseCSV(text);
+}
+async function loadTeamDefinitions(sc){
+  const sid=sc.season_master_sheet_id||sc.master_team_sheet_id,gid=sc.teams_and_principals_gid||sc.master_team_sheet;
+  if(!sid||!gid)return []; // Older seasons use the Data principal markers.
+  const key=sid+'/'+gid;
+  if(!teamDefinitionCache.has(key))teamDefinitionCache.set(key,readTeamRows(sid,gid).then(teamDefinitions).catch(error=>{teamDefinitionCache.delete(key);throw error;}));
+  return teamDefinitionCache.get(key);
+}
 
 async function loadHistoricalAwards(){
   if(!historicalAwardsPromise)historicalAwardsPromise=(async()=>{
@@ -531,7 +568,7 @@ async function loadHistoricalAwards(){
 function applyHistoricalAwards(divisions, reference){
   if(!reference)return;
   const key=value=>clean(value).toLowerCase().replace(/\s+/g,' ').trim();
-  divisions.forEach(division=>division.teams.forEach(team=>{
+  divisions.forEach(division=>[...division.teams,...(division.reserveTeams||[])].forEach(team=>{
     const oldTeam=reference.teams.find(item=>key(item.name)===key(team.name));
     if(!oldTeam)return;
     team.ownerChampion=oldTeam.ownerChampion&&!!team.tp&&key(oldTeam.owner)===key(team.tp);
@@ -576,21 +613,15 @@ async function showSeason(s){
     try {
       // Fetch all divisions' team info tabs in parallel
       const numDivs = parseInt(sc['divisions']) || 1;
+      const definitionsPromise=loadTeamDefinitions(sc);
       const fetches = [];
       for (let d = 1; d <= numDivs; d++) {
         const gid = sc[`d${d}_team_info_gid`];
         const sid = sc[`d${d}_sheet_id`];
-        if (gid && sid) {
-          fetches.push(
-            fetch(`https://docs.google.com/spreadsheets/d/${sid}/export?format=csv&gid=${gid}`)
-              .then(r => r.text())
-              .then(text => ({ div: d, rows: parseCSV(text) }))
-              .catch(() => null)
-          );
-        }
+        fetches.push(gid&&sid?readTeamRows(sid,gid).then(rows=>({div:d,rows})):Promise.reject(new Error('Division '+d+' team information is not configured.')));
       }
-      const results = (await Promise.all(fetches)).filter(Boolean);
-      const divDataArr = results.map(r => parseS28DataTab(r.rows, r.div));
+      const [definitions,results]=await Promise.all([definitionsPromise,Promise.all(fetches)]);
+      const divDataArr = results.map(r => parseS28DataTab(r.rows, r.div,definitions));
       const current=await getCurrentSeason();
       if(!current||Number(s)<Number(current)){
         const awards=await loadHistoricalAwards();
@@ -599,6 +630,7 @@ async function showSeason(s){
       if(selectedTeamSeason!==String(s))return;
       document.getElementById('teams-content').innerHTML = renderS28Season(divDataArr, s);
     } catch(e) {
+      if(selectedTeamSeason!==String(s))return;
       document.getElementById('teams-content').innerHTML=`<div class="loading-msg">Could not load: ${e.message}</div>`;
     }
     return;
