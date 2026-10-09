@@ -290,6 +290,7 @@ function parseCSV(text){
 const cache = {};        // CSV data cache
 const seasonCache = {};  // Rendered season HTML cache
 let _currentSeasonConfig = null;
+let _currentSeason = null;
 
 function parseGID(sheetId, gid){
   // If gid is a full URL, extract the sheet ID and GID from it
@@ -319,6 +320,9 @@ async function fetchCSV(sheetId, gid){
 
 function posClass(p){return p===1?'p1':p===2?'p2':p===3?'p3':p<=10?'pp':p>10?'pout':'';}
 function trClass(p){return p===1?' class="p1"':p===2?' class="p2"':p===3?' class="p3"':'';}
+function esc(value){
+  return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
 function psTeamSlug(team){
   if(!team) return '';
   return team.toLowerCase().replace(/\s+/g,'').replace(/[^a-z0-9]/g,'');
@@ -327,7 +331,7 @@ function psDriverCell(driver, team){
   const slug = psTeamSlug(team);
   const logoStyle = slug ? `background-image:linear-gradient(rgba(22,29,27,0.5),rgba(22,29,27,0.5)),url('../images/teamlogos/thinlogo_${slug}.webp');background-size:cover;background-position:center;background-repeat:no-repeat;` : '';
   const hasLogo = slug ? ' has-logo' : '';
-  return `<td class="ps-st-driver${hasLogo}" style="${logoStyle}"><div class="ps-driver-cell"><span class="ps-driver-name">${driver}</span></div></td>`;
+  return `<td class="ps-st-driver${hasLogo}" style="${logoStyle}"><div class="ps-driver-cell"><span class="ps-driver-name">${esc(driver)}</span></div></td>`;
 }
 
 function psRiClass(val){
@@ -500,38 +504,46 @@ function buildS1S2Drivers(rows){
   return html;
 }
 
-function buildS1S2Constructors(rows){
-  let start = -1;
-  for(let i=0;i<rows.length;i++){
-    if((rows[i][1]||'').trim().toLowerCase()==='team'){ start=i+1; break; }
+function archiveConstructors(rows){
+  const text=v=>String(v??'').trim();
+  const hi=rows.findIndex(r=>r.some(v=>/^team$/i.test(text(v))));
+  if(hi<0)return [];
+  const hdr=rows[hi],col=name=>hdr.findIndex(v=>text(v).toLowerCase()===name);
+  const tc=col('team'),pc=hdr.findIndex(v=>/^pos(?:ition)?\.?$/i.test(text(v))),pts=col('points')>=0?col('points'):col('overall points'),wc=col('wins')>=0?col('wins'):col('races won'),pods=col('podiums');
+  if(pts<0)return [];
+  const data=[];
+  for(const r of rows.slice(hi+1)){
+    const position=text(r[pc]);
+    if(pc>=0&&position&&!/^\d+$/.test(position))continue;
+    const team=text(r[tc])||text(r[tc+1]);
+    if(/^(team|calculations)$/i.test(team))break;
+    if(!team||team.startsWith('#'))continue;
+    const number=Number(text(r[pts]).replace(/,/g,''));
+    data.push({team,pos:pc>=0&&position?Number(position):null,pts:text(r[pts])&&Number.isFinite(number)?Math.floor(number):null,orderPoints:number,
+      wins:wc>=0?text(r[wc]):null,pods:pods>=0?text(r[pods]):null});
   }
-  if(start<0) return '';
-
-  let html = '<div class="section-label">Constructors</div><div class="st-wrap"><table class="st">';
-  html += '<thead><tr><th class="th-l" style="width:30px">Pos</th><th class="th-l">Team</th><th>Wins</th><th>Podiums</th><th>Points</th></tr></thead><tbody>';
-
-  let pos = 1;
-  for(let i=start;i<rows.length;i++){
-    const row = rows[i];
-    const team = (row[1]||'').trim();
-    if(!team) continue;
-    const wins = (row[2]||'').trim();
-    const pods = (row[3]||'').trim();
-    const pts  = (row[4]||'').trim();
-    const pc = posClass(pos);
-    html += '<tr'+trClass(pos)+'>'+
-      '<td><span class="pos'+( pc?' '+pc:'')+'">'+(pos)+'</span></td>'+
-      '<td class="td-l"><span class="dname">'+team+'</span></td>'+
-      '<td><span class="rr-val">'+( wins||'&mdash;')+'</span></td>'+
-      '<td><span class="rr-val">'+( pods||'&mdash;')+'</span></td>'+
-      '<td><span class="pts">'+( pts||'&mdash;')+'</span></td>'+
-      '</tr>';
-    pos++;
-  }
-  html += '</tbody></table></div>';
-  return html;
+  return data.sort((a,b)=>a.pos!==null&&b.pos!==null?a.pos-b.pos:a.pts!==null&&b.pts!==null?b.orderPoints-a.orderPoints:0);
 }
 
+function buildArchiveConstructors(rows){
+  const data=archiveConstructors(rows||[]);
+  if(!data.length)return '<div class="div-loading">No constructors standings available.</div>';
+  const records=data.some(r=>r.wins!==null||r.pods!==null),leader=data[0].pts;
+  let html='<div style="display:flex;justify-content:center;padding:4px 0;"><div class="st-wrap st-wrap-narrow"><table class="standings-table"><thead><tr>'+
+    '<th class="ps-st-pos">Pos</th><th class="ps-st-driver">Team</th>'+(records?'<th class="ps-result">Wins</th><th class="ps-result">Podiums</th>':'')+
+    '<th class="ps-result">Pts</th><th class="ps-result">Gap</th></tr></thead><tbody>';
+  data.forEach((team,i)=>{
+    const pos=team.pos??(team.pts!==null?i+1:'—'),gap=i===0||leader===null||team.pts===null?'—':'-'+(leader-team.pts);
+    html+='<tr><td class="ps-st-pos"><span class="ps-pos-cell '+posClass(pos)+'">'+pos+'</span></td>'+psDriverCell(team.team,team.team)+
+      (records?'<td class="ps-result">'+esc(team.wins||'—')+'</td><td class="ps-result">'+esc(team.pods||'—')+'</td>':'')+
+      '<td class="ps-result"><span class="ps-pts">'+(team.pts===null?'—':team.pts.toLocaleString())+'</span></td><td class="ps-result">'+gap+'</td></tr>';
+  });
+  return html+'</tbody></table></div></div>';
+}
+
+function buildS1S2Constructors(rows){
+  return '<div class="section-label">Constructors</div>'+buildArchiveConstructors(rows);
+}
 
 // ============================================================
 // S3-S5 PARSER
@@ -540,118 +552,51 @@ function buildS1S2Constructors(rows){
 // ============================================================
 // ── OVERALL CONSTRUCTORS RENDERER ────────────────────────────────────────────
 function parseOverallConstructors(rows){
-  const teams = [];
-  let posCol=-1, teamCol=-1, ptsCol=-1, gapCol=-1, tpCol=-1, principalTeamCol=-1;
-  let headerIdx=-1;
-
-  for(let i=0;i<rows.length;i++){
-    const r=rows[i];
-    for(let c=0;c<r.length;c++){
-      const v=(r[c]||'').trim().toLowerCase();
-      if(v==='pos.'||v==='pos'){ posCol=c; headerIdx=i; break; }
-    }
-    if(headerIdx>=0) break;
-  }
+  const text = value=>String(value??'').trim();
+  const headerIdx=rows.findIndex(r=>r.some(v=>/^pos\.?$/i.test(text(v)))&&r.some(v=>/^team$/i.test(text(v))));
   if(headerIdx<0) return [];
-
-  const hdr=rows[headerIdx];
-  for(let c=0;c<hdr.length;c++){
-    const v=(hdr[c]||'').trim().toLowerCase();
-    if(v==='team'){
-      if(teamCol<0) teamCol=c;
-      principalTeamCol=c;
-    }
-    if(v==='points') ptsCol=c;
-    if(v==='gap') gapCol=c;
-    if(v.includes('principal')||v==='name') tpCol=c;
-  }
-
-  // S20-style offset fix: header says 'Team' is in col X but data is in col X+1 (merged cell export)
-  if(teamCol>=0 && headerIdx+1 < rows.length){
-    const firstData = rows[headerIdx+1];
-    const valAtTeamCol = (firstData[teamCol]||'').trim();
-    const valAtTeamColPlus1 = (firstData[teamCol+1]||'').trim();
-    if(!valAtTeamCol && valAtTeamColPlus1 && !valAtTeamColPlus1.startsWith('#')){
-      teamCol = teamCol + 1;
-    }
-  }
-
+  const hdr=rows[headerIdx], column=name=>hdr.findIndex(v=>text(v).toLowerCase()===name);
+  const posCol=hdr.findIndex(v=>/^pos\.?$/i.test(text(v))), teamCol=column('team'), ptsCol=column('points');
+  const tpCol=hdr.findIndex(v=>/principal/i.test(text(v))||text(v).toLowerCase()==='name');
+  let principalTeamCol=teamCol;
+  hdr.forEach((v,i)=>{if(text(v).toLowerCase()==='team')principalTeamCol=i;});
+  if(ptsCol<0) return [];
   const principalMap={};
-  if(tpCol>=0&&principalTeamCol>=0&&principalTeamCol!==teamCol){
-    for(let i=headerIdx+1;i<rows.length;i++){
-      const principal=(rows[i][tpCol]||'').trim();
-      const principalTeam=(rows[i][principalTeamCol]||'').trim();
-      if(principal&&principalTeam) principalMap[principalTeam.toLowerCase()]=principal;
-    }
+  for(const row of rows.slice(headerIdx+1)){
+    const team=text(row[principalTeamCol]), principal=text(row[tpCol]);
+    if(team&&principal)principalMap[psTeamSlug(team)]=principal;
   }
+  return rows.slice(headerIdx+1).filter(r=>/^\d+$/.test(text(r[posCol]))).map(r=>{
+    const team=text(r[teamCol])||text(r[teamCol+1]);
+    const points=Number(text(r[ptsCol]).replace(/,/g,''));
+    return {pos:Number(r[posCol]),team,pts:text(r[ptsCol])&&Number.isFinite(points)?Math.floor(points):null,
+      tp:principalMap[psTeamSlug(team)]||''};
+  }).filter(r=>r.team&&!r.team.startsWith('#')).sort((a,b)=>a.pos-b.pos);
+}
 
-  for(let i=headerIdx+1;i<rows.length;i++){
-    const r=rows[i];
-    const posRaw=(r[posCol]||'').trim();
-    const pos=parseInt(posRaw);
-    if(isNaN(pos)||pos<1) continue;
-    const team=(r[teamCol]||'').trim();
-    if(!team||team.startsWith('#')) continue;
-    const pts=(r[ptsCol]||'').trim().replace(/,/g,'');
-    const gap=gapCol>=0?(r[gapCol]||'').trim().replace(/,/g,'').replace(/^-$/,''):'';
-    const key=team.toLowerCase();
-    const match=Object.keys(principalMap).find(name=>key.includes(name)||name.includes(key));
-    const tp=match?principalMap[match]:'';
-    teams.push({pos, team, pts, gap, tp});
+function buildArchiveOverallTable(rows){
+  const teams=parseOverallConstructors(rows||[]);
+  if(!teams.length)return '<div class="div-loading">No overall standings available.</div>';
+  const leader=teams[0].pts;
+  let html='<div style="display:flex;justify-content:center;padding:12px 0;"><div class="st-wrap st-wrap-narrow"><table class="standings-table"><thead><tr>'+
+    '<th class="ps-st-pos">Pos</th><th class="ps-st-driver">Team / Principal</th><th class="ps-result">Pts</th><th class="ps-result">Gap</th></tr></thead><tbody>';
+  for(const team of teams){
+    const cell=psDriverCell('',team.team).replace('<div class="ps-driver-cell">','<div class="ps-driver-cell" aria-label="'+esc(team.team)+'">')
+      .replace('<span class="ps-driver-name"></span>',team.tp?
+        '<span class="ps-driver-team">'+(team.tp.toLowerCase()==='reserve'?'RESERVE':'Team Principal · '+esc(team.tp))+'</span>':'');
+    const gap=team.pos===1||leader===null||team.pts===null?'—':'-'+(leader-team.pts);
+    html+='<tr><td class="ps-st-pos"><span class="ps-pos-cell '+posClass(team.pos)+'">'+team.pos+'</span></td>'+cell+
+      '<td class="ps-result"><span class="ps-pts">'+(team.pts===null?'—':team.pts.toLocaleString())+'</span></td>'+
+      '<td class="ps-result">'+gap+'</td></tr>';
   }
-  return teams;
+  return html+'</tbody></table></div></div>';
 }
 
 function buildOverallSection(rows){
-  const teams = parseOverallConstructors(rows);
-  if(!teams.length) return '';
-
-  const tdStyle = 'padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.06);border-right:1px solid rgba(255,255,255,0.06);';
-  const thStyle = 'padding:8px 12px;background:#1a2320;color:rgba(255,255,255,0.5);font-family:\'Barlow Condensed\',sans-serif;font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;border-bottom:2px solid rgba(232,184,75,0.5);border-right:1px solid rgba(255,255,255,0.07);';
-
-  let html = `<div class="st-wrap" style="margin:12px 0 0;">
-    <table class="standings-table" style="width:100%;">
-      <thead><tr>
-        <th style="${thStyle}">Pos</th>
-        <th style="${thStyle}text-align:left;">Team / Principal</th>
-        <th style="${thStyle}">Points</th>
-        <th style="${thStyle}">Gap</th>
-      </tr></thead><tbody>`;
-
-  // Calculate gap from leader if not provided
-  const leaderPts = teams.length ? Math.round(parseFloat((teams[0].pts||'0').replace(/,/g,''))||0) : 0;
-
-  teams.forEach(t=>{
-    const slug = t.team.toLowerCase().replace(/\s+/g,'').replace(/[^a-z0-9]/g,'');
-    const color = (typeof TEAM_COLOURS !== 'undefined') ? (TEAM_COLOURS[t.team] || TEAM_COLOURS[Object.keys(TEAM_COLOURS).find(k=>k.toLowerCase()===t.team.toLowerCase())||''] || '#555') : '#555';
-    const r2=parseInt(color.slice(1,3),16)||85, g2=parseInt(color.slice(3,5),16)||85, b2=parseInt(color.slice(5,7),16)||85;
-    const rowBg = `background:rgba(${r2},${g2},${b2},0.1);`;
-    const teamBg = `background:rgba(${r2},${g2},${b2},0.2);border-left:3px solid ${color};`;
-    const logoStyle = `background-image:linear-gradient(rgba(22,29,27,0.5),rgba(22,29,27,0.5)),url('../images/teamlogos/thinlogo_${slug}.webp');background-size:cover;background-position:center;`;
-    const pc = t.pos===1?'#E8B84B':t.pos===2?'#C0C0C0':t.pos===3?'#cd7f32':'rgba(255,255,255,0.5)';
-    const tp = t.tp && t.tp.toLowerCase()==='reserve' ? 'RESERVE' : (t.tp || '');
-    const ptsNum = Math.round(parseFloat((t.pts||'0').replace(/,/g,''))||0);
-    const gapNum = t.pos===1 ? '—' : `-${leaderPts - ptsNum}`;
-    html += `<tr>
-      <td style="${tdStyle}${rowBg}"><span style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:${pc};">${t.pos}</span></td>
-      <td class="has-logo" style="${tdStyle}${teamBg}${logoStyle}"><div class="ps-driver-cell">
-        <span class="ps-driver-name">${t.team}</span>
-        ${tp ? `<span class="ps-driver-team">Team Principal · ${tp}</span>` : ''}
-      </div></td>
-      <td style="${tdStyle}${rowBg}text-align:right;"><span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#3DCC47;">${ptsNum}</span></td>
-      <td style="${tdStyle}${rowBg}text-align:right;color:rgba(255,255,255,0.6);">${gapNum}</td>
-    </tr>`;
-  });
-
-  html += '</tbody></table></div>';
-
-  return `<div class="overall-accordion">
-    <div class="overall-accordion-header" onclick="this.nextElementSibling.classList.toggle('open');this.querySelector('.overall-accordion-chevron').classList.toggle('open')">
-      <span class="overall-accordion-title">Overall Constructors Championship</span>
-      <span class="overall-accordion-chevron">▼</span>
-    </div>
-    <div class="overall-accordion-body open">${html}</div>
-  </div>`;
+  if(!parseOverallConstructors(rows).length)return '';
+  return '<div class="overall-accordion"><div class="overall-accordion-header" onclick="this.nextElementSibling.classList.toggle(\'open\');this.querySelector(\'.overall-accordion-chevron\').classList.toggle(\'open\')">'+
+    '<span class="overall-accordion-title">Overall Constructors Championship</span><span class="overall-accordion-chevron">▼</span></div>'+
+    '<div class="overall-accordion-body open">'+buildArchiveOverallTable(rows)+'</div></div>';
 }
 
 async function fetchAndInsertOverall(id, sc, body){
@@ -876,70 +821,8 @@ function buildRaceGridDrivers(rows){
 }
 
 function buildS3Constructors(rows){
-  // Handles two formats:
-  // S3: col1=Team, col2=Wins, col3=Podiums, col4=Points
-  // S4/S5: col1=Position, col2=Team, col3=Points (no wins/podiums)
-  let start=-1, teamCol=1, hasPos=false;
-  for(let i=0;i<rows.length;i++){
-    const r=rows[i];
-    if((r[1]||'').trim().toLowerCase()==='team'){ start=i+1; teamCol=1; hasPos=false; break; }
-    if((r[2]||'').trim().toLowerCase()==='team'){ start=i+1; teamCol=2; hasPos=true; break; }
-  }
-  if(start<0) return '';
-
-  // Find Points column dynamically (handles blank cols like S8)
-  let ptsCol = -1;
-  if(start > 0){
-    const hdr = rows[start-1];
-    for(let c=0;c<hdr.length;c++){
-      if((hdr[c]||'').trim().toLowerCase()==='points'){ ptsCol=c; break; }
-    }
-  }
-
-  // Sort by points desc
-  const data=[];
-  for(let i=start;i<rows.length;i++){
-    const r=rows[i];
-    const team=(r[teamCol]||'').trim();
-    if(!team || team.startsWith('#')) continue;
-    let wins='', pods='', pts=0;
-    if(ptsCol>=0){
-      pts=parseFloat((r[ptsCol]||'').trim())||0;
-    } else if(hasPos){
-      // S4/S5 format: Position, Team, Points
-      pts=parseFloat((r[teamCol+1]||'').trim())||0;
-    } else {
-      // S3 format: Team, Wins, Podiums, Points
-      wins=(r[2]||'').trim();
-      pods=(r[3]||'').trim();
-      pts=parseFloat((r[4]||'').trim())||0;
-    }
-    data.push({team,wins,pods,pts,hasPos});
-  }
-  data.sort((a,b)=>b.pts-a.pts);
-  if(!data.length) return '';
-
-  const showWinsPods = data.length > 0 && !data[0].hasPos;
-  let html = '<div class="section-label">Constructors</div><div class="st-wrap"><table class="st">';
-  html += '<thead><tr><th class="th-l" style="width:30px">Pos</th><th class="th-l">Team</th>';
-  if(showWinsPods) html += '<th>Wins</th><th>Podiums</th>';
-  html += '<th>Points</th></tr></thead><tbody>';
-  data.forEach((d,idx)=>{
-    const pos=idx+1;
-    html += '<tr'+trClass(pos)+'>';
-    html += '<td><span class="st-pos">'+pos+'</span></td>';
-    html += '<td class="td-l"><span class="dname">'+d.team+'</span></td>';
-    if(showWinsPods){
-      html += '<td><span class="rr-val">'+(d.wins||'&mdash;')+'</span></td>';
-      html += '<td><span class="rr-val">'+(d.pods||'&mdash;')+'</span></td>';
-    }
-    html += '<td><span class="pts">'+(d.pts||'&mdash;')+'</span></td>';
-    html += '</tr>';
-  });
-  html += '</tbody></table></div>';
-  return html;
+  return '<div class="section-label">Constructors</div>'+buildArchiveConstructors(rows);
 }
-
 
 // ============================================================
 // S10 PARSER
@@ -1124,69 +1007,7 @@ function buildDriverStats(rows){
 // OVERALL CONSTRUCTORS ACCORDION
 // ============================================================
 function buildOverallConstTable(rows){
-  if(!rows) return '<div class="div-loading">No data available.</div>';
-  // Find header row — look for 'Pos' or 'Pos.'
-  let start=-1, posCol=-1, teamCol=-1, ptsCol=-1, gapCol=-1, tpCol=-1;
-  for(let i=0;i<rows.length;i++){
-    const r=rows[i];
-    const posIdx=r.findIndex(v=>(v||'').trim().toLowerCase().startsWith('pos'));
-    if(posIdx>=0){
-      posCol=posIdx;
-      teamCol=r.findIndex(v=>(v||'').trim().toLowerCase()==='team');
-      if(teamCol<0) teamCol=posIdx+1;
-      ptsCol=r.findIndex(v=>(v||'').trim().toLowerCase()==='points');
-      gapCol=r.findIndex(v=>(v||'').trim().toLowerCase()==='gap');
-      // TP is the last non-blank column header
-      for(let c=r.length-1;c>=0;c--){
-        if((r[c]||'').trim()){ tpCol=c; break; }
-      }
-      start=i+1; break;
-    }
-  }
-  if(start<0||teamCol<0||ptsCol<0) return '<div class="div-loading">Could not parse data.</div>';
-  const data=[];
-  for(let i=start;i<rows.length;i++){
-    const r=rows[i];
-    let t=(r[teamCol]||'').trim();
-    if(!t) t=(r[teamCol+1]||'').trim();
-    if(!t||t.startsWith('#')) continue;
-    const pts=parseFloat((r[ptsCol]||'').trim().replace(/,/g,''))||0;
-    const gap=(gapCol>=0?(r[gapCol]||'').trim():'')||'';
-    const tp=(tpCol>=0?(r[tpCol]||'').trim():'')||'';
-    const tpDisplay = tp.toLowerCase()==='reserve'?'RESERVE':tp;
-    data.push({team:t, pts, gap, tp:tpDisplay});
-  }
-  data.sort((a,b)=>b.pts-a.pts);
-  if(!data.length) return '<div class="div-loading">No data found.</div>';
-
-  let html='<div style="display:flex;justify-content:center;padding:12px 0;"><div class="st-wrap st-wrap-narrow"><table class="standings-table"><thead><tr>';
-  html+='<th class="ps-st-pos"><span class="ps-pos-header">Pos</span></th>';
-  html+='<th class="ps-st-driver"><span class="ps-driver-header">Team</span></th>';
-  html+='<th class="ps-result"><div class="ps-round-header">Pts</div></th>';
-  if(gapCol>=0) html+='<th class="ps-result"><div class="ps-round-header">Gap</div></th>';
-  html+='</tr></thead><tbody>';
-
-  data.forEach((d,idx)=>{
-    const pos=idx+1;
-    const pc=pos===1?'p1':pos===2?'p2':pos===3?'p3':'';
-    const slug=psTeamSlug(d.team);
-    const logoStyle=slug?`background-image:linear-gradient(rgba(22,29,27,0.5),rgba(22,29,27,0.5)),url('../images/teamlogos/thinlogo_${slug}.webp');background-size:cover;background-position:center;background-repeat:no-repeat;`:'';
-    const hasLogo=slug?' has-logo':'';
-    const ptsClean=Math.floor(d.pts).toLocaleString();
-    html+='<tr>';
-    html+='<td class="ps-st-pos"><span class="ps-pos-cell '+pc+'">'+pos+'</span></td>';
-    html+='<td class="ps-st-driver'+hasLogo+'" style="'+logoStyle+'">';
-    html+='<div class="ps-driver-cell">';
-    html+='<span class="ps-driver-name">'+d.team+'</span>';
-    if(d.tp) html+='<span class="ps-driver-team">Team Principal · '+d.tp+'</span>';
-    html+='</div></td>';
-    html+='<td class="ps-result"><span class="ps-pts">'+ptsClean+'</span></td>';
-    if(gapCol>=0) html+='<td class="ps-result"><span style="font-size:12px;color:rgba(255,255,255,0.5);">'+(d.gap&&d.gap!=='-'?d.gap:'—')+'</span></td>';
-    html+='</tr>';
-  });
-
-  html+='</tbody></table></div></div>';
-  return html;
+  return buildArchiveOverallTable(rows);
 }
 
 function buildWeeklyTotalsTable(rows){
@@ -1534,63 +1355,7 @@ function buildS20ConstructorsWithTeamStats(id, d, constRows, teamStatsRows){
   }
 
   // Constructors table
-  let constHtml = '';
-  if(constRows){
-    // Find header: look for row with 'Pos' or 'Team'
-    let start = -1, posCol = -1, teamCol = -1, ptsCol = -1;
-    for(let i=0;i<constRows.length;i++){
-      const r = constRows[i];
-      const posIdx = r.findIndex(v=>(v||'').trim().toLowerCase()==='pos');
-      if(posIdx>=0){
-        posCol = posIdx;
-        // Team is col with 'Team' label, or first non-empty col after pos
-        teamCol = r.findIndex(v=>(v||'').trim().toLowerCase()==='team');
-        if(teamCol<0) teamCol = posIdx+1;
-        ptsCol = r.findIndex(v=>(v||'').trim().toLowerCase()==='points');
-        start = i+1; break;
-      }
-    }
-    if(start>=0 && teamCol>=0 && ptsCol>=0){
-      const data = [];
-      for(let i=start;i<constRows.length;i++){
-        const r=constRows[i];
-        const posValue = parseInt((r[posCol]||'').trim(),10);
-        if(!Number.isFinite(posValue)||posValue<1) continue;
-        // Team name may be in teamCol or teamCol+1 (blank col between header and value)
-        let t = (r[teamCol]||'').trim();
-        if(!t) t = (r[teamCol+1]||'').trim();
-        if(!t || t.startsWith('#') || /^-?\d+(?:\.\d+)?$/.test(t)) continue;
-        const pts = parseFloat((r[ptsCol]||'').trim())||0;
-        data.push({team:t, pts});
-      }
-      // Sort by points
-      data.sort((a,b)=>b.pts-a.pts);
-      const leader2 = data.length ? Math.floor(data[0].pts) : 0;
-      if(data.length){
-        constHtml = '<div style="display:flex;justify-content:center;padding:4px 0;"><div class="st-wrap st-wrap-narrow"><table class="standings-table"><thead><tr>';
-        constHtml += '<th class="ps-st-pos"><span class="ps-pos-header">Pos</span></th>';
-        constHtml += '<th class="ps-st-driver"><span class="ps-driver-header">Team / Principal</span></th>';
-        constHtml += '<th class="ps-result"><div class="ps-round-header">Pts</div></th>';
-        constHtml += '<th class="ps-result"><div class="ps-round-header">Gap</div></th>';
-        constHtml += '</tr></thead><tbody>';
-        data.forEach((d2,idx)=>{
-          const pos=idx+1;
-          const pc=pos===1?'p1':pos===2?'p2':pos===3?'p3':'';
-          const slug=psTeamSlug(d2.team);
-          const logoStyle=slug?`background-image:linear-gradient(rgba(22,29,27,0.5),rgba(22,29,27,0.5)),url('../images/teamlogos/thinlogo_${slug}.webp');background-size:cover;background-position:center;`:'';
-          const hasLogo=slug?' has-logo':'';
-          const gap=idx===0?'—':'-'+(leader2-Math.floor(d2.pts));
-          constHtml += '<tr>';
-          constHtml += '<td class="ps-st-pos"><span class="ps-pos-cell '+pc+'">'+pos+'</span></td>';
-          constHtml += '<td class="ps-st-driver'+hasLogo+'" style="'+logoStyle+'"><div class="ps-driver-cell"><span class="ps-driver-name">'+d2.team+'</span></div></td>';
-          constHtml += '<td class="ps-result"><span class="ps-pts">'+Math.floor(d2.pts)+'</span></td>';
-          constHtml += '<td class="ps-result"><span style="font-size:12px;color:rgba(255,255,255,0.5);">'+gap+'</span></td>';
-          constHtml += '</tr>';
-        });
-        constHtml += '</tbody></table></div></div>';
-      }
-    }
-  }
+  const constHtml = constRows ? buildArchiveConstructors(constRows) : '';
 
   // Team stats table
   let teamHtml = '';
@@ -1604,7 +1369,7 @@ function buildS20ConstructorsWithTeamStats(id, d, constRows, teamStatsRows){
         'average points':'Avg Pts','average grid':'Avg Grid','average pos. gained':'Pos Gain',
         'average position gained':'Pos Gain'
       };
-      const cols = hdr.map((v,i)=>({label:(v||'').trim(),col:i})).filter(c=>c.label&&c.col>0);
+      const cols = hdr.map((v,i)=>({label:(v||'').trim(),col:i})).filter(c=>c.label&&c.col>0&&!/^\d+$/.test(c.label));
       const dataRows2 = teamStatsRows.slice(hdrIdx+1).filter(r=>(r[0]||'').trim()&&!(r[0]||'').trim().startsWith('#'));
       if(dataRows2.length){
         teamHtml = '<div class="st-wrap"><table class="st"><thead><tr>';
@@ -1779,7 +1544,7 @@ async function loadS28DivContent(id, d, sc){
   if(statsRows){
     const statsEl = document.getElementById(id+'-dcontent-'+d+'s');
     if(statsEl){
-      statsEl.innerHTML = buildS28DriverStats(statsRows);
+      statsEl.innerHTML = buildS28DriverStats(statsRows, driverRows);
       statsEl.dataset.loaded = 'true';
     }
   }
@@ -1920,49 +1685,7 @@ function buildS28Constructors(id, d, constRows, teamStatsRows){
 
   // Constructors standings — from Constructors Standings NoSort
   // Row 0: title, Row 1: Pos/Team/Points/Gap headers, Rows 2+: data
-  let constHtml = '';
-  if(constRows){
-    let hdrIdx = constRows.findIndex(r=>(r[0]||'').trim().toLowerCase()==='pos'||(r[1]||'').trim().toLowerCase()==='team');
-    if(hdrIdx<0) hdrIdx=1; // fallback to row 1
-    const hdr = constRows[hdrIdx];
-    // Team could be col 1 (Constructors Standings NoSort) or col 2 (Constructors Results NoSort)
-    // Prefer Standings NoSort structure: col1=Team, col2=Points
-    const teamCol = hdr.findIndex(v=>(v||'').trim().toLowerCase()==='team');
-    const posCol  = hdr.findIndex(v=>(v||'').trim().toLowerCase()==='pos');
-    const ptsCol  = hdr.findIndex(v=>(v||'').trim().toLowerCase()==='points');
-    if(teamCol>=0 && ptsCol>=0){
-      const data = constRows.slice(hdrIdx+1)
-        .filter(r=>(r[teamCol]||'').trim() && !(r[teamCol]||'').trim().startsWith('#'))
-        .map(r=>({
-          pos:posCol>=0?parseInt((r[posCol]||'').trim(),10):NaN,
-          team:(r[teamCol]||'').trim(),
-          pts:Number.isFinite(parseFloat((r[ptsCol]||'').trim()))?parseFloat(r[ptsCol]):null
-        }))
-        .filter(r=>r.team)
-        .sort((a,b)=>(Number.isFinite(a.pos)?a.pos:Infinity)-(Number.isFinite(b.pos)?b.pos:Infinity)||(b.pts??-Infinity)-(a.pts??-Infinity));
-      if(data.length){
-        const hasPoints = data.some(row=>row.pts!==null);
-        const leaderPoints = data[0].pts===null?null:Math.floor(data[0].pts);
-        constHtml = '<div style="display:flex;justify-content:center;padding:4px 0;"><div class="st-wrap st-wrap-narrow"><table class="standings-table"><thead><tr>';
-        constHtml += '<th class="ps-st-pos"><span class="ps-pos-header">Pos</span></th>';
-        constHtml += '<th class="ps-st-driver"><span class="ps-driver-header">Team / Principal</span></th>';
-        constHtml += '<th class="ps-result"><div class="ps-round-header">Pts</div></th>';
-        constHtml += '<th class="ps-result"><div class="ps-round-header">Gap</div></th>';
-        constHtml += '</tr></thead><tbody>';
-        data.forEach((d2,i)=>{
-          const pos=Number.isFinite(d2.pos)?d2.pos:hasPoints&&d2.pts!==null?i+1:'—';
-          const pc=pos===1?'p1':pos===2?'p2':pos===3?'p3':'';
-          const gap=i===0||leaderPoints===null||d2.pts===null?'—':'-'+(leaderPoints-Math.floor(d2.pts));
-          constHtml += '<tr><td class="ps-st-pos"><span class="ps-pos-cell '+pc+'">'+pos+'</span></td>';
-          constHtml += psDriverCell(d2.team,d2.team);
-          constHtml += '<td class="ps-result"><span class="ps-pts">'+(d2.pts===null?'—':Math.floor(d2.pts))+'</span></td>';
-          constHtml += '<td class="ps-result"><span style="font-size:12px;color:rgba(255,255,255,0.5);">'+gap+'</span></td>';
-          constHtml += '</tr>';
-        });
-        constHtml += '</tbody></table></div></div>';
-      }
-    }
-  }
+  const constHtml = constRows ? buildArchiveConstructors(constRows) : '';
 
   // Team stats — header at row 0
   let teamHtml = '';
@@ -1977,7 +1700,7 @@ function buildS28Constructors(id, d, constRows, teamStatsRows){
         'avg sprint finish t1':'T1 Sp','avg sprint finish t2':'T2 Sp',
         'total points':'Points'
       };
-      const cols = hdr.map((v,i)=>({label:(v||'').trim(),col:i})).filter(c=>c.label&&c.col>0);
+      const cols = hdr.map((v,i)=>({label:(v||'').trim(),col:i})).filter(c=>c.label&&c.col>0&&!/^\d+$/.test(c.label));
       const dataRows = teamStatsRows.slice(hdrIdx+1).filter(r=>(r[0]||'').trim()&&!(r[0]||'').trim().startsWith('#'));
       if(dataRows.length){
         teamHtml = '<div class="st-wrap"><table class="st"><thead><tr>';
@@ -2016,7 +1739,26 @@ function buildS28Constructors(id, d, constRows, teamStatsRows){
   return html;
 }
 
-function buildS28DriverStats(rows){
+function archiveGrandPrixStats(rows){
+  const counts=new Map(),text=v=>String(v??'').trim();
+  const hi=(rows||[]).findIndex(r=>r.some(v=>text(v).toLowerCase()==='driver'));
+  if(hi<0)return counts;
+  const hdr=rows[hi],driver=hdr.findIndex(v=>text(v).toLowerCase()==='driver'),points=hdr.findIndex(v=>text(v).toLowerCase()==='points');
+  const cols=hdr.map((v,i)=>({value:text(v),i})).filter(c=>c.i<(points<0?hdr.length:points)&&/^R\d+(?:\s*\(R\))?$/i.test(c.value));
+  if(!cols.length)return counts;
+  for(const row of rows.slice(hi+1)){
+    const name=text(row[driver]);if(!name||/^driver$|^calculations$/i.test(name))continue;
+    const results=cols.map(c=>text(row[c.i]).toUpperCase());
+    const finished=results.filter(v=>Number.isFinite(Number(v))&&Number(v)>0).length;
+    const dnf=results.filter(v=>v==='DNF').length,dsq=results.filter(v=>v==='DSQ').length;
+    const started=finished+dnf+dsq;
+    counts.set(name.toLowerCase(),{'races started':started,'races finished':finished,dnf,dns:results.filter(v=>v==='DNS').length,
+      'reliability %':started?finished/started:null});
+  }
+  return counts;
+}
+
+function buildS28DriverStats(rows, driverRows){
   // Row 0: "DRIVER STATS" title
   // Row 1: headers — Driver, Team, Tier, Wins, Podiums...
   // Rows 2-23: data
@@ -2037,7 +1779,10 @@ function buildS28DriverStats(rows){
     'races started':'Started','races finished':'Finished','dnf':'DNF','dns':'DNS','reliability %':'Rel%'
   };
 
-  const cols = hdr.map((v,i)=>({label:(v||'').trim(),col:i})).filter(c=>c.label && c.col>0 && c.label!=='Team' && c.label!=='Tier');
+  const technicalColumn=hdr.findIndex((v,i)=>i>0&&(v||'').trim().toLowerCase()==='driver');
+  const visibleHeader=technicalColumn<0?hdr:hdr.slice(0,technicalColumn);
+  const cols = visibleHeader.map((v,i)=>({label:(v||'').trim(),col:i})).filter(c=>c.label && c.col>0 && c.label!=='Team' && c.label!=='Tier');
+  const gpCounts=archiveGrandPrixStats(driverRows);
   const teamCol  = hdr.findIndex(v=>(v||'').trim().toLowerCase()==='team');
   const tierCol  = hdr.findIndex(v=>(v||'').trim().toLowerCase()==='tier');
 
@@ -2045,7 +1790,7 @@ function buildS28DriverStats(rows){
   // table can otherwise collapse directly underneath the visible table.
   // Stop at its second Driver header rather than relying on row numbers.
   const nextDriverHeader = rows.findIndex((r,i)=>i>hdrIdx && (r[0]||'').trim().toLowerCase()==='driver');
-  const dataEnd = nextDriverHeader>hdrIdx ? nextDriverHeader : Math.min(rows.length,hdrIdx+31);
+  const dataEnd = nextDriverHeader>hdrIdx ? nextDriverHeader : rows.length;
   const dataRows = rows.slice(hdrIdx+1, dataEnd).filter(r=>{
     const name = (r[0]||'').trim();
     return name && name !== 'CALCULATIONS' && !name.startsWith('#') && name !== 'Driver';
@@ -2058,7 +1803,8 @@ function buildS28DriverStats(rows){
   html += '<th class="th-l sticky">Driver</th>';
   if(teamCol>=0) html += '<th class="th-l">Team</th>';
   cols.forEach(c=>{
-    const short = labelMap[c.label.toLowerCase()]||c.label;
+    const key=c.label.toLowerCase();
+    const short = gpCounts.size&&['races started','races finished','dnf','dns','reliability %'].includes(key)?'GP '+(labelMap[key]||c.label):labelMap[key]||c.label;
     html += '<th title="'+c.label+'">'+short+'</th>';
   });
   html += '</tr></thead><tbody>';
@@ -2067,16 +1813,19 @@ function buildS28DriverStats(rows){
     const name = (r[0]||'').trim();
     const team = teamCol>=0 ? (r[teamCol]||'').trim() : '';
     const tier = tierCol>=0 ? (r[tierCol]||'').trim() : '';
+    const gp=gpCounts.get(name.toLowerCase());
     html += '<tr>';
-    html += psDriverCell(name, team).replace('class="ps-st-driver', 'class="td-l sticky ps-st-driver').replace('<span class="ps-driver-name">'+name+'</span>', '<span class="ps-driver-name">'+name+'</span>'+(tier?'<br><span class="tname">'+tier+'</span>':''));
-    if(teamCol>=0) html += '<td class="td-l"><span class="tname">'+team+'</span></td>';
+    html += psDriverCell(name, team).replace('class="ps-st-driver', 'class="td-l sticky ps-st-driver').replace('<span class="ps-driver-name">'+esc(name)+'</span>', '<span class="ps-driver-name">'+esc(name)+'</span>'+(tier?'<br><span class="tname">'+esc(tier)+'</span>':''));
+    if(teamCol>=0) html += '<td class="td-l"><span class="tname">'+esc(team)+'</span></td>';
     cols.forEach(c=>{
-      const val = (r[c.col]||'').trim();
       const lbl = c.label.toLowerCase();
+      const value=gp&&Object.hasOwn(gp,lbl)?gp[lbl]:r[c.col];
+      const val=value===null?'':String(value??'').trim();
       if(lbl==='reliability %'){
-        const pct=parseFloat(val)||0;
+        const raw=parseFloat(val);
+        const pct=Number.isFinite(raw)?(val.includes('%')||raw>1?raw/100:raw):null;
         const clr=pct>=0.9?'var(--green)':pct>=0.7?'var(--gold)':'var(--red)';
-        const disp=isNaN(pct)?val:Math.round(pct*100)+'%';
+        const disp=pct===null?'—':(Math.round(pct*1000)/10)+'%';
         html += '<td><span style="color:'+clr+';font-weight:600;">'+disp+'</span>';
         html += '<span class="rel-bar-wrap"><span class="rel-bar-fill" style="width:'+Math.max(0,Math.min(100,pct*100))+'%;background:'+clr+';"></span></span></td>';
       } else if(lbl.includes('gained')){
@@ -2109,6 +1858,7 @@ function buildS28OverallTotals(id, d, rows){
 // ============================================================
 
 async function showSeason(season){
+  _currentSeason = season;
   document.querySelectorAll('.s-btn').forEach(b=>b.classList.remove('active'));
   const btn = document.getElementById('sbtn-'+String(season).replace('.','_'));
   if(btn) btn.classList.add('active');
@@ -2175,13 +1925,21 @@ async function showSeason(season){
   seasonCache[season] = wrap.cloneNode(true);
 }
 
+function archiveSeasons(seasons, activeSeason){
+  return seasons.filter(obj=>activeSeason===null || String(obj.season)!==String(activeSeason));
+}
+
 async function init(){
   let seasonObjs = [];
-  try{ seasonObjs = await getAllSeasons(); }
+  try{
+    const seasons = await getAllSeasons();
+    const activeSeason = await getCurrentSeason();
+    seasonObjs = archiveSeasons(seasons, activeSeason);
+  }
   catch(e){ document.getElementById('season-content').innerHTML='<div class="loading-msg">Config error: '+e.message+'</div>'; return; }
 
-  // Every configured season in the TEST system is part of the historical
-  // verification set, including the newest completed rebuild.
+  // A season joins the archive when the configured season phase is closed.
+  // Keep the current season available on Standings and Results instead.
 
   if(!seasonObjs.length){
     document.getElementById('season-content').innerHTML='<div class="loading-msg">No seasons available.</div>';
