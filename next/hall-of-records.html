@@ -221,7 +221,7 @@
 </footer>
 
 <script src="config.js"></script>
-<script src="history-test-data.js"></script>
+<script src="history-inductees.js"></script>
 <script src="honours-data.js"></script>
 <script>
 
@@ -470,7 +470,7 @@ const HOF_GID      = '82852858';
 let hofNames = []; // primary names of HOF inductees
 
 async function loadHofNames() {
-  hofNames=(window.F1XL_TEST_HISTORY?.inductees||[]).map(item=>item.name.toLowerCase());
+  hofNames=(window.F1XL_HISTORY_INDUCTEES||[]).map(item=>item.name.toLowerCase());
 }
 
 function isHofInductee(driver) {

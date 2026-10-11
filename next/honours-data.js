@@ -64,27 +64,21 @@ async function historyFetchPublic(url) {
   return historyCSV(text);
 }
 async function historyLoadPublic() {
-  const [career,honours]=await Promise.all(['public_career_url','public_honours_url'].map(key=>getConfigValue(key)));
-  if(!career&&!honours)return null;
-  if(!career||!honours)throw new Error('Both public history exports must be connected.');
-  const rows=await Promise.all([historyFetchPublic(career),historyFetchPublic(honours)]);
-  return historyParsePublic(rows[0],rows[1]);
+  const url='https://script.google.com/macros/s/AKfycbxJ9JnIwY39k4k8ouva8CPpa6EvQXeKUD1mNGc3JgaNLfVyiATX68925cKaEZDywf36IQ/exec?view=public-history';
+  const response=await fetch(url,{credentials:'omit',signal:AbortSignal.timeout(60000)});
+  if(!response.ok)throw new Error('TEST registry returned HTTP '+response.status);
+  const data=await response.json();
+  if(!data.ok)throw new Error(data.error||'The TEST history feed is unavailable.');
+  return {...historyParsePublic(data.careerRows,data.honourRows),mode:'connected',refreshedAt:data.refreshedAt,notes:data.notes||[]};
 }
 
 async function historyLoadTest() {
-  const local=location.protocol==='file:'||['localhost','127.0.0.1'].includes(location.hostname);
-  const current=local?null:await historyLoadPublic();
-  if(current)return {...current,mode:'connected',notes:[]};
-  const saved=window.F1XL_TEST_HISTORY;
-  if(!saved)throw new Error('The TEST history source is not connected.');
-  return {...historyParsePublic(saved.careerRows,saved.honourRows),mode:'snapshot',verifiedAt:saved.verifiedAt,notes:saved.notes};
+  return historyLoadPublic();
 }
 
 function historyShowSource(feed) {
   const banner=document.querySelector('.test-banner');
-  if(banner)banner.textContent=feed.mode==='snapshot'
-    ? 'TEST · Corrected archive snapshot · Verified 12 September 2026 · Not a current registry connection'
-    : 'TEST · Connected registry history';
+  if(banner)banner.textContent='TEST · Current registry history';
   let note=document.getElementById('history-source-note');
   if(!note){note=document.createElement('p');note.id='history-source-note';note.style.cssText='padding:12px 20px;color:#acb9b2;font-size:13px;line-height:1.5';banner?.after(note);}
   note.textContent=(feed.notes||[]).join(' ');

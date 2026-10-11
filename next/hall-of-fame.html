@@ -352,7 +352,7 @@
 </footer>
 
 <script src="config.js"></script>
-<script src="history-test-data.js"></script>
+<script src="history-inductees.js"></script>
 <script src="honours-data.js"></script>
 <script>
 function toggleMenu(){
@@ -826,7 +826,7 @@ let hofInductees = [], hofCurrent = 0, hofPaused = false;
 let hofElapsed = 0, hofLastTick = null, hofRafId = null;
 
 async function loadHofLegends() {
-  hofInductees=(window.F1XL_TEST_HISTORY?.inductees||[]).map(item=>({...item}));
+  hofInductees=(window.F1XL_HISTORY_INDUCTEES||[]).map(item=>({...item}));
   if(!hofInductees.length){document.getElementById('hof-flipbook').innerHTML='<div class="loading-msg">Inductees have not been connected.</div>';return;}
   hofCurrent=0;hofElapsed=0;hofRenderFlipbook();
 }
