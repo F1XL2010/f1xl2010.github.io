@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="description" content="F1XL — Competitive but accessible F1 racing league. No custom setups required. All skill levels welcome. Est. 2010.">
+<meta name="robots" content="noindex,nofollow,noarchive,nosnippet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TEST — Hall of Fame | F1XL — UK F1 Racing League</title>
+  <link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="/favicon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--green:#3DCC47;--teal:#5ECFCF;--gold:#E8B84B;--red:#E10600;--black:#0e1210;--dark:#131a17;--dark2:#161e1b;--dark3:#1a2420;--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.12);--text:#ffffff;--text-muted:rgba(255,255,255,0.60);--text-faint:rgba(255,255,255,0.28);}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--black);background-image:url('../images/backgrounds/background_hof.webp');background-size:cover;background-position:center;background-attachment:fixed;color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;}
+  body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(17,24,22,0.5);z-index:0;pointer-events:none;}
+  body>*{position:relative;z-index:1;}
+
+    nav{background:rgba(17,24,22,0.97);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;backdrop-filter:blur(8px);}
+  .nav-left{display:flex;align-items:center;flex-shrink:0;}
+  .nav-logo{display:flex;align-items:center;height:40px;text-decoration:none;}
+  .nav-logo img{height:34px;width:auto;display:block;}
+  .nav-links{display:flex;align-items:stretch;height:56px;}
+  .nav-item{position:relative;display:flex;align-items:stretch;}
+  .nav-item>a,.nav-item>button{color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:500;letter-spacing:0.5px;padding:0 13px;display:flex;align-items:center;gap:4px;border-bottom:2px solid transparent;border-top:none;border-left:none;border-right:none;background:none;cursor:pointer;font-family:'Barlow',sans-serif;text-transform:uppercase;transition:color 0.2s;white-space:nowrap;}
+  .nav-item>a:hover,.nav-item>button:hover{color:var(--text);}
+  .nav-item>a.active,.nav-item>button.active{color:var(--text);border-bottom-color:var(--green);}
+  .nav-chevron{font-size:8px;opacity:0.5;transition:transform 0.2s;}
+  .nav-item:hover .nav-chevron{transform:rotate(180deg);}
+  .nav-dropdown{display:none;position:absolute;top:100%;left:0;background:#141a18;border:1px solid var(--border2);border-top:2px solid var(--green);border-radius:0 0 6px 6px;min-width:180px;padding:6px 0;z-index:300;}
+  .nav-item:hover .nav-dropdown{display:block;}
+  .nav-dropdown a{display:block;padding:9px 16px;color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;transition:color 0.15s,background 0.15s;white-space:nowrap;}
+  .nav-dropdown a:hover{color:var(--text);background:rgba(255,255,255,0.05);}
+  .nav-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:8px;background:none;border:none;}
+  .nav-hamburger span{display:block;width:22px;height:2px;background:var(--text-muted);border-radius:2px;transition:all 0.25s;}
+  .nav-hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+  .nav-hamburger.open span:nth-child(2){opacity:0;}
+  .nav-hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+  .mobile-menu{display:none;position:fixed;top:56px;left:0;right:0;background:#141a18;border-bottom:1px solid var(--border2);z-index:199;padding:12px 0;max-height:calc(100vh - 56px);overflow-y:auto;}
+  .mobile-menu.open{display:block;}
+  .mob-section{font-size:10px;letter-spacing:2px;color:var(--text-faint);padding:12px 24px 4px;text-transform:uppercase;}
+  .mobile-menu a{display:block;padding:10px 24px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;}
+  .mobile-menu a:hover{color:var(--text);}
+  @media(max-width:900px){.nav-links{display:none;}.nav-hamburger{display:flex;}}/* HERO */
+  .hero{padding:48px 28px 40px;border-bottom:1px solid var(--border);position:relative;overflow:hidden;}
+  .hero-bg{position:absolute;top:-20px;right:-10px;font-family:'Barlow Condensed',sans-serif;font-size:180px;font-weight:900;color:rgba(255,255,255,0.018);line-height:1;pointer-events:none;letter-spacing:-4px;user-select:none;}
+  .hero-eyebrow{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--gold);margin-bottom:10px;}
+  .hero-title{font-family:'Barlow Condensed',sans-serif;font-size:56px;font-weight:900;text-transform:uppercase;letter-spacing:2px;line-height:0.9;margin-bottom:20px;}
+  .hero-title span{color:var(--gold);}
+  .hero-stats{display:flex;gap:32px;flex-wrap:wrap;}
+  .hero-stat-val{font-family:'Barlow Condensed',sans-serif;font-size:40px;font-weight:800;color:var(--gold);line-height:1;}
+  .hero-stat-lbl{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1.5px;margin-top:2px;}
+
+  /* SECTION NAV */
+  .section-nav{position:sticky;top:56px;z-index:100;background:rgba(14,18,16,0.97);border-bottom:1px solid var(--border);display:flex;gap:0;padding:0 28px;overflow-x:auto;scrollbar-width:none;}
+  .section-nav::-webkit-scrollbar{display:none;}
+  .section-nav-btn{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:13px 16px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-faint);cursor:pointer;white-space:nowrap;margin-bottom:-1px;}
+  .section-nav-btn:hover{color:var(--text-muted);}
+  .section-nav-btn.active{color:var(--gold);border-bottom-color:var(--gold);}
+
+  /* CHAPTER */
+  .chapter{padding:32px 28px 16px;}
+  .chapter-eyebrow{font-size:10px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:var(--gold);margin-bottom:6px;}
+  .chapter-title{font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;text-transform:uppercase;letter-spacing:1px;line-height:1;color:var(--text);}
+
+  /* LEADERBOARDS */
+  .lb-wrap{padding:0 28px 32px;}
+  .lb-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  @media(max-width:600px){.lb-grid{grid-template-columns:1fr;}}
+  .lb-card{background:var(--dark2);border:1px solid var(--border);border-radius:8px;padding:16px 18px;}
+  .lb-card-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-faint);margin-bottom:14px;}
+  .lb-row{display:flex;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+  .lb-row:last-child{border:none;}
+  .lb-pos{font-family:'Barlow Condensed',sans-serif;font-size:44px;font-weight:900;color:rgba(255,255,255,0.15);line-height:1;width:48px;flex-shrink:0;text-align:center;}
+  .lb-pos.p1{color:rgba(232,184,75,0.45);}
+  .lb-info{flex:1;padding:0 6px;}
+  .lb-name{font-size:13px;font-weight:500;color:var(--text);}
+  .lb-sub{font-size:11px;color:var(--text-faint);margin-top:1px;}
+  .lb-val{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;color:var(--gold);}
+
+  /* SEASON STRIP */
+  .season-wrap{padding:0 28px 32px;}
+  .season-strip{display:flex;gap:8px;overflow-x:auto;padding-bottom:10px;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+  .season-strip::-webkit-scrollbar{display:none;}
+  .season-card{background:var(--dark2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;flex-shrink:0;width:130px;cursor:pointer;transition:border-color 0.2s,background 0.2s;}
+  .season-card:hover,.season-card.active{border-color:var(--gold);}
+  .season-card.active{background:var(--dark3);}
+  .season-card-num{font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:900;color:var(--gold);line-height:1;margin-bottom:6px;}
+  .season-card-name{font-size:12px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .season-card-team{font-size:11px;color:var(--text-faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+  /* SEASON DETAIL */
+  .season-detail{background:var(--dark2);border:1px solid rgba(232,184,75,0.2);border-radius:8px;overflow:hidden;margin-top:10px;}
+  .season-detail-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px;}
+  .season-detail-num{font-family:'Barlow Condensed',sans-serif;font-size:52px;font-weight:900;color:var(--gold);line-height:1;}
+  .season-detail-eyebrow{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-faint);margin-bottom:3px;}
+  .season-detail-name{font-size:18px;font-weight:500;color:var(--text);}
+  .season-detail-team{font-size:13px;color:var(--text-muted);margin-top:2px;}
+  .season-detail-ru{font-size:12px;color:var(--text-faint);margin-top:4px;}
+  .season-divs{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));}
+  .season-div-cell{padding:12px 16px;border-right:1px solid var(--border);border-top:1px solid var(--border);}
+  .season-div-cell:last-child{border-right:none;}
+  .season-div-lbl{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:6px;opacity:0.7;}
+  .season-div-champ{font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px;}
+  .season-div-team{font-size:11px;color:var(--text-faint);margin-bottom:4px;}
+  .season-div-ru{font-size:11px;color:rgba(255,255,255,0.25);}
+  .season-div-cons{font-size:11px;color:var(--text-faint);margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.04);}
+  .season-detail-loading{padding:24px;text-align:center;color:var(--text-faint);font-size:13px;}
+
+  /* ACCOLADE TABLES */
+  .acc-wrap{padding:0 28px 32px;}
+  .acc-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:16px;overflow-x:auto;scrollbar-width:none;}
+  .acc-tabs::-webkit-scrollbar{display:none;}
+  .acc-tab{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:10px 16px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-faint);cursor:pointer;white-space:nowrap;margin-bottom:-1px;}
+  .acc-tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+  .acc-panel{display:none;}
+  .acc-panel.active{display:block;}
+  .acc-table{width:100%;font-size:12px;border-collapse:collapse;}
+  .acc-table th{text-align:left;padding:6px 10px;font-size:10px;color:var(--text-faint);border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:0.5px;font-weight:500;}
+  .acc-table td{padding:7px 10px;border-bottom:1px solid rgba(255,255,255,0.04);color:var(--text-muted);}
+  .acc-table td:first-child{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--gold);width:40px;}
+  .acc-table tr:last-child td{border:none;}
+  .acc-table tr:hover td{background:rgba(255,255,255,0.02);}
+  .acc-name{font-weight:500;color:var(--text);}
+  .acc-team{color:var(--text-faint);font-size:11px;}
+
+  /* DIVIDER */
+  .section-div{height:1px;background:var(--border);margin:0 28px;}
+  /* HOF FLIPBOOK */
+  .hof-flipbook-wrap{padding:0 28px 32px;max-width:900px;margin:0 auto;}
+  .hof-flipbook{position:relative;width:100%;aspect-ratio:16/9;border-radius:12px;overflow:hidden;border:1px solid rgba(232,184,75,0.3);box-shadow:0 0 40px rgba(232,184,75,0.08);}
+  .hof-slide{position:absolute;inset:0;opacity:0;transition:opacity 0.6s ease;pointer-events:none;}
+  .hof-slide.active{opacity:1;pointer-events:auto;}
+  .hof-slide-img{width:100%;height:100%;object-fit:cover;display:block;}
+  .hof-controls{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:16px;max-width:900px;margin-left:auto;margin-right:auto;padding:0 28px;}
+  .hof-ctrl-btn{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all 0.2s;flex-shrink:0;}
+  .hof-ctrl-btn:hover{background:rgba(232,184,75,0.1);border-color:rgba(232,184,75,0.3);color:#E8B84B;}
+  .hof-progress-wrap{flex:1;display:flex;flex-direction:column;gap:6px;}
+  .hof-dots{display:flex;justify-content:center;gap:8px;}
+  .hof-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.15);cursor:pointer;transition:background 0.2s;flex-shrink:0;}
+  .hof-dot.active{background:#E8B84B;}
+  .hof-bar-wrap{height:2px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;}
+  .hof-bar{height:100%;background:#E8B84B;border-radius:2px;width:0;}
+  .hof-pause-btn{background:none;border:none;color:rgba(255,255,255,0.3);cursor:pointer;font-size:11px;letter-spacing:1px;text-transform:uppercase;font-family:'Barlow Condensed',sans-serif;padding:4px 8px;}
+  .hof-pause-btn:hover{color:rgba(232,184,75,0.7);}
+
+  /* LOADING */
+  .loading-msg{text-align:center;padding:48px 24px;color:var(--text-faint);font-size:13px;}
+
+  /* LEAGUE RECORDS */
+  .lr-wrap{padding:0 28px 32px;}
+  #div-records-wrap{background:#161d1b;border:1px solid var(--border);border-radius:8px;margin:0 28px 32px;padding:16px 20px;}
+  .lr-div-section{margin-bottom:28px;}
+  .lr-div-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gold);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+  .lr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+  @media(max-width:600px){.lr-grid{grid-template-columns:1fr;}}
+  .lr-card{background:var(--dark2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;}
+  .lr-card-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-faint);margin-bottom:12px;}
+  .lr-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+  .lr-row:last-child{border:none;}
+  .lr-rank{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--text-faint);width:16px;flex-shrink:0;}
+  .lr-name{flex:1;font-size:12px;color:var(--text);}
+  .lr-val{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--gold);}
+
+  footer{border-top:1px solid var(--border);padding:20px 24px;display:flex;justify-content:space-between;align-items:center;margin-top:40px;}
+  .footer-logo{background:var(--gold);color:#000;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;padding:4px 9px;border-radius:3px;}
+  .footer-text{font-size:11px;color:var(--text-faint);}
+
+  .test-banner{padding:8px 24px;background:#192c25;border-bottom:1px solid #3DCC47;color:#b3edbc;font-size:11px;letter-spacing:1px;text-align:center;}
+  .history-load-notice{margin:16px 24px;padding:12px 16px;border:1px solid #E8B84B;border-radius:6px;color:#E8B84B;font-size:13px;}
+  .history-load-notice[hidden]{display:none;}
+  .history-load-notice button{margin-left:12px;padding:6px 12px;background:transparent;border:1px solid currentColor;border-radius:4px;color:inherit;cursor:pointer;}
+  .history-scroll{max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;}
+  .history-scroll:focus-visible{outline:2px solid var(--gold,var(--green));outline-offset:2px;}
+
+
+  .acc-panel,.lb-card,.lr-card{min-width:0;}.lb-info,.lr-name{min-width:0;overflow-wrap:anywhere;}.history-scroll .acc-table{min-width:480px;}
+  @media(max-width:600px){.hero{padding:32px 16px;}.hero-title{font-size:44px;}.chapter{padding:24px 16px 16px;}.lb-wrap,.season-wrap,.acc-wrap,.lr-wrap{padding-left:16px;padding-right:16px;}#div-records-wrap{margin-left:16px;margin-right:16px;padding:12px;}.hof-flipbook-wrap{padding:0 16px 24px;}footer{gap:12px;flex-wrap:wrap;}}
+</style>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#111816">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="F1XL">
+<link rel="apple-touch-icon" href="/images/icons/icon-512.png">
+</head>
+<body>
+
+<nav>
+  <div class="nav-left">
+    <a href="index.html" class="nav-logo">
+      <img src="../TRANSPARENT.png" alt="F1XL - UK Casual F1 League Racing on Xbox, PlayStation and PC">
+    </a>
+  </div>
+  <div class="nav-links">
+    <div class="nav-item"><a href="index.html">Home</a></div>
+    <div class="nav-item">
+      <button>Standings <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown">
+        <a href="standings.html">Current Season</a>
+        <a href="results.html">Results</a>
+        <a href="old-seasons.html">Past Seasons</a>
+        <a href="../asr.html">All Star Race</a>
+      </div>
+    </div>
+    <div class="nav-item"><a href="teams.html">Teams</a></div>
+    <div class="nav-item">
+      <button>Race Tickets <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown">
+        <a href="ticket-outcomes.html">Ticket Outcomes</a>
+        <a href="drivers-licence.html">Drivers Licence</a>
+      </div>
+    </div>
+    <div class="nav-item"><a href="schedule.html">Schedule</a></div>
+    <div class="nav-item">
+      <button class="active">History <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown">
+        <a href="hall-of-fame.html">Hall of Fame</a>
+        <a href="hall-of-records.html">Hall of Records</a>
+        <a href="track-records.html">Track Records</a>
+      </div>
+    </div>
+    <div class="nav-item"><a href="../applications.html">Applications</a></div>
+    <div class="nav-item"><a href="../league-rules.html">League Rules</a></div>
+    <div class="nav-item"><a href="../merch.html">Merch</a></div>
+    <div class="nav-item"><a href="../music.html">Music</a></div>
+  </div>
+  <button class="nav-hamburger" id="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></button>
+</nav>
+<div class="test-banner">F1XL TEST WEBSITE · HISTORY &amp; RECORDS</div>
+<div class="mobile-menu" id="mobile-menu">
+  <a href="index.html">Home</a>
+  <div class="mob-section">Standings</div>
+  <a href="standings.html">Current Season</a>
+  <a href="results.html">Results</a>
+  <a href="old-seasons.html">Past Seasons</a>
+  <a href="../asr.html">All Star Race</a>
+  <a href="teams.html">Teams</a>
+  <div class="mob-section">Race Tickets</div>
+  <a href="ticket-outcomes.html">Ticket Outcomes</a>
+  <a href="drivers-licence.html">Drivers Licence</a>
+  <a href="schedule.html">Schedule</a>
+  <div class="mob-section">History</div>
+  <a href="hall-of-fame.html">Hall of Fame</a>
+  <a href="hall-of-records.html">Hall of Records</a>
+  <a href="track-records.html">Track Records</a>
+  <a href="../applications.html">Applications</a>
+  <a href="../league-rules.html">League Rules</a>
+  <a href="../merch.html">Merch</a>
+  <a href="../music.html">Music</a>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-bg">F1XL</div>
+  <div class="hero-eyebrow">F1XL · Est. 2010</div>
+  <div class="hero-title">Hall of<br><span>Fame</span></div>
+  <div class="hero-stats" id="hero-stats">
+    <div><div class="hero-stat-val">—</div><div class="hero-stat-lbl">Seasons</div></div>
+    <div><div class="hero-stat-val">—</div><div class="hero-stat-lbl">Drivers</div></div>
+    <div><div class="hero-stat-val">14</div><div class="hero-stat-lbl">Years</div></div>
+  </div>
+</div>
+
+<!-- SECTION NAV -->
+<div class="section-nav">
+  <button class="section-nav-btn active" onclick="scrollToSection('hof-legends',this)">F1XL Legends</button>
+  <button class="section-nav-btn" onclick="scrollToSection('leaderboards',this)">Leaderboards</button>
+  <button class="section-nav-btn" onclick="scrollToSection('league-records',this)">League Records</button>
+  <button class="section-nav-btn" onclick="scrollToSection('seasons',this)">Seasons</button>
+  <button class="section-nav-btn" onclick="scrollToSection('division-records',this)">Division Records</button>
+</div>
+
+<!-- HOF LEGENDS -->
+<div id="hof-legends"></div>
+<div class="chapter">
+  <div class="chapter-eyebrow">Hall of Fame</div>
+  <div class="chapter-title">F1XL Legends</div>
+</div>
+<div class="hof-flipbook-wrap">
+  <div class="hof-flipbook" id="hof-flipbook">
+    <div class="loading-msg">Loading...</div>
+  </div>
+  <div class="hof-controls" id="hof-controls" style="display:none;">
+    <button class="hof-ctrl-btn" id="hof-prev" onclick="hofGo(-1)">&#8592;</button>
+    <div class="hof-progress-wrap">
+      <div class="hof-dots" id="hof-dots"></div>
+      <div class="hof-bar-wrap"><div class="hof-bar" id="hof-bar"></div></div>
+    </div>
+    <button class="hof-ctrl-btn" id="hof-next" onclick="hofGo(1)">&#8594;</button>
+  </div>
+  <div style="text-align:center;margin-top:8px;">
+    <button class="hof-pause-btn" id="hof-pause" onclick="hofTogglePause()">&#9208; Pause</button>
+  </div>
+</div>
+
+<div class="section-div"></div>
+
+<!-- LEADERBOARDS -->
+<div id="leaderboards"></div>
+<div class="chapter">
+  <div class="chapter-eyebrow">The Records</div>
+  <div class="chapter-title">All-Time Leaderboards</div>
+</div>
+<div class="lb-wrap">
+  <div class="lb-grid" id="lb-grid"><div class="loading-msg">Loading...</div></div>
+</div>
+
+<div class="section-div"></div>
+
+<div id="league-records"></div>
+<div class="chapter">
+  <div class="chapter-eyebrow">The Records</div>
+  <div class="chapter-title">League Records</div>
+</div>
+<div class="lr-wrap" id="lr-wrap"><div class="loading-msg">Loading...</div></div>
+
+<div class="section-div"></div>
+
+<!-- SEASONS -->
+<div id="seasons"></div>
+<div class="chapter">
+  <div class="chapter-eyebrow">The Seasons</div>
+  <div class="chapter-title">Season by Season</div>
+</div>
+<div class="season-wrap">
+  <div class="season-strip" id="season-strip"><div class="loading-msg">Loading...</div></div>
+  <div id="season-detail"><div class="season-detail-loading">Select a season above</div></div>
+</div>
+
+<div class="section-div"></div>
+
+<!-- DIVISION RECORDS -->
+<div id="division-records"></div>
+<div class="chapter">
+  <div class="chapter-eyebrow">The Champions</div>
+  <div class="chapter-title">Division Records</div>
+</div>
+<div class="lr-wrap" id="div-records-wrap"><div class="loading-msg">Loading...</div></div>
+
+<div class="section-div" style="margin-bottom:0;"></div>
+
+<div class="history-load-notice" id="history-load-notice" role="status" hidden><span></span><button type="button" onclick="init()">Retry</button></div>
+<footer>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="footer-logo">F1XL</div>
+    <div class="footer-text">F1 League · F1 Sim Racing on Xbox, PlayStation and PC. Casual Racing on F1 26</div>
+  </div>
+  <div class="footer-text">f1xl.co.uk</div>
+</footer>
+
+<script src="config.js"></script>
+<script src="history-test-data.js"></script>
+<script src="honours-data.js"></script>
+<script>
+function toggleMenu(){
+  document.getElementById('hamburger').classList.toggle('open');
+  document.getElementById('mobile-menu').classList.toggle('open');
+}
+
+function parseCSV(text){return historyCSV(text);}
+
+function g(row,col){return((row&&row[col])||'').trim();}
+
+function parseSheetUrl(url){
+  const idMatch = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  const gidMatch = url.match(/gid=(\d+)/);
+  return { id: idMatch?idMatch[1]:null, gid: gidMatch?gidMatch[1]:null };
+}
+
+async function fetchCSV(url){
+  const {id,gid} = parseSheetUrl(url);
+  const res = await fetch(`https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${gid}`);
+  if(!res.ok) throw new Error(`HTTP ${res.status}`);
+  const text = await res.text();
+  if(text.includes('<!DOCTYPE')) throw new Error('Sheet not published');
+  return parseCSV(text);
+}
+
+// ── PARSE DIVISION TAB ────────────────────────────────────────────────────────
+// Row 0: blank, Row 1: blank, Row 2: "Division X" label
+// Row 3: headers — Season, Champion, Team, Points, blank, Runner Up, Team, Points, blank, Constructor, Driver1, Driver2, TotalPts
+// Row 4+: data
+function parseDivTab(rows, divName){
+  const seasons = [];
+  for(let i=1; i<rows.length; i++){
+    const row = rows[i];
+    const raw = g(row,1);
+    if(!raw || raw.toLowerCase()==='season') continue;
+    const s = parseFloat(raw);
+    if(isNaN(s)) continue;
+    seasons.push({
+      season: s,
+      champ: g(row,2), champTeam: g(row,3), champPts: g(row,4),
+      ru: g(row,6), ruTeam: g(row,7), ruPts: g(row,8),
+      constructor: g(row,10), consDriver1: g(row,11), consDriver2: g(row,12), consPts: g(row,13),
+      consRu: g(row,15), consRuDriver1: g(row,16), consRuDriver2: g(row,17), consRuPts: g(row,18),
+      div: divName
+    });
+  }
+  seasons.sort((a,b)=>b.season-a.season);
+  return seasons;
+}
+
+// ── PARSE OVERALL TAB ─────────────────────────────────────────────────────────
+// Same structure but cols: Season, Team Owner, Team, Points, blank, Runner Up, Team, Points
+function parseOverallTab(rows){
+  const seasons = [];
+  for(let i=1; i<rows.length; i++){
+    const row = rows[i];
+    const raw = g(row,1);
+    if(!raw || raw.toLowerCase()==='season') continue;
+    const s = parseFloat(raw);
+    if(isNaN(s)) continue;
+    seasons.push({
+      season: s,
+      owner: g(row,2), ownerTeam: g(row,3), ownerPts: g(row,4),
+      ru: g(row,6), ruTeam: g(row,7), ruPts: g(row,8)
+    });
+  }
+  seasons.sort((a,b)=>b.season-a.season);
+  return seasons;
+}
+
+// Cross-reference overall seasons with division data to find team members
+function enrichOverallWithDrivers(overallData, allDivData){
+  // Overall championship drivers come from Division 1 only
+  const div1Seasons = allDivData['Division 1'] || allDivData['Div 1'] || Object.values(allDivData)[0] || [];
+  return overallData.map(s => {
+    const winningTeam = (s.ownerTeam||'').toLowerCase();
+    const ruTeam = (s.ruTeam||'').toLowerCase();
+    let driver1='', driver2='', ruDriver1='', ruDriver2='';
+    const match = div1Seasons.find(d => parseFloat(d.season) === s.season);
+    if(match){
+      if(match.constructor && match.constructor.toLowerCase() === winningTeam){
+        driver1 = match.consDriver1 || '';
+        driver2 = match.consDriver2 || '';
+      }
+      if(match.consRu && match.consRu.toLowerCase() === ruTeam){
+        ruDriver1 = match.consRuDriver1 || '';
+        ruDriver2 = match.consRuDriver2 || '';
+      }
+    }
+    return {...s, driver1, driver2, ruDriver1, ruDriver2};
+  });
+}
+
+// ── PARSE FULL STATS for leaderboards ────────────────────────────────────────
+function parseStatsForLB(rows){
+  const drivers = [];
+  for(let i=historyStatsHeader(rows)+1; i<rows.length; i++){
+    const row = rows[i];
+    const name = g(row,3);
+    if(!name||name.toLowerCase()==='driver') continue;
+    const primary = name.split('/')[0].trim();
+    drivers.push({
+      name: primary,
+      seasons: parseInt(g(row,4))||0,
+      wins:    parseInt(g(row,5))||0,
+      podiums: parseInt(g(row,6))||0,
+      poles:   parseInt(g(row,7))||0,
+      sprints: parseInt(g(row,8))||0,
+      races:   parseInt(g(row,9))||0
+    });
+  }
+  return drivers;
+}
+
+// ── RENDER LEADERBOARDS ───────────────────────────────────────────────────────
+function renderLB(drivers, totalDrivers){
+  const lbs = [
+    {key:'wins',    label:'Most wins'},
+    {key:'seasons', label:'Most seasons'},
+    {key:'podiums', label:'Most podiums'},
+    {key:'poles',   label:'Most poles'},
+    {key:'sprints', label:'Most sprint wins'},
+    {key:'races',   label:'Most races started'},
+  ];
+
+  // Hero season count filled in by init() after await
+  const yearsRunning = new Date().getFullYear() - 2010;
+  document.getElementById('hero-stats').innerHTML = `
+    <div><div class="hero-stat-val" id="hero-season-val">—</div><div class="hero-stat-lbl">Seasons</div></div>
+    <div><div class="hero-stat-val">${totalDrivers}</div><div class="hero-stat-lbl">Drivers</div></div>
+    <div><div class="hero-stat-val">${yearsRunning}</div><div class="hero-stat-lbl">Years</div></div>
+  `;
+
+  const grid = document.getElementById('lb-grid');
+  grid.innerHTML = lbs.map(lb => {
+    const sorted = [...drivers].sort((a,b)=>b[lb.key]-a[lb.key]).slice(0,5);
+    const rows = sorted.map((d,i) => `
+      <div class="lb-row">
+        <div class="lb-pos${i===0?' p1':''}">${i+1}</div>
+        <div class="lb-info"><div class="lb-name">${historyHTML(d.name)}</div></div>
+        <div class="lb-val">${d[lb.key]}</div>
+      </div>`).join('');
+    return `<div class="lb-card"><div class="lb-card-title">${lb.label}</div>${rows}</div>`;
+  }).join('');
+}
+
+// ── RENDER SEASON STRIP + DETAIL ─────────────────────────────────────────────
+let allDivData = {};
+let overallData = [];
+
+function renderSeasonStrip(){
+  const seasons = overallData;
+  if(!seasons.length) return;
+
+  const strip = document.getElementById('season-strip');
+  strip.innerHTML = seasons.map((s,i) => `
+    <div class="season-card${i===0?' active':''}" onclick="selectSeason(${s.season}, this)">
+      <div class="season-card-num">S${s.season}</div>
+      <div class="season-card-name">${historyHTML(s.owner)}</div>
+      <div class="season-card-team">${historyHTML(s.ownerTeam)}</div>
+    </div>`).join('');
+
+  selectSeason(seasons[0].season, strip.querySelector('.season-card'));
+}
+
+function selectSeason(seasonNum, card){
+  document.querySelectorAll('.season-card').forEach(c=>c.classList.remove('active'));
+  if(card) card.classList.add('active');
+
+  const overall = overallData.find(s=>s.season===seasonNum);
+  const detail = document.getElementById('season-detail');
+
+  // Get all divisions for this season
+  const divCells = Object.entries(allDivData).map(([div, seasons]) => {
+    const s = seasons.find(x=>x.season===seasonNum);
+    if(!s) return '';
+    return `<div class="season-div-cell">
+      <div class="season-div-lbl">${div}</div>
+      <div class="season-div-champ">${historyHTML(s.champ)}</div>
+      <div class="season-div-team">${historyHTML(s.champTeam)}</div>
+      ${s.ru?`<div class="season-div-ru">RU: ${historyHTML(s.ru)}</div>`:''}
+      ${s.constructor?`<div class="season-div-cons">Constructor: ${historyHTML(s.constructor)}</div>`:''}
+    </div>`;
+  }).join('');
+
+  detail.innerHTML = `<div class="season-detail">
+    <div class="season-detail-header">
+      <div class="season-detail-num">S${seasonNum}</div>
+      <div>
+        <div class="season-detail-eyebrow">Overall Champion</div>
+        <div class="season-detail-name">${historyHTML(overall?overall.owner:'—')}</div>
+        <div class="season-detail-team">${historyHTML(overall?overall.ownerTeam:'—')}</div>
+        ${overall&&overall.ru?`<div class="season-detail-ru">Runner Up: ${historyHTML(overall.ru)} · ${historyHTML(overall.ruTeam)}</div>`:''}
+      </div>
+    </div>
+    ${divCells?`<div class="season-divs">${divCells}</div>`:''}
+  </div>`;
+}
+
+// ── RENDER DIVISION RECORDS ───────────────────────────────────────────────────
+function renderDivisionRecords(){
+  const wrap = document.getElementById('div-records-wrap');
+
+  function seasonTable(seasons, cols){
+    if(!seasons||!seasons.length) return '<div class="loading-msg">No data.</div>';
+    const headers = cols.map(c=>`<th>${c.label}</th>`).join('');
+    const rows = seasons.map((s,i)=>{
+      const cells = cols.map(c=>{
+        const val = s[c.key];
+        if(c.key==='season') return `<td class="acc-name">S${val}</td>`;
+        if(c.key==='champPts'||c.key==='ownerPts') return `<td>${val!==''&&val!=null?Math.floor(Number(String(val).replace(/,/g,''))):'—'}</td>`;
+        if(c.key==='consdrivers') return `<td class="acc-team">${historyHTML([s.consDriver1,s.consDriver2].filter(Boolean).join(' · '))}</td>`;
+        return `<td${c.muted?' class="acc-team"':''}>${historyHTML(val||'')}</td>`;
+      }).join('');
+      return `<tr><td>${i+1}</td>${cells}</tr>`;
+    }).join('');
+    return `<div class="history-scroll" tabindex="0" role="region" aria-label="Historical records"><table class="acc-table">
+      <thead><tr><th>#</th>${headers}</tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>`;
+  }
+
+  const tabKeys = [];
+  const tabPanels = {};
+
+  // Overall
+  if(overallData.length){
+    tabKeys.push({key:'overall', label:'Overall'});
+    tabPanels['overall'] = seasonTable(overallData, [
+      {key:'season',label:'Season'},
+      {key:'owner',label:'Team Owner'},
+      {key:'ownerTeam',label:'Team',muted:true},
+      {key:'ownerPts',label:'Points'},
+      {key:'ru',label:'Runner Up (Team Owner)'},
+      {key:'ruTeam',label:'Team',muted:true},
+    ]);
+  }
+
+  // Divisions
+  Object.entries(allDivData).forEach(([div, seasons]) => {
+    const key = div.toLowerCase().replace(' ','');
+    tabKeys.push({key, label:div});
+    tabPanels[key] = seasonTable(seasons, [
+      {key:'season',label:'Season'},
+      {key:'champ',label:'Champion'},
+      {key:'champTeam',label:'Team',muted:true},
+      {key:'champPts',label:'Points'},
+      {key:'ru',label:'Runner Up'},
+      {key:'ruTeam',label:'Team',muted:true},
+      {key:'constructor',label:'Constructor',muted:true},
+      {key:'consDriver1',label:'Driver 1',muted:true},
+      {key:'consDriver2',label:'Driver 2',muted:true},
+      {key:'consRu',label:'Cons. Runner Up',muted:true},
+      {key:'consRuDriver1',label:'Driver 1',muted:true},
+      {key:'consRuDriver2',label:'Driver 2',muted:true},
+    ]);
+  });
+
+  if(!tabKeys.length){ wrap.innerHTML='<div class="loading-msg">No data.</div>'; return; }
+
+  const tabs = tabKeys.map((t,i)=>
+    `<button class="acc-tab${i===0?' active':''}" onclick="switchDivTab('${t.key}',this)">${t.label}</button>`
+  ).join('');
+  const panels = tabKeys.map((t,i)=>
+    `<div class="acc-panel${i===0?' active':''}" id="div-panel-${t.key}">${tabPanels[t.key]}</div>`
+  ).join('');
+
+  wrap.innerHTML = `<div class="acc-tabs">${tabs}</div>${panels}`;
+}
+
+function switchDivTab(key, btn){
+  const wrap = document.getElementById('div-records-wrap');
+  wrap.querySelectorAll('.acc-tab').forEach(t=>t.classList.remove('active'));
+  wrap.querySelectorAll('.acc-panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  const panel = document.getElementById('div-panel-'+key);
+  if(panel) panel.classList.add('active');
+}
+
+// ── SECTION NAV ──────────────────────────────────────────────────────────────
+function scrollToSection(id, btn){
+  document.querySelectorAll('.section-nav-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const el = document.getElementById(id);
+  if(el){
+    const offset = 56 + 44; // nav height + section nav height
+    const top = el.getBoundingClientRect().top + window.scrollY - offset;
+    window.scrollTo({top, behavior:'smooth'});
+  }
+}
+
+// ── PARSE LEAGUE RECORDS ──────────────────────────────────────────────────────
+// Aggregated section starts after a blank row following the season data
+// Format: row with "Champions"/"Runners Up"/"Constructors" headers
+// Then "Drivers"/"Team"/"No. Of Wins" headers
+// Then data rows: blank, blank, Name, Count
+function parseLeagueRecords(rows){
+  // Section 1: starts at row with col2='Champions', col6='Constructors'
+  // Data rows: col2=driver, col3=wins | col6=team, col7=wins
+  // Section 2: starts at row with col2='Runners Up', col6='Constructors drivers'
+  // Data rows: col2=driver, col3=wins | col6=driver, col7=wins
+
+  const champDrivers = [];
+  const consTeams = [];
+  const ruDrivers = [];
+  const consDrivers = [];
+
+  let section = null; // 'champ' or 'ru'
+
+  for(let i=0; i<rows.length; i++){
+    const row = rows[i];
+    const c2 = g(row,2).toLowerCase();
+    const c6 = g(row,6).toLowerCase();
+
+    // Detect section headers
+    if(c2==='champions'){ section='champ'; continue; }
+    if(c2==='runners up'){ section='ru'; continue; }
+
+    // Skip column header rows
+    if(c2==='drivers'||c2==='driver') continue;
+    if(c2==='constructors') continue;
+
+    if(!section) continue;
+
+    const name2 = g(row,2), val3 = g(row,3);
+    const name6 = g(row,6), val7 = g(row,7);
+
+    if(section==='champ'){
+      if(name2 && val3 && !isNaN(parseFloat(val3))) champDrivers.push({name:name2, val:parseInt(val3)});
+      if(name6 && val7 && !isNaN(parseFloat(val7))) consTeams.push({name:name6, val:parseInt(val7)});
+    } else if(section==='ru'){
+      if(name2 && val3 && !isNaN(parseFloat(val3))) ruDrivers.push({name:name2, val:parseInt(val3)});
+      if(name6 && val7 && !isNaN(parseFloat(val7))) consDrivers.push({name:name6, val:parseInt(val7)});
+    }
+  }
+
+  return { champDrivers, ruDrivers, consTeams, consDrivers };
+}
+
+function parseOverallLeagueRecords(rows){
+  const champions = [];
+  const consTeams = [];
+  const runners = [];
+  let section = null;
+
+  for(let i=0; i<rows.length; i++){
+    const row = rows[i];
+    const c2 = g(row,2).toLowerCase();
+    const c3 = g(row,3).toLowerCase();
+
+    // Detect section headers
+    if(c2==='team owner' && c3.includes('win')){ section='champ'; continue; }
+    if(c2==='team owner' && c3.includes('runner')){ section='ru'; continue; }
+    if(!section) continue;
+
+    const name2 = g(row,2), val3 = g(row,3);
+    const name6 = g(row,6), val7 = g(row,7);
+
+    if(section==='champ'){
+      if(name2 && val3 && !isNaN(parseFloat(val3))) champions.push({name:name2, val:parseInt(val3)});
+      if(name6 && val7 && !isNaN(parseFloat(val7))) consTeams.push({name:name6, val:parseInt(val7)});
+    } else if(section==='ru'){
+      if(name2 && val3 && !isNaN(parseFloat(val3))) runners.push({name:name2, val:parseInt(val3)});
+    }
+  }
+  return {champions, consTeams, runners};
+}
+
+function renderLeagueRecords(divDataRaw, overallDataRaw, historyRecords){
+  const wrap = document.getElementById('lr-wrap');
+
+  function lrTable(title, items){
+    if(!items||!items.length) return '';
+    // Sort by wins desc, then by original sheet position desc within ties
+    // (sheet adds new entries at bottom, so higher index = more recent = should rank first in ties)
+    const indexed = items.map((item,i)=>({...item,_i:i}));
+    const top = indexed.sort((a,b)=>b.val-a.val||b._i-a._i).slice(0,10);
+    return `<div class="lr-card">
+      <div class="lr-card-title">${title}</div>
+      ${top.map((item,i)=>`
+        <div class="lr-row">
+          <div class="lr-rank">${i+1}</div>
+          <div class="lr-name">${historyHTML(item.name)}</div>
+          <div class="lr-val">${item.val}</div>
+        </div>`).join('')}
+    </div>`;
+  }
+
+  // Build tab list
+  const tabKeys = [];
+  const tabPanels = {};
+
+  // Overall
+  if(overallDataRaw||historyRecords){
+    const rec = historyRecords ? historyRecords.overall : parseOverallLeagueRecords(overallDataRaw);
+    if(rec){
+      tabKeys.push({key:'overall', label:'Overall'});
+      tabPanels['overall'] = `<div class="lr-grid">
+        ${lrTable('Team Owner Champions', rec.champions)}
+        ${lrTable('Constructor Teams', rec.consTeams)}
+        ${lrTable('Team Owner Runners Up', rec.runners)}
+      </div>`;
+    }
+  }
+
+  // Divisions
+  Object.entries(historyRecords?historyRecords.divisions:divDataRaw).forEach(([div, rows]) => {
+    const rec = historyRecords ? historyRecords.divisions[div] : parseLeagueRecords(rows);
+    if(!rec) return;
+    const key = div.toLowerCase().replace(' ','');
+    tabKeys.push({key, label:div});
+    tabPanels[key] = `<div class="lr-grid">
+      ${lrTable('Driver Champions', rec.champDrivers)}
+      ${lrTable('Constructor Teams', rec.consTeams)}
+      ${lrTable('Runners Up', rec.ruDrivers)}
+      ${lrTable('Constructor Drivers', rec.consDrivers)}
+    </div>`;
+  });
+
+  if(!tabKeys.length){ wrap.innerHTML='<div class="loading-msg">No league records found.</div>'; return; }
+
+  const tabs = tabKeys.map((t,i)=>
+    `<button class="acc-tab${i===0?' active':''}" onclick="switchLRTab('${t.key}',this)">${t.label}</button>`
+  ).join('');
+
+  const panels = tabKeys.map((t,i)=>
+    `<div class="acc-panel${i===0?' active':''}" id="lr-panel-${t.key}">${tabPanels[t.key]}</div>`
+  ).join('');
+
+  wrap.innerHTML = `<div class="acc-tabs">${tabs}</div>${panels}`;
+}
+
+function switchLRTab(key, btn){
+  const wrap = document.getElementById('lr-wrap');
+  wrap.querySelectorAll('.acc-tab').forEach(t=>t.classList.remove('active'));
+  wrap.querySelectorAll('.acc-panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  const panel = document.getElementById('lr-panel-'+key);
+  if(panel) panel.classList.add('active');
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+async function init(){
+  historyLoadNotice([]);
+  try {
+    const feed=await historyLoadTest();
+    historyShowSource(feed);
+    renderLB(feed.drivers.map(d=>({name:d.primary,seasons:d.totalSeasons,wins:d.totalWins,podiums:d.totalPodiums,poles:d.totalPoles,sprints:d.sprintWins,races:d.totalRaces})),feed.drivers.length);
+    const championships=historyTestChampionships(feed);
+    allDivData=championships.divisions;overallData=championships.overall;
+    document.getElementById('hero-season-val').textContent=Math.max(...feed.publishedSeasons);
+    renderSeasonStrip();renderDivisionRecords();
+    renderLeagueRecords({},null,historyChampionshipCounts(allDivData,overallData,feed));
+    await loadHofLegends();
+  }catch(error){
+    historyLoadNotice(['TEST history: '+error.message]);
+    document.getElementById('lb-grid').innerHTML='<div class="loading-msg">TEST history could not load. Use Retry.</div>';
+  }
+}
+
+init();
+
+// ── HOF LEGENDS FLIPBOOK ────────────────────────────────────────────────────
+const HOF_SHEET_ID = '1mrnmIHJNREanKawFTdDbB4m6YuB1B1tq2VS0PC18xfI';
+const HOF_GID      = '82852858';
+const HOF_INTERVAL = 30000;
+const HOF_IMG_BASE = '../images/hof/';
+
+let hofInductees = [], hofCurrent = 0, hofPaused = false;
+let hofElapsed = 0, hofLastTick = null, hofRafId = null;
+
+async function loadHofLegends() {
+  hofInductees=(window.F1XL_TEST_HISTORY?.inductees||[]).map(item=>({...item}));
+  if(!hofInductees.length){document.getElementById('hof-flipbook').innerHTML='<div class="loading-msg">Inductees have not been connected.</div>';return;}
+  hofCurrent=0;hofElapsed=0;hofRenderFlipbook();
+}
+
+function parseCSVHof(text) {
+  return text.split(/\r?\n/).filter(l => l.trim()).map(line => {
+    const cells = []; let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c==='"'&&!inQ){inQ=true;}
+      else if(c==='"'&&inQ){if(line[i+1]==='"'){cur+='"';i++;}else{inQ=false;}}
+      else if(c===','&&!inQ){cells.push(cur.trim());cur='';}
+      else cur+=c;
+    }
+    cells.push(cur.trim());
+    return cells;
+  });
+}
+
+function hofRenderFlipbook() {
+  const flipbook = document.getElementById('hof-flipbook');
+  const controls = document.getElementById('hof-controls');
+  const dotsEl   = document.getElementById('hof-dots');
+
+  // Build slides — image only, no overlay
+  flipbook.innerHTML = hofInductees.map((ind, i) => `
+    <div class="hof-slide${i===0?' active':''}" id="hof-slide-${i}">
+      <img class="hof-slide-img" src="${HOF_IMG_BASE}${ind.imgFile}" alt="${ind.name}" onerror="this.style.background='#1a2320'">
+    </div>
+  `).join('');
+
+  // Build dots
+  dotsEl.innerHTML = hofInductees.map((_, i) =>
+    `<div class="hof-dot${i===0?' active':''}" onclick="hofGo(${i} - hofCurrent)"></div>`
+  ).join('');
+
+  controls.style.display = 'flex';
+
+  // Start timer
+  hofLastTick = performance.now();
+  if(hofRafId !== null) cancelAnimationFrame(hofRafId);
+  hofRafId = requestAnimationFrame(hofTick);
+}
+
+
+function hofGo(dir) {
+  const slides = document.querySelectorAll('.hof-slide');
+  const dots   = document.querySelectorAll('.hof-dot');
+  slides[hofCurrent].classList.remove('active');
+  dots[hofCurrent].classList.remove('active');
+  hofCurrent = (hofCurrent + dir + hofInductees.length) % hofInductees.length;
+  slides[hofCurrent].classList.add('active');
+  dots[hofCurrent].classList.add('active');
+  hofElapsed  = 0;
+  hofLastTick = hofPaused ? null : performance.now();
+  document.getElementById('hof-bar').style.width = '0%';
+}
+
+function hofTogglePause() {
+  hofPaused = !hofPaused;
+  document.getElementById('hof-pause').textContent = hofPaused ? '▶ Resume' : '⏸ Pause';
+  if (!hofPaused) hofLastTick = performance.now();
+}
+
+function hofTick(now) {
+  if (!hofPaused && hofLastTick !== null) {
+    hofElapsed += now - hofLastTick;
+    hofLastTick = now;
+    if (hofElapsed >= HOF_INTERVAL) hofGo(1);
+    document.getElementById('hof-bar').style.width = (hofElapsed / HOF_INTERVAL * 100) + '%';
+  }
+  hofRafId = requestAnimationFrame(hofTick);
+}
+
+</script>
+
+</body>
+</html>
