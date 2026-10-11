@@ -353,7 +353,7 @@
 
 <script src="config.js"></script>
 <script src="history-inductees.js?v=20261011-current-registry-1"></script>
-<script src="honours-data.js?v=20261011-current-registry-1"></script>
+<script src="honours-data.js?v=20261011-honours-parity-1"></script>
 <script>
 function toggleMenu(){
   document.getElementById('hamburger').classList.toggle('open');
@@ -565,7 +565,11 @@ function renderDivisionRecords(){
         const val = s[c.key];
         if(c.key==='season') return `<td class="acc-name">S${val}</td>`;
         if(c.key==='champPts'||c.key==='ownerPts') return `<td>${val!==''&&val!=null?Math.floor(Number(String(val).replace(/,/g,''))):'—'}</td>`;
-        if(c.key==='consdrivers') return `<td class="acc-team">${historyHTML([s.consDriver1,s.consDriver2].filter(Boolean).join(' · '))}</td>`;
+        if(c.key==='consdrivers'||c.key==='consrudrivers') {
+          const prefix=c.key==='consdrivers'?'cons':'consRu';
+          const names=[...new Set([s[prefix+'Driver1'],s[prefix+'Driver2']].flatMap(value=>String(value||'').split(' · ')).map(name=>name.trim()).filter(Boolean))];
+          return `<td class="acc-team" style="white-space:normal;min-width:180px">${names.map(name=>`<div>${historyHTML(name)}</div>`).join('')}</td>`;
+        }
         return `<td${c.muted?' class="acc-team"':''}>${historyHTML(val||'')}</td>`;
       }).join('');
       return `<tr><td>${i+1}</td>${cells}</tr>`;
@@ -604,11 +608,9 @@ function renderDivisionRecords(){
       {key:'ru',label:'Runner Up'},
       {key:'ruTeam',label:'Team',muted:true},
       {key:'constructor',label:'Constructor',muted:true},
-      {key:'consDriver1',label:'Driver 1',muted:true},
-      {key:'consDriver2',label:'Driver 2',muted:true},
+      {key:'consdrivers',label:'Contributors',muted:true},
       {key:'consRu',label:'Cons. Runner Up',muted:true},
-      {key:'consRuDriver1',label:'Driver 1',muted:true},
-      {key:'consRuDriver2',label:'Driver 2',muted:true},
+      {key:'consrudrivers',label:'Contributors',muted:true},
     ]);
   });
 
@@ -727,12 +729,10 @@ function renderLeagueRecords(divDataRaw, overallDataRaw, historyRecords){
 
   function lrTable(title, items){
     if(!items||!items.length) return '';
-    // Sort by wins desc, then by original sheet position desc within ties
-    // (sheet adds new entries at bottom, so higher index = more recent = should rank first in ties)
-    const indexed = items.map((item,i)=>({...item,_i:i}));
-    const top = indexed.sort((a,b)=>b.val-a.val||b._i-a._i).slice(0,10);
+    // Sort ties by the actual most recent award, independent of source row order.
+    const top = [...items].sort((a,b)=>b.val-a.val||(b.lastSeason||0)-(a.lastSeason||0)||a.name.localeCompare(b.name,undefined,{sensitivity:'base'})).slice(0,10);
     return `<div class="lr-card">
-      <div class="lr-card-title">${title}</div>
+      <div class="lr-card-title" title="Equal totals are ordered by most recent award, then name.">${title}</div>
       ${top.map((item,i)=>`
         <div class="lr-row">
           <div class="lr-rank">${i+1}</div>

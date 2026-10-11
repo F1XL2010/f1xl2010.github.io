@@ -228,9 +228,24 @@ function historyChampionshipCounts(divisions,overall,feed) {
     if(!names.has(key))names.set(key,new Set());names.get(key).add(driver.primary);
   }
   function canonical(name) {const matches=names.get(historyIdentityKey(name));return matches?.size===1?[...matches][0]:name;}
-  function counts(rows,getName) {
-    const totals=new Map();for(const row of rows)for(const raw of getName(row).filter(name=>name&&name!=='--')){const name=canonical(raw);totals.set(name,(totals.get(name)||0)+1);}
-    return [...totals].map(([name,val])=>({name,val}));
+  function counts(rows,getName,teams=false) {
+    const totals=new Map();
+    for(const row of rows){
+      const seen=new Set();
+      for(const raw of getName(row)){
+        const clean=String(raw||'').trim().replace(/\s+/g,' ');
+        if(!clean||['--','—','?'].includes(clean))continue;
+        const name=teams?(clean.toLowerCase()==='mclaren'?'McLaren':clean):canonical(clean);
+        // Team capitalization is not a change of team identity. Do not merge
+        // distinct historical names such as Renault and Alpine.
+        const key=teams?name.toLowerCase():name;
+        if(seen.has(key))continue;seen.add(key);
+        const item=totals.get(key)||{name,val:0,lastSeason:0};
+        item.val++;item.lastSeason=Math.max(item.lastSeason,Number(row.season)||0);
+        totals.set(key,item);
+      }
+    }
+    return [...totals.values()];
   }
-  return {divisions:Object.fromEntries(Object.entries(divisions).map(([key,rows])=>[key,{champDrivers:counts(rows,row=>[row.champ]),ruDrivers:counts(rows,row=>[row.ru]),consTeams:counts(rows,row=>[row.constructor]),consDrivers:counts(rows,row=>[row.consDriver1,row.consDriver2].flatMap(name=>String(name||'').split(' · ')))}])),overall:{champions:counts(overall,row=>[row.owner==='Team championship'?'':row.owner]),runners:counts(overall,row=>[row.ru==='Team championship'?'':row.ru]),consTeams:counts(overall,row=>[row.ownerTeam])}};
+  return {divisions:Object.fromEntries(Object.entries(divisions).map(([key,rows])=>[key,{champDrivers:counts(rows,row=>[row.champ]),ruDrivers:counts(rows,row=>[row.ru]),consTeams:counts(rows,row=>[row.constructor],true),consDrivers:counts(rows,row=>[row.consDriver1,row.consDriver2].flatMap(name=>String(name||'').split(' · ')))}])),overall:{champions:counts(overall,row=>[row.owner==='Team championship'?'':row.owner]),runners:counts(overall,row=>[row.ru==='Team championship'?'':row.ru]),consTeams:counts(overall,row=>[row.ownerTeam],true)}};
 }
