@@ -65,7 +65,8 @@ async function historyFetchPublic(url) {
 }
 async function historyLoadPublic() {
   const url='https://script.google.com/macros/s/AKfycbxJ9JnIwY39k4k8ouva8CPpa6EvQXeKUD1mNGc3JgaNLfVyiATX68925cKaEZDywf36IQ/exec?view=public-history';
-  const response=await fetch(url,{credentials:'omit',signal:AbortSignal.timeout(60000)});
+  // A unique request also bypasses older installed service workers which cached this feed.
+  const response=await fetch(url+'&request='+Date.now()+'-'+Math.random().toString(36).slice(2),{credentials:'omit',cache:'no-store',signal:AbortSignal.timeout(60000)});
   if(!response.ok)throw new Error('TEST registry returned HTTP '+response.status);
   const data=await response.json();
   if(!data.ok)throw new Error(data.error||'The TEST history feed is unavailable.');

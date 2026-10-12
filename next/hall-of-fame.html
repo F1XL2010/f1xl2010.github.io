@@ -353,7 +353,7 @@
 
 <script src="config.js"></script>
 <script src="history-inductees.js?v=20261011-current-registry-1"></script>
-<script src="honours-data.js?v=20261011-honours-parity-1"></script>
+<script src="honours-data.js?v=20261012-history-points-1"></script>
 <script>
 function toggleMenu(){
   document.getElementById('hamburger').classList.toggle('open');
@@ -564,7 +564,7 @@ function renderDivisionRecords(){
       const cells = cols.map(c=>{
         const val = s[c.key];
         if(c.key==='season') return `<td class="acc-name">S${val}</td>`;
-        if(c.key==='champPts'||c.key==='ownerPts') return `<td>${val!==''&&val!=null?Math.floor(Number(String(val).replace(/,/g,''))):'—'}</td>`;
+        if(c.key.endsWith('Pts')) return `<td>${val!==''&&val!=null?historyHTML(val):'—'}</td>`;
         if(c.key==='consdrivers'||c.key==='consrudrivers') {
           const prefix=c.key==='consdrivers'?'cons':'consRu';
           const names=[...new Set([s[prefix+'Driver1'],s[prefix+'Driver2']].flatMap(value=>String(value||'').split(' · ')).map(name=>name.trim()).filter(Boolean))];
@@ -593,6 +593,7 @@ function renderDivisionRecords(){
       {key:'ownerPts',label:'Points'},
       {key:'ru',label:'Runner Up (Team Owner)'},
       {key:'ruTeam',label:'Team',muted:true},
+      {key:'ruPts',label:'Runner-up Points'},
     ]);
   }
 
@@ -607,9 +608,12 @@ function renderDivisionRecords(){
       {key:'champPts',label:'Points'},
       {key:'ru',label:'Runner Up'},
       {key:'ruTeam',label:'Team',muted:true},
+      {key:'ruPts',label:'Runner-up Points'},
       {key:'constructor',label:'Constructor',muted:true},
+      {key:'consPts',label:'Constructor Points'},
       {key:'consdrivers',label:'Contributors',muted:true},
       {key:'consRu',label:'Cons. Runner Up',muted:true},
+      {key:'consRuPts',label:'Cons. Runner-up Points'},
       {key:'consrudrivers',label:'Contributors',muted:true},
     ]);
   });

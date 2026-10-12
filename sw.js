@@ -67,6 +67,12 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
 
+  // The TEST history export changes independently of website deployments.
+  if (url.hostname === 'script.google.com' && url.searchParams.get('view') === 'public-history') {
+    event.respondWith(fetch(event.request, { cache: 'no-store' }));
+    return;
+  }
+
   // OAuth returns contain one-use codes. Never put these URLs or responses in
   // the offline cache, and never serve a cached callback after a network error.
   if (url.pathname === '/next/fap-google-return.html') {
