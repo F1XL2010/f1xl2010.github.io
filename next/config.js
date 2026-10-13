@@ -65,6 +65,58 @@ async function getCurrentSeasonConfig(){
 }
 async function getContentSeasonConfig(){if(nextContentConfigCache)return nextContentConfigCache;const season=await getContentSeason();if(!season)return null;nextContentConfigCache=await loadSeasonConfig(season);return nextContentConfigCache;}
 
+// Direct-source seasons combine the same division calculations in the browser.
+// This avoids waiting for the private Master's cross-workbook total imports.
+// Historical configurations keep their original fetch path.
+const nextDirectTables=new Map(),nextDirectReads=new Map();
+function nextWriteCSV(rows){const width=Math.max(...rows.map(r=>r.length));return rows.map(row=>Array.from({length:width},(_,i)=>'"'+String(row[i]==null?'':row[i]).replace(/"/g,'""')+'"').join(',')).join('\n');}
+async function nextDirectRead(id,gid){
+  const key=id+':'+gid;
+  if(!nextDirectReads.has(key))nextDirectReads.set(key,(async()=>{
+    const response=await fetch('https://docs.google.com/spreadsheets/d/'+id+'/export?format=csv&gid='+gid);
+    if(!response.ok)throw Error('Working sheet returned HTTP '+response.status);
+    const text=await response.text();if(/<!doctype|<html/i.test(text))throw Error('Working sheet is not publicly readable');
+    return nextParseCSV(text);
+  })().catch(e=>{nextDirectReads.delete(key);throw e;}));
+  return nextDirectReads.get(key);
+}
+async function nextDirectTotals(config){
+  const key=String(config.season);
+  if(!nextDirectTables.has(key))nextDirectTables.set(key,(async()=>{
+    const count=Number(config.divisions);if(!Number.isInteger(count)||count<1||count>8)throw Error('Invalid direct division count');
+    const [definitions,divisions]=await Promise.all([
+      nextDirectRead(config.season_master_sheet_id,config.teams_and_principals_gid),
+      Promise.all(Array.from({length:count},async(_,i)=>{const p='d'+(i+1)+'_';return Promise.all([nextDirectRead(config[p+'sheet_id'],config[p+'constructors_gid']),nextDirectRead(config[p+'sheet_id'],config[p+'team_stats_gid'])]);}))
+    ]);
+    const normal=v=>String(v||'').trim().toLowerCase(),number=v=>{const s=String(v==null?'':v).trim();if(!s)return 0;const n=Number(s.replace(/,/g,''));if(!Number.isFinite(n)||/^#/.test(s))throw Error('A working-sheet points value is invalid');return n;};
+    const teams=definitions.slice(1,13).filter(r=>r[0]).map(r=>({short:r[0],name:r[1],principal:r[4],points:0,weekly:Array(22).fill(0)}));
+    if(!teams.length||new Set(teams.map(t=>normal(t.short))).size!==teams.length)throw Error('Working team definitions are incomplete');
+    divisions.forEach(([standings,stats])=>teams.forEach(t=>{
+      standings.slice(4,16).filter(r=>normal(r[1])===normal(t.short)).forEach(r=>t.points+=number(r[2]));
+      stats.slice(1,13).filter(r=>normal(r[0])===normal(t.short)).forEach(r=>t.weekly=t.weekly.map((n,i)=>n+number(r[13+i])));
+    }));
+    // Existing tie-break fractions carry six decimal places. Remove binary
+    // representation noise without truncating those fractions.
+    teams.forEach(t=>t.points=Math.round(t.points*1e6)/1e6);
+    const sorted=teams.slice().sort((a,b)=>b.points-a.points),maximum=Math.max(...sorted.map(t=>t.points));
+    const overall=[[' '],['','','','Pos','','Team','','Points','','Gap','','team principal','team']];
+    sorted.forEach(t=>overall.push(['','','',1+sorted.filter(o=>o.points>t.points).length,t.name,t.short,Math.floor(t.points),t.points,'',Math.round((t.points-maximum)*1e6)/1e6,'',t.principal,t.short]));
+    while(overall.length<15)overall.push(Array(13).fill(''));
+    const weekly=[['Weekly Totals'],['Round',...Array.from({length:22},(_,i)=>i+1)],...teams.map(t=>[t.short,...t.weekly])];
+    while(weekly.length<14)weekly.push(Array(23).fill(''));
+    return {overall:nextWriteCSV(overall),weekly:nextWriteCSV(weekly)};
+  })().catch(e=>{nextDirectTables.delete(key);throw e;}));
+  return nextDirectTables.get(key);
+}
+async function nextPublicFetch(url){
+  const match=String(url).match(/\/d\/([\w-]+)/),gid=String(url).match(/[?&]gid=(\d+)/);
+  if(match&&gid){
+    const config=Object.values(nextConfigBySeason).find(c=>c.source_mode==='direct_division_v1'&&c.season_master_sheet_id===match[1]&&[c.direct_overall_gid,c.direct_weekly_gid].includes(gid[1]));
+    if(config){const tables=await nextDirectTotals(config);return new Response(gid[1]===config.direct_overall_gid?tables.overall:tables.weekly,{status:200,headers:{'Content-Type':'text/csv; charset=utf-8'}});}
+  }
+  return fetch(url);
+}
+
 async function getConfigValue(key){if(!F1XL_NEXT_CONFIG_SHEET_ID)return null;try{const main=await nextLoadMain();return main[String(key).toLowerCase()]||null;}catch(error){return null;}}
 function getRaceGIDs(config,division){const gids=[];for(let round=1;round<=22;round+=1)gids.push(config['d'+division+'_r'+round+'_gid']||null);return gids;}
 function isNextGeneratedSeason(config){return !!(config&&(config.source_format==='generated_division_v1'||config.season_master_sheet_id));}

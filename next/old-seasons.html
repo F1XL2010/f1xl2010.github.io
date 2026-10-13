@@ -8,7 +8,7 @@
 <title>F1XL TEST &mdash; Past Seasons</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
-<script src="config.js"></script>
+<script src="config.js?v=direct-20261013"></script>
 <style>
   :root{--green:#3DCC47;--teal:#5ECFCF;--red:#E10600;--black:#111816;--dark:#161d1b;--dark2:#1a2320;--dark3:#1e2a27;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);--text:#ffffff;--text-muted:rgba(255,255,255,0.60);--text-faint:rgba(255,255,255,0.30);--gold:#E8B84B;}
   *{box-sizing:border-box;margin:0;padding:0;}
@@ -310,7 +310,7 @@ async function fetchCSV(sheetId, gid){
   const key = sheetId+'|'+gid;
   if(cache[key]) return cache[key];
   const url = 'https://docs.google.com/spreadsheets/d/'+sheetId+'/export?format=csv&gid='+gid;
-  const res = await fetch(url);
+  const res = await nextPublicFetch(url);
   const text = await res.text();
   if(text.includes('<!DOCTYPE')) throw new Error('Sheet not published');
   const rows = parseCSV(text).filter(r=>r.some(v=>v.trim())&&!(r[0]||'').trim().startsWith('#')&&!(r[1]||'').trim().startsWith('#'));

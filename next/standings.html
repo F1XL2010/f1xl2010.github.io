@@ -338,7 +338,7 @@
   <div class="footer-text">f1xl.co.uk</div>
 </footer>
 
-<script src="config.js?v=20260823-config-v3"></script>
+<script src="config.js?v=direct-20261013"></script>
 <script>
 // Divisions and sheet IDs loaded from config at runtime
 let divisions = [];
@@ -390,7 +390,7 @@ function fetchSheet(sheetId, gid) {
 
 async function fetchSheetUncached(sheetId, gid) {
   const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
-  const res = await fetch(url);
+  const res = await nextPublicFetch(url);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const text = await res.text();
   if (text.includes('<!DOCTYPE') || text.includes('<html')) throw new Error('Sheet not published to web');
@@ -1441,7 +1441,7 @@ async function loadOverallConstructors() {
         const mGid = overallUrl.match(/gid=(\d+)/);
         if (mId && mGid) {
           const csvUrl = `https://docs.google.com/spreadsheets/d/${mId[1]}/export?format=csv&gid=${mGid[1]}`;
-          const res = await fetch(csvUrl);
+          const res = await nextPublicFetch(csvUrl);
           const text = await res.text();
           const csvRows = text.split(/\r?\n/).map(l=>l.split(',').map(v=>v.replace(/^"|"$/g,'').trim()));
           overallCsvRows = csvRows;
