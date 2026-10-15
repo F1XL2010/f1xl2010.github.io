@@ -1,1 +1,1 @@
-{"schema":1,"runId":"38762670763","id":"750b9706-8b02-4889-829b-cf7a083c2051","phase":"running","at":"2026-10-15T15:42:33.566Z","delivered":0,"history":[],"ledger":{},"commandRevision":"1812ac68-a264-4167-902a-69a07cd60120"}
+{"schema":1,"runId":"38762670763","id":"750b9706-8b02-4889-829b-cf7a083c2051","phase":"running","at":"2026-10-15T15:42:42.786Z","delivered":1,"history":[{"at":"2026-10-15T15:42:42.786Z","label":"Season 28 Calendar","state":"Updated","messageId":"1560314624505548911"}],"ledger":{},"commandRevision":"1812ac68-a264-4167-902a-69a07cd60120"}
