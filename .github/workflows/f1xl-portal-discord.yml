@@ -1,0 +1,35 @@
+name: F1XL Portal Discord
+run-name: Portal Discord · ${{ inputs.job }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      job:
+        description: Portal job reference (no credentials)
+        required: true
+        type: string
+
+# This runner writes delivery receipts only to the separate discord-control branch.
+permissions:
+  contents: write
+concurrency:
+  group: f1xl-portal-discord
+  cancel-in-progress: false
+
+jobs:
+  updates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 250
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Run Portal-controlled private rehearsal
+        env:
+          PORTAL_JOB: ${{ inputs.job }}
+          GITHUB_TOKEN: ${{ github.token }}
+          DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+        run: node bot/portal-discord.cjs
