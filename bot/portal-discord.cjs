@@ -22,6 +22,16 @@ function validatePicks(data,control){
   const seen=new Set();for(const p of data.picks){if(!Number.isInteger(p.division)||p.division<1||p.division>8||!Number.isInteger(p.pick)||p.pick<1||p.pick>24||p.id!==p.division+'/'+p.pick||seen.has(p.id)||!p.team||!Number.isFinite(Date.parse(p.at)))throw Error('Invalid confirmed pick.');seen.add(p.id);for(const d of [p.one,p.two])if(!d||typeof d.id!=='string'||typeof d.name!=='string'||!!d.id!==!!d.name||d.name.length>100)throw Error('Invalid confirmed driver.');}return data.picks;
 }
 function markdown(v){return String(v).replace(/([\\`*_~|>])/g,'\\$1').replace(/@/g,'＠').replace(/[\r\n]/g,' ');}
+function canPost(roles,member,channel){
+  if(!Array.isArray(roles)||!Array.isArray(member?.roles))throw Error('Discord permissions could not be checked.');
+  const bits=v=>{if(!/^\d{1,30}$/.test(String(v??'')))throw Error('Invalid Discord permission value.');return BigInt(v);};
+  let permissions=bits(roles.find(r=>r.id===GUILD)?.permissions||'0');for(const role of roles)if(member.roles.includes(role.id))permissions|=bits(role.permissions);
+  if(permissions&8n)return true;
+  const overwrites=channel.permission_overwrites||[],everyone=overwrites.find(r=>r.id===GUILD);if(everyone)permissions=permissions&~bits(everyone.deny)|bits(everyone.allow);
+  let deny=0n,allow=0n;for(const r of overwrites)if(Number(r.type)===0&&member.roles.includes(r.id)){deny|=bits(r.deny);allow|=bits(r.allow);}permissions=permissions&~deny|allow;
+  const own=overwrites.find(r=>r.id===BOT);if(own)permissions=permissions&~bits(own.deny)|bits(own.allow);
+  return (permissions&(1024n|2048n|16384n))===(1024n|2048n|16384n);
+}
 function pickPayload(p,season,practice){return {content:(practice?'PRIVATE PRACTICE · ':'')+'F1XL S'+season+' · D'+p.division+' · Pick '+p.pick,embeds:[{title:markdown(p.team),description:'**Tier 1** · '+markdown(p.one.name||'Open seat')+'\n**Tier 2** · '+markdown(p.two.name||'Open seat'),color:0x3DCC47,footer:{text:'Confirmed draft pick · Private rehearsal'}}],allowed_mentions:{parse:[],users:[],roles:[],replied_user:false},flags:4096};}
 function standings(rows,division,season){
   const head=rows.findIndex(r=>String(r[0]).toLowerCase()==='pos');if(head<0)throw Error('Standings headings could not be found.');
@@ -85,6 +95,7 @@ function createRunner({env=process.env,fetcher=fetch,sleep=wait,now=()=>Date.now
     state=existing?.value||{schema:1,runId,id,phase:'starting',at:'',delivered:0,history:[],ledger:{}};
     try{
       const bot=await discord('GET','/users/@me');if(bot?.id!==BOT||bot.bot!==true)throw Error('The secret is not for F1XLDataBot.');const channel=await discord('GET','/channels/'+CHANNEL);if(channel?.id!==CHANNEL||channel.guild_id!==GUILD||![0,5].includes(channel.type))throw Error('The private test channel could not be verified.');
+      const [roles,member]=await Promise.all([discord('GET','/guilds/'+GUILD+'/roles'),discord('GET','/guilds/'+GUILD+'/members/'+BOT)]);if(!canPost(roles,member,channel))throw Error('F1XLDataBot needs View Channel, Send Messages and Embed Links in the private channel.');
       if(control.kind==='draft')await source();
       state.phase='ready';state.commandRevision=control.revision;await save();
       if(!['draft','practice'].includes(control.kind)){if(control.command==='run'){state.phase='running';await save();await boards();}state.phase='finished';await save();return;}
@@ -111,5 +122,5 @@ function createRunner({env=process.env,fetcher=fetch,sleep=wait,now=()=>Date.now
   }
   return {run,read,write};
 }
-module.exports={parseCSV,validateControl,validatePicks,pickPayload,standings,teamsFromRows,teamCards,calendarCard,createRunner};
+module.exports={parseCSV,validateControl,validatePicks,pickPayload,canPost,standings,teamsFromRows,teamCards,calendarCard,createRunner};
 if(require.main===module)createRunner().run().catch(e=>{console.error('Portal Discord stopped:',e.message);process.exitCode=1;});
