@@ -199,8 +199,8 @@
 </footer>
 
 <script>
-const SHEET_ID = '18vD7g_29uzRSr_GYbXkNjclCHe8F_bsp4cY69TjXrW4';
-const GIDS = ['0','343950932','806509057','557492395','1468409556','1147341365','1917666666','468074839'];
+const TRACK_RECORDS_FEED = 'https://script.google.com/macros/s/AKfycbxJ9JnIwY39k4k8ouva8CPpa6EvQXeKUD1mNGc3JgaNLfVyiATX68925cKaEZDywf36IQ/exec?view=track-records';
+let recordsFeed;
 
 const FLAGS = {
   'abu dhabi':'🇦🇪','australia':'🇦🇺','austria':'🇦🇹','azerbaijan':'🇦🇿',
@@ -280,14 +280,8 @@ async function loadDiv(idx, btn) {
   }
 
   try {
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${GIDS[idx]}`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const text = await res.text();
-    if (text.includes('<!DOCTYPE') || text.includes('<html')) throw new Error('Not published');
-    const rows = parseCSV(text);
-
-    const records = parseTrackRecords(rows, idx + 1);
+    if(!recordsFeed)recordsFeed=fetch(TRACK_RECORDS_FEED).then(async res=>{if(!res.ok)throw Error('HTTP '+res.status);const data=await res.json();if(!data.ok||!Array.isArray(data.records))throw Error(data.error||'Invalid records response');return data.records;}).catch(e=>{recordsFeed=null;throw e;});
+    const records=(await recordsFeed).filter(r=>r.division===idx+1).sort((a,b)=>a.circuit.localeCompare(b.circuit));
     cache[idx] = records;
     if(request !== latestRequest) return;
     allRecords = records;
