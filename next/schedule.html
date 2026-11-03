@@ -201,8 +201,8 @@
 
 <script src="config.js"></script>
 <script>
-let SHEET_ID = '17Exg9qlJPzQNUh6egWu7SJZhWJY9AEmDw81Ab38B42I';
-let GID = '0';
+let SHEET_ID = '';
+let GID = '';
 
 const TRACKS = {
   'italy':        { flag:'🇮🇹', name:'Autodromo Nazionale Monza', country:'Italy',
@@ -315,13 +315,17 @@ async function loadSchedule() {
       return;
     }
     const sc = await getCurrentSeasonConfig();
-    if (sc && sc['d1_sheet_id']) SHEET_ID = sc['d1_sheet_id'];
-    if (sc && sc['d1_calendar_gid']) GID = sc['d1_calendar_gid'];
+    if(!sc || !sc.d1_sheet_id || !sc.d1_calendar_gid)throw nextConfigFailure('The season calendar is not connected.');
+    SHEET_ID = sc.d1_sheet_id;
+    GID = sc.d1_calendar_gid;
     if (season) {
       document.getElementById('page-title').textContent = `Season ${season} Schedule`;
       document.title = `F1XL — Season ${season} Schedule`;
     }
-  } catch(e) {}
+  } catch(e) {
+    document.getElementById('schedule').textContent='The schedule could not be loaded. Please use Retry above.';
+    return;
+  }
   try {
     const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${GID}`;
     const res = await fetch(url);

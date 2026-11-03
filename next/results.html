@@ -366,7 +366,10 @@ async function init(){
   const paramSeason = params.get('season');
   const paramDiv = parseInt(params.get('div')) || 1;
 
-  try { _allSeasons = await getAllSeasons(); } catch(e) { _allSeasons = []; }
+  try { _allSeasons = await getAllSeasons(); } catch(e) {
+    document.getElementById('content').textContent='Results could not be loaded. Please use Retry above.';
+    return;
+  }
 
   // Build season selector
   if(_allSeasons.length){
@@ -415,7 +418,11 @@ async function showSeason(season, div){
 
   try {
     _seasonCfg = await loadSeasonConfig(season);
-  } catch(e) { _seasonCfg = null; }
+  } catch(e) {
+    _seasonCfg = null;
+    document.getElementById('round-selector').textContent='Results could not be loaded. Please use Retry above.';
+    return;
+  }
 
   if(!_seasonCfg){
     document.getElementById('page-meta').textContent = 'Season '+season;
