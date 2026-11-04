@@ -525,7 +525,7 @@ function archiveConstructors(rows){
   return data.sort((a,b)=>a.pos!==null&&b.pos!==null?a.pos-b.pos:a.pts!==null&&b.pts!==null?b.orderPoints-a.orderPoints:0);
 }
 
-function buildArchiveConstructors(rows){
+function buildArchiveConstructors(rows, zeroTeamLabel=''){
   const data=archiveConstructors(rows||[]);
   if(!data.length)return '<div class="div-loading">No constructors standings available.</div>';
   const records=data.some(r=>r.wins!==null||r.pods!==null),leader=data[0].pts;
@@ -534,7 +534,9 @@ function buildArchiveConstructors(rows){
     '<th class="ps-result">Pts</th><th class="ps-result">Gap</th></tr></thead><tbody>';
   data.forEach((team,i)=>{
     const pos=team.pos??(team.pts!==null?i+1:'—'),gap=i===0||leader===null||team.pts===null?'—':'-'+(leader-team.pts);
-    html+='<tr><td class="ps-st-pos"><span class="ps-pos-cell '+posClass(pos)+'">'+pos+'</span></td>'+psDriverCell(team.team,team.team)+
+    // S27's two zero-labelled rows are confirmed reserve teams; retain both scores.
+    const reserve=team.team==='0'&&zeroTeamLabel;
+    html+='<tr><td class="ps-st-pos"><span class="ps-pos-cell '+posClass(pos)+'">'+pos+'</span></td>'+psDriverCell(reserve||team.team,reserve?'':team.team)+
       (records?'<td class="ps-result">'+esc(team.wins||'—')+'</td><td class="ps-result">'+esc(team.pods||'—')+'</td>':'')+
       '<td class="ps-result"><span class="ps-pts">'+(team.pts===null?'—':team.pts.toLocaleString())+'</span></td><td class="ps-result">'+gap+'</td></tr>';
   });
@@ -1355,7 +1357,7 @@ function buildS20ConstructorsWithTeamStats(id, d, constRows, teamStatsRows){
   }
 
   // Constructors table
-  const constHtml = constRows ? buildArchiveConstructors(constRows) : '';
+  const constHtml = constRows ? buildArchiveConstructors(constRows, id==='ps-27'?'Reserve':'') : '';
 
   // Team stats table
   let teamHtml = '';
@@ -1685,7 +1687,7 @@ function buildS28Constructors(id, d, constRows, teamStatsRows){
 
   // Constructors standings — from Constructors Standings NoSort
   // Row 0: title, Row 1: Pos/Team/Points/Gap headers, Rows 2+: data
-  const constHtml = constRows ? buildArchiveConstructors(constRows) : '';
+  const constHtml = constRows ? buildArchiveConstructors(constRows, id==='ps-27'?'Reserve':'') : '';
 
   // Team stats — header at row 0
   let teamHtml = '';
