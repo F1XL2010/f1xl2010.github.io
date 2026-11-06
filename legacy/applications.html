@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="description" content="F1XL — Competitive but accessible F1 racing league. No custom setups required. All skill levels welcome. Est. 2010.">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Legacy · Join F1XL — Apply to Race in the UK's Longest Running F1 League</title>
+  <link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="/favicon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green:#3DCC47;--teal:#5ECFCF;--red:#E10600;--black:#111816;--dark:#161d1b;--dark2:#1a2320;--dark3:#1e2a27;
+    --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+    --text:#ffffff;--text-muted:rgba(255,255,255,0.60);--text-faint:rgba(255,255,255,0.30);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:#111816;background-image:url('/images/backgrounds/background_application.webp');background-size:cover;background-position:center;background-attachment:fixed;color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;display:flex;flex-direction:column;}
+  body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(17,24,22,0.5);z-index:0;pointer-events:none;}
+  body>*{position:relative;z-index:1;}
+
+  /* NAV */
+  nav{background:rgba(9,9,9,0.97);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;}
+  .nav-left{display:flex;align-items:center;gap:14px;flex-shrink:0;}
+  .nav-logo{display:flex;align-items:center;height:40px;text-decoration:none;}
+  .nav-logo img{height:34px;width:auto;display:block;}
+  .nav-links{display:flex;align-items:stretch;height:56px;}
+  .nav-item{position:relative;display:flex;align-items:stretch;}
+  .nav-item>a,.nav-item>button{color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:500;letter-spacing:0.5px;padding:0 13px;display:flex;align-items:center;gap:4px;border-bottom:2px solid transparent;border-top:none;border-left:none;border-right:none;background:none;cursor:pointer;font-family:'Barlow',sans-serif;text-transform:uppercase;transition:color 0.2s;white-space:nowrap;}
+  .nav-item>a:hover,.nav-item>button:hover{color:var(--text);}
+  .nav-item>a.active{color:var(--text);border-bottom-color:var(--green);}
+  .nav-chevron{font-size:8px;opacity:0.5;transition:transform 0.2s;}
+  .nav-item:hover .nav-chevron{transform:rotate(180deg);}
+  .nav-dropdown{display:none;position:absolute;top:100%;left:0;background:#141414;border:1px solid var(--border2);border-top:2px solid var(--green);border-radius:0 0 6px 6px;min-width:180px;padding:6px 0;z-index:300;}
+  .nav-item:hover .nav-dropdown{display:block;}
+  .nav-dropdown a{display:block;padding:9px 16px;color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;transition:color 0.15s,background 0.15s;white-space:nowrap;}
+  .nav-dropdown a:hover{color:var(--text);background:rgba(255,255,255,0.05);}
+  .nav-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:8px;background:none;border:none;}
+  .nav-hamburger span{display:block;width:22px;height:2px;background:var(--text-muted);border-radius:2px;transition:all 0.25s;}
+  .nav-hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+  .nav-hamburger.open span:nth-child(2){opacity:0;}
+  .nav-hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+  .mobile-menu{display:none;position:fixed;top:56px;left:0;right:0;background:#141a18;border-bottom:1px solid var(--border2);z-index:199;padding:12px 0;max-height:calc(100vh - 56px);overflow-y:auto;}
+  .mobile-menu.open{display:block;}
+  .mob-section{font-size:10px;letter-spacing:2px;color:var(--text-faint);padding:12px 24px 4px;text-transform:uppercase;}
+  .mobile-menu a{display:block;padding:10px 24px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;}
+  .mobile-menu a:hover{color:var(--text);}
+  @media(max-width:900px){.nav-links{display:none;}.nav-title{display:none;}.nav-hamburger{display:flex;}}
+
+
+  /* PAGE HEADER */
+  .page-header{background:#161d1b;border-bottom:1px solid var(--border);padding:24px;}
+  .page-eyebrow{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:2.5px;color:var(--teal);text-transform:uppercase;font-weight:600;margin-bottom:4px;}
+  .page-title{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:700;text-transform:uppercase;line-height:1;}
+  .page-meta{font-size:13px;color:var(--text-muted);margin-top:6px;}
+
+  /* CARDS */
+  .app-cards{padding:20px 24px 48px;max-width:860px;display:flex;flex-direction:column;gap:10px;}
+  .app-card{background:#1a2320;border:1px solid var(--border);border-radius:8px;overflow:hidden;transition:border-color 0.2s;}
+  .app-card.open{border-color:var(--green);}
+  .app-card-btn{width:100%;display:flex;align-items:center;gap:16px;padding:18px 20px;background:none;border:none;cursor:pointer;text-align:left;transition:background 0.2s;}
+  .app-card-btn:hover{background:#1e2a27;}
+  .app-card-left{flex:1;}
+  .app-card-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text);margin-bottom:4px;}
+  .app-card.open .app-card-title{color:var(--green);}
+  .app-card-desc{font-size:12px;color:var(--text-muted);line-height:1.5;}
+  .app-card-chevron{font-size:14px;color:var(--text-faint);transition:transform 0.25s;flex-shrink:0;}
+  .app-card.open .app-card-chevron{transform:rotate(180deg);color:var(--green);}
+  .app-form-wrap{display:none;border-top:1px solid var(--border);padding:20px;}
+  .app-card.open .app-form-wrap{display:block;}
+  .form-frame{width:100%;border:none;border-radius:8px;min-height:1100px;display:block;}
+
+  /* FOOTER */
+  footer{background:var(--dark);border-top:1px solid var(--border);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:auto;}
+  .footer-logo{background:var(--green);color:#000;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;padding:4px 9px;border-radius:3px;}
+  .footer-text{font-size:12px;color:var(--text-faint);}
+</style>
+<meta name="theme-color" content="#111816">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="F1XL">
+<link rel="apple-touch-icon" href="/images/icons/icon-512.png">
+<meta name="robots" content="noindex,nofollow">
+<link rel="canonical" href="https://f1xl.co.uk/applications.html">
+<link rel="stylesheet" href="/legacy/legacy.css?v=legacy-b7c4eff4bb37">
+</head>
+<body>
+<aside class="legacy-banner" id="legacy-banner" aria-label="Legacy website"><div><strong>Legacy website</strong><span>Previous F1XL site · original spreadsheet sources</span></div><a href="/applications.html" data-legacy-current>Open current website →</a></aside>
+
+<nav>
+  <div class="nav-left">
+    <a href="/legacy/index.html" class="nav-logo">
+      <img src="/TRANSPARENT.png" alt="F1XL - UK Casual F1 League Racing on Xbox, PlayStation and PC">
+    </a>
+  </div>
+  <div class="nav-links">
+    <div class="nav-item"><a href="/legacy/index.html">Home</a></div>
+    <div class="nav-item">
+      <button>Standings <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown">
+        <a href="/legacy/standings.html">Current Season</a>
+        <a href="/legacy/results.html">Results</a>
+        <a href="/legacy/past-seasons.html">Past Seasons</a>
+        <a href="/legacy/asr.html">All Star Race</a>
+      </div>
+    </div>
+    <div class="nav-item"><a href="/legacy/teams.html">Teams</a></div>
+    <div class="nav-item">
+      <button>Race Tickets <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown">
+        <a href="/legacy/submit-ticket.html">Submit Ticket</a>
+        <a href="/legacy/ticket-outcomes.html">Ticket Outcomes</a>
+        <a href="/legacy/drivers-licence.html">Drivers Licence</a>
+      </div>
+    </div>
+    <div class="nav-item"><a href="/legacy/schedule.html">Schedule</a></div>
+    <div class="nav-item">
+      <button>History <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown">
+        <a href="/legacy/hall-of-fame.html">Hall of Fame</a>
+        <a href="/legacy/hall-of-records.html">Hall of Records</a>
+        <a href="/legacy/track-records.html">Track Records</a>
+      </div>
+    </div>
+    <div class="nav-item"><a href="/legacy/applications.html" class="active">Applications</a></div>
+    <div class="nav-item"><a href="/legacy/league-rules.html">League Rules</a></div>
+    <div class="nav-item"><a href="/legacy/merch.html">Merch</a></div>
+    <div class="nav-item"><a href="/legacy/music.html">Music</a></div>
+  </div>
+  <button class="nav-hamburger" id="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></button>
+</nav>
+<div class="mobile-menu" id="mobile-menu">
+  <a href="/legacy/index.html">Home</a>
+  <div class="mob-section">Standings</div>
+  <a href="/legacy/standings.html">Current Season</a>
+  <a href="/legacy/results.html">Results</a>
+  <a href="/legacy/past-seasons.html">Past Seasons</a>
+  <a href="/legacy/asr.html">All Star Race</a>
+  <a href="/legacy/teams.html">Teams</a>
+  <div class="mob-section">Race Tickets</div>
+  <a href="/legacy/submit-ticket.html">Submit Ticket</a>
+  <a href="/legacy/ticket-outcomes.html">Ticket Outcomes</a>
+  <a href="/legacy/drivers-licence.html">Drivers Licence</a>
+  <a href="/legacy/schedule.html">Schedule</a>
+  <div class="mob-section">History</div>
+  <a href="/legacy/hall-of-fame.html">Hall of Fame</a>
+  <a href="/legacy/hall-of-records.html">Hall of Records</a>
+  <a href="/legacy/track-records.html">Track Records</a>
+  <a href="/legacy/applications.html">Applications</a>
+  <a href="/legacy/league-rules.html">League Rules</a>
+  <a href="/legacy/merch.html">Merch</a>
+  <a href="/legacy/music.html">Music</a>
+</div>
+
+<div class="page-header">
+  <div class="page-eyebrow">F1XL</div>
+  <div class="page-title">Applications</div>
+  <div class="page-meta">Applications are always open — select the relevant form below</div>
+</div>
+
+<div class="app-cards">
+
+  <div class="app-card" id="card-f1">
+    <button class="app-card-btn" onclick="toggleForm('f1')">
+      <div class="app-card-left">
+        <div class="app-card-title">F1 Driver Application</div>
+        <div class="app-card-desc">Apply to race in one of our F1 divisions. New drivers will need to complete a time trial.</div>
+      </div>
+      <div class="app-card-chevron" id="chev-f1">▼</div>
+    </button>
+    <div class="app-form-wrap" id="form-f1">
+      <iframe class="form-frame"
+        src="https://docs.google.com/forms/d/e/1FAIpQLSdYT9Bb6x-bPb7NKszdiF5Xc1ZkT1mYVJo4xR5Q4TCAYlZxsA/viewform?embedded=true"
+        frameborder="0" marginheight="0" marginwidth="0">Loading...</iframe>
+    </div>
+  </div>
+
+  <div class="app-card" id="card-staff">
+    <button class="app-card-btn" onclick="toggleForm('staff')">
+      <div class="app-card-left">
+        <div class="app-card-title">Staff Application</div>
+        <div class="app-card-desc">Join the F1XL team as a steward, race controller, commentator or in another capacity.</div>
+      </div>
+      <div class="app-card-chevron" id="chev-staff">▼</div>
+    </button>
+    <div class="app-form-wrap" id="form-staff">
+      <iframe class="form-frame"
+        src="https://docs.google.com/forms/d/e/1FAIpQLSczd-YDc_6yAuolgyWkRQmboaPzax8sqpYYwJ3f0vFTf8rKgw/viewform?embedded=true"
+        frameborder="0" marginheight="0" marginwidth="0">Loading...</iframe>
+    </div>
+  </div>
+
+  <div class="app-card" id="card-timetrial">
+    <button class="app-card-btn" onclick="toggleForm('timetrial')">
+      <div class="app-card-left">
+        <div class="app-card-title">Time Trial Submission</div>
+        <div class="app-card-desc">Submit your time trial recording. Make sure it meets the requirements in Section 16 of the League Rules before submitting.</div>
+      </div>
+      <div class="app-card-chevron" id="chev-timetrial">▼</div>
+    </button>
+    <div class="app-form-wrap" id="form-timetrial">
+      <iframe class="form-frame"
+        src="https://docs.google.com/forms/d/e/1FAIpQLSdWo3z0h758ZlMGGYuOyg47ky1hZB0hVF54VctH9-RHP8OkvQ/viewform?embedded=true"
+        frameborder="0" marginheight="0" marginwidth="0">Loading...</iframe>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="footer-logo">F1XL</div>
+    <div class="footer-text">F1 League · F1 Sim Racing on Xbox, PlayStation and PC. Casual Racing on F1 26</div>
+  </div>
+  <div class="footer-text">f1xl.co.uk</div>
+</footer>
+
+<script>
+function toggleForm(name) {
+  const card = document.getElementById('card-' + name);
+  const isOpen = card.classList.contains('open');
+  // Close all others
+  document.querySelectorAll('.app-card').forEach(c => c.classList.remove('open'));
+  // Toggle this one
+  if (!isOpen) card.classList.add('open');
+}
+
+function toggleMenu() {
+  document.getElementById('mobile-menu').classList.toggle('open');
+  document.getElementById('hamburger').classList.toggle('open');
+}
+</script>
+
+<script src="/legacy/legacy.js?v=legacy-b7c4eff4bb37"></script>
+</body>
+</html>

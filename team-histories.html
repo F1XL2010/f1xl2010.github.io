@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Explore F1XL constructor history: team titles, recorded points, wins, podiums and poles from the beginning of the league."><title>F1XL — Team Histories</title><meta name="theme-color" content="#111816"><link rel="icon" href="/favicon.ico"><link rel="apple-touch-icon" href="/favicon-180.png"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet"><style>:root{--text:#fff;--text-muted:rgba(255,255,255,.65);--text-faint:rgba(255,255,255,.4);--green:#3DCC47;--border2:rgba(255,255,255,.15)}    nav{background:rgba(17,24,22,0.97);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;backdrop-filter:blur(8px);}
+  .nav-left{display:flex;align-items:center;flex-shrink:0;}
+  .nav-logo{display:flex;align-items:center;height:40px;text-decoration:none;}
+  .nav-logo img{height:34px;width:auto;display:block;}
+  .nav-links{display:flex;align-items:stretch;height:56px;}
+  .nav-item{position:relative;display:flex;align-items:stretch;}
+  .nav-item>a,.nav-item>button{color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:500;letter-spacing:0.5px;padding:0 13px;display:flex;align-items:center;gap:4px;border-bottom:2px solid transparent;border-top:none;border-left:none;border-right:none;background:none;cursor:pointer;font-family:'Barlow',sans-serif;text-transform:uppercase;transition:color 0.2s;white-space:nowrap;}
+  .nav-item>a:hover,.nav-item>button:hover{color:var(--text);}
+  .nav-item>a.active,.nav-item>button.active{color:var(--text);border-bottom-color:var(--green);}
+  .nav-chevron{font-size:8px;opacity:0.5;transition:transform 0.2s;}
+  .nav-item:hover .nav-chevron{transform:rotate(180deg);}
+  .nav-dropdown{display:none;position:absolute;top:100%;left:0;background:#141a18;border:1px solid var(--border2);border-top:2px solid var(--green);border-radius:0 0 6px 6px;min-width:180px;padding:6px 0;z-index:300;}
+  .nav-item:hover .nav-dropdown{display:block;}
+  .nav-dropdown a{display:block;padding:9px 16px;color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;transition:color 0.15s,background 0.15s;white-space:nowrap;}
+  .nav-dropdown a:hover{color:var(--text);background:rgba(255,255,255,0.05);}
+  .nav-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:8px;background:none;border:none;}
+  .nav-hamburger span{display:block;width:22px;height:2px;background:var(--text-muted);border-radius:2px;transition:all 0.25s;}
+  .nav-hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+  .nav-hamburger.open span:nth-child(2){opacity:0;}
+  .nav-hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+  .mobile-menu{display:none;position:fixed;top:56px;left:0;right:0;background:#141a18;border-bottom:1px solid var(--border2);z-index:199;padding:12px 0;max-height:calc(100vh - 56px);overflow-y:auto;}
+  .mobile-menu.open{display:block;}
+  .mob-section{font-size:10px;letter-spacing:2px;color:var(--text-faint);padding:12px 24px 4px;text-transform:uppercase;}
+  .mobile-menu a{display:block;padding:10px 24px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;}
+  .mobile-menu a:hover{color:var(--text);}
+  @media(max-width:900px){.nav-links{display:none;}.nav-hamburger{display:flex;}}
+.nav-item:focus-within .nav-dropdown{display:block}</style><link rel="stylesheet" href="team-histories.css?v=launch-proposal-20261105-r4"></head><body>
+<nav>
+  <div class="nav-left">
+    <a href="index.html" class="nav-logo">
+      <img src="/TRANSPARENT.png" alt="F1XL - UK Casual F1 League Racing on Xbox, PlayStation and PC">
+    </a>
+  </div>
+  <div class="nav-links">
+    <div class="nav-item"><a href="index.html">Home</a></div>
+    <div class="nav-item">
+      <button>Standings <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown">
+        <a href="standings.html">Current Season</a>
+        <a href="results.html">Results</a>
+        <a href="past-seasons.html">Past Seasons</a>
+        <a href="/asr.html">All Star Race</a>
+      </div>
+    </div>
+    <div class="nav-item"><a href="teams.html">Teams</a></div>
+    <div class="nav-item">
+      <button>Race Tickets <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown">
+
+        <a href="ticket-outcomes.html">Ticket Outcomes</a>
+        <a href="drivers-licence.html">Drivers Licence</a>
+      </div>
+    </div>
+    <div class="nav-item"><a href="schedule.html">Schedule</a></div>
+    <div class="nav-item">
+      <button class="active">History <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown">
+        <a href="hall-of-fame.html">Hall of Fame</a>
+        <a href="hall-of-records.html">Hall of Records</a>
+        <a href="team-histories.html">Team Histories</a>
+        <a href="track-records.html">Track Records</a>
+      </div>
+    </div>
+    <div class="nav-item"><a href="/applications.html">Applications</a></div>
+    <div class="nav-item"><a href="/league-rules.html">League Rules</a></div>
+    <div class="nav-item"><a href="/merch.html">Merch</a></div>
+    <div class="nav-item"><a href="/music.html">Music</a></div>
+  </div>
+  <button class="nav-hamburger" id="hamburger" aria-label="Open navigation" aria-controls="mobile-menu" aria-expanded="false" onclick="toggleMenu()" aria-label="Open navigation menu"><span></span><span></span><span></span></button>
+</nav>
+<div class="mobile-menu" id="mobile-menu">
+  <a href="index.html">Home</a>
+  <div class="mob-section">Standings</div>
+  <a href="standings.html">Current Season</a>
+  <a href="results.html">Results</a>
+  <a href="past-seasons.html">Past Seasons</a>
+  <a href="/asr.html">All Star Race</a>
+  <a href="teams.html">Teams</a>
+  <div class="mob-section">Race Tickets</div>
+
+  <a href="ticket-outcomes.html">Ticket Outcomes</a>
+  <a href="drivers-licence.html">Drivers Licence</a>
+  <a href="schedule.html">Schedule</a>
+  <div class="mob-section">History</div>
+  <a href="hall-of-fame.html">Hall of Fame</a>
+  <a href="hall-of-records.html">Hall of Records</a>
+  <a href="team-histories.html">Team Histories</a>
+        <a href="track-records.html">Track Records</a>
+  <a href="/applications.html">Applications</a>
+  <a href="/league-rules.html">League Rules</a>
+  <a href="/merch.html">Merch</a>
+  <a href="/music.html">Music</a>
+</div>
+
+<main class="history-main">
+<header class="history-heading"><div><div class="eyebrow">F1XL history</div><h1>Team histories</h1></div><p>Titles and recorded team statistics, season by season.</p></header>
+<div class="selection-bar"><div class="team-select-wrap"><label for="team-select">Choose a team</label><select id="team-select" aria-controls="team-profile"><option value="ferrari">Ferrari</option></select></div><label class="current-toggle"><input id="include-current" type="checkbox"><span id="include-current-label">Include current season</span></label><button class="refresh-button" id="refresh-records" type="button">Refresh records ↻</button></div>
+<p class="load-status" id="load-status" role="status"><span class="pulse" aria-hidden="true"></span><span id="load-text">Connecting to the season archive…</span></p>
+<div class="warning" id="load-warning" role="alert" hidden></div>
+<section id="team-profile" aria-labelledby="team-name"><header class="team-hero"><img class="hero-watermark" id="team-watermark" alt="" src="/images/teamlogos/squarelogo_ferrari.webp"><div class="team-identity"><img class="team-logo" id="team-logo" alt="" src="/images/teamlogos/squarelogo_ferrari.webp"><span class="team-monogram" id="team-monogram" aria-hidden="true" hidden>FE</span><div><div class="eyebrow">F1XL constructor archive</div><h2 class="team-title" id="team-name">Ferrari</h2><p class="team-subtitle" id="team-subtitle">Historical constructor records</p></div></div><div class="hero-honours"><div class="hero-honour"><strong id="hero-overall">—</strong><span>Overall titles</span></div><div class="hero-honour"><strong id="hero-division">—</strong><span>Division titles</span></div></div></header>
+<div class="team-tabs" role="tablist" aria-label="Team history views"><button id="tab-overview" type="button" role="tab" aria-controls="panel-overview" aria-selected="true" data-history-tab="overview">Overview</button><button id="tab-seasons" type="button" role="tab" aria-controls="panel-seasons" aria-selected="false" tabindex="-1" data-history-tab="seasons">Season history</button><button id="tab-honours" type="button" role="tab" aria-controls="panel-honours" aria-selected="false" tabindex="-1" data-history-tab="honours">Honours</button><button id="tab-principals" type="button" role="tab" aria-controls="panel-principals" aria-selected="false" tabindex="-1" data-history-tab="principals">Principals</button></div>
+<section id="panel-overview" role="tabpanel" aria-labelledby="tab-overview" data-history-panel="overview"><div class="metric-grid" id="metric-grid"></div><p class="record-note" id="record-note"></p><div class="section-heading"><h2>Constructor titles</h2><button type="button" class="text-button" data-open-honours>View all honours →</button></div><div class="honours-grid" id="recent-honours"></div><div class="section-heading"><h2>Team principals</h2><button type="button" class="text-button" data-open-principals>View all principal records →</button></div><div class="principal-grid" id="recent-principals"></div></section>
+<section id="panel-seasons" role="tabpanel" aria-labelledby="tab-seasons" data-history-panel="seasons" hidden><div class="history-controls"><p id="scope-text">Completed seasons. Expand a season for its division breakdown.</p><div class="division-filter"><label for="division-filter">Table division</label><select id="division-filter"><option value="all">All divisions</option><option value="1">Division 1</option><option value="2">Division 2</option><option value="3">Division 3</option><option value="4">Division 4</option><option value="5">Division 5</option><option value="6">Division 6</option><option value="7">Division 7</option><option value="8">Division 8</option></select></div></div><div class="season-history" id="season-history"></div></section>
+<section id="panel-honours" role="tabpanel" aria-labelledby="tab-honours" data-history-panel="honours" hidden><div class="honours-section"><div class="section-heading"><h2>Overall constructors</h2></div><div class="honours-grid" id="overall-honours"></div></div><div class="honours-section"><div class="section-heading"><h2>Division constructors</h2></div><div class="honours-grid" id="division-honours"></div></div><div class="honours-section"><div class="section-heading"><h2>All Star Race</h2></div><p class="muted">ASR team honours are recorded separately and do not contribute to the racing totals above.</p><div class="honours-grid" id="asr-honours"></div></div></section>
+<section id="panel-principals" role="tabpanel" aria-labelledby="tab-principals" data-history-panel="principals" hidden><div class="section-heading"><h2>Team principals</h2></div><p class="muted">Names and seasons from the team rosters, where recorded. A gap does not imply the same person remained in charge.</p><div class="principal-grid" id="principal-history"></div><p class="record-note" id="principal-gaps"></p></section>
+<details class="coverage-box"><summary>About these records</summary><ul><li>Titles and runners-up come from confirmed constructor honours. Driver and team-principal awards are not counted again as team titles.</li><li>Team points and race figures follow the team recorded in each season’s division workbook, not a driver’s current team.</li><li>Early honours and championship points are retained where known. Detailed team race figures before S10 are unavailable. Some S14 and S15 divisions also have incomplete original sessions; team pole attribution is unavailable for S11–S12.</li><li>Only available figures contribute to the recorded totals. A dash means unknown, not zero. Championship points retain sprint points and official adjustments; feature points exclude sprint points wherever that split is recorded.</li><li>Historical team names are separate: Renault and Alpine, for example, have their own records. Confirmed spelling variants such as McLaren/mclaren are combined.</li><li>Previous principals come from explicit team-owner entries in Past Season Teams. Newer seasons use their own principal list. Badges are removed; names are kept as recorded, without guessing driver aliases or filling gaps.</li><li>Choose Refresh records to reread the public sources. Archived data is cached in this browser to speed up later visits; current-season figures refresh more often.</li></ul><a href="past-seasons.html">Explore the season archive →</a></details>
+</section></main>
+<footer><span class="footer-logo">F1XL</span><span>Team histories · Est. 2010</span></footer>
+<script src="config.js?v=launch-proposal-20261105-r4"></script><script src="honours-data.js?v=launch-proposal-20261105-r4"></script><script src="team-history-data.js?v=launch-proposal-20261105-r4"></script><script>function toggleMenu(){const open=document.getElementById('mobile-menu').classList.toggle('open');document.getElementById('hamburger').classList.toggle('open',open);document.getElementById('hamburger').setAttribute('aria-expanded',String(open));}</script><script src="team-histories-client.js?v=launch-proposal-20261105-r4"></script><script>if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js',{updateViaCache:'none'}).then(registration=>registration.update()).catch(error=>console.warn('Website update check:',error));});}</script></body></html>

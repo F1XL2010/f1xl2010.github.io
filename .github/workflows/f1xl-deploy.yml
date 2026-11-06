@@ -12,9 +12,15 @@ jobs:
 
       - name: Inject cache version into service worker
         run: |
-          COMMIT=$(echo "${{ github.sha }}" | cut -c1-8)
-          sed -i "s/CACHE_VERSION/${COMMIT}/g" sw.js
-          echo "Cache version set to: ${COMMIT}"
+          node <<'NODE'
+          const fs = require('node:fs');
+          const version = process.env.GITHUB_SHA.slice(0, 12);
+          if (!/^[a-f0-9]{12}$/.test(version)) throw Error('Invalid release version');
+          const file = fs.readFileSync('sw.js', 'utf8');
+          if (!/^const VERSION = '[^']+';/m.test(file)) throw Error('Missing cache version');
+          fs.writeFileSync('sw.js', file.replace(/^const VERSION = '[^']+';/m, `const VERSION = '${version}';`));
+          console.log('Cache version set to: ' + version);
+          NODE
 
       - name: Commit updated service worker
         uses: stefanzweifel/git-auto-commit-action@v5

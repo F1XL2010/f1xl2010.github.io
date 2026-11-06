@@ -12,7 +12,7 @@
 <style>
   :root{--green:#3DCC47;--teal:#5ECFCF;--red:#E10600;--black:#111816;--dark:#161d1b;--dark2:#1a2320;--dark3:#1e2a27;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);--text:#ffffff;--text-muted:rgba(255,255,255,0.60);--text-faint:rgba(255,255,255,0.30);--gold:#E8B84B;}
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{background:#111816;background-image:url('images/backgrounds/background_trackrecords.webp');background-size:cover;background-position:center;background-attachment:fixed;color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;}
+  body{background:#111816;background-image:url('/images/backgrounds/background_trackrecords.webp');background-size:cover;background-position:center;background-attachment:fixed;color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;}
   body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(17,24,22,0.72);z-index:0;pointer-events:none;}
   body>*{position:relative;z-index:1;}
 
@@ -71,6 +71,8 @@
   .team-name{font-size:11px;color:var(--text-muted);margin-top:1px;}
   .record-season{font-size:13px;color:var(--text-muted);font-family:'Barlow Condensed',sans-serif;font-weight:600;}
   .record-date{font-size:11px;color:var(--text-muted);}
+  .record-review{font-size:11px;color:#E8B84B;margin-top:4px;}
+  .record-review-time{color:#E8B84B;font-size:14px;letter-spacing:0;}
 
   /* FLAG col */
   .flag-cell{font-size:20px;width:40px;text-align:center;}
@@ -81,6 +83,16 @@
   footer{background:#161d1b;border-top:1px solid var(--border);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:auto;}
   .footer-logo{background:var(--green);color:#000;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;padding:4px 9px;border-radius:3px;}
   .footer-text{font-size:12px;color:var(--text-faint);}
+
+  .test-banner{padding:8px 24px;background:#192c25;border-bottom:1px solid #3DCC47;color:#b3edbc;font-size:11px;letter-spacing:1px;text-align:center;}
+  .history-load-notice{margin:16px 24px;padding:12px 16px;border:1px solid #E8B84B;border-radius:6px;color:#E8B84B;font-size:13px;}
+  .history-load-notice[hidden]{display:none;}
+  .history-load-notice button{margin-left:12px;padding:6px 12px;background:transparent;border:1px solid currentColor;border-radius:4px;color:inherit;cursor:pointer;}
+  .history-scroll{max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;}
+  .history-scroll:focus-visible{outline:2px solid var(--gold,var(--green));outline-offset:2px;}
+
+
+  @media(max-width:600px){.page-header{padding:20px 16px;}.content{padding:16px;}.div-tabs{padding:0 16px;flex-wrap:nowrap;overflow-x:auto;}.div-tab{flex-shrink:0;}.records-table,.records-table tbody{display:block;background:none;}.records-table thead{display:none;}.records-table tr{display:grid;grid-template-columns:32px minmax(0,1fr) auto;background:#1a2320;border:1px solid var(--border2);border-radius:8px;margin-bottom:10px;padding:12px;gap:6px 8px;}.records-table td{display:block;padding:0;border:0;min-width:0;}.records-table tr:hover td{background:none;}.records-table .flag-cell{width:auto;}.lap-cell{grid-column:3;}.driver-cell{grid-column:2/4;overflow-wrap:anywhere;}.season-cell{grid-column:2/4;}.record-season{font-size:12px;}.circuit-name{font-size:16px;}.driver-name{font-size:14px;}.record-season::before{content:'Season: ';}footer{gap:12px;}}
 </style>
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#111816">
@@ -94,7 +106,7 @@
 <nav>
   <div class="nav-left">
     <a href="index.html" class="nav-logo">
-      <img src="TRANSPARENT.png" alt="F1XL - UK Casual F1 League Racing on Xbox, PlayStation and PC">
+      <img src="/TRANSPARENT.png" alt="F1XL - UK Casual F1 League Racing on Xbox, PlayStation and PC">
     </a>
   </div>
   <div class="nav-links">
@@ -105,14 +117,13 @@
         <a href="standings.html">Current Season</a>
         <a href="results.html">Results</a>
         <a href="past-seasons.html">Past Seasons</a>
-        <a href="asr.html">All Star Race</a>
+        <a href="/asr.html">All Star Race</a>
       </div>
     </div>
     <div class="nav-item"><a href="teams.html">Teams</a></div>
     <div class="nav-item">
       <button>Race Tickets <span class="nav-chevron">▼</span></button>
       <div class="nav-dropdown">
-        <a href="submit-ticket.html">Submit Ticket</a>
         <a href="ticket-outcomes.html">Ticket Outcomes</a>
         <a href="drivers-licence.html">Drivers Licence</a>
       </div>
@@ -123,15 +134,16 @@
       <div class="nav-dropdown">
         <a href="hall-of-fame.html">Hall of Fame</a>
         <a href="hall-of-records.html">Hall of Records</a>
+        <a href="team-histories.html">Team Histories</a>
         <a href="track-records.html">Track Records</a>
       </div>
     </div>
-    <div class="nav-item"><a href="applications.html">Applications</a></div>
-    <div class="nav-item"><a href="league-rules.html">League Rules</a></div>
-    <div class="nav-item"><a href="merch.html">Merch</a></div>
-    <div class="nav-item"><a href="music.html">Music</a></div>
+    <div class="nav-item"><a href="/applications.html">Applications</a></div>
+    <div class="nav-item"><a href="/league-rules.html">League Rules</a></div>
+    <div class="nav-item"><a href="/merch.html">Merch</a></div>
+    <div class="nav-item"><a href="/music.html">Music</a></div>
   </div>
-  <button class="nav-hamburger" id="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></button>
+  <button class="nav-hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Open navigation menu"><span></span><span></span><span></span></button>
 </nav>
 <div class="mobile-menu" id="mobile-menu">
   <a href="index.html">Home</a>
@@ -139,21 +151,21 @@
   <a href="standings.html">Current Season</a>
   <a href="results.html">Results</a>
   <a href="past-seasons.html">Past Seasons</a>
-  <a href="asr.html">All Star Race</a>
+  <a href="/asr.html">All Star Race</a>
   <a href="teams.html">Teams</a>
   <div class="mob-section">Race Tickets</div>
-  <a href="submit-ticket.html">Submit Ticket</a>
   <a href="ticket-outcomes.html">Ticket Outcomes</a>
   <a href="drivers-licence.html">Drivers Licence</a>
   <a href="schedule.html">Schedule</a>
   <div class="mob-section">History</div>
   <a href="hall-of-fame.html">Hall of Fame</a>
   <a href="hall-of-records.html">Hall of Records</a>
-  <a href="track-records.html">Track Records</a>
-  <a href="applications.html">Applications</a>
-  <a href="league-rules.html">League Rules</a>
-  <a href="merch.html">Merch</a>
-  <a href="music.html">Music</a>
+  <a href="team-histories.html">Team Histories</a>
+        <a href="track-records.html">Track Records</a>
+  <a href="/applications.html">Applications</a>
+  <a href="/league-rules.html">League Rules</a>
+  <a href="/merch.html">Merch</a>
+  <a href="/music.html">Music</a>
 </div>
 
 <div class="page-header">
@@ -177,6 +189,7 @@
   <div id="content"><div class="loading-msg">Loading track records...</div></div>
 </div>
 
+<div class="history-load-notice" id="history-load-notice" role="status" hidden><span></span><button type="button" onclick="loadDiv(currentDiv,document.querySelectorAll('.div-tab')[currentDiv])">Retry</button></div>
 <footer>
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="footer-logo">F1XL</div>
@@ -186,8 +199,8 @@
 </footer>
 
 <script>
-const SHEET_ID = '18vD7g_29uzRSr_GYbXkNjclCHe8F_bsp4cY69TjXrW4';
-const GIDS = ['0','343950932','806509057','557492395','1468409556','1147341365','1917666666','468074839'];
+const TRACK_RECORDS_FEED = 'https://script.google.com/macros/s/AKfycbxJ9JnIwY39k4k8ouva8CPpa6EvQXeKUD1mNGc3JgaNLfVyiATX68925cKaEZDywf36IQ/exec?view=track-records';
+let recordsFeed;
 
 const FLAGS = {
   'abu dhabi':'🇦🇪','australia':'🇦🇺','austria':'🇦🇹','azerbaijan':'🇦🇿',
@@ -197,12 +210,13 @@ const FLAGS = {
   'jeddah':'🇸🇦','saudi':'🇸🇦','saudi arabia':'🇸🇦',
   'las vegas':'🇺🇸','mexico':'🇲🇽','miami':'🇺🇸','monaco':'🇲🇨',
   'netherlands':'🇳🇱','portimao':'🇵🇹','qatar':'🇶🇦',
-  'russia':'🇷🇺','singapore':'🇸🇬','spain':'🇪🇸',
+  'russia':'🇷🇺','singapore':'🇸🇬','spain':'🇪🇸','catalunya':'🇪🇸',
   'united states':'🇺🇸','vietnam':'🇻🇳',
 };
 
 let allRecords = [];
 let currentDiv = 0;
+let latestRequest = 0;
 const cache = {};
 
 function getFlag(circuit) {
@@ -211,14 +225,49 @@ function getFlag(circuit) {
 
 function formatDate(str) {
   if (!str || !str.trim()) return '';
-  const p = str.trim().split('/');
-  if (p.length !== 3) return str;
+  const match = str.trim().match(/^(\d{1,2})[/.](\d{1,2})[/.](\d{4})$/);
+  if (!match) return '';
+  const p = match.slice(1), day = Number(p[0]), month = Number(p[1]), year = Number(p[2]);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) return '';
   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  return `${p[0]} ${months[parseInt(p[1])-1]} ${p[2]}`;
+  return `${String(day).padStart(2,'0')} ${months[month-1]} ${year}`;
+}
+
+function recordText(value) {
+  return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function normaliseRecordTime(value) {
+  const match = String(value ?? '').trim().match(/^(\d{1,2})[:.]+([0-5]\d)(?:[.:]+(\d{1,3}))?$/);
+  if (!match) return '';
+  const fraction = (match[3] || '').padEnd(3,'0');
+  if (Number(match[1]) * 60000 + Number(match[2]) * 1000 + Number(fraction) === 0) return '';
+  return `${Number(match[1])}:${match[2]}.${fraction}`;
+}
+
+function parseTrackRecords(rows, division) {
+  const records = [];
+  for (const row of rows.slice(1)) {
+    const [circuit, rawTime, driver, team, date, season] = Array.from({length:6}, (_,i) => String(row[i] ?? '').trim());
+    if (!circuit || !rawTime || /^(?:-+|—|–|n\/a)$/i.test(rawTime)) continue;
+    const time = normaliseRecordTime(rawTime);
+    if (/^0[:.]00[.:]0+$/.test(rawTime)) continue;
+    // The original S19 D8 cells contain race fastest laps, not qualifying laps.
+    // Keep the circuit visible, but do not present these as qualifying records.
+    // Fingerprint the old values so a corrected source immediately clears review.
+    const raceLap = division === 8 && Number(season) === 19 &&
+      ((circuit === 'Imola' && time === '1:17.322') || (circuit === 'Russia' && time === '1:35.260'));
+    const review = raceLap || !time || !/^[A-Za-z]/.test(circuit);
+    records.push({circuit, time, driver, team, date, season, review});
+  }
+  return records.sort((a,b) => a.circuit.localeCompare(b.circuit));
 }
 
 async function loadDiv(idx, btn) {
+  const request = ++latestRequest;
   currentDiv = idx;
+  document.getElementById('page-meta').textContent = `Loading Division ${idx + 1}…`;
   document.querySelectorAll('.div-tab').forEach(t => t.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById('content').innerHTML = '<div class="loading-msg">Loading...</div>';
@@ -231,40 +280,25 @@ async function loadDiv(idx, btn) {
   }
 
   try {
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${GIDS[idx]}`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const text = await res.text();
-    if (text.includes('<!DOCTYPE') || text.includes('<html')) throw new Error('Not published');
-    const rows = parseCSV(text);
-
-    const records = [];
-    for (let i = 1; i < rows.length; i++) {
-      const row = rows[i];
-      const circuit = (row[0]||'').trim();
-      const time    = (row[1]||'').trim();
-      const driver  = (row[2]||'').trim();
-      const team    = (row[3]||'').trim();
-      const date    = (row[4]||'').trim();
-      const season  = (row[5]||'').trim();
-      if (!circuit || !time) continue;
-      records.push({ circuit, time, driver, team, date, season });
-    }
-
-    records.sort((a,b) => a.circuit.localeCompare(b.circuit));
+    if(!recordsFeed)recordsFeed=fetch(TRACK_RECORDS_FEED).then(async res=>{if(!res.ok)throw Error('HTTP '+res.status);const data=await res.json();if(!data.ok||!Array.isArray(data.records))throw Error(data.error||'Invalid records response');return data.records;}).catch(e=>{recordsFeed=null;throw e;});
+    const records=(await recordsFeed).filter(r=>r.division===idx+1).sort((a,b)=>a.circuit.localeCompare(b.circuit));
     cache[idx] = records;
+    if(request !== latestRequest) return;
     allRecords = records;
     renderRecords(records);
     updateMeta();
 
   } catch(e) {
-    document.getElementById('content').innerHTML = `<div class="loading-msg">Could not load records: ${e.message}</div>`;
+    if(request !== latestRequest) return;
+    document.getElementById('content').innerHTML = `<div class="loading-msg">Could not load records: ${e.message}<br><button type="button" onclick="loadDiv(currentDiv,document.querySelectorAll('.div-tab')[currentDiv])">Retry</button></div>`;
   }
 }
 
 function updateMeta() {
+  const review = allRecords.filter(r => r.review).length;
+  const confirmed = allRecords.length - review;
   document.getElementById('page-meta').textContent =
-    `${allRecords.length} circuit record${allRecords.length !== 1 ? 's' : ''} · Division ${currentDiv + 1}`;
+    `${confirmed} qualifying record${confirmed !== 1 ? 's' : ''} · Division ${currentDiv + 1}${review ? ` · ${review} under review` : ''}`;
 }
 
 function renderRecords(records) {
@@ -278,7 +312,7 @@ function renderRecords(records) {
       <tr>
         <th style="width:40px;"></th>
         <th>Circuit</th>
-        <th>Lap Time</th>
+        <th>Qualifying Time</th>
         <th>Driver</th>
         <th>Season</th>
       </tr>
@@ -288,14 +322,14 @@ function renderRecords(records) {
   records.forEach(r => {
     html += `<tr>
       <td class="flag-cell">${getFlag(r.circuit)}</td>
-      <td><div class="circuit-name">${r.circuit}</div></td>
-      <td><div class="lap-time">${r.time}</div></td>
-      <td>
-        <div class="driver-name">${r.driver || '—'}</div>
-        <div class="team-name">${r.team || ''}</div>
-        <div class="record-date">${formatDate(r.date)}</div>
+      <td class="circuit-cell"><div class="circuit-name">${recordText(r.circuit)}</div></td>
+      <td class="lap-cell"><div class="lap-time${r.review ? ' record-review-time' : ''}">${r.review ? 'Under review' : recordText(r.time)}</div></td>
+      <td class="driver-cell">
+        <div class="driver-name">${r.review ? 'Qualifying record to be confirmed' : recordText(r.driver && r.driver !== '--' ? r.driver : 'Not recorded')}</div>
+        <div class="team-name">${!r.review && r.team && r.team !== '--' ? recordText(r.team) : ''}</div>
+        <div class="record-date">${!r.review ? formatDate(r.date) : ''}</div>
       </td>
-      <td><div class="record-season">S${r.season}</div></td>
+      <td class="season-cell"><div class="record-season">${Number(r.season)>0 ? `S${r.season}` : '—'}</div></td>
     </tr>`;
   });
 
@@ -323,8 +357,9 @@ function toggleMenu(){
 
 loadDiv(0, document.querySelector('.div-tab'));
 </script>
+
 <script>
-if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js').catch(e=>console.warn('SW:',e));});}
+if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js',{updateViaCache:'none'}).then(registration=>registration.update()).catch(error=>console.warn('Website update check:',error));});}
 </script>
 </body>
 </html>

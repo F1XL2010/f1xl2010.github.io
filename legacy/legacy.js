@@ -1,0 +1,1 @@
+(()=>{const banner=document.getElementById('legacy-banner');if(!banner)return;const measure=()=>document.documentElement.style.setProperty('--legacy-banner-height',Math.ceil(banner.getBoundingClientRect().height)+'px');measure();window.addEventListener('resize',measure);if('ResizeObserver' in window)new ResizeObserver(measure).observe(banner);})();

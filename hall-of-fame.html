@@ -12,7 +12,7 @@
 <style>
   :root{--green:#3DCC47;--teal:#5ECFCF;--gold:#E8B84B;--red:#E10600;--black:#0e1210;--dark:#131a17;--dark2:#161e1b;--dark3:#1a2420;--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.12);--text:#ffffff;--text-muted:rgba(255,255,255,0.60);--text-faint:rgba(255,255,255,0.28);}
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{background:var(--black);background-image:url('images/backgrounds/background_hof.webp');background-size:cover;background-position:center;background-attachment:fixed;color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;}
+  body{background:var(--black);background-image:url('/images/backgrounds/background_hof.webp');background-size:cover;background-position:center;background-attachment:fixed;color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;}
   body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(17,24,22,0.5);z-index:0;pointer-events:none;}
   body>*{position:relative;z-index:1;}
 
@@ -165,6 +165,17 @@
   footer{border-top:1px solid var(--border);padding:20px 24px;display:flex;justify-content:space-between;align-items:center;margin-top:40px;}
   .footer-logo{background:var(--gold);color:#000;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;padding:4px 9px;border-radius:3px;}
   .footer-text{font-size:11px;color:var(--text-faint);}
+
+  .test-banner{padding:8px 24px;background:#192c25;border-bottom:1px solid #3DCC47;color:#b3edbc;font-size:11px;letter-spacing:1px;text-align:center;}
+  .history-load-notice{margin:16px 24px;padding:12px 16px;border:1px solid #E8B84B;border-radius:6px;color:#E8B84B;font-size:13px;}
+  .history-load-notice[hidden]{display:none;}
+  .history-load-notice button{margin-left:12px;padding:6px 12px;background:transparent;border:1px solid currentColor;border-radius:4px;color:inherit;cursor:pointer;}
+  .history-scroll{max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;}
+  .history-scroll:focus-visible{outline:2px solid var(--gold,var(--green));outline-offset:2px;}
+
+
+  .acc-panel,.lb-card,.lr-card{min-width:0;}.lb-info,.lr-name{min-width:0;overflow-wrap:anywhere;}.history-scroll .acc-table{min-width:480px;}
+  @media(max-width:600px){.hero{padding:32px 16px;}.hero-title{font-size:44px;}.chapter{padding:24px 16px 16px;}.lb-wrap,.season-wrap,.acc-wrap,.lr-wrap{padding-left:16px;padding-right:16px;}#div-records-wrap{margin-left:16px;margin-right:16px;padding:12px;}.hof-flipbook-wrap{padding:0 16px 24px;}footer{gap:12px;flex-wrap:wrap;}}
 </style>
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#111816">
@@ -179,7 +190,7 @@
 <nav>
   <div class="nav-left">
     <a href="index.html" class="nav-logo">
-      <img src="TRANSPARENT.png" alt="F1XL - UK Casual F1 League Racing on Xbox, PlayStation and PC">
+      <img src="/TRANSPARENT.png" alt="F1XL - UK Casual F1 League Racing on Xbox, PlayStation and PC">
     </a>
   </div>
   <div class="nav-links">
@@ -190,14 +201,13 @@
         <a href="standings.html">Current Season</a>
         <a href="results.html">Results</a>
         <a href="past-seasons.html">Past Seasons</a>
-        <a href="asr.html">All Star Race</a>
+        <a href="/asr.html">All Star Race</a>
       </div>
     </div>
     <div class="nav-item"><a href="teams.html">Teams</a></div>
     <div class="nav-item">
       <button>Race Tickets <span class="nav-chevron">▼</span></button>
       <div class="nav-dropdown">
-        <a href="submit-ticket.html">Submit Ticket</a>
         <a href="ticket-outcomes.html">Ticket Outcomes</a>
         <a href="drivers-licence.html">Drivers Licence</a>
       </div>
@@ -208,15 +218,16 @@
       <div class="nav-dropdown">
         <a href="hall-of-fame.html">Hall of Fame</a>
         <a href="hall-of-records.html">Hall of Records</a>
+        <a href="team-histories.html">Team Histories</a>
         <a href="track-records.html">Track Records</a>
       </div>
     </div>
-    <div class="nav-item"><a href="applications.html">Applications</a></div>
-    <div class="nav-item"><a href="league-rules.html">League Rules</a></div>
-    <div class="nav-item"><a href="merch.html">Merch</a></div>
-    <div class="nav-item"><a href="music.html">Music</a></div>
+    <div class="nav-item"><a href="/applications.html">Applications</a></div>
+    <div class="nav-item"><a href="/league-rules.html">League Rules</a></div>
+    <div class="nav-item"><a href="/merch.html">Merch</a></div>
+    <div class="nav-item"><a href="/music.html">Music</a></div>
   </div>
-  <button class="nav-hamburger" id="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></button>
+  <button class="nav-hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Open navigation menu"><span></span><span></span><span></span></button>
 </nav>
 <div class="mobile-menu" id="mobile-menu">
   <a href="index.html">Home</a>
@@ -224,21 +235,21 @@
   <a href="standings.html">Current Season</a>
   <a href="results.html">Results</a>
   <a href="past-seasons.html">Past Seasons</a>
-  <a href="asr.html">All Star Race</a>
+  <a href="/asr.html">All Star Race</a>
   <a href="teams.html">Teams</a>
   <div class="mob-section">Race Tickets</div>
-  <a href="submit-ticket.html">Submit Ticket</a>
   <a href="ticket-outcomes.html">Ticket Outcomes</a>
   <a href="drivers-licence.html">Drivers Licence</a>
   <a href="schedule.html">Schedule</a>
   <div class="mob-section">History</div>
   <a href="hall-of-fame.html">Hall of Fame</a>
   <a href="hall-of-records.html">Hall of Records</a>
-  <a href="track-records.html">Track Records</a>
-  <a href="applications.html">Applications</a>
-  <a href="league-rules.html">League Rules</a>
-  <a href="merch.html">Merch</a>
-  <a href="music.html">Music</a>
+  <a href="team-histories.html">Team Histories</a>
+        <a href="track-records.html">Track Records</a>
+  <a href="/applications.html">Applications</a>
+  <a href="/league-rules.html">League Rules</a>
+  <a href="/merch.html">Merch</a>
+  <a href="/music.html">Music</a>
 </div>
 
 <!-- HERO -->
@@ -331,6 +342,7 @@
 
 <div class="section-div" style="margin-bottom:0;"></div>
 
+<div class="history-load-notice" id="history-load-notice" role="status" hidden><span></span><button type="button" onclick="init()">Retry</button></div>
 <footer>
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="footer-logo">F1XL</div>
@@ -339,30 +351,16 @@
   <div class="footer-text">f1xl.co.uk</div>
 </footer>
 
-<script src="config.js"></script>
+<script src="config.js?v=launch-proposal-20261105-r4"></script>
+<script src="history-inductees.js?v=launch-proposal-20261105-r4"></script>
+<script src="honours-data.js?v=launch-proposal-20261105-r4"></script>
 <script>
 function toggleMenu(){
   document.getElementById('hamburger').classList.toggle('open');
   document.getElementById('mobile-menu').classList.toggle('open');
 }
 
-function parseCSV(text){
-  const rows=[];let cells=[],cur='',inQ=false;
-  for(let i=0;i<text.length;i++){
-    const c=text[i];
-    if(c==='"'){inQ=!inQ;}
-    else if(c===','&&!inQ){cells.push(cur.trim());cur='';}
-    else if((c==='\n'||c==='\r')&&!inQ){
-      cells.push(cur.trim());
-      if(cells.some(v=>v))rows.push(cells);
-      cells=[];cur='';
-      if(c==='\r'&&text[i+1]==='\n')i++;
-    }else cur+=c;
-  }
-  cells.push(cur.trim());
-  if(cells.some(v=>v))rows.push(cells);
-  return rows;
-}
+function parseCSV(text){return historyCSV(text);}
 
 function g(row,col){return((row&&row[col])||'').trim();}
 
@@ -452,7 +450,7 @@ function enrichOverallWithDrivers(overallData, allDivData){
 // ── PARSE FULL STATS for leaderboards ────────────────────────────────────────
 function parseStatsForLB(rows){
   const drivers = [];
-  for(let i=4; i<rows.length; i++){
+  for(let i=historyStatsHeader(rows)+1; i<rows.length; i++){
     const row = rows[i];
     const name = g(row,3);
     if(!name||name.toLowerCase()==='driver') continue;
@@ -495,7 +493,7 @@ function renderLB(drivers, totalDrivers){
     const rows = sorted.map((d,i) => `
       <div class="lb-row">
         <div class="lb-pos${i===0?' p1':''}">${i+1}</div>
-        <div class="lb-info"><div class="lb-name">${d.name}</div></div>
+        <div class="lb-info"><div class="lb-name">${historyHTML(d.name)}</div></div>
         <div class="lb-val">${d[lb.key]}</div>
       </div>`).join('');
     return `<div class="lb-card"><div class="lb-card-title">${lb.label}</div>${rows}</div>`;
@@ -514,8 +512,8 @@ function renderSeasonStrip(){
   strip.innerHTML = seasons.map((s,i) => `
     <div class="season-card${i===0?' active':''}" onclick="selectSeason(${s.season}, this)">
       <div class="season-card-num">S${s.season}</div>
-      <div class="season-card-name">${s.owner}</div>
-      <div class="season-card-team">${s.ownerTeam}</div>
+      <div class="season-card-name">${historyHTML(s.owner)}</div>
+      <div class="season-card-team">${historyHTML(s.ownerTeam)}</div>
     </div>`).join('');
 
   selectSeason(seasons[0].season, strip.querySelector('.season-card'));
@@ -534,10 +532,10 @@ function selectSeason(seasonNum, card){
     if(!s) return '';
     return `<div class="season-div-cell">
       <div class="season-div-lbl">${div}</div>
-      <div class="season-div-champ">${s.champ}</div>
-      <div class="season-div-team">${s.champTeam}</div>
-      ${s.ru?`<div class="season-div-ru">RU: ${s.ru}</div>`:''}
-      ${s.constructor?`<div class="season-div-cons">Constructor: ${s.constructor}</div>`:''}
+      <div class="season-div-champ">${historyHTML(s.champ)}</div>
+      <div class="season-div-team">${historyHTML(s.champTeam)}</div>
+      ${s.ru?`<div class="season-div-ru">RU: ${historyHTML(s.ru)}</div>`:''}
+      ${s.constructor?`<div class="season-div-cons">Constructor: ${historyHTML(s.constructor)}</div>`:''}
     </div>`;
   }).join('');
 
@@ -546,9 +544,9 @@ function selectSeason(seasonNum, card){
       <div class="season-detail-num">S${seasonNum}</div>
       <div>
         <div class="season-detail-eyebrow">Overall Champion</div>
-        <div class="season-detail-name">${overall?overall.owner:'—'}</div>
-        <div class="season-detail-team">${overall?overall.ownerTeam:'—'}</div>
-        ${overall&&overall.ru?`<div class="season-detail-ru">Runner Up: ${overall.ru} · ${overall.ruTeam}</div>`:''}
+        <div class="season-detail-name">${historyHTML(overall?overall.owner:'—')}</div>
+        <div class="season-detail-team">${historyHTML(overall?overall.ownerTeam:'—')}</div>
+        ${overall&&overall.ru?`<div class="season-detail-ru">Runner Up: ${historyHTML(overall.ru)} · ${historyHTML(overall.ruTeam)}</div>`:''}
       </div>
     </div>
     ${divCells?`<div class="season-divs">${divCells}</div>`:''}
@@ -566,16 +564,20 @@ function renderDivisionRecords(){
       const cells = cols.map(c=>{
         const val = s[c.key];
         if(c.key==='season') return `<td class="acc-name">S${val}</td>`;
-        if(c.key==='champPts'||c.key==='ownerPts') return `<td>${val?Math.floor(parseFloat(val)):''}</td>`;
-        if(c.key==='consdrivers') return `<td class="acc-team">${[s.consDriver1,s.consDriver2].filter(Boolean).join(' · ')}</td>`;
-        return `<td${c.muted?' class="acc-team"':''}>${val||''}</td>`;
+        if(c.key.endsWith('Pts')) return `<td>${val!==''&&val!=null?historyHTML(val):'—'}</td>`;
+        if(c.key==='consdrivers'||c.key==='consrudrivers') {
+          const prefix=c.key==='consdrivers'?'cons':'consRu';
+          const names=[...new Set([s[prefix+'Driver1'],s[prefix+'Driver2']].flatMap(value=>String(value||'').split(' · ')).map(name=>name.trim()).filter(Boolean))];
+          return `<td class="acc-team" style="white-space:normal;min-width:180px">${names.map(name=>`<div>${historyHTML(name)}</div>`).join('')}</td>`;
+        }
+        return `<td${c.muted?' class="acc-team"':''}>${historyHTML(val||'')}</td>`;
       }).join('');
       return `<tr><td>${i+1}</td>${cells}</tr>`;
     }).join('');
-    return `<table class="acc-table">
+    return `<div class="history-scroll" tabindex="0" role="region" aria-label="Historical records"><table class="acc-table">
       <thead><tr><th>#</th>${headers}</tr></thead>
       <tbody>${rows}</tbody>
-    </table>`;
+    </table></div>`;
   }
 
   const tabKeys = [];
@@ -591,6 +593,7 @@ function renderDivisionRecords(){
       {key:'ownerPts',label:'Points'},
       {key:'ru',label:'Runner Up (Team Owner)'},
       {key:'ruTeam',label:'Team',muted:true},
+      {key:'ruPts',label:'Runner-up Points'},
     ]);
   }
 
@@ -605,12 +608,13 @@ function renderDivisionRecords(){
       {key:'champPts',label:'Points'},
       {key:'ru',label:'Runner Up'},
       {key:'ruTeam',label:'Team',muted:true},
+      {key:'ruPts',label:'Runner-up Points'},
       {key:'constructor',label:'Constructor',muted:true},
-      {key:'consDriver1',label:'Driver 1',muted:true},
-      {key:'consDriver2',label:'Driver 2',muted:true},
+      {key:'consPts',label:'Constructor Points'},
+      {key:'consdrivers',label:'Contributors',muted:true},
       {key:'consRu',label:'Cons. Runner Up',muted:true},
-      {key:'consRuDriver1',label:'Driver 1',muted:true},
-      {key:'consRuDriver2',label:'Driver 2',muted:true},
+      {key:'consRuPts',label:'Cons. Runner-up Points'},
+      {key:'consrudrivers',label:'Contributors',muted:true},
     ]);
   });
 
@@ -724,21 +728,19 @@ function parseOverallLeagueRecords(rows){
   return {champions, consTeams, runners};
 }
 
-function renderLeagueRecords(divDataRaw, overallDataRaw){
+function renderLeagueRecords(divDataRaw, overallDataRaw, historyRecords){
   const wrap = document.getElementById('lr-wrap');
 
   function lrTable(title, items){
     if(!items||!items.length) return '';
-    // Sort by wins desc, then by original sheet position desc within ties
-    // (sheet adds new entries at bottom, so higher index = more recent = should rank first in ties)
-    const indexed = items.map((item,i)=>({...item,_i:i}));
-    const top = indexed.sort((a,b)=>b.val-a.val||b._i-a._i).slice(0,10);
+    // Sort ties by the actual most recent award, independent of source row order.
+    const top = [...items].sort((a,b)=>b.val-a.val||(b.lastSeason||0)-(a.lastSeason||0)||a.name.localeCompare(b.name,undefined,{sensitivity:'base'})).slice(0,10);
     return `<div class="lr-card">
-      <div class="lr-card-title">${title}</div>
+      <div class="lr-card-title" title="Equal totals are ordered by most recent award, then name.">${title}</div>
       ${top.map((item,i)=>`
         <div class="lr-row">
           <div class="lr-rank">${i+1}</div>
-          <div class="lr-name">${item.name}</div>
+          <div class="lr-name">${historyHTML(item.name)}</div>
           <div class="lr-val">${item.val}</div>
         </div>`).join('')}
     </div>`;
@@ -749,8 +751,8 @@ function renderLeagueRecords(divDataRaw, overallDataRaw){
   const tabPanels = {};
 
   // Overall
-  if(overallDataRaw){
-    const rec = parseOverallLeagueRecords(overallDataRaw);
+  if(overallDataRaw||historyRecords){
+    const rec = historyRecords ? historyRecords.overall : parseOverallLeagueRecords(overallDataRaw);
     if(rec){
       tabKeys.push({key:'overall', label:'Overall'});
       tabPanels['overall'] = `<div class="lr-grid">
@@ -762,8 +764,8 @@ function renderLeagueRecords(divDataRaw, overallDataRaw){
   }
 
   // Divisions
-  Object.entries(divDataRaw).forEach(([div, rows]) => {
-    const rec = parseLeagueRecords(rows);
+  Object.entries(historyRecords?historyRecords.divisions:divDataRaw).forEach(([div, rows]) => {
+    const rec = historyRecords ? historyRecords.divisions[div] : parseLeagueRecords(rows);
     if(!rec) return;
     const key = div.toLowerCase().replace(' ','');
     tabKeys.push({key, label:div});
@@ -799,70 +801,20 @@ function switchLRTab(key, btn){
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 async function init(){
+  historyLoadNotice([]);
   try {
-    // Load all config values
-    const keys = ['stats_url','overall_winners_url','d1_winners_url','d2_winners_url','d3_winners_url','d4_winners_url','d5_winners_url','d6_winners_url','d7_winners_url','d8_winners_url'];
-    const vals = await Promise.all(keys.map(k=>getConfigValue(k)));
-    const cfg = {};
-    keys.forEach((k,i)=>cfg[k]=vals[i]);
-
-    // Fetch all in parallel
-    const fetches = {};
-    if(cfg.stats_url) fetches.stats = fetchCSV(cfg.stats_url);
-    loadHofLegends();
-    if(cfg.overall_winners_url) fetches.overall = fetchCSV(cfg.overall_winners_url);
-    for(let d=1;d<=8;d++){
-      const key = `d${d}_winners_url`;
-      if(cfg[key]) fetches[`d${d}`] = fetchCSV(cfg[key]);
-    }
-
-    const results = {};
-    await Promise.all(Object.entries(fetches).map(async ([k,p])=>{
-      try { results[k] = await p; } catch(e) { console.warn(`Failed to load ${k}:`, e.message); }
-    }));
-
-    // Parse stats for leaderboards
-    if(results.stats){
-      const drivers = parseStatsForLB(results.stats);
-      renderLB(drivers, drivers.length);
-      // Fill in season count now that we're in async context
-      const currentSeason = await getCurrentSeason();
-      const heroVal = document.getElementById('hero-season-val');
-      if(heroVal) heroVal.textContent = currentSeason || overallData.length;
-    }
-
-    // Parse overall
-    if(results.overall){
-      overallData = parseOverallTab(results.overall);
-    }
-
-    // Parse divisions
-    for(let d=1;d<=8;d++){
-      if(results[`d${d}`]){
-        const divName = `Division ${d}`;
-        allDivData[divName] = parseDivTab(results[`d${d}`], divName);
-      }
-    }
-
-    // Enrich overall data with driver names from division data
-    if(overallData.length) overallData = enrichOverallWithDrivers(overallData, allDivData);
-
-    // Render seasons
-    renderSeasonStrip();
-
-    // Render division records
-    renderDivisionRecords();
-
-    // Render league records — pass raw rows for parsing
-    const divRawRows = {};
-    for(let d=1;d<=8;d++){
-      if(results[`d${d}`]) divRawRows[`Division ${d}`] = results[`d${d}`];
-    }
-    renderLeagueRecords(divRawRows, results.overall);
-
-  } catch(e){
-    console.error('Hall of Fame init error:', e);
-    document.getElementById('lb-grid').innerHTML = `<div class="loading-msg">Could not load data: ${e.message}</div>`;
+    const feed=await historyLoadTest();
+    historyShowSource(feed);
+    renderLB(feed.drivers.map(d=>({name:d.primary,seasons:d.totalSeasons,wins:d.totalWins,podiums:d.totalPodiums,poles:d.totalPoles,sprints:d.sprintWins,races:d.totalRaces})),feed.drivers.length);
+    const championships=historyTestChampionships(feed);
+    allDivData=championships.divisions;overallData=championships.overall;
+    document.getElementById('hero-season-val').textContent=Math.max(...feed.publishedSeasons);
+    renderSeasonStrip();renderDivisionRecords();
+    renderLeagueRecords({},null,historyChampionshipCounts(allDivData,overallData,feed));
+    await loadHofLegends();
+  }catch(error){
+    historyLoadNotice(['history: '+error.message]);
+    document.getElementById('lb-grid').innerHTML='<div class="loading-msg">history could not load. Use Retry.</div>';
   }
 }
 
@@ -872,42 +824,15 @@ init();
 const HOF_SHEET_ID = '1mrnmIHJNREanKawFTdDbB4m6YuB1B1tq2VS0PC18xfI';
 const HOF_GID      = '82852858';
 const HOF_INTERVAL = 30000;
-const HOF_IMG_BASE = 'images/hof/';
+const HOF_IMG_BASE = '/images/hof/';
 
 let hofInductees = [], hofCurrent = 0, hofPaused = false;
 let hofElapsed = 0, hofLastTick = null, hofRafId = null;
 
 async function loadHofLegends() {
-  try {
-    const url  = `https://docs.google.com/spreadsheets/d/${HOF_SHEET_ID}/gviz/tq?tqx=out:csv&gid=${HOF_GID}`;
-    const text = await fetch(url).then(r => r.text());
-    const rows = parseCSVHof(text);
-
-    // Find header row — Name, Inducted Season, Image Filename
-    let hi = -1;
-    for (let i = 0; i < rows.length; i++) {
-      if ((rows[i][0]||'').trim().toLowerCase() === 'name') { hi = i; break; }
-    }
-    if (hi < 0) { document.getElementById('hof-flipbook').innerHTML = '<div class="loading-msg">No inductees found.</div>'; return; }
-
-    const inductees = [];
-    for (let i = hi + 1; i < rows.length; i++) {
-      const name    = (rows[i][0]||'').trim();
-      const season  = (rows[i][1]||'').trim();
-      const imgFile = (rows[i][2]||'').trim();
-      if (!name) break;
-      inductees.push({ name, season, imgFile });
-    }
-
-    if (!inductees.length) { document.getElementById('hof-flipbook').innerHTML = '<div class="loading-msg">No inductees yet.</div>'; return; }
-
-    hofInductees = inductees;
-    hofRenderFlipbook();
-
-  } catch(e) {
-    document.getElementById('hof-flipbook').innerHTML = `<div class="loading-msg">Could not load inductees.</div>`;
-    console.error('HOF error:', e);
-  }
+  hofInductees=(window.F1XL_HISTORY_INDUCTEES||[]).map(item=>({...item}));
+  if(!hofInductees.length){document.getElementById('hof-flipbook').innerHTML='<div class="loading-msg">Inductees have not been connected.</div>';return;}
+  hofCurrent=0;hofElapsed=0;hofRenderFlipbook();
 }
 
 function parseCSVHof(text) {
@@ -946,7 +871,8 @@ function hofRenderFlipbook() {
 
   // Start timer
   hofLastTick = performance.now();
-  requestAnimationFrame(hofTick);
+  if(hofRafId !== null) cancelAnimationFrame(hofRafId);
+  hofRafId = requestAnimationFrame(hofTick);
 }
 
 
@@ -973,15 +899,16 @@ function hofTick(now) {
   if (!hofPaused && hofLastTick !== null) {
     hofElapsed += now - hofLastTick;
     hofLastTick = now;
-    if (hofElapsed >= HOF_INTERVAL) { hofGo(1); return; }
+    if (hofElapsed >= HOF_INTERVAL) hofGo(1);
     document.getElementById('hof-bar').style.width = (hofElapsed / HOF_INTERVAL * 100) + '%';
   }
-  requestAnimationFrame(hofTick);
+  hofRafId = requestAnimationFrame(hofTick);
 }
 
 </script>
+
 <script>
-if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js').catch(e=>console.warn('SW:',e));});}
+if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js',{updateViaCache:'none'}).then(registration=>registration.update()).catch(error=>console.warn('Website update check:',error));});}
 </script>
 </body>
 </html>

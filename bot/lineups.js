@@ -6,7 +6,7 @@ const https = require('https');
 const DISCORD_TOKEN       = process.env.DISCORD_TOKEN;
 const CHANNEL_ID          = process.env.DISCORD_CHANNEL_ID;
 const CALENDAR_CHANNEL_ID = process.env.DISCORD_CALENDAR_CHANNEL_ID;
-const CONFIG_SHEET_ID     = '1ThIh7aKlGOuv83v9IJVSGpuspZLl0c9ajE0GJBpuCtk';
+const CONFIG_SHEET_ID     = '1tmTdmjPRXF23Ixj3p_-nxsfIqv76MUIUET7Qht2qfdg';
 const CONFIG_GID          = '0';
 
 const DIV_COLOURS = {

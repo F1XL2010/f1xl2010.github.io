@@ -19,7 +19,7 @@
     --p710-bg:#0f2e1a;--p710-text:#4aaa6a;--dnf-bg:#3a0a0a;--dnf-text:#ff6b6b;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{background:#111816;background-image:url('images/backgrounds/background_standings.webp');background-size:cover;background-position:center;background-attachment:fixed;color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;}
+  body{background:#111816;background-image:url('/images/backgrounds/background_standings.webp');background-size:cover;background-position:center;background-attachment:fixed;color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;}
   body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(17,24,22,0.5);z-index:0;pointer-events:none;}
   body>*{position:relative;z-index:1;}
 
@@ -99,6 +99,8 @@
   .standings-table td{background:#161d1b;color:#fff;padding:0;border-bottom:1px solid rgba(255,255,255,0.06);border-right:1px solid rgba(255,255,255,0.06);}
   .standings-table tr:hover td:not(.has-logo){background:#1e2a27!important;}
   .standings-table tr:hover td.has-logo{box-shadow:inset 0 0 0 9999px rgba(30,42,39,0.35);}
+  #overall-constructors-table .ps-driver-cell{white-space:normal;line-height:1.35;overflow-wrap:anywhere;}
+  #overall-constructors-table .ps-driver-team{font-size:12px;color:rgba(255,255,255,0.8);}
   .st-pos{position:sticky;left:0;z-index:3;width:38px;min-width:38px;}
   .standings-table th.st-pos{z-index:8;background:#1a2320;}
   .standings-table td.st-pos{background:#161d1b;}
@@ -142,6 +144,12 @@
 
   /* CONSTRUCTORS */
   .constructors-list{padding:16px 24px;}
+  .constructor-scroll{overflow-x:auto;width:100%;max-width:720px;margin:4px auto;border:1px solid var(--border);border-radius:6px;}
+  .constructor-table .st-driver{max-width:none;}
+  .constructor-table .st-end-header{min-height:48px;display:flex;align-items:flex-end;justify-content:center;}
+  .constructor-table .st-end-cell{min-height:40px;padding:0 8px;display:flex;align-items:center;justify-content:center;}
+  .constructor-table .st-pts{font-size:14px;}
+  .constructor-table .st-gap{font-size:12px;}
   .con-row{display:flex;align-items:center;gap:12px;padding:14px 16px;background:#1a2320;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;}
   .con-pos{width:28px;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--text-faint);flex-shrink:0;text-align:center;}
   .con-pos.p1{color:#E8B84B;}.con-pos.p2{color:#9EA3A8;}.con-pos.p3{color:#cd7f32;}
@@ -199,56 +207,30 @@
   .footer-logo{background:var(--green);color:#000;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;padding:4px 9px;border-radius:3px;}
   .footer-text{font-size:12px;color:var(--text-faint);}
 </style>
-<link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#111816">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="F1XL">
-<link rel="apple-touch-icon" href="/images/icons/icon-512.png">
 </head>
 <body>
 
 <nav>
   <div class="nav-left">
     <a href="index.html" class="nav-logo">
-      <img src="TRANSPARENT.png" alt="F1XL - UK Casual F1 League Racing on Xbox, PlayStation and PC">
+      <img src="/TRANSPARENT.png" alt="F1XL">
     </a>
   </div>
   <div class="nav-links">
     <div class="nav-item"><a href="index.html">Home</a></div>
-    <div class="nav-item">
-      <button class="active">Standings <span class="nav-chevron">▼</span></button>
-      <div class="nav-dropdown">
-        <a href="standings.html">Current Season</a>
-        <a href="results.html">Results</a>
-        <a href="past-seasons.html">Past Seasons</a>
-        <a href="asr.html">All Star Race</a>
-      </div>
-    </div>
+    <div class="nav-item"><button class="active">Standings <span class="nav-chevron">▼</span></button><div class="nav-dropdown"><a href="standings.html">Current Season</a><a href="results.html">Results</a><a href="past-seasons.html">Past Seasons</a><a href="/asr.html">All Star Race</a></div></div>
     <div class="nav-item"><a href="teams.html">Teams</a></div>
-    <div class="nav-item">
-      <button>Race Tickets <span class="nav-chevron">▼</span></button>
-      <div class="nav-dropdown">
-        <a href="submit-ticket.html">Submit Ticket</a>
-        <a href="ticket-outcomes.html">Ticket Outcomes</a>
-        <a href="drivers-licence.html">Drivers Licence</a>
-      </div>
-    </div>
+    <div class="nav-item"><button>Race Tickets <span class="nav-chevron">▼</span></button><div class="nav-dropdown"><a href="ticket-outcomes.html">Ticket Outcomes</a><a href="drivers-licence.html">Drivers Licence</a></div></div>
     <div class="nav-item"><a href="schedule.html">Schedule</a></div>
-    <div class="nav-item">
-      <button>History <span class="nav-chevron">▼</span></button>
-      <div class="nav-dropdown">
-        <a href="hall-of-fame.html">Hall of Fame</a>
-        <a href="hall-of-records.html">Hall of Records</a>
-        <a href="track-records.html">Track Records</a>
-      </div>
-    </div>
-    <div class="nav-item"><a href="applications.html">Applications</a></div>
-    <div class="nav-item"><a href="league-rules.html">League Rules</a></div>
-    <div class="nav-item"><a href="merch.html">Merch</a></div>
-    <div class="nav-item"><a href="music.html">Music</a></div>
+    <div class="nav-item"><button>History <span class="nav-chevron">▼</span></button><div class="nav-dropdown"><a href="hall-of-fame.html">Hall of Fame</a><a href="hall-of-records.html">Hall of Records</a><a href="team-histories.html">Team Histories</a>
+        <a href="track-records.html">Track Records</a></div></div>
+    <div class="nav-item"><a href="/applications.html">Applications</a></div>
+    <div class="nav-item"><a href="/league-rules.html">League Rules</a></div>
+    <div class="nav-item"><a href="/merch.html">Merch</a></div>
+    <div class="nav-item"><a href="/music.html">Music</a></div>
   </div>
-  <button class="nav-hamburger" id="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></button>
+  <button class="nav-hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Open navigation menu"><span></span><span></span><span></span></button>
 </nav>
 <div class="mobile-menu" id="mobile-menu">
   <a href="index.html">Home</a>
@@ -256,21 +238,22 @@
   <a href="standings.html">Current Season</a>
   <a href="results.html">Results</a>
   <a href="past-seasons.html">Past Seasons</a>
-  <a href="asr.html">All Star Race</a>
+  <a href="/asr.html">All Star Race</a>
   <a href="teams.html">Teams</a>
   <div class="mob-section">Race Tickets</div>
-  <a href="submit-ticket.html">Submit Ticket</a>
+
   <a href="ticket-outcomes.html">Ticket Outcomes</a>
   <a href="drivers-licence.html">Drivers Licence</a>
   <a href="schedule.html">Schedule</a>
   <div class="mob-section">History</div>
   <a href="hall-of-fame.html">Hall of Fame</a>
   <a href="hall-of-records.html">Hall of Records</a>
-  <a href="track-records.html">Track Records</a>
-  <a href="applications.html">Applications</a>
-  <a href="league-rules.html">League Rules</a>
-  <a href="merch.html">Merch</a>
-  <a href="music.html">Music</a>
+  <a href="team-histories.html">Team Histories</a>
+        <a href="track-records.html">Track Records</a>
+  <a href="/applications.html">Applications</a>
+  <a href="/league-rules.html">League Rules</a>
+  <a href="/merch.html">Merch</a>
+  <a href="/music.html">Music</a>
 </div>
 
 <div class="page-header">
@@ -352,7 +335,7 @@
   <div class="footer-text">f1xl.co.uk</div>
 </footer>
 
-<script src="config.js"></script>
+<script src="config.js?v=launch-proposal-20261105-r4"></script>
 <script>
 // Divisions and sheet IDs loaded from config at runtime
 let divisions = [];
@@ -360,6 +343,11 @@ let currentDiv = null;
 let seasonConfig = null;
 let driverTeams = {};
 let teamOwners = {};
+let teamTypes = {};
+
+// The next-generation website has its own configuration file and never reads
+// the current live Website Config.
+const F1XL_STANDINGS_TEST_MODE = true;
 
 const teamColors = (typeof TEAM_COLOURS !== 'undefined') ? TEAM_COLOURS : {
   'McLaren':'#EF8733','Mclaren':'#EF8733','Mercedes':'#75F1D3',
@@ -382,9 +370,24 @@ const raceFlags = {
 
 
 
-async function fetchSheet(sheetId, gid) {
+// Share reads between the standings and stats panels during this page visit.
+// Failed reads are removed so a later attempt can retry; a reload reads afresh.
+const sheetReads = new Map();
+function fetchSheet(sheetId, gid) {
+  const key = `${sheetId}:${gid}`;
+  if (!sheetReads.has(key)) {
+    const read = fetchSheetUncached(sheetId, gid).catch(error => {
+      sheetReads.delete(key);
+      throw error;
+    });
+    sheetReads.set(key, read);
+  }
+  return sheetReads.get(key);
+}
+
+async function fetchSheetUncached(sheetId, gid) {
   const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
-  const res = await fetch(url);
+  const res = await nextPublicFetch(url);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const text = await res.text();
   if (text.includes('<!DOCTYPE') || text.includes('<html')) throw new Error('Sheet not published to web');
@@ -424,6 +427,14 @@ function cs(row, col) {
   return v === null ? '' : String(v).trim();
 }
 
+function circuitFlagBackground(name) {
+  let country = String(name || '').toLowerCase().replace(/[^a-z ]/g,'').trim().replace(/ +/g,'_');
+  // Catalunya uses the existing Spanish flag artwork, rather than a missing
+  // vertical_catalunya file. Keep the circuit's displayed name unchanged.
+  if (country === 'catalunya') country = 'spain';
+  return country ? `/images/vertflags/vertical_${country}.webp` : '';
+}
+
 function buildSelector() {
   const el = document.getElementById('div-selector');
   el.innerHTML = divisions.map((d,i) => {
@@ -440,7 +451,7 @@ function buildSelector() {
       </div>
       <div class="div-card-name">${d.name}</div>
       ${avail ? `
-        <div class="div-card-lbl">Championship leader</div>
+        <div class="div-card-lbl">${d.leader && d.leader!=='—' ? 'Championship leader' : 'Final positions not confirmed'}</div>
         <div class="div-card-leader">${d.leader||'—'}</div>
         <div class="div-card-team">${d.leaderTeam||''}</div>
         <div class="div-card-pts">${d.leaderPts||'—'} <span class="div-card-pts-lbl">pts</span></div>
@@ -591,18 +602,31 @@ function natToFlag(nat) {
     'MEX':'mx','VEN':'ve',
   };
   const code = nat.trim().toUpperCase();
-  const iso = THREE_TO_TWO[code] || code.toLowerCase().slice(0,2);
-  return `<img class="td-driver-flag" src="images/smallflags/${iso}.svg" alt="${nat}" onerror="this.style.display='none'" style="width:18px;height:12px;object-fit:cover;border-radius:1px;vertical-align:middle;margin-right:4px;">`;
+  const nationalities = {
+    british:'gb',english:'gb',scottish:'gb',welsh:'gb','northern irish':'gb',
+    american:'us',australian:'au',canadian:'ca',dutch:'nl',french:'fr',german:'de',
+    spanish:'es',irish:'ie',italian:'it',mexican:'mx',romanian:'ro',latvian:'lv',
+    portuguese:'pt',swedish:'se',finnish:'fi',danish:'dk',norwegian:'no',
+    belgian:'be',austrian:'at',polish:'pl',brazilian:'br','new zealander':'nz'
+  };
+  const country = Object.keys(NAT_TO_ISO).find(name=>name.toUpperCase()===code);
+  const iso = THREE_TO_TWO[code] || nationalities[code.toLowerCase()] ||
+    (country ? NAT_TO_ISO[country] : /^[A-Z]{2}$/.test(code) ? code.toLowerCase() : '');
+  if(!iso)return '';
+  const label=nat.replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  return `<img class="td-driver-flag" src="/images/smallflags/${iso}.svg" alt="${label}" onerror="this.style.display='none'" style="width:18px;height:12px;object-fit:cover;border-radius:1px;vertical-align:middle;margin-right:4px;">`;
 }
 
 const PLATFORM_ICONS = {
-  'Xbox':    'images/platform_xbox.png',
-  'PS':      'images/platform_PS.png',
-  'PC':      'images/platform_PC.png',
+  'Xbox':    '/images/platform_xbox.png',
+  'PS':      '/images/platform_PS.png',
+  'Playstation': '/images/platform_PS.png',
+  'PC':      '/images/platform_PC.png',
 };
 const CONTROLLER_ICONS = {
-  'Wheel':    'images/controller_wheel.png',
-  'Gamepad':  'images/controller_gamepad.png',
+  'Wheel':    '/images/controller_wheel.png',
+  'Gamepad':  '/images/controller_gamepad.png',
+  'Controller': '/images/controller_gamepad.png',
 };
 
 function driverIcon(src, alt){
@@ -625,38 +649,51 @@ async function loadDriverInfo(sheetId, gid){
     }
     if(hIdx<0) hIdx = 1;
 
-    // Col A(0)=driver, Col C(2)=nat code, Col F(5)=platform, Col G(6)=controller
+    // New adapters may have a nationality in B with no abbreviation in C.
     for(let i=hIdx+1;i<rows.length;i++){
       const r = rows[i];
       const driver = cs(r,0).trim();
       if(!driver) continue;
       _driverInfoMap[driver.toLowerCase()] = {
-        nat:        cs(r,2).trim(),
+        nat:        cs(r,2).trim() || cs(r,1).trim(),
         platform:   cs(r,5).trim(),
         controller: cs(r,6).trim(),
       };
     }
 
-    // Parse Team Principal section — col J(9)=TP name, col K(10)=team name
-    let tpStart = -1;
+    // Parse Team Principal section — col J(9)=TP name, col K(10)=team name.
+    // Older rebuilt adapters omit the heading, so constrain the lookup using
+    // the roster's proved team names rather than relying on a marker row.
+    const rosterTeams = new Set();
     for(let i=0;i<rows.length;i++){
-      if(cs(rows[i],9).toLowerCase()==='team principal'){ tpStart=i+2; break; }
+      const rosterTeam = cs(rows[i],12).trim().toLowerCase();
+      const tier = cs(rows[i],13).trim();
+      if(rosterTeam && /^tier\s*[12]$/i.test(tier)) rosterTeams.add(rosterTeam);
     }
-    if(tpStart>=0){
-      for(let i=tpStart;i<rows.length;i++){
-        const tp = cs(rows[i],9).trim();
-        const team = cs(rows[i],10).trim().toLowerCase();
-        if(!tp || !team) continue;
-        teamOwners[team] = tp;
-      }
+    for(let i=0;i<rows.length;i++){
+      const tp = cs(rows[i],9).trim();
+      const team = cs(rows[i],10).trim().toLowerCase();
+      if(!tp || !team || !rosterTeams.has(team)) continue;
+      teamOwners[team] = tp;
     }
   } catch(e){ console.warn('Driver info load failed:', e.message); }
 }
 
 async function loadDrivers() {
   try {
-    const table = await fetchSheet(currentDiv.sheetId, currentDiv.gids.drivers);
+    const [table, calendarTable] = await Promise.all([
+      fetchSheet(currentDiv.sheetId, currentDiv.gids.drivers),
+      currentDiv.gids.calendar ? fetchSheet(currentDiv.sheetId, currentDiv.gids.calendar).catch(()=>null) : Promise.resolve(null)
+    ]);
     const rows = table.rows;
+    const calendarNames = {};
+    if(calendarTable){
+      calendarTable.rows.forEach(row=>{
+        const round=parseInt(cs(row,0),10);
+        const circuit=cs(row,3).trim();
+        if(Number.isFinite(round)&&round>0&&circuit) calendarNames[round]=circuit;
+      });
+    }
 
     // Load driver info (nationality, platform, controller)
     _driverInfoMap = {};
@@ -680,25 +717,25 @@ async function loadDrivers() {
     }
     if (!nameRow) nameRow = rows[Math.max(0,hIdx-4)];
 
-    // Map race columns — stop once we've passed the Gap column
+    // Read named summary columns even when hidden calculation columns occur
+    // between them (the current export places Raw Points before Gap).
     const races = [];
     let poleCol=-1, flCol=-1, ptsCol=-1, gapCol=-1;
     for (let c=4; c<hRow.c.length; c++) {
       const h = cs(hRow,c);
       if (!h) continue;
-      if (h==='Pole'){poleCol=c;continue;}
-      if (h==='F/L'){flCol=c;continue;}
-      if (h==='Points'){ptsCol=c;continue;}
-      if (h==='Gap'){gapCol=c;continue;}
-      // Stop processing once we've found Points — anything after is hidden calc cols
-      if (ptsCol>=0) break;
+      if (h==='Pole' && poleCol<0){poleCol=c;continue;}
+      if (h==='F/L' && flCol<0){flCol=c;continue;}
+      if (h==='Points' && ptsCol<0){ptsCol=c;continue;}
+      if (h==='Gap'){gapCol=c;break;}
+      if (ptsCol>=0) continue;
       const sprint = h.toLowerCase().includes('(s)') || h.toLowerCase().includes('(r)');
       const sprintRace = h.toLowerCase().includes('(r)');
-      const circuitName = nameRow ? cs(nameRow,c) : '';
-      const short = circuitName || h.replace(/\(s\)/i,'').replace(/\(r\)/i,'').trim();
       // Only include race columns up to the number of rounds in this season
       const rMatch = h.match(/R(\d+)/i);
       const rNum = rMatch ? parseInt(rMatch[1]) : 999;
+      const circuitName = calendarNames[rNum] || (nameRow ? cs(nameRow,c) : '');
+      const short = circuitName || h.replace(/\(s\)/i,'').replace(/\(r\)/i,'').trim();
       if (rNum <= (currentDiv.numRounds || 21)) races.push({col:c, label:h, short:short.trim(), sprint:sprint, sprintRace:sprintRace});
     }
 
@@ -735,8 +772,7 @@ async function loadDrivers() {
         // Sprint race col — same flag as sprint quali col
         const roundNum = r.label.replace(/\(r\)/i,'').trim();
         const prevRace = idx > 0 ? races[idx-1] : null;
-        const countryKey = prevRace ? (prevRace.short||prevRace.label).toLowerCase().replace(/[^a-z ]/g,'').replace(/ /g,'_').trim() : '';
-        const bgImg = countryKey ? `images/vertflags/vertical_${countryKey}.webp` : '';
+        const bgImg = prevRace ? circuitFlagBackground(prevRace.short||prevRace.label) : '';
         const bgStyleAttr = bgImg ? `style="background-image:url('${bgImg}');background-size:cover;background-position:center;"` : '';
         hHtml += `<th class="st-race ${sc}"><div class="st-race-header" ${bgStyleAttr}>
           <span class="st-race-round">${roundNum}<span style="font-size:8px;">(R)</span></span>
@@ -745,8 +781,7 @@ async function loadDrivers() {
       } else {
         const roundNum = r.label.replace(/\(s\)/i,'').trim();
         const sprintSuffix = r.sprint ? `<span style="font-size:8px;color:rgba(130,170,255,0.9);">(S)</span>` : '';
-        const countryKey = (r.short||r.label).toLowerCase().replace(/[^a-z ]/g,'').replace(/ /g,'_').trim();
-        const bgImg = countryKey ? `images/vertflags/vertical_${countryKey}.webp` : '';
+        const bgImg = circuitFlagBackground(r.short||r.label);
         const bgStyleAttr = bgImg ? `style="background-image:url('${bgImg}');background-size:cover;background-position:center;"` : '';
         hHtml += `<th class="st-race ${sc}"><div class="st-race-header" ${bgStyleAttr}>
           <span class="st-race-round">${roundNum}${sprintSuffix}</span>
@@ -799,21 +834,43 @@ async function loadDrivers() {
       const row = rows[i];
       const driver = cs(row,2);
       if (!driver) continue;
+      const sourcePosRaw = parseInt(cs(row,0),10);
+      const sourcePos = Number.isFinite(sourcePosRaw)&&sourcePosRaw>0 ? sourcePosRaw : null;
       const pts = ptsCol>=0 ? parseFloat(cs(row,ptsCol)) || 0 : 0;
       const countback = countbackArray(row);
-      dataRows.push({row, pts, countback});
+      dataRows.push({row, sourcePos, pts, countback});
     }
-    dataRows.sort((a,b) => b.pts - a.pts || compareCountback(a.countback,b.countback));
+    const hasOfficialPoints=ptsCol>=0&&dataRows.some(({row})=>cs(row,ptsCol).trim()!=='');
+    dataRows.sort((a,b) => {
+      if(a.sourcePos!==null&&b.sourcePos!==null&&a.sourcePos!==b.sourcePos) return a.sourcePos-b.sourcePos;
+      if((a.sourcePos!==null)!==(b.sourcePos!==null)) return a.sourcePos!==null?-1:1;
+      return hasOfficialPoints ? b.pts-a.pts || compareCountback(a.countback,b.countback) : 0;
+    });
+    // The source ranks equal points equally, while this page uses countback to
+    // put the tied drivers in a useful order. Use that displayed order for
+    // repeated source positions so the position column cannot show P11 twice.
+    const sourcePosCounts = new Map();
+    dataRows.forEach(({sourcePos}) => {
+      if(sourcePos!==null) sourcePosCounts.set(sourcePos, (sourcePosCounts.get(sourcePos)||0)+1);
+    });
     const leaderPts = dataRows.length ? dataRows[0].pts : 0;
 
     // Body
     let bHtml = '';
-    let rounds = 0;
-    let firstDriver = true;
+    const completedRounds = new Set();
+    races.forEach(race=>{
+      if(/\(s\)/i.test(race.label)) return;
+      const hasResult = dataRows.some(({row})=>{
+        const value = cs(row,race.col).trim().toUpperCase();
+        return /^\d+$/.test(value) || ['DNF','DNS','DSQ'].includes(value);
+      });
+      const match = race.label.match(/R(\d+)/i);
+      if(hasResult && match) completedRounds.add(parseInt(match[1],10));
+    });
 
     for (let ri=0; ri<dataRows.length; ri++) {
-      const {row} = dataRows[ri];
-      const pos = ri+1;
+      const {row,sourcePos} = dataRows[ri];
+      const pos = sourcePos && sourcePosCounts.get(sourcePos)===1 ? sourcePos : hasOfficialPoints ? ri+1 : '—';
       const driver = cs(row,2);
 
       const nat = cs(row,1);
@@ -829,17 +886,8 @@ async function loadDrivers() {
       const platformHtml = driverIcon(PLATFORM_ICONS[dInfo.platform], dInfo.platform||'');
       const controllerHtml = driverIcon(CONTROLLER_ICONS[dInfo.controller], dInfo.controller||'');
 
-      if (firstDriver) {
-        races.forEach(r => {
-          const v = cs(row,r.col).trim();
-          // Count as completed if non-sprint col has a numeric value or DNF
-          if (!r.sprint && v && v !== '' && (parseInt(v) > 0 || ['DNF','DNS','DSQ'].includes(v.toUpperCase()))) rounds++;
-        });
-        firstDriver = false;
-      }
-
       const teamSlug = (team||'').toLowerCase().replace(/\s+/g,'').replace(/[^a-z0-9]/g,'');
-      const logoStyle = teamSlug ? `background-image:linear-gradient(rgba(22,29,27,0.5),rgba(22,29,27,0.5)),url('images/teamlogos/thinlogo_${teamSlug}.webp');` : '';
+      const logoStyle = teamSlug ? `background-image:linear-gradient(rgba(22,29,27,0.5),rgba(22,29,27,0.5)),url('/images/teamlogos/thinlogo_${teamSlug}.webp');` : '';
       const hasLogo = teamSlug ? ' has-logo' : '';
       const teamSpan = teamSlug ? '' : `<span class="st-driver-team">${team||''}</span>`;
 
@@ -863,7 +911,7 @@ async function loadDrivers() {
       const pole = poleCol>=0 ? cs(row,poleCol) : '';
       const fl   = flCol>=0   ? cs(row,flCol)   : '';
       const pts  = ptsCol>=0  ? cs(row,ptsCol)  : '';
-      const gap  = gapCol>=0  ? (ri===0 ? '' : String(leaderPts - dataRows[ri].pts)) : '';
+      const gap  = gapCol>=0&&hasOfficialPoints&&pts.trim()!=='' ? (ri===0 ? '' : String(leaderPts - dataRows[ri].pts)) : '';
 
       if (poleCol>=0) rHtml += `<td class="st-end"><span class="st-end-cell st-pole ${!pole||pole==='0'?'zero':''}">${pole||'—'}</span></td>`;
       if (flCol>=0)   rHtml += `<td class="st-end"><span class="st-end-cell st-fl ${!fl||fl==='0'?'zero':''}">${fl||'—'}</span></td>`;
@@ -875,7 +923,7 @@ async function loadDrivers() {
     }
 
     document.getElementById('drivers-body').innerHTML = bHtml;
-    document.getElementById('div-view-meta').textContent = `${rounds} rounds completed`;
+    document.getElementById('div-view-meta').textContent = `${completedRounds.size} rounds completed`;
 
   } catch(e) {
     document.getElementById('drivers-body').innerHTML = '<tr><td colspan="30"><div class="loading-msg">Could not load data: ' + e.message + '</div></td></tr>';
@@ -883,71 +931,52 @@ async function loadDrivers() {
   }
 }
 
+function constructorStandings(rows) {
+  const hIdx = rows.findIndex(row => row.c && row.c.some(cell =>
+    String(cell.v || '').trim().toLowerCase() === 'team'));
+  if (hIdx < 0) throw new Error('Header not found');
+  const heading = rows[hIdx];
+  const column = name => heading.c.findIndex(cell =>
+    String(cell.v || '').trim().toLowerCase() === name);
+  const posCol = column('pos'), teamCol = column('team'), ptsCol = column('points');
+  if (teamCol < 0 || ptsCol < 0) throw new Error('Columns not found');
+  return rows.slice(hIdx + 1).filter(row => cs(row, teamCol)).map(row => {
+    const number = parseFloat(cs(row, ptsCol));
+    return {pos: posCol >= 0 ? parseInt(cs(row, posCol), 10) : 0,
+      team: cs(row, teamCol), pts: Number.isFinite(number) ? Math.floor(number) : null};
+  }).sort((a,b) => (a.pos>0&&b.pos>0&&a.pos!==b.pos) ? a.pos-b.pos : a.pts!==null&&b.pts!==null ? b.pts-a.pts : 0);
+}
+
 async function loadConstructors() {
   try {
     const conTable = await fetchSheet(currentDiv.sheetId, currentDiv.gids.constructors);
     const rows = conTable.rows;
 
-    // Find header row dynamically
-    let hIdx = -1;
-    for (let i=0; i<rows.length; i++) {
-      if (rows[i].c.some(c => (c.v||'').toString().trim().toLowerCase() === 'team')) { hIdx=i; break; }
-    }
-    if (hIdx<0) throw new Error('Header not found');
-    const hRow = rows[hIdx];
-    const posCol = hRow.c.findIndex(c => (c.v||'').toString().trim().toLowerCase() === 'pos');
-    const teamCol = hRow.c.findIndex(c => (c.v||'').toString().trim().toLowerCase() === 'team');
-    const ptsCol = hRow.c.findIndex(c => (c.v||'').toString().trim().toLowerCase() === 'points');
-    if (teamCol<0 || ptsCol<0) throw new Error('Columns not found');
-
-    const teams = [];
-    for (let i=hIdx+1; i<rows.length; i++) {
-      const row = rows[i];
-      const team = cs(row,teamCol).trim();
-      const ptsRaw = cs(row,ptsCol).trim();
-      if (!team || !ptsRaw) continue;
-      const pts = Math.floor(parseFloat(ptsRaw)) || 0;
-      teams.push({pos: posCol>=0 ? parseInt(cs(row,posCol)) : 0, team, pts});
-    }
-
-    // Sort by points descending and calculate gaps
-    teams.sort((a,b) => b.pts - a.pts);
+    const teams = constructorStandings(rows);
     const leader = teams.length ? teams[0].pts : 0;
 
-    const conTableStyle = `width:100%;max-width:560px;border-collapse:collapse;`;
-    const thStyle = `text-align:left;padding:5px 10px;font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.4);border-bottom:1px solid rgba(255,255,255,0.12);background:#1e2a27;`;
-    const tdStyle = `padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.05);font-size:13px;color:#fff;vertical-align:middle;background:#1a2320;`;
-
-    let html = `<div style="padding:16px 24px;"><table style="${conTableStyle}">
+    // Match the centred, logo-backed constructors table in Past Seasons.
+    let html = `<div class="constructor-scroll"><table class="standings-table constructor-table">
       <thead><tr>
-        <th style="${thStyle}width:36px;">Pos</th>
-        <th style="${thStyle}">Team</th>
-        <th style="${thStyle}text-align:right;">Pts</th>
-        <th style="${thStyle}text-align:right;">Gap</th>
-        <th style="${thStyle}text-align:right;">+/-</th>
+        <th class="st-pos"><span class="st-pos-header">Pos</span></th>
+        <th class="st-driver"><span class="st-driver-header">Team</span></th>
+        <th class="st-end"><span class="st-end-header">Pts</span></th>
+        <th class="st-end"><span class="st-end-header">Gap</span></th>
       </tr></thead><tbody>`;
 
     teams.forEach((d, i) => {
-      const color = teamColors[d.team] || teamColors[Object.keys(teamColors).find(k=>k.toLowerCase()===d.team.toLowerCase())||''] || '#555';
-      const r=parseInt(color.slice(1,3),16)||85, g=parseInt(color.slice(3,5),16)||85, b=parseInt(color.slice(5,7),16)||85;
-      const posNum = i+1;
-      const pc = posNum===1?'#E8B84B':posNum===2?'#C0C0C0':posNum===3?'#cd7f32':'rgba(255,255,255,0.5)';
-      const gl = i===0 ? '—' : `-${leader - d.pts}`;
-      const ga = i===0 ? '—' : `-${teams[i-1].pts - d.pts}`;
-      const rowBg = `background:rgba(${r},${g},${b},0.15);`;
-      const teamCellBg = `background:rgba(${r},${g},${b},0.25);border-left:3px solid ${color};`;
+      const posNum = d.pos>0 ? d.pos : d.pts!==null ? i+1 : '—';
+      const pc = pClass(posNum);
+      const gl = i===0||leader===null||d.pts===null ? '—' : `-${leader - d.pts}`;
       const slug = d.team.toLowerCase().replace(/\s+/g,'').replace(/[^a-z0-9]/g,'');
-      const logoStyle2 = slug ? `background-image:linear-gradient(rgba(22,29,27,0.5),rgba(22,29,27,0.5)),url('images/teamlogos/thinlogo_${slug}.webp');background-size:cover;background-position:center;` : '';
-      const ownerName = teamOwners[d.team.toLowerCase()] || '';
-      const ownerDisplay = ownerName && ownerName.toLowerCase()==='reserve' ? 'RESERVE' : ownerName;
+      const logoStyle2 = slug ? `background-image:linear-gradient(rgba(22,29,27,0.5),rgba(22,29,27,0.5)),url('/images/teamlogos/thinlogo_${slug}.webp');background-size:cover;background-position:center;` : '';
       html += `<tr>
-        <td style="${tdStyle}${rowBg}"><span style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:${pc};">${posNum}</span></td>
-        <td class="${slug?'has-logo':''}" style="${tdStyle}${teamCellBg}${logoStyle2}"><div class="ps-driver-cell">
-          <span class="ps-driver-name">&nbsp;</span>
+        <td class="st-pos"><span class="st-pos-cell ${pc}">${posNum}</span></td>
+        <td class="st-driver${slug?' has-logo':''}" style="${logoStyle2}"><div class="st-driver-cell">
+          <span class="st-driver-name">${d.team}</span>
         </div></td>
-        <td style="${tdStyle}${rowBg}text-align:right;"><span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#3DCC47;">${d.pts}</span></td>
-        <td style="${tdStyle}${rowBg}text-align:right;color:rgba(255,255,255,0.6);">${gl}</td>
-        <td style="${tdStyle}${rowBg}text-align:right;color:rgba(255,255,255,0.4);font-size:12px;">${ga}</td>
+        <td class="st-end"><span class="st-end-cell st-pts">${d.pts===null?'—':d.pts}</span></td>
+        <td class="st-end"><span class="st-end-cell st-gap">${gl}</span></td>
       </tr>`;
     });
 
@@ -959,9 +988,38 @@ async function loadConstructors() {
   }
 }
 
+function grandPrixResults(rows) {
+  const results = new Map();
+  const headerIndex = rows.findIndex(row => row.c && row.c.some(cell =>
+    String(cell.v || '').trim().toLowerCase() === 'driver'));
+  if (headerIndex < 0) return results;
+  const header = rows[headerIndex];
+  const driverCol = header.c.findIndex(cell => String(cell.v || '').trim().toLowerCase() === 'driver');
+  const pointsCol = header.c.findIndex(cell => String(cell.v || '').trim().toLowerCase() === 'points');
+  const finishCols = [];
+  // Later columns repeat the race headings for points calculations; these are
+  // not finishing positions and must not be counted as additional starts.
+  for (let c=0; c<(pointsCol >= 0 ? pointsCol : header.c.length); c++) {
+    // Rn is a normal feature race; Rn(R) is the feature in a sprint weekend.
+    // Rn(S), DNS and empty future rounds must not add Grand Prix starts.
+    if (/^R\d+(?:\s*\(R\))?$/i.test(cs(header,c))) finishCols.push(c);
+  }
+  if (!finishCols.length) return results;
+  for (const row of rows.slice(headerIndex + 1)) {
+    const driver = cs(row, driverCol).toLowerCase();
+    if (driver && driver !== 'driver' && driver !== 'calculations') {
+      results.set(driver, finishCols.map(c => cs(row,c)));
+    }
+  }
+  return results;
+}
+
 async function loadStats() {
   try {
-    const table = await fetchSheet(currentDiv.sheetId, currentDiv.gids.driverStats);
+    const [table, resultsTable] = await Promise.all([
+      fetchSheet(currentDiv.sheetId, currentDiv.gids.driverStats),
+      fetchSheet(currentDiv.sheetId, currentDiv.gids.drivers).catch(() => null)
+    ]);
     const rows = table.rows;
     let html = '';
 
@@ -993,6 +1051,37 @@ async function loadStats() {
 
     if (hIdx < 0) hIdx = 0;
 
+    // Read Grand Prix finishes from the calculation table by heading rather
+    // than trusting fixed row offsets. Sprint finishes are deliberately not
+    // counted in the main-race reliability figures.
+    // Public snapshots omit the private calculation block. Use the published
+    // feature-race columns, retaining the calculation block as a legacy fallback.
+    const gpResultsByDriver = resultsTable ? grandPrixResults(resultsTable.rows) : new Map();
+    let calcHeaderIdx = -1;
+    let gpFinishCols = [];
+    for (let i=hIdx+1; i<rows.length; i++) {
+      const row = rows[i];
+      if (!row.c || cs(row,0).toLowerCase()!=='driver') continue;
+      const finishCols = [];
+      for (let c=1; c<row.c.length; c++) {
+        if (/^r\d+ finish$/i.test(cs(row,c))) finishCols.push(c);
+      }
+      if (finishCols.length) {
+        calcHeaderIdx = i;
+        gpFinishCols = finishCols;
+        break;
+      }
+    }
+    if (calcHeaderIdx >= 0) {
+      for (let i=calcHeaderIdx+1; i<rows.length; i++) {
+        const driver = cs(rows[i],0);
+        if (!driver) continue;
+        if (!gpResultsByDriver.has(driver.toLowerCase())) {
+          gpResultsByDriver.set(driver.toLowerCase(), gpFinishCols.map(c => cs(rows[i],c)));
+        }
+      }
+    }
+
     // Fallbacks matching Driver Stats Calc Sheet column order
     if (cols.driver===undefined)   cols.driver=0;
     if (cols.wins===undefined)     cols.wins=3;
@@ -1013,7 +1102,11 @@ async function loadStats() {
       const row = rows[i];
       const driver = cs(row, cols.driver);
       if (driver.toLowerCase()==='calculations') break;
-      if (!driver || driver.toLowerCase()==='driver') continue;
+      // The generated workbooks place a second "Driver" header before the
+      // calculation block.  Stop there so those source rows are not rendered
+      // as a second, empty set of driver cards.
+      if (driver.toLowerCase()==='driver') break;
+      if (!driver) continue;
 
       const wins     = parseFloat(cs(row,cols.wins))||0;
       const pods     = parseFloat(cs(row,cols.pods))||0;
@@ -1022,11 +1115,25 @@ async function loadStats() {
       const avgFin   = cs(row,cols.avgFin);
       const avgGain  = cs(row,cols.avgGain);
       const ppr      = cs(row,cols.ppr);
-      const started  = parseFloat(cs(row,cols.started))||0;
-      const dnfs     = parseFloat(cs(row,cols.dnfs))||0;
+      let started  = parseFloat(cs(row,cols.started))||0;
+      let finished = parseFloat(cs(row,cols.finished))||0;
+      const sourceDnfs = parseFloat(cs(row,cols.dnfs))||0;
+      let dnfs = Math.min(sourceDnfs, Math.max(0, started - finished));
+      const gpResults = gpResultsByDriver.get(driver.toLowerCase());
+      if (gpResults) {
+        finished = gpResults.filter(value => {
+          const number = parseFloat(value);
+          return Number.isFinite(number) && number > 0;
+        }).length;
+        dnfs = gpResults.filter(value => value.toUpperCase()==='DNF').length;
+        const dsqs = gpResults.filter(value => value.toUpperCase()==='DSQ').length;
+        started = finished + dnfs + dsqs;
+      }
       const relStr   = cs(row,cols.rel);
       const relRaw   = parseFloat(relStr);
-      const rel      = Number.isFinite(relRaw) ? (relRaw <= 1 ? relRaw * 100 : relRaw) : null;
+      const rel      = gpResults
+        ? (started ? finished / started * 100 : null)
+        : (Number.isFinite(relRaw) ? (relRaw <= 1 ? relRaw * 100 : relRaw) : null);
       const relWidth = rel === null ? 0 : Math.max(0, Math.min(100, rel));
       const relText  = rel === null ? '—' : `${Math.round(rel * 10) / 10}%`;
       const relClass = rel!==null && rel>=85?'':rel!==null && rel>=60?'mid':'low';
@@ -1042,7 +1149,7 @@ async function loadStats() {
           <div class="stat-card-bar" style="background:var(--green)"></div>
           <div>
             <div class="stat-card-name">${driver}</div>
-            <div class="stat-card-sub">${started} races · ${dnfs} DNF${dnfs!==1?'s':''}</div>
+            <div class="stat-card-sub">${started} ${gpResults ? 'Grand Prix starts' : 'race starts (including sprints)'} · ${dnfs} DNF${dnfs!==1?'s':''}</div>
           </div>
         </div>
         <div class="stat-metrics">
@@ -1074,40 +1181,70 @@ async function loadStats() {
 
 async function loadTeamStats() {
   try {
-    const table = await fetchSheet(currentDiv.sheetId, currentDiv.gids.teamStats);
+    const [table, standingsTable] = await Promise.all([
+      fetchSheet(currentDiv.sheetId, currentDiv.gids.teamStats),
+      fetchSheet(currentDiv.sheetId, currentDiv.gids.constructors).catch(() => null)
+    ]);
     const rows = table.rows;
     let html = '';
 
-    // Header is row 0: Driver, Wins, Podiums, Avg Finish, Avg Points, Avg Grid, Avg Pos Gained
+    // Season 28+ has separate Tier 1/Tier 2 averages. Map the exact headings
+    // instead of falling back to the retired seven-column team-stats layout.
     const hRow = rows[0];
-    let cols = { name:0, wins:1, pods:2, avgFin:3, avgPts:4, avgGrid:5, avgGain:6 };
+    const cols = {};
 
-    // Try to find columns by header name
     for (let c=0; c<hRow.c.length; c++) {
       const v = cs(hRow,c).toLowerCase();
-      if (v.includes('wins') && !v.includes('sprint')) cols.wins=c;
-      if (v.includes('podiums')) cols.pods=c;
-      if (v.includes('average finishing')||v.includes('avg finish')) cols.avgFin=c;
-      if (v.includes('average points')||v.includes('avg points')) cols.avgPts=c;
-      if (v.includes('average grid')||v.includes('avg grid')) cols.avgGrid=c;
-      if (v.includes('gained')) cols.avgGain=c;
+      if (v==='team') cols.name=c;
+      if (v==='total points') cols.totalPts=c;
+      if (v==='wins') cols.wins=c;
+      if (v==='podiums') cols.pods=c;
+      if (v==='avg finish t1'||v==='average finish t1') cols.avgFinT1=c;
+      if (v==='avg finish t2'||v==='average finish t2') cols.avgFinT2=c;
+      if (v==='sprint wins') cols.sprintWins=c;
     }
 
-    for (let i=1; i<rows.length; i++) {
-      const row = rows[i];
+    if (cols.name===undefined || cols.wins===undefined || cols.pods===undefined) {
+      throw new Error('Team statistics headings were not recognised');
+    }
+
+    // Numeric headings are the per-round constructor totals. A round is
+    // complete once at least one team has scored, so this remains independent
+    // of the Sheet's currently unreliable Avg Points Per Race formula.
+    const roundColumns = [];
+    for (let c=0; c<hRow.c.length; c++) {
+      if (!/^\d+$/.test(cs(hRow,c))) continue;
+      const hasPoints = rows.slice(1).some(row => (parseFloat(cs(row,c))||0) > 0);
+      if (hasPoints) roundColumns.push(c);
+    }
+
+    const numberText = (value, decimals) => {
+      const number = parseFloat(value);
+      return Number.isFinite(number) ? number.toFixed(decimals) : '—';
+    };
+
+    const positions = new Map(standingsTable ? constructorStandings(standingsTable.rows)
+      .map((team, index) => [team.team.toLowerCase(), index]) : []);
+    const orderedRows = rows.slice(1).filter(row => cs(row,cols.name)).sort((a,b) => {
+      const aPos = positions.get(cs(a,cols.name).toLowerCase());
+      const bPos = positions.get(cs(b,cols.name).toLowerCase());
+      return (aPos ?? Infinity) - (bPos ?? Infinity) ||
+        (parseFloat(cs(b,cols.totalPts)) || 0) - (parseFloat(cs(a,cols.totalPts)) || 0) ||
+        cs(a,cols.name).localeCompare(cs(b,cols.name), 'en', {sensitivity:'base'});
+    });
+    for (const row of orderedRows) {
       const team = cs(row, cols.name);
       if (!team) continue;
 
       const wins    = parseFloat(cs(row,cols.wins))||0;
       const pods    = parseFloat(cs(row,cols.pods))||0;
-      const avgFin  = cs(row,cols.avgFin);
-      const avgPts  = cs(row,cols.avgPts);
-      const avgGain = cs(row,cols.avgGain);
+      const rawPoints = parseFloat(cs(row,cols.totalPts));
+      const totalPts = Number.isFinite(rawPoints) ? Math.floor(rawPoints) : NaN;
+      const avgPts  = Number.isFinite(totalPts) && roundColumns.length ? totalPts / roundColumns.length : null;
+      const avgFinT1 = cs(row,cols.avgFinT1);
+      const avgFinT2 = cs(row,cols.avgFinT2);
+      const sprintWins = parseFloat(cs(row,cols.sprintWins))||0;
       const color   = teamColors[team] || '#555';
-
-      const gainNum  = parseFloat(avgGain);
-      const gainStr  = !isNaN(gainNum) ? (gainNum>0?'+':'')+gainNum.toFixed(1) : '—';
-      const gainCls  = !isNaN(gainNum) ? (gainNum>0?'good':gainNum<0?'bad':'') : '';
 
       const tr2=parseInt(color.slice(1,3),16)||85, tg2=parseInt(color.slice(3,5),16)||85, tb2=parseInt(color.slice(5,7),16)||85;
       html += `<div class="con-row" style="align-items:flex-start;flex-wrap:wrap;gap:8px;background:rgba(${tr2},${tg2},${tb2},0.15);border-left:3px solid ${color};border-radius:6px;padding:10px 12px;">
@@ -1115,20 +1252,25 @@ async function loadTeamStats() {
           <div class="con-name">${team}</div>
           <div class="con-sub" style="margin-top:4px;">${wins} win${wins!==1?'s':''} · ${pods} podium${pods!==1?'s':''}</div>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;min-width:200px;flex:1;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:6px;min-width:0;flex:1 1 360px;">
           <div class="stat-metric" style="background:#1e2a27;border-radius:4px;padding:8px 6px;text-align:center;">
-            <div class="stat-metric-val">${avgFin?parseFloat(avgFin).toFixed(1):'—'}</div>
-            <div class="stat-metric-lbl">Avg finish</div>
+            <div class="stat-metric-val">${Number.isFinite(totalPts)?Math.floor(totalPts):'—'}</div>
+            <div class="stat-metric-lbl">Points</div>
           </div>
           <div class="stat-metric" style="background:#1e2a27;border-radius:4px;padding:8px 6px;text-align:center;">
-            <div class="stat-metric-val">${avgPts?parseFloat(avgPts).toFixed(1):'—'}</div>
-            <div class="stat-metric-lbl">Avg pts</div>
+            <div class="stat-metric-val">${numberText(avgPts,1)}</div>
+            <div class="stat-metric-lbl">Pts / round</div>
           </div>
           <div class="stat-metric" style="background:#1e2a27;border-radius:4px;padding:8px 6px;text-align:center;">
-            <div class="stat-metric-val ${gainCls}">${gainStr}</div>
-            <div class="stat-metric-lbl">Avg gained</div>
+            <div class="stat-metric-val">${numberText(avgFinT1,1)}</div>
+            <div class="stat-metric-lbl">Avg finish T1</div>
+          </div>
+          <div class="stat-metric" style="background:#1e2a27;border-radius:4px;padding:8px 6px;text-align:center;">
+            <div class="stat-metric-val">${numberText(avgFinT2,1)}</div>
+            <div class="stat-metric-lbl">Avg finish T2</div>
           </div>
         </div>
+        ${sprintWins ? `<div class="con-sub" style="flex-basis:100%;text-align:right;">${sprintWins} sprint win${sprintWins!==1?'s':''}</div>` : ''}
       </div>`;
     }
 
@@ -1151,22 +1293,23 @@ function psTeamSlug(team){
 
 function buildOverallConstTable(rows){
   if(!rows) return '<div class="div-loading">No data available.</div>';
+  const textValue = value => String(value == null ? '' : value).trim();
   let start=-1, posCol=-1, teamCol=-1, ptsCol=-1, gapCol=-1, tpCol=-1, principalTeamCol=-1;
   for(let i=0;i<rows.length;i++){
     const r=rows[i];
-    const posIdx=r.findIndex(v=>(v||'').trim().toLowerCase().startsWith('pos'));
+    const posIdx=r.findIndex(v=>textValue(v).toLowerCase().startsWith('pos'));
     if(posIdx>=0){
       posCol=posIdx;
-      teamCol=r.findIndex(v=>(v||'').trim().toLowerCase()==='team');
+      teamCol=r.findIndex(v=>textValue(v).toLowerCase()==='team');
       if(teamCol<0) teamCol=posIdx+1;
-      ptsCol=r.findIndex(v=>(v||'').trim().toLowerCase()==='points');
-      gapCol=r.findIndex(v=>(v||'').trim().toLowerCase()==='gap');
-      tpCol=r.findIndex(v=>(v||'').trim().toLowerCase().includes('principal'));
+      ptsCol=r.findIndex(v=>textValue(v).toLowerCase()==='points');
+      gapCol=r.findIndex(v=>textValue(v).toLowerCase()==='gap');
+      tpCol=r.findIndex(v=>textValue(v).toLowerCase().includes('principal'));
       // The clean "team" column next to the principal list is a SEPARATE,
       // independently-ordered reference table — it is NOT row-aligned with
       // the ranked Pos/Team/Points table above it. Find its own column via
       // the LAST 'team' header match (the ranked table's is the first).
-      r.forEach((v,ci)=>{ if((v||'').trim().toLowerCase()==='team') principalTeamCol=ci; });
+      r.forEach((v,ci)=>{ if(textValue(v).toLowerCase()==='team') principalTeamCol=ci; });
       start=i+1; break;
     }
   }
@@ -1178,8 +1321,8 @@ function buildOverallConstTable(rows){
   const principalMap = {};
   if(tpCol>=0 && principalTeamCol>=0){
     for(let i=start;i<rows.length;i++){
-      const refTeam = (rows[i][principalTeamCol]||'').trim();
-      const refPrincipal = (rows[i][tpCol]||'').trim();
+      const refTeam = textValue(rows[i][principalTeamCol]);
+      const refPrincipal = textValue(rows[i][tpCol]);
       if(refTeam && refPrincipal) principalMap[refTeam.toLowerCase()] = refPrincipal;
     }
   }
@@ -1187,11 +1330,11 @@ function buildOverallConstTable(rows){
   const data=[];
   for(let i=start;i<rows.length;i++){
     const r=rows[i];
-    let t=(r[teamCol]||'').trim();
-    if(!t) t=(r[teamCol+1]||'').trim();
+    let t=textValue(r[teamCol]);
+    if(!t) t=textValue(r[teamCol+1]);
     if(!t||t.startsWith('#')) { if(!t && data.length > 0) break; continue; }
-    const pts=Math.floor(parseFloat((r[ptsCol]||'').trim().replace(/,/g,''))||0);
-    const gapRaw=(gapCol>=0?(r[gapCol]||'').trim():'')||'';
+    const pts=Math.floor(parseFloat(textValue(r[ptsCol]).replace(/,/g,''))||0);
+    const gapRaw=(gapCol>=0?textValue(r[gapCol]):'')||'';
     const gapNum = parseFloat(gapRaw);
     const gap = !isNaN(gapNum) && gapNum !== 0 ? String(Math.round(gapNum)) : (gapRaw || '');
     // Match this ranked row's team against the principal lookup by name
@@ -1201,7 +1344,9 @@ function buildOverallConstTable(rows){
     const matchedName = Object.keys(principalMap).find(name => tKey.includes(name) || name.includes(tKey));
     const tpFinal = matchedName ? principalMap[matchedName] : (typeof teamOwners !== 'undefined' ? (teamOwners[tKey] || '') : '');
     const tpDisplay = tpFinal.toLowerCase()==='reserve'?'RESERVE':tpFinal;
-    data.push({team:t, pts, gap, tp:tpDisplay});
+    const typeKey = matchedName || tKey;
+    const teamType = (typeof teamTypes !== 'undefined' ? (teamTypes[typeKey] || teamTypes[tKey] || '') : '').toLowerCase();
+    data.push({team:t, pts, gap, tp:tpDisplay, isFreeAgent:teamType.includes('free agent')});
   }
   data.sort((a,b)=>b.pts-a.pts);
   if(!data.length) return '<div class="div-loading">No data found.</div>';
@@ -1224,14 +1369,16 @@ function buildOverallConstTable(rows){
     const r2=parseInt(color.slice(1,3),16)||85, g2=parseInt(color.slice(3,5),16)||85, b2=parseInt(color.slice(5,7),16)||85;
     const rowBg = 'background:rgba('+r2+','+g2+','+b2+',0.1);';
     const teamBg = 'background:rgba('+r2+','+g2+','+b2+',0.2);border-left:3px solid '+color+';';
-    const logoStyle = slug ? 'background-image:linear-gradient(rgba(22,29,27,0.5),rgba(22,29,27,0.5)),url(\'images/teamlogos/thinlogo_'+slug+'.webp\');background-size:cover;background-position:center;' : '';
+    const logoStyle = slug ? 'background-image:linear-gradient(rgba(22,29,27,0.5),rgba(22,29,27,0.5)),url(\'/images/teamlogos/thinlogo_'+slug+'.webp\');background-size:cover;background-position:center;' : '';
     const gapNum = idx===0 ? '—' : '-'+(leader - Math.floor(d.pts));
     const tpDisplay = d.tp && d.tp.toLowerCase()==='reserve' ? 'RESERVE' : d.tp;
     html += '<tr>';
     html += '<td style="'+tdStyle+rowBg+'text-align:center;"><span style="font-family:\'Barlow Condensed\',sans-serif;font-size:15px;font-weight:700;color:'+pc+';">'+pos+'</span></td>';
-    html += '<td class="has-logo" style="'+tdStyle+teamBg+logoStyle+'">';
+    const teamLabel = d.team.replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    html += '<td class="has-logo" aria-label="'+teamLabel+'" style="'+tdStyle+teamBg+logoStyle+'">';
     html += '<div class="ps-driver-cell">';
-    html += '<span class="ps-driver-name">'+(tpDisplay ? 'Team Principal · '+tpDisplay : '&nbsp;')+'</span>';
+    if(d.isFreeAgent) html += '<span class="ps-driver-team">Free agent team</span>';
+    else if(tpDisplay) html += '<span class="ps-driver-team">Team Principal · '+tpDisplay+'</span>';
     html += '</div></td>';
     html += '<td style="'+tdStyle+rowBg+'text-align:center;"><span style="font-family:\'Barlow Condensed\',sans-serif;font-size:16px;font-weight:700;color:#3DCC47;">'+Math.floor(d.pts)+'</span></td>';
     html += '<td style="'+tdStyle+rowBg+'text-align:center;color:rgba(255,255,255,0.6);">'+gapNum+'</td>';
@@ -1252,20 +1399,27 @@ async function loadOverallConstructors() {
     // teamOwners and driverTeams are module-level vars
     try {
       const currentSeason = await getCurrentSeason();
-      const teamsTable = await fetchSheet('1VdV1CEefr4nct-_KZPu9xBzbFMHY3nHVbShm9RBnX0c', '1278748961');
+      const teamsTable = F1XL_STANDINGS_TEST_MODE
+        ? await fetchSheet(seasonConfig.master_team_sheet_id, seasonConfig.master_team_sheet)
+        : await fetchSheet('1VdV1CEefr4nct-_KZPu9xBzbFMHY3nHVbShm9RBnX0c', '1278748961');
       // Find title case team name from teamColors
       const teamNameMap = {};
       Object.keys(teamColors).forEach(t => { teamNameMap[t.toLowerCase()] = t; });
       for (let i=1; i<teamsTable.rows.length; i++) {
         const row = teamsTable.rows[i];
         const season = cs(row,0).trim();
-        if (season !== String(currentSeason)) continue;
-        const teamRaw = cs(row,1).trim().toLowerCase();
-        const owner = cs(row,2).trim();
-        const teamDisplay = teamNameMap[teamRaw] || cs(row,1).trim();
+        if (!F1XL_STANDINGS_TEST_MODE && season !== String(currentSeason)) continue;
+        const teamColumn = F1XL_STANDINGS_TEST_MODE ? 0 : 1;
+        const ownerColumn = F1XL_STANDINGS_TEST_MODE ? 4 : 2;
+        const typeColumn = F1XL_STANDINGS_TEST_MODE ? 5 : -1;
+        const teamRaw = cs(row,teamColumn).trim().toLowerCase();
+        const owner = cs(row,ownerColumn).trim();
+        const type = typeColumn >= 0 ? cs(row,typeColumn).trim().toLowerCase() : '';
+        const teamDisplay = teamNameMap[teamRaw] || cs(row,teamColumn).trim();
         if (teamRaw && owner) teamOwners[teamRaw] = owner;
+        if (teamRaw && type) teamTypes[teamRaw] = type;
         // Map all drivers in this row to this team
-        for (let c=3; c<row.c.length; c++) {
+        for (let c=F1XL_STANDINGS_TEST_MODE ? row.c.length : 3; c<row.c.length; c++) {
           const driver = cs(row,c).trim().toLowerCase();
           if (driver) driverTeams[driver] = teamDisplay;
         }
@@ -1276,6 +1430,7 @@ async function loadOverallConstructors() {
     const overallUrl = seasonConfig['overall_gid'];
     const teamPoints = {};
     let overallCsvRows = null;
+    let overallCsvHasTeams = false;
 
     if (overallUrl) {
       try {
@@ -1283,12 +1438,12 @@ async function loadOverallConstructors() {
         const mGid = overallUrl.match(/gid=(\d+)/);
         if (mId && mGid) {
           const csvUrl = `https://docs.google.com/spreadsheets/d/${mId[1]}/export?format=csv&gid=${mGid[1]}`;
-          const res = await fetch(csvUrl);
+          const res = await nextPublicFetch(csvUrl);
           const text = await res.text();
           const csvRows = text.split(/\r?\n/).map(l=>l.split(',').map(v=>v.replace(/^"|"$/g,'').trim()));
           overallCsvRows = csvRows;
           // Find header row
-          let hIdx=-1, posCol=-1, teamCol=-1, ptsCol=-1, tpCol=-1;
+          let hIdx=-1, posCol=-1, teamCol=-1, ptsCol=-1;
           for(let i=0;i<csvRows.length;i++){
             const r=csvRows[i];
             const posIdx=r.findIndex(v=>(v||'').toLowerCase().startsWith('pos'));
@@ -1297,8 +1452,6 @@ async function loadOverallConstructors() {
               teamCol=r.findIndex(v=>(v||'').toLowerCase()==='team');
               if(teamCol<0) teamCol=posIdx+1;
               ptsCol=r.findIndex(v=>(v||'').toLowerCase()==='points');
-              // TP is last non-blank header
-              for(let c=r.length-1;c>=0;c--){ if((r[c]||'').trim()){ tpCol=c; break; } }
               hIdx=i; break;
             }
           }
@@ -1310,7 +1463,7 @@ async function loadOverallConstructors() {
               if(!team||!ptsRaw) continue;
               const pts=Math.floor(parseFloat(ptsRaw))||0;
               if(pts) teamPoints[team]=(teamPoints[team]||0)+pts;
-              if(tpCol>=0){ const tp=(r[tpCol]||'').trim(); if(tp && isNaN(parseFloat(tp))) teamOwners[team.toLowerCase()]=tp; }
+              overallCsvHasTeams = true;
             }
           }
         }
@@ -1358,7 +1511,7 @@ async function loadOverallConstructors() {
       return;
     }
 
-    if(overallCsvRows && overallCsvRows.length){
+    if(overallCsvRows && overallCsvRows.length && overallCsvHasTeams){
       el.innerHTML = buildOverallConstTable(overallCsvRows);
     } else if(Object.keys(teamPoints).length){
       // Fallback: build minimal rows from teamPoints
@@ -1631,7 +1784,7 @@ async function loadCoolStats() {
             // block further down the sheet that reuses these same column
             // positions for unrelated per-round data — must stop here, not
             // just skip blanks, or those numbers get misread as extra stats.
-            if (name.toLowerCase() === 'calculations') break;
+            if (['calculations','driver'].includes(name.toLowerCase())) break;
             if (!name) continue; // unfilled seat (e.g. no Tier 2 driver yet) — skip, don't stop
             out.push({
               name,
@@ -1655,16 +1808,21 @@ async function loadCoolStats() {
       return;
     }
 
-    const top5 = (arr, key) => [...arr].filter(d => d[key] > 0).sort((a,b) => b[key] - a[key]).slice(0, 5);
+    const top5 = (arr, key) => [...arr].filter(d => d[key] > 0).sort((a,b) =>
+      b[key] - a[key] || a.div.localeCompare(b.div, 'en', {numeric:true}) ||
+      a.name.localeCompare(b.name, 'en', {sensitivity:'base'}) || a.name.localeCompare(b.name, 'en')
+    ).slice(0, 5);
 
     const buildCard = (title, sub, arr, key) => {
       if (!arr.length) return '';
       let html = `<div class="cs-card"><div><div class="cs-card-title">${title}</div><div class="cs-card-sub">${sub}</div></div>`;
       arr.forEach((d, i) => {
         const color = teamColors[d.team] || '#555';
-        const gold = i === 0 ? 'gold' : '';
+        const rank = arr.findIndex(other => other[key] === d[key]) + 1;
+        const tied = arr.some((other, index) => index !== i && other[key] === d[key]);
+        const gold = rank === 1 ? 'gold' : '';
         html += `<div class="cs-row">
-          <span class="cs-row-pos ${gold}">${i+1}</span>
+          <span class="cs-row-pos ${gold}">${tied ? '=' : ''}${rank}</span>
           <div style="width:3px;height:14px;background:${color};border-radius:1px;flex-shrink:0;"></div>
           <div style="flex:1;min-width:0;">
             <div class="cs-row-name">${d.name}</div>
@@ -1694,15 +1852,34 @@ async function loadCoolStats() {
 
 async function initStandings() {
   try {
-    const currentSeason = await getCurrentSeason();
-    seasonConfig = await getCurrentSeasonConfig();
+    const requestedSeason = new URLSearchParams(window.location.search).get('season');
+    const currentSeason = requestedSeason || await getCurrentSeason();
+    if(!currentSeason){
+      document.getElementById('page-season-eyebrow').textContent='Between seasons';
+      document.querySelector('.page-title').textContent='Standings';
+      document.querySelector('.page-meta').textContent='The completed tables are available in Past Seasons. Current-season standings will return when the next season launches.';
+      document.getElementById('overall-constructors').style.display='none';
+      document.getElementById('selector-view').innerHTML='<div class="loading-msg" style="padding:48px 24px">There is no active season. <a href="past-seasons.html" style="color:var(--green)">Open Past Seasons</a></div>';
+      return;
+    }
+    seasonConfig = requestedSeason ? await loadSeasonConfig(requestedSeason) : await getCurrentSeasonConfig();
+    await loadReferenceTeamColours();
 
     if (!seasonConfig) {
       document.getElementById('div-selector').innerHTML = '<div class="loading-msg">Could not load season config.</div>';
       return;
     }
 
-    const numDivisions = parseInt(seasonConfig['divisions']) || 1;
+    const divisionSetting = String(seasonConfig['divisions'] == null ? '' : seasonConfig['divisions']).trim();
+    if (!divisionSetting) {
+      document.getElementById('div-selector').innerHTML = '<div class="loading-msg">Season setup is under way. Divisions have not been confirmed yet.</div>';
+      document.getElementById('overall-constructors-table').innerHTML = '';
+      document.getElementById('oc-panel-weekly').innerHTML = '';
+      document.getElementById('cool-stats-cards').innerHTML = '';
+      return;
+    }
+
+    const numDivisions = parseInt(divisionSetting, 10);
 
     // Build divisions array from config
     divisions = [];
@@ -1711,7 +1888,7 @@ async function initStandings() {
       const hasStandings = seasonConfig[`d${d}_has_standings`] === 'yes';
       // Count rounds from config
       let numRounds = 0;
-      for (let r=1; r<=21; r++) {
+      for (let r=1; r<=22; r++) {
         if (seasonConfig[`d${d}_r${r}_gid`]) numRounds++;
         else break;
       }
@@ -1725,6 +1902,7 @@ async function initStandings() {
           driverStats:  seasonConfig[`d${d}_driver_stats_gid`],
           teamStats:    seasonConfig[`d${d}_team_stats_gid`],
           teamInfo:     seasonConfig[`d${d}_team_info_gid`],
+          calendar:     seasonConfig[`d${d}_calendar_gid`],
         },
         season: currentSeason,
         numRounds: numRounds
@@ -1749,16 +1927,17 @@ async function initStandings() {
         for (let c=4; c<hRow.c.length; c++) {
           if (cs(hRow,c)==='Points') { ptsCol=c; break; }
         }
-        // Get leader - find row with highest points
+        // Source position 1 is authoritative, including manual tie-breaks.
         let leaderRow = null;
         let maxPts = -1;
         for(let r=hIdx+1; r<rows.length; r++){
           const driver = cs(rows[r], 2);
           if (!driver || driver === 'Driver') continue;
-          const pts = parseFloat(cs(rows[r], ptsCol)) || 0;
-          if (pts > maxPts) { maxPts = pts; leaderRow = rows[r]; }
+          const sourcePos = parseInt(cs(rows[r],0),10);
+          const pts = parseFloat(cs(rows[r], ptsCol));
+          if(sourcePos===1){leaderRow=rows[r];maxPts=pts;break;}
+          if (Number.isFinite(pts) && pts > maxPts) { maxPts = pts; leaderRow = rows[r]; }
         }
-        if(!leaderRow) leaderRow = rows[hIdx+1];
         if (!leaderRow) return;
         divisions[i].leader = cs(leaderRow, 2) || '—';
         divisions[i].leaderTeam = cs(leaderRow, 3) || '';
@@ -1772,6 +1951,9 @@ async function initStandings() {
     // Update season heading
     const eyebrow = document.getElementById('page-season-eyebrow');
     if (eyebrow && currentSeason) eyebrow.textContent = 'Season ' + currentSeason;
+    if(currentSeason) document.title = 'Standings | F1XL · Season ' + currentSeason;
+    const testBanner = document.getElementById('standings-test-banner');
+    if (testBanner && currentSeason) testBanner.textContent = 'F1XL · SEASON ' + currentSeason + '';
 
     buildSelector();
 
@@ -1789,7 +1971,7 @@ async function initStandings() {
 initStandings();
 </script>
 <script>
-if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js').catch(e=>console.warn('SW:',e));});}
+if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js',{updateViaCache:'none'}).then(registration=>registration.update()).catch(error=>console.warn('Website update check:',error));});}
 </script>
 </body>
 </html>

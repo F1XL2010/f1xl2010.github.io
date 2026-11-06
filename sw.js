@@ -1,6 +1,6 @@
 // F1XL Service Worker
 // VERSION is injected automatically by GitHub Actions on each deploy
-const VERSION = '69ff34b9';
+const VERSION = 'launch-proposal-20261105-r4';
 const CACHE_NAME = `f1xl-shell-${VERSION}`;
 
 // Files to cache — the app shell only, never data
@@ -68,7 +68,7 @@ self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
 
   // The TEST history export changes independently of website deployments.
-  if (url.hostname === 'script.google.com' && url.searchParams.get('view') === 'public-history') {
+  if (url.hostname === 'script.google.com' && ['public-history','track-records'].includes(url.searchParams.get('view'))) {
     event.respondWith(fetch(event.request, { cache: 'no-store' }));
     return;
   }
@@ -95,14 +95,14 @@ self.addEventListener('fetch', event => {
           caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
           return response;
         })
-        .catch(() => caches.match(event.request))
+        .catch(() => caches.open(CACHE_NAME).then(cache => cache.match(event.request)))
     );
     return;
   }
 
   // For everything else — cache first, fall back to network
   event.respondWith(
-    caches.match(event.request).then(cached => {
+    caches.open(CACHE_NAME).then(cache => cache.match(event.request)).then(cached => {
       if (cached) return cached;
       return fetch(event.request).then(response => {
         if (response && response.status === 200) {

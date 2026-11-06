@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="description" content="F1XL — Competitive but accessible F1 racing league. No custom setups required. All skill levels welcome. Est. 2010.">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Legacy · League Rules | F1XL — UK F1 Racing League</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green:#3DCC47;--teal:#5ECFCF;--red:#E10600;--black:#111816;--dark:#161d1b;--dark2:#1a2320;--dark3:#1e2a27;
+    --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+    --text:#ffffff;--text-muted:rgba(255,255,255,0.60);--text-faint:rgba(255,255,255,0.30);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:#111816;background-image:url('/images/backgrounds/rules_background.webp');background-size:cover;background-position:center;background-attachment:fixed;color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;}
+  body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(17,24,22,0.72);z-index:0;pointer-events:none;}
+  body>*{position:relative;z-index:1;}
+
+  /* NAV */
+  nav{background:rgba(17,24,22,0.97);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;backdrop-filter:blur(8px);}
+  .nav-left{display:flex;align-items:center;flex-shrink:0;}
+  .nav-logo{display:flex;align-items:center;height:40px;text-decoration:none;}
+  .nav-logo img{height:34px;width:auto;display:block;}
+  .nav-links{display:flex;align-items:stretch;height:56px;}
+  .nav-item{position:relative;display:flex;align-items:stretch;}
+  .nav-item>a,.nav-item>button{color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:500;letter-spacing:0.5px;padding:0 13px;display:flex;align-items:center;gap:4px;border-bottom:2px solid transparent;border-top:none;border-left:none;border-right:none;background:none;cursor:pointer;font-family:'Barlow',sans-serif;text-transform:uppercase;transition:color 0.2s;white-space:nowrap;}
+  .nav-item>a:hover,.nav-item>button:hover{color:var(--text);}
+  .nav-item>a.active,.nav-item>button.active{color:var(--text);border-bottom-color:var(--green);}
+  .nav-chevron{font-size:8px;opacity:0.5;transition:transform 0.2s;}
+  .nav-item:hover .nav-chevron{transform:rotate(180deg);}
+  .nav-dropdown{display:none;position:absolute;top:100%;left:0;background:#141a18;border:1px solid var(--border2);border-top:2px solid var(--green);border-radius:0 0 6px 6px;min-width:180px;padding:6px 0;z-index:300;}
+  .nav-item:hover .nav-dropdown{display:block;}
+  .nav-dropdown a{display:block;padding:9px 16px;color:var(--text-muted);text-decoration:none;font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;transition:color 0.15s,background 0.15s;white-space:nowrap;}
+  .nav-dropdown a:hover{color:var(--text);background:rgba(255,255,255,0.05);}
+  .nav-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:8px;background:none;border:none;}
+  .nav-hamburger span{display:block;width:22px;height:2px;background:var(--text-muted);border-radius:2px;transition:all 0.25s;}
+  .nav-hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+  .nav-hamburger.open span:nth-child(2){opacity:0;}
+  .nav-hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+  .mobile-menu{display:none;position:fixed;top:56px;left:0;right:0;background:#141a18;border-bottom:1px solid var(--border2);z-index:199;padding:12px 0;max-height:calc(100vh - 56px);overflow-y:auto;}
+  .mobile-menu.open{display:block;}
+  .mob-section{font-size:10px;letter-spacing:2px;color:var(--text-faint);padding:12px 24px 4px;text-transform:uppercase;}
+  .mobile-menu a{display:block;padding:10px 24px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;}
+  .mobile-menu a:hover{color:var(--text);}
+  @media(max-width:900px){.nav-links{display:none;}.nav-hamburger{display:flex;}}
+  @media(min-width:861px){.mobile-menu{display:none !important;}}
+
+  /* PAGE HEADER */
+  .page-header{background:#161d1b;border-bottom:1px solid var(--border);padding:24px;}
+  .page-eyebrow{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:2.5px;color:var(--teal);text-transform:uppercase;font-weight:600;margin-bottom:4px;}
+  .page-title{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:700;text-transform:uppercase;line-height:1;}
+  .page-meta{font-size:13px;color:var(--text-muted);margin-top:6px;}
+
+  /* ADMIN MESSAGE */
+  .admin-msg{margin:20px 24px;background:#1a2320;border:1px solid var(--border2);border-left:3px solid var(--teal);border-radius:0 8px 8px 0;padding:16px 18px;}
+  .admin-msg-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--teal);font-weight:600;margin-bottom:8px;}
+  .admin-msg-text{font-size:13px;color:var(--text-muted);line-height:1.7;}
+
+  /* QUICK NAV */
+  .quick-nav{padding:0 24px 20px;display:flex;flex-wrap:wrap;gap:6px;}
+  .quick-nav-btn{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;padding:5px 12px;border-radius:4px;border:1px solid var(--border2);background:#1a2320;color:var(--text-muted);cursor:pointer;transition:all 0.2s;}
+  .quick-nav-btn:hover{color:var(--green);border-color:var(--green);}
+  .quick-nav-btn:hover{color:var(--text);border-color:rgba(255,255,255,0.35);}
+
+  /* CONTENT */
+  .content{padding:0 24px 48px;max-width:860px;}
+
+  /* CHAPTER */
+  .chapter{margin-bottom:8px;}
+  .chapter-header{display:flex;align-items:center;gap:12px;padding:14px 18px;background:#1a2320;border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:background 0.2s;user-select:none;}
+  .chapter-header:hover{background:#1e2a27;}
+  .chapter-header.open{border-radius:8px 8px 0 0;border-bottom-color:transparent;}
+  .chapter-tag{font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--teal);font-weight:600;flex-shrink:0;}
+  .chapter-title{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;flex:1;}
+  .chapter-chevron{font-size:13px;color:var(--text-faint);transition:transform 0.25s;flex-shrink:0;}
+  .chapter-chevron.open{transform:rotate(180deg);}
+  .chapter-body{display:none;border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;padding:4px 0 8px;background:#161d1b;}
+  .chapter-body.open{display:block;}
+  .rule-section{border-top:1px solid var(--border);padding:16px 20px;}
+  .rule-section-title{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--teal);margin-bottom:10px;}
+  .section-body{padding:0 0 4px;}
+  .rule-item{display:flex;gap:12px;margin-bottom:8px;align-items:baseline;}
+  .rule-label{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:var(--teal);text-transform:uppercase;min-width:16px;flex-shrink:0;}
+  .rule-text{font-size:13px;color:var(--text-muted);line-height:1.6;}
+  .rule-para{font-size:13px;color:var(--text-muted);line-height:1.6;margin-bottom:8px;}
+  .rule-label-only{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:var(--teal);text-transform:uppercase;margin-bottom:4px;}
+
+  /* RULE */
+  .rule{padding:12px 18px;border-bottom:1px solid var(--border);}
+  .rule:last-child{border-bottom:none;}
+  .rule-header{display:flex;align-items:baseline;gap:10px;margin-bottom:6px;}
+  .rule-num{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--teal);flex-shrink:0;min-width:28px;}
+  .rule-title{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:600;text-transform:uppercase;letter-spacing:0.3px;color:var(--text);}
+  .rule-items{padding-left:0;}
+  .rule-item{display:flex;gap:10px;margin-bottom:6px;font-size:13px;color:var(--text-muted);line-height:1.65;}
+  .rule-item:last-child{margin-bottom:0;}
+  .rule-item-label{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:var(--teal);flex-shrink:0;min-width:20px;margin-top:1px;}
+  .rule-item-text{flex:1;}
+  .rule-sub{padding-left:28px;margin-top:4px;}
+  .rule-sub-item{display:flex;gap:10px;margin-bottom:4px;font-size:12px;color:rgba(255,255,255,0.4);line-height:1.6;}
+  .rule-sub-label{font-family:'Barlow Condensed',sans-serif;font-size:11px;color:rgba(94,207,207,0.6);flex-shrink:0;min-width:20px;}
+  .rule-plain{font-size:13px;color:var(--text-muted);line-height:1.65;margin-bottom:6px;}
+  .rule-plain:last-child{margin-bottom:0;}
+  .rule-highlight{background:rgba(225,6,0,0.08);border:1px solid rgba(225,6,0,0.15);border-radius:4px;padding:8px 12px;margin-top:8px;font-size:12px;color:rgba(255,180,180,0.8);line-height:1.6;}
+
+  /* AI TABLE */
+  .ai-table{width:100%;border-collapse:collapse;margin-top:8px;font-size:13px;}
+  .ai-table th{text-align:left;padding:6px 10px;background:var(--dark3);color:var(--text-muted);font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;}
+  .ai-table td{padding:7px 10px;border-bottom:1px solid var(--border);color:var(--text-muted);}
+  .ai-table tr:last-child td{border-bottom:none;}
+  .ai-table td:last-child{color:var(--text);font-weight:500;}
+
+  /* LICENCE TABLE */
+  .pts-table{width:100%;border-collapse:collapse;margin-top:8px;font-size:13px;}
+  .pts-table th{text-align:left;padding:6px 10px;background:var(--dark3);color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:0.5px;}
+  .pts-table td{padding:7px 10px;border-bottom:1px solid var(--border);color:var(--text-muted);}
+  .pts-table tr:last-child td{border-bottom:none;}
+  .pts-table td:first-child{color:var(--text);font-weight:500;}
+
+  /* FOOTER */
+  footer{background:var(--dark);border-top:1px solid var(--border);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+  .footer-logo{background:var(--green);color:#000;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;padding:4px 9px;border-radius:3px;}
+  .footer-text{font-size:12px;color:var(--text-faint);}
+</style>
+<meta name="theme-color" content="#111816">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="F1XL">
+<link rel="apple-touch-icon" href="/images/icons/icon-512.png">
+<meta name="robots" content="noindex,nofollow">
+<link rel="canonical" href="https://f1xl.co.uk/league-rules.html">
+<link rel="stylesheet" href="/legacy/legacy.css?v=legacy-b7c4eff4bb37">
+</head>
+<body>
+<aside class="legacy-banner" id="legacy-banner" aria-label="Legacy website"><div><strong>Legacy website</strong><span>Previous F1XL site · original spreadsheet sources</span></div><a href="/league-rules.html" data-legacy-current>Open current website →</a></aside>
+
+<nav>
+  <div class="nav-left">
+    <a href="/legacy/index.html" class="nav-logo">
+      <img src="/TRANSPARENT.png" alt="F1XL - UK Casual F1 League Racing on Xbox, PlayStation and PC">
+    </a>
+  </div>
+  <div class="nav-links">
+    <div class="nav-item"><a href="/legacy/index.html">Home</a></div>
+    <div class="nav-item">
+      <button>Standings <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown">
+        <a href="/legacy/standings.html">Current Season</a>
+        <a href="/legacy/results.html">Results</a>
+        <a href="/legacy/past-seasons.html">Past Seasons</a>
+        <a href="/legacy/asr.html">All Star Race</a>
+      </div>
+    </div>
+    <div class="nav-item"><a href="/legacy/teams.html">Teams</a></div>
+    <div class="nav-item">
+      <button>Race Tickets <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown">
+        <a href="/legacy/submit-ticket.html">Submit Ticket</a>
+        <a href="/legacy/ticket-outcomes.html">Ticket Outcomes</a>
+        <a href="/legacy/drivers-licence.html">Drivers Licence</a>
+      </div>
+    </div>
+    <div class="nav-item"><a href="/legacy/schedule.html">Schedule</a></div>
+    <div class="nav-item">
+      <button>History <span class="nav-chevron">▼</span></button>
+      <div class="nav-dropdown">
+        <a href="/legacy/hall-of-fame.html">Hall of Fame</a>
+        <a href="/legacy/hall-of-records.html">Hall of Records</a>
+        <a href="/legacy/track-records.html">Track Records</a>
+      </div>
+    </div>
+    <div class="nav-item"><a href="/legacy/applications.html">Applications</a></div>
+    <div class="nav-item"><a href="/legacy/league-rules.html" class="active">League Rules</a></div>
+    <div class="nav-item"><a href="/legacy/merch.html">Merch</a></div>
+    <div class="nav-item"><a href="/legacy/music.html">Music</a></div>
+  </div>
+  <button class="nav-hamburger" id="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></button>
+</nav>
+<div class="mobile-menu" id="mobile-menu">
+  <a href="/legacy/index.html">Home</a>
+  <div class="mob-section">Standings</div>
+  <a href="/legacy/standings.html">Current Season</a>
+  <a href="/legacy/results.html">Results</a>
+  <a href="/legacy/past-seasons.html">Past Seasons</a>
+  <a href="/legacy/asr.html">All Star Race</a>
+  <a href="/legacy/teams.html">Teams</a>
+  <div class="mob-section">Race Tickets</div>
+  <a href="/legacy/submit-ticket.html">Submit Ticket</a>
+  <a href="/legacy/ticket-outcomes.html">Ticket Outcomes</a>
+  <a href="/legacy/drivers-licence.html">Drivers Licence</a>
+  <a href="/legacy/schedule.html">Schedule</a>
+  <div class="mob-section">History</div>
+  <a href="/legacy/hall-of-fame.html">Hall of Fame</a>
+  <a href="/legacy/hall-of-records.html">Hall of Records</a>
+  <a href="/legacy/track-records.html">Track Records</a>
+  <a href="/legacy/applications.html">Applications</a>
+  <a href="/legacy/league-rules.html">League Rules</a>
+  <a href="/legacy/merch.html">Merch</a>
+  <a href="/legacy/music.html">Music</a>
+</div>
+
+<div class="page-header">
+  <div class="page-eyebrow">F1XL</div>
+  <div class="page-title">League Rules</div>
+  <div class="page-meta">F1XL Management reserve the right to amend this document at any time. All changes will be communicated via Discord.</div>
+</div>
+
+<div class="admin-msg">
+  <div class="admin-msg-label">From the Admins</div>
+  <div class="admin-msg-text">This document has been created to provide drivers old and new full details of the league racing we provide here at F1XL. It also provides information as to what drivers can expect from F1XL, and in turn what F1XL expects from any driver that signs up to race here in terms of standards both on the track, and off it.<br><br>
+  We strive to provide an environment that is welcoming to all, with clean fair racing. Whilst we appreciate the Rules here are extensive, we believe they are necessary to ensure that standards are high in all areas and, most importantly, that everyone has fun.<br><br>
+  Please take the time to read all the rules and familiarise yourself with them before racing. Not being aware of them is not a suitable defence for any on or off track incidents.</div>
+</div>
+
+<div class="quick-nav" id="quick-nav">
+  <div class="loading-msg" style="font-size:13px;">Loading...</div>
+</div>
+
+<div class="content" id="rules-content">
+  <div class="loading-msg" style="padding:40px 24px;">Loading league rules...</div>
+</div></div>
+
+<footer>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="footer-logo">F1XL</div>
+    <div class="footer-text">F1 League · F1 Sim Racing on Xbox, PlayStation and PC. Casual Racing on F1 26</div>
+  </div>
+  <div class="footer-text">f1xl.co.uk</div>
+</footer>
+
+<script src="/legacy/config.js?v=legacy-b7c4eff4bb37"></script>
+<script>
+// ── CHAPTER ID MAP ────────────────────────────────────────────────────────────
+const CHAPTER_IDS = {
+  'GENERAL INFORMATION': 'general',
+  'LEAGUE STRUCTURE': 'structure',
+  'TEAMS, DRIVERS, TIERS, AND TEAM PRINCIPALS': 'teams',
+  'ON TRACK': 'ontrack',
+  'STEWARDING, TICKETS & APPEALS': 'stewarding',
+  'STEWARDING, TICKETS &amp; APPEALS': 'stewarding',
+};
+const CHAPTER_LABELS = {
+  'general': 'General Information',
+  'structure': 'League Structure',
+  'teams': 'Teams & Drivers',
+  'ontrack': 'On Track',
+  'stewarding': 'Stewarding & Tickets',
+};
+
+function toggleChapter(id) {
+  const body = document.getElementById('body-' + id);
+  const chev = document.getElementById('chev-' + id);
+  const header = document.querySelector(`#chapter-${id} .chapter-header`);
+  const open = body.classList.toggle('open');
+  chev.classList.toggle('open', open);
+  if (header) header.classList.toggle('open', open);
+}
+
+function openChapter(id) {
+  const body = document.getElementById('body-' + id);
+  const chev = document.getElementById('chev-' + id);
+  const header = document.querySelector(`#chapter-${id} .chapter-header`);
+  if (body && !body.classList.contains('open')) {
+    body.classList.add('open');
+    if (chev) chev.classList.add('open');
+    if (header) header.classList.add('open');
+  }
+  const el = document.getElementById('chapter-' + id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function toggleMenu() {
+  document.getElementById('hamburger').classList.toggle('open');
+  document.getElementById('mobile-menu').classList.toggle('open');
+}
+
+// ── PARSER ────────────────────────────────────────────────────────────────────
+function parseDocHtml(html) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+  const body = doc.body;
+  if (!body) return [];
+
+  const chapters = [];
+  let currentChapter = null;
+  let currentSection = null;
+
+  function cleanText(el) {
+    // Remove br elements before reading text
+    el.querySelectorAll('br').forEach(br => br.replaceWith(' '));
+    return (el.textContent || '').trim()
+      .replace(/\u00a0/g, ' ')
+      .replace(/\s+/g, ' ').trim();
+  }
+
+  function isSubLabel(text) {
+    return /^[a-z]$/.test(text) || /^\d{1,2}$/.test(text);
+  }
+
+  // Google published docs wrap content in divs — walk all descendants
+  function* walkNodes(parent) {
+    for (const node of parent.children) {
+      yield node;
+      yield* walkNodes(node);
+    }
+  }
+
+  // Debug: log first few tags seen
+  const firstTags = [...body.children].slice(0,5).map(n=>n.tagName+':'+n.textContent.trim().slice(0,30));
+  console.log('Top level tags:', firstTags);
+  const allH1 = doc.querySelectorAll('h1,h2,h3');
+  console.log('All headings found:', allH1.length, [...allH1].slice(0,3).map(h=>h.tagName+':'+h.textContent.trim().slice(0,40)));
+
+  for (const node of doc.querySelectorAll('h1,h2,h3,p')) {
+    const tag = node.tagName.toLowerCase();
+    const text = cleanText(node);
+
+    if (tag === 'h1') {
+      if (!text) continue;
+      const id = CHAPTER_IDS[text.toUpperCase()] || text.toLowerCase().replace(/[^a-z]/g, '');
+      currentChapter = { title: text, id, sections: [], intro: [] };
+      currentSection = null;
+      chapters.push(currentChapter);
+    } else if (tag === 'h2' || tag === 'h3') {
+      if (!text || !currentChapter) continue;
+      currentSection = { title: text, items: [] };
+      currentChapter.sections.push(currentSection);
+    } else if (tag === 'p') {
+      if (!text) continue;
+      const target = currentSection || currentChapter;
+      if (!target) continue;
+      const arr = currentSection ? currentSection.items : currentChapter.intro;
+      if (isSubLabel(text)) {
+        arr.push({ type: 'label', text });
+      } else {
+        arr.push({ type: 'para', text });
+      }
+    }
+  }
+  return chapters;
+}
+
+function renderItems(items) {
+  let html = '';
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    if (item.type === 'label') {
+      // Check if next item is a para — render inline
+      const next = items[i + 1];
+      if (next && next.type === 'para') {
+        html += `<div class="rule-item"><span class="rule-label">${item.text}</span><span class="rule-text">${next.text}</span></div>`;
+        i++; // skip next
+      } else {
+        html += `<div class="rule-label-only">${item.text}</div>`;
+      }
+    } else {
+      html += `<p class="rule-para">${item.text}</p>`;
+    }
+  }
+  return html;
+}
+
+function renderChapters(chapters) {
+  // Build quick nav
+  const validChapters = chapters.filter(ch => ch.id !== 'admins' && (ch.sections.length > 0 || ch.intro.length > 0));
+  const qnav = document.getElementById('quick-nav');
+  if (qnav) {
+    qnav.innerHTML = validChapters.map(ch =>
+      `<button class="quick-nav-btn" onclick="openChapter('${ch.id}')">${CHAPTER_LABELS[ch.id] || ch.title}</button>`
+    ).join('');
+  }
+
+  // Build content
+  let html = '';
+  chapters.filter(ch => ch.id !== 'admins').forEach(ch => {
+    const label = CHAPTER_LABELS[ch.id] || ch.title;
+    html += `<div class="chapter" id="chapter-${ch.id}">
+      <div class="chapter-header" onclick="toggleChapter('${ch.id}')">
+        <div class="chapter-title">${label}</div>
+        <div class="chapter-chevron" id="chev-${ch.id}">▼</div>
+      </div>
+      <div class="chapter-body" id="body-${ch.id}">`;
+
+    // Intro content (before any h2)
+    if (ch.intro.length) {
+      html += `<div class="section-body">${renderItems(ch.intro)}</div>`;
+    }
+
+    // Sections
+    ch.sections.forEach(sec => {
+      html += `<div class="rule-section">
+        <div class="rule-section-title">${sec.title}</div>
+        <div class="section-body">${renderItems(sec.items)}</div>
+      </div>`;
+    });
+
+    html += `</div></div>`;
+  });
+
+  document.getElementById('rules-content').innerHTML = html;
+
+  // Auto-open first non-admins chapter
+  const first = validChapters[0];
+  if (first) openChapter(first.id);
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+async function init() {
+  try {
+    const rulesUrl = await getConfigValue('league_rules_url');
+    if (!rulesUrl) throw new Error('No league_rules_url in config');
+
+    const res = await fetch(rulesUrl);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const html = await res.text();
+    const chapters = parseDocHtml(html);
+    if (!chapters.length) throw new Error('No content found');
+    renderChapters(chapters);
+  } catch(e) {
+    document.getElementById('rules-content').innerHTML =
+      `<div class="loading-msg">Could not load rules: ${e.message}</div>`;
+    console.error(e);
+  }
+}
+
+init();
+</script>
+
+<script src="/legacy/legacy.js?v=legacy-b7c4eff4bb37"></script>
+</body>
+</html>
