@@ -1,40 +1,39 @@
-# Current project status
+# Current operational state — 6 November 2026
 
-Snapshot date: 14 August 2026
+## Live switch complete
 
-## Repository
+- Public website: https://f1xl.co.uk/ — established public URLs retained.
+- Staff entry: https://f1xl.co.uk/admincentre/ — intentionally off public navigation.
+- Previous website: https://f1xl.co.uk/legacy/ — labelled reference, noindex, original sources retained.
+- /next/ page links redirect to production, preserving query/fragment. **/next/fap-google-return.html remains the working Google sign-in callback.**
+- Portal v409, 121 files, same project/deployment/owner/scopes. No new service introduced.
+- 153 connected new-system workbooks/templates renamed from TEST to FAP. IDs and sharing unchanged by those renames; original historical/live source workbooks were not renamed.
+- Real combined intake was already active on 3 November. The new ticket Form and existing application/staff/TT Forms keep their connected destinations.
 
-- Branch inspected: `main`
-- Remote: `https://github.com/F1XL2010/f1xl2010.github.io.git`
-- Baseline commit before handover-document creation: `eb72536` (`Update ticket-outcomes.html`)
-- Working tree was clean before this documentation task.
-- This handover pack is being created as uncommitted work unless the owner separately authorises a commit.
+## Data and checks at the switch
 
-Recent inspected commits:
+S28 has four divisions. The R1–R15 reconciliation includes D3's R14 rerun, tickets, appeals and confirmed ban/carryover decisions, with accepted differences from old LIVE retained. The last readiness checkpoint recorded 1,094 race rows, 155 applied cases and 36 appeals. Those are audit counts, not expected permanent constants.
 
-- `eb72536` — ticket outcomes update.
-- `33d392d` and `ef94b74` — standings updates.
+The final bounded delta check found no new changes to previously verified R15 ranges. It did not establish that every cell outside those ranges was unchanged. Fresh backup comparison covered 169,852 input/formula cells in eleven private recovery copies.
 
-Do not assume later work has been committed; always run Git status and inspect history.
+Actual publication checks verified 61 published release files and all 18 established sitemap routes. The new source feeds returned four divisions in direct_division_v1 mode, 841 career rows, 1,502 honour rows and 216 track records with no feed error notes. These counts demonstrate the dated load, not blanket proof that every historical statistic is knowable.
 
-## Live configuration
+Owner confirmed staff/phone checks on 5 November after v408. Launch browser checks confirmed owner entry, active S28 hub, result/standings loads, no unprocessed ticket submissions and R15 “Round complete”. No fabricated operational submission or save was performed. A final attempted phone-size screenshot did not actually apply the narrow viewport: it is not new mobile proof.
 
-- Current detected season: 28.
-- Configured divisions: 4.
-- Central configuration and Season 28 configuration were publicly reachable as CSV during this review.
-- Full IDs and GIDs are recorded in `DATA-SOURCES.md`.
+Evidence: [release](../reference/launch-2026-11-06/release.json), [Portal parity](../reference/launch-2026-11-06/portal-final-verification.json), [public publication](../reference/launch-2026-11-06/public-publication-verification.json), [feeds](../reference/launch-2026-11-06/public-feed-verification.json), [backup comparison](../reference/launch-2026-11-06/backup-content-verification.json).
 
-## Recently established ticket behaviour
+## Immediate continuation
 
-The Ticket Outcomes display now distinguishes points added by a ticket from points held before the race. Because the Sheet stores running totals after each ticket, the page derives a race-start total from the driver’s first appearance in that race. Verify this behaviour if ticket columns or Sheet formulas change.
+Normal Portal operation can continue. There is no continuing launch freeze and no outstanding instruction to wait for all staff to join. Observe the next genuine weekly workflow and fix a reproducible fault if one occurs; do not manufacture a new full audit to keep busy.
 
-## Strategic position
+Current handover update is documentation only. No post-launch operational data was changed during it. The dated snapshot cannot promise no newer submissions/results exist when another AI reads it.
 
-- Historical standardisation was discussed but deliberately paused.
-- Any future standard structure should represent sessions as optional records rather than fixed horizontal blocks, allowing normal, early-sprint and modern-sprint formats.
-- The original Sheets must remain unchanged during any migration.
-- The immediate governance priority is durable documentation, backups and succession readiness.
+## Boundaries that must remain intact
 
-## Documentation review
+Private Master, People and Registry stay private. Public division workbooks and selected Config views are deliberate. Ticket Write Up public sharing was corrected to reader, preserving named editors and Portal owner writes. Current manual sheet updates feed public readers without a separate duplicate-public-workbook publishing step.
 
-A weekly review was configured in the owner’s current Codex task for Fridays at 10:00 local time. It is instructed to report discrepancies and propose documentation changes without editing code, Sheets, commits or services. This automation is account-specific and must be recreated by a successor.
+Old books and /legacy/ are recovery/reference assets, not the second place to enter new results. /next/ and TEST-named code are not disposable sandboxes. More staff can be onboarded later without moving the site again.
+
+Discord standings/team/calendar jobs retain their schedules; only source pointers changed at launch. Portal-controlled private runner exists. Application-alert route is OFF with no assigned recipient. Review/appeal/TP Discord alerts were dropped. Firebase is rejected.
+
+The authoritative open/deferred list is [KNOWN-ISSUES](KNOWN-ISSUES.md), not the old launch plan. The preserved running log is in [the archive](../archive/2026-11-06-before-refresh/ai-pack/CURRENT-STATUS.md).

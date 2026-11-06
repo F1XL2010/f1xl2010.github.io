@@ -1,0 +1,172 @@
+<script>
+  window.F1XLSeasonStatisticsPreview = (function() {
+    const state = { preview: null, previewSeason: null, request: 0, workbooks: [] };
+    function el(id) { return document.getElementById(id); }
+    function esc(value) {
+      return String(value == null ? '' : value).replace(/[&<>"']/g, function(character) {
+        return ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[character];
+      });
+    }
+    function status(message, error) {
+      const target = el('season-statistics-preview-status');
+      target.innerHTML = '<strong>' + esc(message) + '</strong>';
+      target.classList.toggle('error', !!error);
+    }
+    function reset() {
+      state.request++;
+      state.preview = null;
+      state.previewSeason = null;
+      const selected = el('season-statistics-preview-season').value;
+      const item = state.workbooks.find(function(item) { return String(item.season) === selected; });
+      el('run-season-statistics-preview').disabled = !item;
+      el('run-season-statistics-preview').textContent = 'Run read-only preview';
+      el('prepare-season-career-stats').hidden = !item || !!item.readOnly;
+      el('prepare-season-career-stats').disabled = true;
+      el('prepare-season-career-stats').textContent = 'Prepare / refresh Career Stats';
+      el('verify-season-career-stats').disabled = true;
+      el('verify-season-career-stats').textContent = 'Verify Career Stats';
+      el('season-statistics-preview-output').hidden = true;
+      el('open-season-career-import').hidden = true;
+      el('open-season-career-stats').hidden = true;
+      el('season-maintenance').open = false;
+      status(item ? 'Season ' + selected + ': run a read-only preview to begin.' : 'Choose a connected season to begin.');
+    }
+    function setSeasons(workbooks) {
+      state.workbooks = workbooks.filter(function(item) { return item.available; });
+      const select = el('season-statistics-preview-season'), selected = select.value;
+      select.innerHTML = '<option value="">Choose a season…</option>' + state.workbooks.map(function(item) { return '<option value="' + esc(item.season) + '">Season ' + esc(item.season) + (item.readOnly ? ' · completed history' : '') + '</option>'; }).join('');
+      if (state.workbooks.some(function(item) { return String(item.season) === selected; })) select.value = selected;
+      reset();
+    }
+    function busy() {
+      el('run-season-statistics-preview').disabled = true;
+      el('prepare-season-career-stats').disabled = true;
+      el('verify-season-career-stats').disabled = true;
+    }
+    function finished() {
+      el('run-season-statistics-preview').disabled = false;
+      if (state.preview) render();
+    }
+    function run(button) {
+      const season = el('season-statistics-preview-season').value.trim();
+      if (!season) return status('Choose a connected season to preview.', true);
+      state.preview = null; state.previewSeason = null;
+      const request = ++state.request;
+      button.disabled = true;
+      busy();
+      button.textContent = 'Reading Sheets…';
+      el('season-statistics-preview-output').hidden = true;
+      el('prepare-season-career-stats').disabled = true;
+      el('verify-season-career-stats').disabled = true;
+      el('open-season-career-import').hidden = true;
+      el('open-season-career-stats').hidden = true;
+      status('Reading the connected Division workbooks. Nothing is being written…', false);
+      google.script.run
+        .withSuccessHandler(function(response) {
+          if (request !== state.request) return;
+          state.preview = response;
+          state.previewSeason = season;
+          finished();
+          button.disabled = false;
+          button.textContent = 'Run read-only preview';
+          render();
+          status((response.seasonReadOnly ? response.readOnlyReason + ' ' : '') + response.message + (response.unmatched ? ' Review the unmatched names below.' : ' Every name found a registry match.'), response.unmatched > 0);
+        })
+        .withFailureHandler(function(error) {
+          if (request !== state.request) return;
+          finished();
+          button.disabled = false;
+          button.textContent = 'Run read-only preview';
+          status(error && error.message ? error.message : 'The season statistics could not be previewed.', true);
+        })
+        .getDriverSeasonStatisticsPreview(season, true);
+    }
+    function render() {
+      const preview = state.preview;
+      el('season-statistics-preview-output').hidden = !preview;
+      if (!preview) return;
+      el('season-statistics-preview-matched').textContent = preview.matched;
+      el('season-statistics-preview-unmatched').textContent = preview.unmatched;
+      el('season-statistics-preview-divisions').textContent = preview.divisions;
+      el('season-statistics-preview-master-link').href = preview.masterUrl;
+      el('prepare-season-career-stats').hidden = !!preview.seasonReadOnly;
+      el('prepare-season-career-stats').disabled = !!preview.seasonReadOnly || preview.unmatched > 0;
+      el('verify-season-career-stats').disabled = preview.unmatched > 0;
+      el('season-statistics-preview-sources').textContent = preview.sources.map(function(source) { return 'Division ' + source.division + ': ' + source.workbookName; }).join(' · ');
+      el('season-statistics-preview-rows').innerHTML = preview.rows.map(function(row) {
+        const stateClass = row.matched ? 'complete' : '';
+        return '<tr><td><span class="status ' + stateClass + '">' + esc(row.matched ? 'Matched' : 'Needs review') + '</span></td>' +
+          '<td><strong>' + esc(row.sourceNames.join(' / ')) + '</strong></td>' +
+          '<td>' + esc(row.driverId || '—') + '</td>' +
+          '<td>' + esc(row.currentGamertag || '—') + '</td>' +
+          '<td>' + esc(row.matchType) + '</td>' +
+          '<td class="centred-cell">' + esc(row.divisions.join(', ')) + '</td>' +
+          '<td class="centred-cell">' + esc(row.wins) + '</td>' +
+          '<td class="centred-cell">' + esc(row.podiums) + '</td>' +
+          '<td class="centred-cell">' + esc(row.poles) + '</td>' +
+          '<td class="centred-cell">' + esc(row.sprintWins) + '</td>' +
+          '<td class="centred-cell">' + esc(row.racesStarted) + '</td></tr>';
+      }).join('');
+    }
+    function prepare(button) {
+      const season = el('season-statistics-preview-season').value.trim();
+      if (state.preview && state.preview.seasonReadOnly) return status(state.preview.readOnlyReason, true);
+      if (!state.preview || state.previewSeason !== season || state.preview.unmatched) return status('Run a clean read-only preview and resolve every unmatched driver first.', true);
+      const request = ++state.request;
+      button.disabled = true;
+      busy();
+      button.textContent = 'Refreshing Career Stats…';
+      status('Refreshing the Season Master career export and its permanent Career Stats block. A verified Driver Registry backup is made first…', false);
+      google.script.run
+        .withSuccessHandler(function(response) {
+          if (request !== state.request) return;
+          finished();
+          button.disabled = false;
+          button.textContent = 'Prepare / refresh Career Stats';
+          if (response.importUrl) { el('open-season-career-import').href = response.importUrl; el('open-season-career-import').hidden = false; }
+          if (response.careerUrl) { el('open-season-career-stats').href = response.careerUrl; el('open-season-career-stats').hidden = false; }
+          status((response.message || 'Career Stats refreshed.') + ' If Career Imports shows #REF!, open it and press Allow access once.', false);
+        })
+        .withFailureHandler(function(error) {
+          if (request !== state.request) return;
+          finished();
+          button.disabled = false;
+          button.textContent = 'Prepare / refresh Career Stats';
+          status(error && error.message ? error.message : 'Career Stats could not be refreshed.', true);
+        })
+        .prepareTestCareerSeasonFormulas({ season:season });
+    }
+    function verify(button) {
+      const season = el('season-statistics-preview-season').value.trim();
+      if (!state.preview || state.previewSeason !== season || state.preview.unmatched) return status('Run a clean read-only preview and resolve every unmatched driver first.', true);
+      const request = ++state.request;
+      button.disabled = true;
+      busy();
+      button.textContent = 'Verifying…';
+      status('Comparing the permanent Career Stats block with the calculated Division totals…', false);
+      google.script.run
+        .withSuccessHandler(function(response) {
+          if (request !== state.request) return;
+          finished();
+          button.disabled = false;
+          button.textContent = 'Verify Career Stats';
+          if (response.importUrl) { el('open-season-career-import').href = response.importUrl; el('open-season-career-import').hidden = false; }
+          if (response.careerUrl) { el('open-season-career-stats').href = response.careerUrl; el('open-season-career-stats').hidden = false; }
+          status(response.message || 'Career Stats verification complete.', !response.ok);
+        })
+        .withFailureHandler(function(error) {
+          if (request !== state.request) return;
+          finished();
+          button.disabled = false;
+          button.textContent = 'Verify Career Stats';
+          status(error && error.message ? error.message : 'Career Stats could not be verified.', true);
+        })
+        .verifyTestCareerSeasonFormulas({ season:season });
+    }
+    el('run-season-statistics-preview').addEventListener('click', function(event) { run(event.currentTarget); });
+    el('prepare-season-career-stats').addEventListener('click', function(event) { prepare(event.currentTarget); });
+    el('verify-season-career-stats').addEventListener('click', function(event) { verify(event.currentTarget); });
+    el('season-statistics-preview-season').addEventListener('change', reset);
+    return { render: render, setSeasons: setSeasons };
+  })();
+</script>

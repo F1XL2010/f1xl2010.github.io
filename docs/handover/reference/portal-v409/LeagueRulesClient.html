@@ -1,0 +1,65 @@
+<style>
+  #league-rules-dialog{width:min(1100px,96vw);max-width:96vw;height:min(850px,92dvh);max-height:92dvh;padding:0}
+  #league-rules-dialog .dialog-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px}
+  #league-rules-dialog h2{margin:0;font-size:22px}
+  .league-rules-actions{display:flex;flex-wrap:wrap;gap:8px;padding:0 18px 12px}
+  #league-rules-status{margin:0;padding:0 18px 12px;font-size:14px}
+  #league-rules-reader{height:calc(100% - 150px);overflow:auto;padding:0 18px 18px;box-sizing:border-box;line-height:1.65;overflow-wrap:anywhere}
+  #league-rules-reader details{margin:0 0 12px;border:1px solid var(--line);border-radius:8px;padding:12px 16px}
+  #league-rules-reader summary{font-weight:700;font-size:17px;cursor:pointer}#league-rules-reader h3{font-size:16px;margin:20px 0 8px}#league-rules-reader p{margin:10px 0}#league-rules-reader a{color:var(--green)}
+  @media(max-width:540px){#league-rules-dialog{height:94dvh;max-height:94dvh}#league-rules-dialog .button{min-height:42px}#league-rules-reader{height:calc(100% - 180px);padding:0 12px 12px;font-size:16px}#league-rules-reader details{padding:12px}}
+</style>
+<dialog id="league-rules-dialog" aria-labelledby="league-rules-title">
+  <div class="dialog-head"><h2 id="league-rules-title">League rules</h2><button class="button" type="button" id="league-rules-close">Close</button></div>
+  <div class="league-rules-actions"><a class="button" id="league-rules-open" target="_blank" rel="noopener noreferrer" hidden>Open rules in a new tab ↗</a><a class="button" id="league-rules-edit" target="_blank" rel="noopener noreferrer" data-access-area="maintenance" data-access-level="2" hidden>Edit rules in Google Docs ↗</a></div>
+  <p id="league-rules-status" role="status"></p><div id="league-rules-reader"></div>
+</dialog>
+<script>
+window.F1XLLeagueRules=(function(){
+  const el=id=>document.getElementById(id);let busy=false,loaded=false,lastEditable=!!window.F1XLAccess?.can('maintenance',2);
+  function copyInline(source,target){
+    for(const child of source.childNodes){
+      if(child.nodeType===3)target.appendChild(document.createTextNode(child.textContent));
+      else if(child.nodeType===1){
+        if(child.tagName==='BR'){target.appendChild(document.createElement('br'));continue;}
+        if(child.tagName==='A'&&/^https?:\/\//i.test(child.getAttribute('href')||'')){
+          const a=document.createElement('a');a.href=child.getAttribute('href');a.target='_blank';a.rel='noopener noreferrer';a.textContent=child.textContent;target.appendChild(a);
+        }else copyInline(child,target);
+      }
+    }
+  }
+  function render(html){
+    const doc=new DOMParser().parseFromString(html,'text/html'),root=doc.querySelector('#contents')||doc.body,mount=el('league-rules-reader');
+    mount.replaceChildren();let section=mount,chapters=0;
+    for(const source of root.querySelectorAll('h1,h2,h3,p')){
+      const text=source.textContent.trim();if(!text)continue;
+      if(source.tagName==='H1'){
+        const detail=document.createElement('details'),summary=document.createElement('summary');summary.textContent=text;detail.open=chapters++===0;detail.appendChild(summary);mount.appendChild(detail);section=detail;
+      }else if(chapters){const heading=/^H/.test(source.tagName),node=document.createElement(heading?'h3':'p');if(heading)node.textContent=text;else copyInline(source,node);section.appendChild(node);}
+    }
+    if(!chapters)throw new Error('Could not read the published rules. Use “Open rules in a new tab”.');
+  }
+  function open(){
+    const dialog=el('league-rules-dialog');if(!dialog.open)dialog.showModal();
+    if(loaded||busy)return;
+    busy=true;el('league-rules-status').textContent='Loading league rules…';
+    google.script.run.withSuccessHandler(async data=>{
+      const safePublished=/^https:\/\/docs\.google\.com\/document\/d\/e\/[A-Za-z0-9_-]+\/pub(?:\?[^#]*)?$/.test(data.publishedUrl||'');
+      if(!safePublished){busy=false;el('league-rules-status').textContent='The published rules link needs checking in Website Config.';return;}
+      el('league-rules-open').href=data.publishedUrl;el('league-rules-open').hidden=false;
+      const edit=el('league-rules-edit');edit.hidden=!(data.editUrl&&window.F1XLAccess?.can('maintenance',2));if(!edit.hidden){edit.href=data.editUrl;el('league-rules-status').textContent='Edits are saved in the original Google Doc. Google’s document permissions apply.';}else el('league-rules-status').textContent='';
+      try{const response=await fetch(data.publishedUrl,{credentials:'omit'});if(!response.ok)throw new Error('The published rules are unavailable. Use “Open rules in a new tab”.');render(await response.text());loaded=true;}
+      catch(error){el('league-rules-status').textContent=error.message;}
+      finally{busy=false;}
+    }).withFailureHandler(error=>{busy=false;el('league-rules-status').textContent=error.message||'Could not load league rules. Close and reopen to retry.';}).getLeagueRulesLinks();
+  }
+  document.addEventListener('click',event=>{if(event.target.closest('[data-league-rules]'))open();});
+  el('league-rules-close').addEventListener('click',()=>el('league-rules-dialog').close());
+  window.addEventListener('fap-access-ready',()=>{
+    const editable=!!window.F1XLAccess?.can('maintenance',2),edit=el('league-rules-edit');
+    if(lastEditable!==null&&lastEditable!==editable)loaded=false;lastEditable=editable;
+    edit.hidden=!(editable&&edit.getAttribute('href'));if(!editable)edit.removeAttribute('href');
+  });
+  return {open:open};
+})();
+</script>

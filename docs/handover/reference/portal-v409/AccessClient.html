@@ -1,0 +1,200 @@
+<style>
+  body.fap-locked>.app,body.fap-locked>dialog{display:none!important}
+  #fap-login{max-width:680px;margin:8vh auto;padding:28px;background:var(--panel);border:1px solid var(--line);border-radius:12px}
+  #fap-login[hidden]{display:none} .fap-access-hidden{display:none!important}
+  .fap-readonly-action{display:none!important}
+  .access-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+  .access-options label{display:flex;align-items:center;gap:10px;padding:8px;border-bottom:1px solid var(--line)}
+  .access-options select{margin-left:auto;max-width:170px} .access-options input[type=checkbox]{width:auto}
+  #fap-person-dialog{width:min(1050px,94vw)} #fap-person-dialog form{padding:20px}
+  #fap-person-form>label{display:block;margin:14px 0} #fap-person-form>label>input,#fap-person-form>label>textarea,#fap-profile-form input{display:block;box-sizing:border-box;width:100%;padding:10px;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:7px}
+  #fap-person-dialog .access-options{grid-template-columns:repeat(auto-fit,minmax(290px,1fr))} #fap-person-dialog details{margin:18px 0}
+  #fap-account-bar{padding:8px 0;border-top:1px solid var(--line);margin-top:12px;font-size:13px}
+</style>
+<section id="fap-login" aria-label="Account access">
+  <h1>F1XL Admin Portal</h1><p id="fap-login-status" role="status">Checking your account…</p>
+  <button class="button" id="fap-login-prepare" type="button" hidden>Sign in with Google</button>
+  <a class="button" id="fap-login-link" target="_top" rel="noreferrer" hidden>Continue to Google</a>
+  <button class="button" id="fap-setup" type="button" hidden>Create People & permissions register</button>
+  <form id="fap-profile-form" hidden><label>Gamertag<input id="fap-profile-tag" required maxlength="100"></label><label>Discord name<input id="fap-profile-discord" required maxlength="100"></label><p>Your portal profile is separate from the Driver Database.</p><button class="button" type="submit">Save profile</button></form>
+  <button class="button" type="button" id="fap-account-refresh" hidden>Check approval</button>
+  <button class="button" type="button" id="fap-account-switch" hidden>Sign out</button>
+</section>
+<script>
+window.F1XLAccess=(function(){
+  const raw=google['script']['run'],el=id=>document.getElementById(id),esc=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  let token='',person=null,ready=false,queue=[],boot=window.F1XL_ACCESS_BOOT||{},refreshing=false,peopleData=null,edited=null,sessionEnded=false;
+  const loadStored=k=>{try{return sessionStorage.getItem(k)||'';}catch(e){return '';}};
+  const saveStored=(k,v)=>{try{if(v)sessionStorage.setItem(k,v);else sessionStorage.removeItem(k);}catch(e){}};
+  const call=(name,...args)=>new Promise((resolve,reject)=>raw.withSuccessHandler(resolve).withFailureHandler(reject)[name](...args));
+  function can(area,level=1){return !!person&&(person.owner||Number(person.permissions[area]||0)>=level);}
+  const viewAreas={'discord-control':'maintenance','season-planning':'season_setup','season-master':'archive','driver-database':'drivers','reference-data':'reference','website-data':'publishing','applications':'applications','staff-applications':'principals','driver-streams':'applications','ticket-submissions':'tickets','ticket-processing':'tickets','licence':'licences','results-entry':'results','active-asr':'asr','preseason-intake':'applications','preseason-time-trials':'time_trials','preseason-social-races':'social_races','preseason-placement':'placement','preseason-track-draw':'tracks','preseason-principals':'principals','preseason-draft':'draft','preseason-live-draft':'draft','preseason-allocations':'division_allocations','preseason-preparation':'season_setup','team-principal-hub':'team_hub','postseason':'postseason','preseason-hub':'season_hub','season-launch':'season_hub','active-operations':'movements','people':'people','overview':'navigation','tracker':'maintenance','calendar':'maintenance','time-trials':'maintenance','placements':'maintenance','division-data':'maintenance','asr':'maintenance'};
+  const areaLinks={intake:'applications',trials:'time_trials',tt:'time_trials','social-races':'social_races',placement:'placement',calendar:'calendar',tickets:'tickets',licences:'licences',asr:'asr',results:'results',postseason:'postseason',dates:'season_setup','track-draw':'tracks',principals:'principals',draft:'draft','live-draft':'draft',allocations:'division_allocations',preparation:'season_setup',launch:'publishing'};
+  function permittedView(view,area){if(['season-master','driver-database','applications','ticket-submissions'].includes(view)&&!can('maintenance'))return false;if(view==='team-principal-hub')return can('team_hub')||can('free_agents');if(view==='discord-control')return can('maintenance')||can('draft')||can('results');if(view==='preseason-time-trials')return can('time_trials')||can('time_trial_bookings');if(view==='steward-desk')return can('steward')||can('appeal');if(view==='active-operations')return area?can(area==='calendar'?'calendar':'movements'):can('calendar')||can('movements');return can(viewAreas[view]||'maintenance');}
+  function nodeAllowed(node){
+    const v=node.dataset.view||node.dataset.sidebarView||node.dataset.navTo;if(v&&!permittedView(v,node.dataset.sidebarArea))return false;
+    const a=node.dataset.seasonArea||node.dataset.activeArea;if(a){if(a==='trials'||a==='tt'){if(!can('time_trials')&&!can('time_trial_bookings'))return false;}else if(!can(a==='placement'&&(node.hasAttribute('data-season-area')||node.hasAttribute('data-active-area'))?'movements':areaLinks[a]||'maintenance'))return false;}
+    for(const [key,area]of Object.entries(areaLinks)){if(!node.hasAttribute('data-preseason-'+key))continue;if(key==='tt'&&!(can('time_trials')||can('time_trial_bookings')))return false;if(key!=='tt'&&!can(area))return false;}
+    if((node.hasAttribute('data-test-season-open')||node.hasAttribute('data-preseason-open'))&&!can('season_hub'))return false;
+    if(node.hasAttribute('data-access-area')&&!can(node.dataset.accessArea,Number(node.dataset.accessLevel||1)))return false;
+    return true;
+  }
+  function paint(full=true){
+    if(!person)return;
+    const sections=Array.from(document.querySelectorAll('main>section[id^="view-"]')),visible=sections.filter(s=>!s.hidden),roots=[el('main-navigation'),...visible,...document.querySelectorAll('dialog[open]')].filter(Boolean);
+    const nodes=selector=>full?document.querySelectorAll(selector):Array.from(new Set(roots.flatMap(root=>Array.from(root.querySelectorAll(selector)))));
+    nodes('[data-view],[data-sidebar-view],[data-nav-to],[data-season-area],[data-active-area],[data-access-area],button[data-preseason-dates],button[data-preseason-intake],button[data-preseason-tt],button[data-preseason-social-races],button[data-preseason-track-draw],button[data-preseason-principals],button[data-preseason-placement],button[data-preseason-draft],button[data-preseason-live-draft],button[data-preseason-allocations],button[data-preseason-preparation],button[data-preseason-launch]').forEach(n=>n.classList.toggle('fap-access-hidden',!nodeAllowed(n)));
+    nodes('a[href]').forEach(a=>{if(/^https:\/\/docs\.google\.com\/spreadsheets\//.test(a.href)||/master|sheet-link/.test(a.id))a.classList.toggle('fap-access-hidden',!can('maintenance'));});
+    document.querySelectorAll('#main-navigation details').forEach(d=>d.classList.toggle('fap-access-hidden',!Array.from(d.querySelectorAll('button')).some(b=>!b.classList.contains('fap-access-hidden'))));
+    const bar=el('fap-account-name');if(bar)bar.textContent=(person.gamertag||person.email)+' · '+(person.owner?'Owner':person.roles.join(', '));
+    const label=el('fap-access-level');if(label){const visible=Array.from(document.querySelectorAll('main>section[id^="view-"]')).find(s=>!s.hidden),area=visible&&(visible.id==='view-team-principal-hub'&&!el('tph-free-agents').hidden?'free_agents':viewAreas[visible.id.slice(5)]);label.textContent=area&&can(area)&&!can(area,2)?'View only':'';}
+    // Remove misleading maintenance actions from otherwise accessible screens.
+    const restrictions={'season-maintenance-actions':'maintenance','driver-career-maintenance':'career','finalise-season-accolades':'career','postseason-prepare-career':'career','postseason-finalise-accolades':'career','postseason-close':'publishing','launch-start':'publishing','launch-restart':'publishing','launch-retry':'publishing','launch-tickets':'tickets','start-new-season':'maintenance'};
+    Object.entries(restrictions).forEach(([id,area])=>{const n=el(id);if(n)n.classList.toggle('fap-access-hidden',!can(area,2));});
+    (full?sections:visible).forEach(section=>{const view=section.id.slice(5),area=view==='team-principal-hub'&&!el('tph-free-agents').hidden?'free_agents':viewAreas[view],readonly=area&&can(area)&&!can(area,2);section.querySelectorAll('button').forEach(button=>{if(/^(Save|Confirm|Delete|Remove|Reject|Archive|Add|Create|Process|Apply|Publish|Launch|Close season|Reset|Undo|Finish|Draw|Import|Prepare|Copy roster|Connect|Repair|Refresh and commit|Finalise)\b/i.test(button.textContent.trim()))button.classList.toggle('fap-readonly-action',button.dataset.accessArea?!can(button.dataset.accessArea,Number(button.dataset.accessLevel||2)):!!readonly);});});
+  }
+  function setMessage(s){el('fap-login-status').textContent=s;}
+  function lock(message){ready=false;sessionEnded=true;queue=[];document.querySelectorAll('dialog[open]').forEach(d=>d.close());document.body.classList.add('fap-locked');el('fap-login').hidden=false;setMessage(message);el('fap-login-prepare').hidden=false;}
+  function apply(p){const was=person;person=p;window.F1XLAccessPerson=p;
+    el('fap-profile-form').hidden=!!p.owner;el('fap-profile-tag').value=p.gamertag||'';el('fap-profile-discord').value=p.discord||'';el('fap-account-switch').hidden=false;
+    if(p.status!=='Active'){ready=false;document.body.classList.add('fap-locked');el('fap-login').hidden=false;el('fap-login-prepare').hidden=true;el('fap-account-refresh').hidden=false;setMessage(p.gamertag&&p.discord?'Your profile is awaiting F1XL approval.':'Complete your gamertag and Discord name to request access.');return;}
+    ready=true;sessionEnded=false;document.body.classList.remove('fap-locked');el('fap-login').hidden=true;paint();queue.splice(0).forEach(fn=>fn());
+    // RPC objects may return keys in a different order on the next session check.
+    // Only changed permission levels (or owner status) invalidate open reviews.
+    const accessChanged=was&&(!!was.owner!==!!p.owner||Array.from(new Set(Object.keys(was.permissions||{}).concat(Object.keys(p.permissions||{})))).some(area=>Number(was.permissions?.[area]||0)!==Number(p.permissions?.[area]||0)));
+    if(accessChanged){const current=Array.from(document.querySelectorAll('main>section')).find(s=>!s.hidden);document.querySelectorAll('dialog[open]').forEach(d=>d.close());if(current&&!permittedView(current.id.slice(5))){show('overview');el('season-startup-message').textContent='Your access changed. Choose an available area from the menu.';home([]);}}
+    window.dispatchEvent(new Event('fap-access-ready'));
+  }
+  // One lane for nonessential counter checks. A user's foreground RPC starts
+  // immediately; queued background work waits until the foreground is idle.
+  window.F1XLBackground=(function(){
+    const pending=new Map(),queue=[];let active=false,starting=false,foreground=0;
+    function pump(){if(active||foreground||document.hidden||!queue.length)return;const task=queue.shift();active=true;starting=true;let work;
+      try{work=task.work();}catch(error){work=Promise.reject(error);}finally{starting=false;}
+      const complete=(ok,value)=>{pending.delete(task.key);active=false;if(ok)task.resolve(value);else task.reject(value);setTimeout(pump,0);};
+      Promise.resolve(work).then(value=>complete(true,value),error=>complete(false,error));
+    }
+    function request(key,work){if(pending.has(key))return pending.get(key);let resolve,reject;const promise=new Promise((a,b)=>{resolve=a;reject=b;});pending.set(key,promise);queue.push({key,work,resolve,reject});setTimeout(pump,0);return promise;}
+    function foregroundStart(){if(starting)return ()=>{};foreground++;let finished=false;return ()=>{if(finished)return;finished=true;foreground--;setTimeout(pump,0);};}
+    document.addEventListener('visibilitychange',()=>{if(!document.hidden)pump();});
+    return {request,foregroundStart};
+  })();
+  // Bounded, in-memory diagnostics: method, transport/server wait and synchronous
+  // handler/render time only. No arguments, replies, identities or error text.
+  window.F1XLPerformance=(function(){const records=[];return {recent:()=>records.map(r=>({...r})),record:(operation,started,received,success)=>{records.push({operation,success,waitMs:Math.round(received-started),handlerMs:Math.round(performance.now()-received),totalMs:Math.round(performance.now()-started)});if(records.length>60)records.shift();try{console.info(JSON.stringify({message:'FAP browser performance v1',...records[records.length-1]}));}catch(ignore){}}};})();
+  function dispatch(name,args,ok,bad,context){
+    if(sessionEnded){if(bad)bad({message:'Sign in again before continuing.'},context);return;}
+    const run=()=>{
+      const done=window.F1XLProgress?.begin(name)||(()=>{}),release=window.F1XLBackground.foregroundStart(),started=performance.now();let settled=false;
+      const finish=(success,handler)=>{if(settled)return;settled=true;const received=performance.now();done();try{handler();}finally{window.F1XLPerformance.record(name,started,received,success);release();}};
+      try{raw.withSuccessHandler(result=>finish(true,()=>{if(!ready)return;if(ok)ok(result,context);schedulePaint();})).withFailureHandler(error=>finish(false,()=>{if(/SIGN_IN_REQUIRED|ACCESS_REMOVED/.test(error.message||''))lock(error.message);if(bad)bad(error,context);}))['fapCall'](token,name,args);}
+      catch(error){finish(false,()=>{if(bad)bad(error,context);});}
+    };if(ready)run();else queue.push(run);
+  }
+  function runner(ok,bad,context){return new Proxy({}, {get(t,key){if(key==='withSuccessHandler')return fn=>runner(fn,bad,context);if(key==='withFailureHandler')return fn=>runner(ok,fn,context);if(key==='withUserObject')return value=>runner(ok,bad,value);return (...args)=>dispatch(key,args,ok,bad,context);}});}
+  window.F1XLRpc=runner();
+  function show(view){document.querySelectorAll('main>section[id^="view-"]').forEach(s=>s.hidden=s.id!=='view-'+view);paint(false);}
+  function home(hubs){
+    const trialTeam=person&&!person.owner&&person.roles.includes('time_trial_team')&&!person.roles.some(r=>['god','admin','allocations_lead','head_steward'].includes(r));
+    const trialSeasons=(hubs||[]).slice().sort((a,b)=>Number(b.season)-Number(a.season)),trialSeason=trialSeasons.find(h=>h.active)||trialSeasons[0];
+    if(trialTeam&&can('time_trials')&&trialSeason&&window.F1XLPreseasonTimeTrials){window.F1XLPreseasonTimeTrials.open(String(trialSeason.season));return true;}
+    const draftOnly=can('draft')&&!['applications','time_trials','placement','movements','results','tickets','season_setup','people','archive'].some(a=>can(a));
+    if(draftOnly&&!(hubs||[]).length){show('overview');el('season-startup-message').textContent='No pre-season draft is available yet. Your draft tools will appear here when the next pre-season is prepared.';return true;}
+    if(can('season_hub'))return false;
+    if(can('team_hub')||can('free_agents')){window.F1XLNavigate('team-principal-hub');return true;}
+    if(can('steward')||can('appeal')){openDesk();return true;}
+    const match=Object.keys(viewAreas).find(v=>!['overview','active-operations','season-launch','preseason-hub'].includes(v)&&permittedView(v));
+    if(match)window.F1XLNavigate(match);else{show('overview');el('season-startup-message').textContent='Your account is approved. Ask F1XL to assign the areas you need.';}return true;
+  }
+  let scheduled=false;function schedulePaint(){if(scheduled)return;scheduled=true;setTimeout(()=>{scheduled=false;paint(false);},0);}
+  document.addEventListener('click',e=>{const b=e.target.closest('button,a');if(b&&person&&!nodeAllowed(b)){e.preventDefault();e.stopImmediatePropagation();}else if(b)schedulePaint();},true);
+  window.addEventListener('f1xl-view-change',schedulePaint);
+  new MutationObserver(schedulePaint).observe(el('main-navigation'),{childList:true,subtree:true});
+  async function begin(){try{const bytes=new Uint8Array(32);crypto.getRandomValues(bytes);const proof=Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');saveStored('fap-browser-proof',proof);if(loadStored('fap-browser-proof')!==proof)throw new Error('Allow session storage in this browser to sign in.');const r=await call('fapBeginSignIn',proof);el('fap-login-link').href=r.url;el('fap-login-link').hidden=false;el('fap-login-prepare').hidden=true;setMessage('Continue to Google, then choose your own account.');}catch(e){setMessage(e.message);}}
+  async function refresh(){if(refreshing||!token)return;refreshing=true;try{apply(await call('fapGetSession',token));}catch(e){lock(e.message);}finally{refreshing=false;}}
+  async function signOut(){try{await call('fapSignOut',token);}finally{token='';person=null;queue=[];saveStored('fap-session','');saveStored('fap-signed-out','1');el('fap-login-link').hidden=true;el('fap-login-link').removeAttribute('href');document.querySelectorAll('dialog[open]').forEach(d=>d.close());lock('Signed out.');el('fap-profile-form').hidden=true;el('fap-account-refresh').hidden=true;el('fap-account-switch').hidden=true;}}
+  function googleReturn(){return new Promise((resolve,reject)=>{
+    const timer=setTimeout(()=>reject(new Error('Unable to read the sign-in return. Reload this page and try again.')),15000);
+    google.script.url.getLocation(location=>{clearTimeout(timer);try{
+      const hash=String(location.hash||'');if(!hash.startsWith('google-return=')){resolve(null);return;}
+      if(hash.length>14000)throw new Error('Invalid Google sign-in response.');
+      const parameters=JSON.parse(decodeURIComponent(hash.slice('google-return='.length)));
+      // The return payload lives in the URL fragment only. Do not retain
+      // ?signin=1 after completion: a later refresh should restore the saved
+      // session rather than starting Google sign-in again.
+      google.script.history.replace({}, {}, '');
+      resolve(parameters);
+    }catch(e){reject(e);}});
+  });}
+  function acceptSession(r){saveStored('fap-browser-proof','');saveStored('fap-signed-out','');token=r.token;saveStored('fap-session',token);apply(r.person);}
+  async function start(){try{
+    const returned=await googleReturn();
+    if(returned){setMessage('Completing Google sign-in…');acceptSession(await call('fapCompleteGoogleReturn',returned,loadStored('fap-browser-proof')));return;}
+    const config=await call('fapAuthBootstrap');
+    if(boot.handoff){acceptSession(await call('fapCompleteSignIn',boot.handoff,loadStored('fap-browser-proof')));return;}
+    // Restore a real saved session before interpreting an old ?signin=1
+    // flag. Older return links retained that flag after sign-in, which made
+    // an ordinary refresh ask the user to log in again.
+    token=loadStored('fap-session');
+    if(token){try{apply(await call('fapGetSession',token));return;}catch(e){saveStored('fap-session','');token='';}}
+    // A failed account switch must never silently fall back to the native owner.
+    // The direct sign-in link also works when this browser already knows F1XL.
+    if(boot.error||boot.signIn){setMessage(boot.error||'Sign in with your Google account to request or use F1XL access.');el('fap-login-prepare').hidden=!config.configured;return;}
+    token=config.nativeOwner&&!loadStored('fap-signed-out')?'native-owner':'';
+    if(config.nativeOwner&&!config.registerReady){token='native-owner';setMessage('Create the private People & permissions register to continue. This is a one-time owner setup.');el('fap-setup').hidden=false;return;}
+    if(token){try{apply(await call('fapGetSession',token));return;}catch(e){saveStored('fap-session','');token='';}}
+    setMessage(boot.error||(!config.configured?'The F1XL owner is preparing Google sign-in.':'Sign in with your Google account to request or use F1XL access.'));el('fap-login-prepare').hidden=!config.configured;
+  }catch(e){lock(e.message);}}
+  el('fap-login-prepare').addEventListener('click',begin);el('fap-account-refresh').addEventListener('click',refresh);el('fap-account-switch').addEventListener('click',signOut);
+  el('fap-profile-form').addEventListener('submit',async e=>{e.preventDefault();try{apply(await call('fapSaveProfile',token,{gamertag:el('fap-profile-tag').value,discord:el('fap-profile-discord').value}));}catch(error){setMessage(error.message);}});
+  el('fap-setup').addEventListener('click',async()=>{el('fap-setup').disabled=true;try{await call('fapSetupAccess',token);el('fap-setup').hidden=true;apply(await call('fapGetSession',token));}catch(e){setMessage(e.message);}finally{el('fap-setup').disabled=false;}});
+  setInterval(()=>{if(!document.hidden&&token)refresh();},60000);
+  function rpc(name,...args){return new Promise((resolve,reject)=>dispatch(name,args,resolve,reject));}
+  function renderPeople(){
+    const q=el('fap-people-search').value.trim().toLowerCase(),status=el('fap-people-filter').value;
+    el('fap-people-owner').textContent=peopleData.owner+' · permanent owner · full access';el('fap-people-book').href=peopleData.url;
+    el('fap-people-setup-note').textContent=peopleData.authConfigured?'Google sign-in is configured.':'Google sign-in needs its OAuth client values saved below.';
+    el('fap-google-auth-config').hidden=peopleData.authConfigured;el('fap-google-redirect').value=peopleData.redirect||'';
+    let returnButton=el('fap-google-return-enable');
+    if(!returnButton){returnButton=document.createElement('button');returnButton.id='fap-google-return-enable';returnButton.className='button';returnButton.type='button';returnButton.textContent='Use website sign-in return';el('fap-people-setup-note').after(returnButton);returnButton.addEventListener('click',async()=>{
+      if(!window.confirm('Only continue after the F1XL return page is published and its address is authorised in the Google OAuth client. Switch Google sign-in to that return page?'))return;
+      returnButton.disabled=true;try{await rpc('saveFapGoogleAuthConfig',{useExistingClient:true,redirect:'https://f1xl.co.uk/next/fap-google-return.html'});peopleData=await rpc('getFapPeople');renderPeople();el('fap-people-status').textContent='Google sign-in now uses the website return page. Test signing in from a normal browser.';}catch(e){el('fap-people-status').textContent=e.message;}finally{returnButton.disabled=false;}
+    });}
+    returnButton.hidden=!peopleData.authConfigured||peopleData.redirect==='https://f1xl.co.uk/next/fap-google-return.html';
+    if(peopleData.redirect==='https://f1xl.co.uk/next/fap-google-return.html')el('fap-people-setup-note').textContent='Google sign-in uses the F1XL website return page.';
+    el('fap-people-rows').innerHTML=peopleData.people.filter(p=>(!status||p.status===status)&&[p.email,p.gamertag,p.discord,p.roles.join(' ')].join(' ').toLowerCase().includes(q)).map(p=>'<tr><td><button type="button" class="name-button" data-edit-person="'+esc(p.id)+'">'+esc(p.gamertag||p.googleName||p.email)+'</button><br>'+esc(p.email)+'</td><td>'+esc(p.discord)+(p.discordUserId?'<br><small>'+esc(p.discordUserId)+'</small>':'')+'</td><td>'+esc(p.status)+'</td><td>'+esc(p.roles.map(r=>peopleData.roles[r]?.label||r).join(', '))+'</td><td>'+esc(p.lastSignIn?new Date(p.lastSignIn).toLocaleString('en-GB',{timeZone:'Europe/London'}):'—')+'</td></tr>').join('')||'<tr><td colspan="5">No matching accounts. People appear after signing in with Google.</td></tr>';
+  }
+  async function openPeople(){show('people');try{peopleData=await rpc('getFapPeople');renderPeople();el('fap-people-status').textContent='Choose a person to review their roles and individual access.';}catch(e){el('fap-people-status').textContent=e.message;}}
+  function editPerson(id){edited=peopleData.people.find(p=>p.id===id);if(!edited)return;el('fap-person-title').textContent=edited.gamertag||edited.email;el('fap-person-tag').value=edited.gamertag||'';el('fap-person-discord').value=edited.discord||'';el('fap-person-discord-id').value=edited.discordUserId||'';el('fap-person-status').value=edited.status;el('fap-person-reviewer').value=edited.reviewerName;
+    el('fap-person-roles').innerHTML=Object.entries(Object.assign({},peopleData.roles,edited.roles.includes('viewer')?peopleData.retiredRoles:{})).map(([key,r])=>'<label><input type="checkbox" data-role="'+key+'"'+(edited.roles.includes(key)?' checked':'')+'>'+esc(r.label)+'</label>').join('');
+    el('fap-person-areas').innerHTML=Object.entries(peopleData.areas).filter(([k])=>!['people','navigation','season_hub'].includes(k)).map(([key,label])=>'<label>'+esc(label)+'<select data-override="'+key+'">'+[['','Role default'],['0','No access'],['1','View'],['2','Edit']].map(([v,t])=>'<option value="'+v+'"'+(String(edited.overrides[key]??'')===v?' selected':'')+'>'+t+'</option>').join('')+'</select><small data-effective="'+key+'"></small></label>').join('');
+    assignmentDraft=Object.entries(edited.teams).map(([season,team])=>({season,team}));renderAssignments();loadAssignmentChoices(edited.id);el('fap-person-message').textContent='';el('fap-person-dialog').querySelector('details').open=false;effective();el('fap-person-dialog').showModal();el('fap-person-dialog').scrollTop=0;}
+
+  let assignmentChoices=null,assignmentDraft=[];
+  function readAssignments(){return Array.from(el('fap-team-assignments').querySelectorAll('[data-team-row]')).map(row=>({season:row.querySelector('[data-team-season]').value,team:row.querySelector('[data-team-name]').value}));}
+  function renderAssignments(){
+    const seasons=assignmentChoices?.seasons||[];el('fap-team-add').disabled=!assignmentChoices;
+    el('fap-team-assignments').innerHTML=assignmentDraft.map((row,i)=>{const choice=seasons.find(s=>s.season===row.season),known=seasons.some(s=>s.season===row.season);const list=choice?.teams||[];
+      return '<div data-team-row="'+i+'" class="access-options"><label>Season<select data-team-season><option value="">Choose season</option>'+(!known&&row.season?'<option value="'+esc(row.season)+'" selected>S'+esc(row.season)+' (previous assignment)</option>':'')+seasons.map(s=>'<option value="'+esc(s.season)+'"'+(s.season===row.season?' selected':'')+'>S'+esc(s.season)+(s.active?' · active':'')+'</option>').join('')+'</select></label><label>Team<select data-team-name><option value="">Choose team</option>'+(!list.includes(row.team)&&row.team?'<option value="'+esc(row.team)+'" selected>'+esc(row.team)+' (previous assignment)</option>':'')+list.map(t=>'<option value="'+esc(t)+'"'+(t===row.team?' selected':'')+'>'+esc(t)+'</option>').join('')+'</select></label><button type="button" class="button" data-team-remove="'+i+'">Remove assignment</button></div>';
+    }).join('')||'<p>No team assigned. Team Principals need a season and team; Free Agent Coordinators do not.</p>';
+  }
+  async function loadAssignmentChoices(id){el('fap-team-choices-status').textContent='Loading season and team choices…';try{const data=assignmentChoices||await rpc('getFapAssignmentOptions');if(edited?.id!==id)return;assignmentDraft=readAssignments();assignmentChoices=data;renderAssignments();el('fap-team-choices-status').textContent=data.seasons.length?'Choose the active season for current TP access.':'No configured seasons are available yet.';}catch(e){if(edited?.id===id)el('fap-team-choices-status').textContent=e.message;}}
+  function selectedRoles(){return Array.from(el('fap-person-roles').querySelectorAll('input:checked')).map(n=>n.dataset.role);}
+  function effective(){const roles=selectedRoles(),god=roles.includes('god');el('fap-person-areas').querySelectorAll('select').forEach(s=>{s.disabled=god;const level=god?2:(s.value===''?Math.max(0,...roles.map(r=>(peopleData.roles[r]||peopleData.retiredRoles?.[r])?.permissions[s.dataset.override]||0)):Number(s.value));el('fap-person-areas').querySelector('[data-effective="'+s.dataset.override+'"]').textContent=god?'Full access':['None','View','Edit'][level];});}
+  async function savePerson(e){e.preventDefault();const button=el('fap-person-save');button.disabled=true;try{const roles=selectedRoles(),overrides={},teams={};if(!roles.includes('god'))el('fap-person-areas').querySelectorAll('select').forEach(s=>{if(s.value!=='')overrides[s.dataset.override]=Number(s.value);});readAssignments().forEach(row=>{if(!row.season&&!row.team)return;if(!row.season||!row.team)throw Error('Choose a season and team, or remove the empty assignment.');if(teams[row.season])throw Error('Assign only one team per season.');teams[row.season]=row.team;});peopleData=await rpc('saveFapPerson',{id:edited.id,revision:edited.revision,gamertag:el('fap-person-tag').value,discord:el('fap-person-discord').value,discordUserId:el('fap-person-discord-id').value,status:el('fap-person-status').value,roles:roles,overrides,teams,reviewerName:el('fap-person-reviewer').value});renderPeople();el('fap-person-dialog').close();el('fap-people-status').textContent='Access saved. New requests use these permissions immediately.';}catch(error){el('fap-person-message').textContent=error.message;}finally{button.disabled=false;}}
+  function bind(){
+    el('fap-people-open').addEventListener('click',openPeople);el('fap-people-refresh').addEventListener('click',openPeople);el('fap-people-search').addEventListener('input',renderPeople);el('fap-people-filter').addEventListener('change',renderPeople);
+    el('fap-people-rows').addEventListener('click',e=>{const b=e.target.closest('[data-edit-person]');if(b)editPerson(b.dataset.editPerson);});el('fap-person-form').addEventListener('submit',savePerson);el('fap-person-close').addEventListener('click',()=>el('fap-person-dialog').close());el('fap-person-form').addEventListener('change',effective);
+    el('fap-team-add').addEventListener('click',()=>{assignmentDraft=readAssignments();assignmentDraft.push({season:assignmentChoices?.seasons.find(s=>s.active)?.season||assignmentChoices?.seasons[0]?.season||'',team:''});renderAssignments();});
+    el('fap-team-assignments').addEventListener('change',e=>{assignmentDraft=readAssignments();if(e.target.hasAttribute('data-team-season')){const i=Number(e.target.closest('[data-team-row]').dataset.teamRow),teams=assignmentChoices?.seasons.find(s=>s.season===assignmentDraft[i].season)?.teams||[];if(!teams.includes(assignmentDraft[i].team))assignmentDraft[i].team='';renderAssignments();}});
+    el('fap-team-assignments').addEventListener('click',e=>{const b=e.target.closest('[data-team-remove]');if(!b)return;assignmentDraft=readAssignments();assignmentDraft.splice(Number(b.dataset.teamRemove),1);renderAssignments();});
+    el('fap-signout').addEventListener('click',signOut);el('fap-desk-open').addEventListener('click',openDesk);
+    el('fap-google-auth-save').addEventListener('click',async()=>{const button=el('fap-google-auth-save');button.disabled=true;try{const r=await rpc('saveFapGoogleAuthConfig',{clientId:el('fap-google-client-id').value,clientSecret:el('fap-google-client-secret').value,redirect:el('fap-google-redirect').value});el('fap-google-client-secret').value='';peopleData.authConfigured=r.configured;renderPeople();el('fap-google-auth-status').textContent='Google sign-in is configured.';}catch(e){el('fap-google-auth-status').textContent=e.message;}finally{button.disabled=false;}});
+    el('fap-install-check').addEventListener('click',async()=>{try{const r=await rpc('checkFapAccessInstallation');el('fap-install-status').textContent=r.endpoints+' registered actions. '+r.message+(r.unguarded.length?' Missing guards: '+r.unguarded.join(', '):'')+(r.unknown.length?' Unregistered functions: '+r.unknown.join(', '):'');}catch(e){el('fap-install-status').textContent=e.message;}});
+    el('fap-audit-open').addEventListener('click',async()=>{try{const r=await rpc('getFapAccessAudit');el('fap-audit-rows').innerHTML=r.rows.map(row=>'<tr>'+[new Date(row[0]).toLocaleString('en-GB',{timeZone:'Europe/London'}),row[4]||row[3],row[5],row[6],row[7]].map(v=>'<td>'+esc(v)+'</td>').join('')+'</tr>').join('');el('fap-audit-panel').hidden=false;}catch(e){el('fap-people-status').textContent=e.message;}});
+  }
+  function openDesk(){show('steward-desk');window.F1XLStewardDesk?.open();}
+  setTimeout(()=>{bind();start();},0);
+  return {can,paint,schedulePaint,home,permittedView,rpc,person:()=>person,openPeople,openDesk};
+})();
+</script>

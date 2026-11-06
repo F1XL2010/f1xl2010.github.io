@@ -1,0 +1,59 @@
+<script>
+window.F1XLPreseasonPreparation=(function(){
+  if(window.F1XLNavigation)window.F1XLNavigation.register('preseason-preparation',()=>state.saving,()=> ({season:state.season}));
+
+  const state={season:'',data:null,busy:false,saving:false,selected:0};
+  function el(id){return document.getElementById(id);}
+  function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function controls(){el('pprep-back').disabled=state.busy;el('pprep-refresh').disabled=state.busy;el('pprep-fields').disabled=state.busy;}
+  function rpc(name,division,after){
+    if(state.busy)return;
+    const d=state.data&&state.data.divisions.find(function(d){return d.division===division;});
+    state.saving=name!=='getPreseasonPreparation';state.busy=true;controls();
+    el('pprep-status').textContent=name==='createPreseasonDivisionWorkbook'?'Creating Division '+division+'… This can take a few minutes. Picks in other divisions can continue. If the browser loses the response, refresh this screen before retrying.':name==='finishPreseasonDivisionWorkbook'?'Finishing the existing workbook and checking obsolete triggers…':name==='copyPreseasonDivisionRoster'?'Copying Division '+division+' to the Master…':'Checking division preparation…';
+    google.script.run.withSuccessHandler(function(data){state.data=data;state.busy=false;state.saving=false;render();controls();el('pprep-status').textContent=data.message||'Preparation updated.';if(after)after(data);})
+      .withFailureHandler(function(error){state.busy=false;state.saving=false;controls();el('pprep-status').textContent=(error.message||'Preparation could not finish.')+' Use Refresh to check the latest saved status.';})[name]({season:state.season,division:division||0,revision:d?d.revision:''});
+  }
+  function render(){
+    const data=state.data;el('pprep-master').href=data.url;el('pprep-master').hidden=false;
+    if(!data.divisions.some(function(d){return d.division===state.selected;}))state.selected=data.divisions[0]&&data.divisions[0].division||0;
+    el('pprep-tabs').innerHTML=data.divisions.map(function(d){return '<button class="button'+(d.division===state.selected?' active':'')+'" type="button" data-pprep-tab="'+d.division+'" aria-pressed="'+(d.division===state.selected)+'">Division '+d.division+'</button>';}).join('');
+    el('pprep-cards').innerHTML=data.divisions.map(function(d){
+      const connection=d.connection;
+      const label=d.state==='Prepared'?(connection&&connection.ready?'Preparation complete':'Connections to approve'):d.state;
+      return '<article class="panel"'+(d.division===state.selected?'':' hidden')+'><h2>Division '+d.division+' <span class="status">'+esc(label)+'</span></h2><p>'+d.count+' drivers · '+d.reserves+' reserves</p>'+
+        (d.issues.length?'<ul>'+d.issues.map(function(i){return '<li>'+esc(i)+'</li>';}).join('')+'</ul>':'')+
+        (d.error?'<p role="alert">'+esc(d.error)+'</p>':'')+
+        '<div class="toolbar"><button class="button" type="button" data-pprep-prepare="'+d.division+'"'+(d.canCopy||d.canCreate||d.canRetry||d.canResume?'':' disabled')+'>'+(d.canCopy?'Prepare division':d.canResume?'Finish existing workbook':d.canRetry?'Retry after binning unfinished copy':'Create division workbook')+'</button> <button class="button" type="button" data-pprep-allocations="'+d.division+'">Review allocations</button></div>'+
+        ((d.canCopy||d.canCreate)?'<details><summary>Individual recovery actions</summary><p class="secondary-line">Prepare division normally copies the confirmed roster into the Master and creates the workbook. Use these only when resuming an interrupted step.</p><div class="toolbar"><button class="button" type="button" data-pprep-copy="'+d.division+'"'+(d.canCopy?'':' disabled')+'>Copy roster to Master</button> <button class="button" type="button" data-pprep-create="'+d.division+'"'+(d.canCreate?'':' disabled')+'>Create division workbook</button></div></details>':'')+
+        (d.canConnect?connections(d,data.url):'')+
+        '<details><summary>Review confirmed roster</summary><div class="table-wrap"><table><thead><tr><th>Driver</th><th>Team</th><th>Tier</th></tr></thead><tbody>'+d.roster.map(function(p){return '<tr><td>'+esc(p.name)+'</td><td>'+esc(p.team)+'</td><td>'+p.tier+'</td></tr>';}).join('')+'</tbody></table></div></details></article>';
+    }).join('')||'<p>Confirm placements to decide the divisions first.</p>';
+  }
+  function connections(d,masterUrl){
+    const c=d.connection||{},tasks=c.tasks||[],first=tasks.find(function(t){return /^Division/.test(t.direction);}),second=tasks.find(function(t){return /^Season Master/.test(t.direction);});
+    const steps=[{ready:c.divisionToMaster===true||c.ready,title:'Let Division '+d.division+' read the Master',text:'This supplies the division’s drivers, teams, calendar and licence data.',url:first&&first.url||d.workbookUrl,where:'Division '+d.division+' workbook',cell:'B13'},
+      {ready:c.masterToDivision===true||c.ready,title:'Let the Master read Division '+d.division,text:'This supplies division results to the Master’s overall standings.',url:second&&second.url||masterUrl,where:'Season Master',cell:'B'+(22+d.division)}];
+    return '<section class="pprep-connections" aria-label="Google Sheets connection steps"><h3>Connect the two workbooks</h3><p>'+(c.ready?'Connections ready. Both permissions have been confirmed.':'Do both steps once for this division. Each link opens Google Sheets in another tab; return here afterwards.')+'</p><div class="pprep-connection-grid">'+steps.map(function(s,i){return '<div class="pprep-connection-step"><h4>'+(i+1)+'. '+esc(s.title)+'</h4><p>'+esc(s.text)+'</p><span class="status">'+(s.ready?'✓ Connected':'Permission needed')+'</span>'+(s.ready?'<p>No action needed for this connection.</p>':'<ol><li><a class="button" target="_blank" rel="noopener" href="'+esc(s.url)+'">Open '+esc(s.where)+' ↗</a></li><li>On <strong>Start Here</strong>, select cell <strong>'+s.cell+'</strong>.</li><li>If it shows <strong>#REF!</strong>, click <strong>Allow access</strong> in the cell’s message.</li></ol>')+'</div>';}).join('')+'</div><div class="toolbar"><button class="button" type="button" data-pprep-connect="'+d.division+'">3. Check both connections</button><span class="secondary-line">'+(c.ready?(d.state==='Prepared'?'This division is prepared. Continue with the other division tabs; publication comes later.':'The links work. Resolve any roster or setup messages above before continuing.'):'After approving both, click here. If Google is still loading, wait briefly and check again.')+'</span></div>'+(c.ready?'':'<details><summary>If Allow access is missing</summary><p>Check the exact cell above, using a Google account that can open both spreadsheets. Wait if the cell says Loading. An existing value may mean permission was already granted—try Check both connections. If there is a different error, keep that message for review.</p></details>')+'</section>';
+  }
+  function open(season){if(state.busy)return;state.season=season;state.data=null;state.selected=0;el('pprep-tabs').innerHTML='';el('pprep-cards').innerHTML='';window.F1XLNavigate('preseason-preparation');el('pprep-title').textContent='S'+season+' Division preparation';el('pprep-back').textContent='← S'+season+' Pre-season';el('pprep-master').hidden=true;rpc('getPreseasonPreparation');}
+  function prepare(division){
+    const d=state.data&&state.data.divisions.find(function(item){return item.division===division;});if(!d)return;
+    if(d.canCopy)return rpc('copyPreseasonDivisionRoster',division,function(){
+      const updated=state.data.divisions.find(function(item){return item.division===division;});
+      if(updated&&updated.canCreate)rpc('createPreseasonDivisionWorkbook',division);
+    });
+    rpc(d.canResume?'finishPreseasonDivisionWorkbook':'createPreseasonDivisionWorkbook',division);
+  }
+  el('pprep-refresh').addEventListener('click',function(){rpc('getPreseasonPreparation');});el('pprep-back').addEventListener('click',function(){window.F1XLPreseasonHub.open(state.season);});
+  el('pprep-tabs').addEventListener('click',function(e){const b=e.target.closest('[data-pprep-tab]');if(b&&!state.busy){state.selected=Number(b.dataset.pprepTab);render();}});
+  el('pprep-cards').addEventListener('click',function(e){if(state.busy)return;const b=e.target.closest('button');if(!b||b.disabled)return;
+    if(b.dataset.pprepPrepare)prepare(Number(b.dataset.pprepPrepare));
+    if(b.dataset.pprepCopy)rpc('copyPreseasonDivisionRoster',Number(b.dataset.pprepCopy));
+    if(b.dataset.pprepCreate){const division=Number(b.dataset.pprepCreate),d=state.data.divisions.find(function(d){return d.division===division;});rpc(d.canResume?'finishPreseasonDivisionWorkbook':'createPreseasonDivisionWorkbook',division);}
+    if(b.dataset.pprepConnect)rpc('connectPreseasonDivisionWorkbook',Number(b.dataset.pprepConnect));
+    if(b.dataset.pprepAllocations)window.F1XLPreseasonAllocations.open(state.season,Number(b.dataset.pprepAllocations));
+  });
+  return {open:open};
+})();
+</script>

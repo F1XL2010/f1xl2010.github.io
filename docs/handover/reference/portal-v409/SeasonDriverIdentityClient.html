@@ -1,0 +1,57 @@
+<script>
+  window.F1XLSeasonDriverIdentity = (function() {
+    const state = { seasons:[], data:null };
+    function el(id) { return document.getElementById(id); }
+    function esc(value) { return String(value == null ? '' : value).replace(/[&<>"']/g, function(character) { return ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[character]; }); }
+    function status(message, error) { const target = el('season-identity-status'); target.innerHTML = '<strong>' + esc(message) + '</strong>'; target.classList.toggle('error', !!error); }
+    function setSeasons(seasons) {
+      state.seasons = (seasons || []).filter(function(season) { return season.available; });
+      const select = el('season-identity-season'), current = select.value;
+      select.innerHTML = '<option value="">Choose a season…</option>' + state.seasons.map(function(season) { return '<option value="' + esc(season.season) + '">Season ' + esc(season.season) + ' · ' + esc(season.mode || 'Modern') + '</option>'; }).join('');
+      if (state.seasons.some(function(season) { return season.season === current; })) select.value = current;
+    }
+    function label(driver) { return driver ? driver.gamertag + ' · ' + driver.driverId : ''; }
+    function driverById(id) { return (state.data && state.data.drivers || []).filter(function(driver) { return driver.driverId === id; })[0] || null; }
+    function load() {
+      const season = el('season-identity-season').value;
+      if (!season) return status('Choose a season first.', true);
+      status('Checking the normal Season Entrants tab against the permanent Driver Database…');
+      google.script.run.withSuccessHandler(function(response) { state.data = response; render(); }).withFailureHandler(function(error) { status(error && error.message ? error.message : 'Driver identities could not be checked.', true); }).getSeasonDriverIdentityMatches({ season:season });
+    }
+    function render() {
+      const data = state.data;
+      el('season-identity-output').hidden = false;
+      el('season-identity-save').hidden = !!data.readOnly || !(data.rows || []).length;
+      el('season-identity-master-link').hidden = !data.masterUrl;
+      if (data.masterUrl) el('season-identity-master-link').href = data.masterUrl;
+      el('season-identity-total').textContent = data.counts.total;
+      el('season-identity-linked').textContent = data.counts.linked;
+      el('season-identity-suggested').textContent = data.counts.suggested;
+      el('season-identity-unresolved').textContent = data.counts.unresolved;
+      const seen = {};
+      el('season-identity-driver-options').innerHTML = (data.drivers || []).map(function(driver) {
+        return [driver.gamertag].concat(driver.aliases || []).filter(function(name) { const clean = String(name || '').trim(); const key = clean.toLowerCase() + '|' + driver.driverId; if (!clean || seen[key]) return false; seen[key] = true; return true; }).map(function(name) { return '<option value="' + esc(name + ' · ' + driver.driverId) + '"></option>'; }).join('');
+      }).join('');
+      el('season-identity-rows').innerHTML = (data.rows || []).map(function(row) {
+        const selected = driverById(row.currentId || row.suggestedId);
+        const badge = row.status === 'linked' ? 'Linked' : row.status === 'suggested' ? 'Suggested — confirm before saving' : row.status === 'conflict' ? 'Conflict' : 'Needs review';
+        return '<tr data-season-identity-row="' + row.sourceRow + '" data-season-gamertag="' + esc(row.seasonGamertag) + '"><td>' + row.sourceRow + '</td><td>' + esc(row.seasonGamertag) + '</td><td><input data-season-driver-match type="text" list="season-identity-driver-options" value="' + esc(label(selected)) + '" placeholder="Search current or previous gamertag"></td><td><span class="status ' + (row.status === 'linked' ? 'complete' : '') + '">' + esc(badge) + '</span><div class="secondary-line">' + esc(row.explanation) + '</div></td></tr>';
+      }).join('');
+      el('season-identity-rows').querySelectorAll('input').forEach(function(input) { input.disabled = !!data.readOnly; });
+      status(data.readOnly ? data.readOnlyReason : (data.message || 'Driver identities checked.'));
+    }
+    function save(button) {
+      if (state.data && state.data.readOnly) return status(state.data.readOnlyReason, true);
+      const rows = Array.prototype.map.call(el('season-identity-rows').querySelectorAll('[data-season-identity-row]'), function(tr) {
+        const text = String(tr.querySelector('[data-season-driver-match]').value || '').trim();
+        const id = text.indexOf(' · ') >= 0 ? text.substring(text.lastIndexOf(' · ') + 3) : text;
+        return { sourceRow:Number(tr.dataset.seasonIdentityRow), seasonGamertag:tr.dataset.seasonGamertag, driverId:driverById(id) ? id : '' };
+      });
+      button.disabled = true; button.textContent = 'Saving…'; status('Writing only the confirmed stable Driver IDs to Season Entrants…');
+      google.script.run.withSuccessHandler(function(response) { button.disabled = false; button.textContent = 'Save confirmed Driver IDs'; state.data = response; render(); }).withFailureHandler(function(error) { button.disabled = false; button.textContent = 'Save confirmed Driver IDs'; status(error && error.message ? error.message : 'Driver IDs could not be saved.', true); }).saveSeasonDriverIdentityMatches({ season:state.data.season, expectedVersion:state.data.version, rows:rows });
+    }
+    el('season-identity-check').addEventListener('click', load);
+    el('season-identity-save').addEventListener('click', function(event) { save(event.currentTarget); });
+    return { setSeasons:setSeasons };
+  })();
+</script>

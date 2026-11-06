@@ -1,45 +1,44 @@
-# Start here — instructions for the replacement AI
+# Start here — replacement AI
 
-You are assisting with the F1XL website. The project owner may have no coding experience. You must act as a careful technical guide, not merely a code generator.
+This pack is designed to let you continue without the original conversation. The owner runs F1XL and is not a developer. The objective is a simple, fast league administration system, backed by manually usable Google Sheets, with a public website that preserves the league's history and established URLs.
 
-## Before doing any work
+## Read this first
 
-1. Read every Markdown file in this `ai-pack` folder.
-2. Read the repository files relevant to the request; never rely only on this documentation.
-3. Run `git status --short --branch` and report whether the working tree is clean.
-4. Treat existing uncommitted work as belonging to the owner.
-5. Do not edit, commit, push, publish, write to Google Sheets, submit Forms or change external services unless the owner’s current request authorises that exact action.
-6. For inspection tasks, remain read-only.
-7. Explain conclusions and proposed changes in plain English.
+1. [CURRENT-STATUS](CURRENT-STATUS.md): what is live, verified and not currently being changed.
+2. [PROJECT-PRINCIPLES](PROJECT-PRINCIPLES.md): how to work with the owner and avoid repeating rejected approaches.
+3. Select the relevant topic below. Read its rules **before** touching code or data.
+4. Inspect the actual repository and relevant deployed source/data read-only. Identify drift since this dated pack; do not treat the pack as a live API response.
+5. Give the owner a brief account of what you found and the next useful step. Do not resume a past “go”, reset, release, consent or deletion as if newly authorised.
 
-## First response after receiving the pack
+**The website switched on 6 November 2026. /next/ is now a compatibility route, not an isolated test environment. TEST in a property/function name does not make an action safe for disposable testing.**
 
-Confirm, without changing anything:
+## Which topic to read
 
-- The repository and branch you can access.
-- The current Git status.
-- That this is a static GitHub Pages website.
-- That Google Sheets are the main live data source.
-- Whether the public central configuration Sheet is reachable.
-- The current configured season and divisions.
-- Any obvious discrepancy between this pack, the repository and the live configuration.
+| Task | Read |
+| --- | --- |
+| Sources, Google IDs, website routing | [ARCHITECTURE](ARCHITECTURE.md), [DATA-SOURCES](DATA-SOURCES.md) |
+| Any sporting/data change | [LEAGUE-RULES-AND-EXCEPTIONS](LEAGUE-RULES-AND-EXCEPTIONS.md) |
+| Applications, TT, draft, season setup, ASR | [PRESEASON-WORKFLOW](PRESEASON-WORKFLOW.md), [WORKFLOWS](WORKFLOWS.md) |
+| Tickets, appeals, penalties, licences | [TICKETS-AND-PENALTIES](TICKETS-AND-PENALTIES.md) |
+| Historical statistics, identities, track/team records | [STATISTICS-AND-HISTORY](STATISTICS-AND-HISTORY.md), [RESULT-IMPORT-VALIDATION](RESULT-IMPORT-VALIDATION.md) |
+| People, permissions, TP/coordinator/reviewer views | [ROLES-AND-ACCESS](ROLES-AND-ACCESS.md) |
+| Discord and alerts | [DISCORD](DISCORD.md) |
+| Designs, reasons and superseded choices | [DECISION-HISTORY](DECISION-HISTORY.md) |
+| What to do next / what not to reopen | [KNOWN-ISSUES](KNOWN-ISSUES.md) |
+| Release, speed changes, regression checks | [OPERATIONS](OPERATIONS.md), [TESTING-CHECKLIST](TESTING-CHECKLIST.md) |
+| Another account, recovery, backups | [BACKUP-AND-RECOVERY](BACKUP-AND-RECOVERY.md), [TRANSFER-AND-MAINTENANCE](TRANSFER-AND-MAINTENANCE.md) |
+| Earlier nuance or a disputed previous claim | [historical index](../archive/HISTORICAL-INDEX.md), [evidence guide](EVIDENCE-AND-COVERAGE.md) |
 
-Then ask what the owner wants to do.
+## Authority and confidence
 
-## Non-negotiable behaviour
+Current owner instruction governs task scope. Explicit sporting rules/confirmed exceptions govern interpretation; flag conflicts rather than rewriting them to fit data. Fresh verified sources establish implementation facts. The latest dated current documents supersede archived proposals. An old assistant conclusion is not proof, and a screenshot is not a database audit.
 
-- Preserve past and present data.
-- Prefer reversible, tested changes.
-- Never overwrite original historical Sheets as part of a migration.
-- Preserve existing public URLs and search visibility unless a properly planned replacement is approved.
-- Do not place secrets in code, public documentation or chat output.
-- Public visitors should not need website accounts.
-- Administrative write access must not be exposed in public browser JavaScript.
-- Keep handover documentation accurate after material approved changes.
-- Do not assume this AI platform, account or conversation will remain available.
+Use these labels when updating the pack: **Owner decision**, **Verified implementation**, **Recorded previous verification**, **Parked/rejected**, **Unconfirmed**. “Built”, “deployed”, “published”, “visually checked”, “owner accepted” and “fully exercised on genuine work” are distinct.
 
-## Communication standard
+The source reference contains the 121 files verified as v409. Names such as DivisionDataServices and PreseasonPreperationService are real remote names, including historical spelling. Fetch fresh HEAD and published content before deploying; do not bulk-upload the local admin-app folder or this old reference.
 
-Lead with the outcome. Describe files as parts of the website rather than expecting the owner to understand HTML, CSS, JavaScript, Git or APIs. State exactly what was changed, what was tested, what remains uncertain and whether anything was committed or published.
+## First response on a new account
 
-Read next: `PROJECT-PRINCIPLES.md`, then `ARCHITECTURE.md` and `DATA-SOURCES.md`.
+Recommend a suitable model/effort before substantive new work; the owner chooses the switch. Confirm what files/access you actually have, current branch/dirty state, and whether the live baseline has changed. Explain only the implications the owner needs. If a connector is missing, continue safe local work and state the exact missing capability; never assume a different account inherits Google/GitHub/Discord sessions.
+
+This pack is context, not authorization to send messages, alter roles, spend money, expose private data, close a season or rerun old maintenance scripts.

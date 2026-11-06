@@ -1,0 +1,143 @@
+<script>
+window.F1XLSeasonPlanning = (function() {
+  if(window.F1XLNavigation)window.F1XLNavigation.register('season-planning',()=>state.dirty,()=> ({season:state.savedSeason}));
+
+  const state={loaded:false,existingMaster:false,busy:false,dirty:false,revision:'',savedSeason:'',url:'',maxRounds:22,plans:[],plan:blank()};
+  const labels={announce:'Tracks / team principals announced',apps:'Applications close',tt:'Time trials close',draft:'Draft'};
+  function blank() { return {season:'',start:'',opens:'',count:0,overrides:{},times:{announce:'19:00',apps:'21:00',tt:'19:00',draft:'19:00'},raceOverrides:{}}; }
+  function el(id) { return document.getElementById(id); }
+  function esc(value) { return String(value==null?'':value).replace(/[&<>"']/g,function(c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function status(message,error) { const target=el('season-planning-status');target.textContent=message;target.classList.toggle('error',!!error); }
+  function day(date) { return new Date(date+'T00:00:00Z').getUTCDay(); }
+  function shift(date,days) { const result=new Date(date+'T00:00:00Z');result.setUTCDate(result.getUTCDate()+days);return result.toISOString().slice(0,10); }
+  function validDate(date) { if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||date<'2000-01-01'||date>'2100-12-31')return false;const parsed=new Date(date+'T00:00:00Z');return !isNaN(parsed.getTime())&&parsed.toISOString().slice(0,10)===date; }
+  function friendly(date) { return new Date(date+'T00:00:00Z').toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric',timeZone:'UTC'}); }
+  function schedule(plan) {
+    if(!validDate(plan.start))return {dates:{},races:[],socials:[]};
+    const draft=plan.overrides.draft||shift(plan.start,-((day(plan.start)-3+7)%7||7));
+    if(!validDate(draft))return {dates:{},races:[],socials:[]};
+    const defaults={draft:draft,announce:shift(draft,-7),apps:shift(draft,-2),tt:shift(draft,-1)};
+    const dates={};Object.keys(labels).forEach(function(key) { dates[key]=plan.overrides[key]||defaults[key]; });
+    const races=[];
+    for(let i=1;i<=Math.min(plan.count,state.maxRounds);i++)races.push(i===1?plan.start:plan.raceOverrides[i]||shift(plan.start,7*(i-1)));
+    const socials=[];
+    if(validDate(plan.opens)&&plan.opens<=plan.start&&new Date(plan.start)-new Date(plan.opens)<=366*86400000) {
+      let sunday=shift(plan.opens,(7-day(plan.opens))%7);
+      while(sunday<plan.start) { socials.push(sunday);sunday=shift(sunday,7); }
+    }
+    return {dates:dates,races:races,socials:socials};
+  }
+  function validation(plan,result) {
+    if(!/^\d{1,4}(?:\.5)?$/.test(plan.season)||Number(plan.season)<1)return 'Enter the season number.';
+    if(!validDate(plan.start)||!validDate(plan.opens))return 'Choose an opening race date and an applications opening date.';
+    if(!Number.isInteger(plan.count)||plan.count<1||plan.count>state.maxRounds)return 'Choose between 1 and '+state.maxRounds+' rounds.';
+    const d=result.dates;
+    if(Object.keys(labels).some(function(key) { return !validDate(d[key]); }))return 'Check the preseason dates.';
+    if(!(plan.opens<=d.apps&&d.apps<d.tt&&d.tt<d.draft&&d.draft<plan.start&&d.announce<=d.draft))return 'Check the order: applications open, applications close, time trials close, draft, then opening race. Announcements must be no later than the draft.';
+    if(new Date(plan.start)-new Date(plan.opens)>366*86400000)return 'Applications opening must be within a year of the opening race.';
+    if(!plan.times.apps||!plan.times.tt)return 'Application and time-trial closing times are required.';
+    if(result.races.some(function(date,i) { return !validDate(date)||(i>0&&date<=result.races[i-1]); }))return 'Each race date must be valid and later than the previous round.';
+    return '';
+  }
+  function busy(value) {
+    state.busy=value;el('season-planning-fields').disabled=value||state.existingMaster;
+    ['season-planning-refresh'].forEach(function(id) { el(id).disabled=value; });
+    el('season-planning-save').disabled=value||state.existingMaster;
+    el('season-planning-save').textContent=value?'Working…':'Save to Season Master';
+  }
+  function markDirty() { state.dirty=true;el('season-planning-save-state').textContent='Unsaved changes'; }
+  function setBasics() {
+    const p=state.plan;
+    el('season-planning-fields').hidden=state.existingMaster;
+    el('season-planning-validation').hidden=state.existingMaster;
+    el('season-planning-save').hidden=state.existingMaster;
+    el('preseason-dates-back').hidden=!state.savedSeason||state.existingMaster;
+    el('preseason-dates-back').textContent='Back to S'+state.savedSeason+' Pre-season';
+    el('season-planning-season').value=p.season;el('season-planning-season').readOnly=!!state.savedSeason;
+    el('season-planning-start').value=p.start;el('season-planning-opens').value=p.opens;el('season-planning-count').value=p.count||'';
+    el('season-planning-count').max=state.maxRounds;
+    el('season-planning-sheet').hidden=!state.url;if(state.url)el('season-planning-sheet').href=state.url;
+    el('season-planning-save-state').textContent=state.dirty?'Unsaved changes':state.savedSeason?'Saved to Season Master':'Not saved yet';
+    render();
+  }
+  function render() {
+    const p=state.plan,result=schedule(p),hasStart=!!result.dates.draft;
+    el('season-planning-milestones').innerHTML=hasStart?Object.keys(labels).map(function(key) {
+      const custom=!!p.overrides[key];
+      return '<div class="planning-event"><div><strong>'+labels[key]+'</strong><span class="secondary-line">'+(custom?'Custom date':'Calculated date')+'</span></div><div class="field"><label for="planning-date-'+key+'">Date</label><input id="planning-date-'+key+'" type="date" data-plan-date="'+key+'" value="'+esc(result.dates[key])+'"></div><div class="field"><label for="planning-time-'+key+'">UK time'+(key==='apps'||key==='tt'?'':' (optional)')+'</label><input id="planning-time-'+key+'" type="time" data-plan-time="'+key+'" value="'+esc(p.times[key])+'"></div><button class="button" type="button" data-plan-reset="'+key+'"'+(custom?'':' hidden')+'>Use default date</button></div>';
+    }).join(''):'<p class="secondary-line">Choose the opening race date to calculate preseason dates.</p>';
+    el('season-planning-races').innerHTML=result.races.map(function(date,i) {
+      return '<div class="planning-race"><label for="planning-round-'+(i+1)+'">Round '+(i+1)+'</label><input id="planning-round-'+(i+1)+'" type="date" data-plan-round="'+(i+1)+'" value="'+esc(date)+'"'+(i===0?' readonly':'')+'><span class="secondary-line">'+(i===0?'Opening race':p.raceOverrides[i+1]?'Custom date':'Weekly date')+'</span>'+(p.raceOverrides[i+1]?'<button class="button" type="button" data-race-reset="'+(i+1)+'">Use weekly date</button>':'')+'</div>';
+    }).join('');
+    el('season-planning-socials').innerHTML=result.socials.length?'<ol class="planning-social-list">'+result.socials.map(function(date) { return '<li>'+esc(friendly(date))+'</li>'; }).join('')+'</ol>':'<p class="secondary-line">'+(validDate(p.opens)&&hasStart?'No Sundays fall between those dates.':'Choose applications opening and the opening race to see the social Sundays.')+'</p>';
+    el('season-planning-validation').textContent=validation(p,result)||'Dates are ready to save. All times use UK local time, including daylight saving.';
+    el('season-planning-validation').classList.toggle('error',!!validation(p,result));
+  }
+  function list() { el('season-planning-title').textContent=state.savedSeason?'S'+state.savedSeason+' Season dates':'Start new season'; }
+  function load(force) {
+    if(state.loaded&&!force)return;
+    if(state.busy)return;
+    if(!window.google||!google.script||!google.script.run)return status('Open the deployed FAP to save or load Season Master dates.',true);
+    busy(true);status('Loading Season Masters…');
+    google.script.run.withSuccessHandler(function(response) {
+      state.loaded=true;state.plans=response.plans;state.maxRounds=response.maxRounds;list();setBasics();busy(false);status('Plan the dates first. Divisions and driver numbers follow after placement.');
+    }).withFailureHandler(function(error) { busy(false);status(error.message||'Saved plans could not be loaded.',true); }).getSeasonPlanningInitial();
+  }
+  function apply(response) {
+    if(response.existingMaster) { state.plan=blank();state.plan.season=response.season;state.savedSeason=response.season;state.url=response.url;state.revision='';state.dirty=false;state.existingMaster=true;list();setBasics();el('season-planning-save-state').textContent='Existing Season Master';return; }
+    state.existingMaster=false;
+    state.loaded=true;
+    state.plan=response.plan;state.revision=response.revision;state.savedSeason=response.plan.season;state.url=response.url;state.dirty=false;
+    if(!state.plans.includes(state.savedSeason))state.plans.push(state.savedSeason);
+    state.plans.sort(function(a,b) { return Number(b)-Number(a); });list();setBasics();
+  }
+  function openSaved(season,onOpen) {
+    if(!season||state.busy)return;
+    if(state.dirty&&!window.confirm('Discard unsaved changes and open the saved plan?')) { return; }
+    busy(true);status('Opening Season '+season+' plan…');
+    google.script.run.withSuccessHandler(function(response) { apply(response);busy(false);status(response.message||'Season '+season+' dates loaded from its Master.');if(onOpen)onOpen(); }).withFailureHandler(function(error) { busy(false);status(error.message||'The plan could not be loaded.',true);if(onOpen)window.F1XLNavigate('season-planning'); }).getSeasonPlan(season);
+  }
+  function save() {
+    const problem=validation(state.plan,schedule(state.plan));if(problem)return status(problem,true);
+    busy(true);status('Saving dates in the Season Master. The first save builds the Master and may take a little while…');
+    google.script.run.withSuccessHandler(function(response) { apply(response);busy(false);status(response.message);if(window.F1XLPreseasonHub)window.F1XLPreseasonHub.saved(response); }).withFailureHandler(function(error) { busy(false);status((error.message||'The plan could not be saved.')+' Your entries remain on this screen.',true); }).saveSeasonPlan(Object.assign({},state.plan,{revision:state.revision}));
+  }
+  el('season-planning-fields').addEventListener('input',markDirty);
+  el('season-planning-fields').addEventListener('change',function(event) {
+    const target=event.target,p=state.plan;
+    if(target.id==='season-planning-count') {
+      const count=Number(target.value);
+      if(count<p.count&&Object.keys(p.raceOverrides).some(function(round) { return Number(round)>count; })&&!window.confirm('Remove the custom race dates beyond round '+count+'?')) { target.value=p.count;return; }
+      Object.keys(p.raceOverrides).forEach(function(round) { if(Number(round)>count)delete p.raceOverrides[round]; });p.count=count;
+    } else if(target.id==='season-planning-start')p.start=target.value;
+    else if(target.id==='season-planning-opens')p.opens=target.value;
+    else if(target.id==='season-planning-season')p.season=target.value.trim();
+    else if(target.dataset.planDate)p.overrides[target.dataset.planDate]=target.value;
+    else if(target.dataset.planTime)p.times[target.dataset.planTime]=target.value;
+    else if(target.dataset.planRound)p.raceOverrides[target.dataset.planRound]=target.value;
+    else return;
+    markDirty();render();
+  });
+  el('season-planning-fields').addEventListener('click',function(event) {
+    const reset=event.target.closest('[data-plan-reset]'),race=event.target.closest('[data-race-reset]');
+    if(reset)delete state.plan.overrides[reset.dataset.planReset];else if(race)delete state.plan.raceOverrides[race.dataset.raceReset];else return;
+    markDirty();render();
+  });
+  function begin() {
+    if(state.busy)return false;
+    if(state.dirty&&!window.confirm('Discard unsaved changes and start a blank plan?'))return false;
+    state.existingMaster=false;busy(false);state.plan=blank();state.revision='';state.savedSeason='';state.url='';state.dirty=false;list();setBasics();status('Enter the dates for a new season plan.');
+    return true;
+  }
+  el('season-planning-refresh').addEventListener('click',function() { if(state.savedSeason)openSaved(state.savedSeason);else load(true); });
+  el('season-planning-save').addEventListener('click',save);
+  el('preseason-dates-back').addEventListener('click',function() { if(window.F1XLPreseasonHub)window.F1XLPreseasonHub.open(state.savedSeason); });
+  window.addEventListener('beforeunload',function(event) { if(state.dirty) { event.preventDefault();event.returnValue=''; } });
+  setBasics();
+  return {load:load,begin:begin,openSeason:function(season) {
+    if(state.busy)return;
+    if(state.savedSeason===season&&!state.existingMaster)window.F1XLNavigate('season-planning');
+    else openSaved(season,function() { window.F1XLNavigate('season-planning'); });
+  }};
+})();
+</script>

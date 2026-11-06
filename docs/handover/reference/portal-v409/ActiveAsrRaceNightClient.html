@@ -1,0 +1,48 @@
+<style>
+ #asr-night{position:fixed;inset:0;width:100vw;height:100dvh;max-width:none;max-height:none;margin:0;border:0;padding:22px 30px;background:radial-gradient(ellipse at top right,#153c34,#0a151b 68%);color:#f3faf7;box-sizing:border-box}
+ #asr-night[open]{display:flex;flex-direction:column;gap:12px}#asr-night::backdrop{background:#050c10}
+ #asr-night header{display:flex;align-items:center;gap:22px}#asr-night-logo{width:145px;height:auto;object-fit:contain}#asr-night h1{font-size:30px;margin:0}#asr-night-meta{color:#a9c5ba;font-size:14px;margin-top:3px}
+ #asr-night .night-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-left:auto}#asr-night .night-tabs{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+ #asr-night .night-tabs label{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:13px;white-space:nowrap}#asr-night-auto{width:auto;margin:0}#asr-night .button{font-size:13px;padding:7px 11px;color:inherit}
+ #asr-night-content{flex:1;min-height:0;display:flex;flex-direction:column;gap:12px;overflow:auto}#asr-night .night-columns{display:grid;grid-template-columns:1fr 1fr;gap:22px;min-height:0;flex:1}
+ #asr-night .night-list{display:grid;grid-template-rows:repeat(var(--night-rows),minmax(32px,1fr));gap:3px;min-height:0}
+ #asr-night .night-row{display:grid;grid-template-columns:42px minmax(0,1fr) minmax(80px,115px) 40px;gap:9px;align-items:center;padding:1px 10px;background:#ffffff08;border-left:3px solid #2b5247;border-radius:4px;min-height:0}
+ #asr-night .night-row:first-child{border-left-color:#4bdc99}#asr-night .night-position{font-size:18px;font-weight:800;color:#82e8b1}#asr-night .night-driver{font-size:16px;line-height:18px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ #asr-night .night-team{font-size:11px;line-height:13px;color:#a5c6b7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#asr-night .night-time{font-variant-numeric:tabular-nums;font-size:14px;text-align:right}#asr-night .night-points{font-size:19px;font-weight:800;text-align:right}
+ #asr-night .night-team-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(var(--night-rows),minmax(85px,1fr));gap:12px;flex:1;min-height:0}
+ #asr-night .night-team-card{display:flex;flex-direction:column;justify-content:center;border:1px solid #31584b;border-top:3px solid #4bdc99;background:#12271fd9;border-radius:8px;padding:12px 16px;min-height:0}#asr-night .night-team-card h2{font-size:21px;line-height:24px;margin:0 0 6px}#asr-night .night-team-card p{font-size:13px;line-height:18px;margin:2px 0;color:#b4cfc4}#asr-night .night-team-card strong{float:right;color:#82e8b1}
+ #asr-night .night-leaders{display:flex;gap:20px;background:#23453688;border:1px solid #3a6b55;padding:10px 16px;border-radius:8px}#asr-night .night-leaders div{flex:1;min-width:0}#asr-night .night-leaders small{display:block;color:#afcbbc}#asr-night .night-leaders strong{font-size:20px}
+ #asr-night-status{font-size:12px;color:#a5c6b7;min-height:16px}#asr-night-status[data-error=true]{color:#ffb696}#asr-night .night-empty{margin:auto;text-align:center;color:#b4cfc4;font-size:22px}
+ @media(max-width:760px){#asr-night{padding:14px}#asr-night header{flex-wrap:wrap;gap:12px}#asr-night-logo{width:90px}#asr-night h1{font-size:23px}#asr-night .night-columns{display:block}#asr-night .night-list{display:block}#asr-night .night-row{margin-bottom:5px;min-height:44px;grid-template-columns:32px minmax(0,1fr) 78px 30px;gap:5px}#asr-night .night-team-grid{grid-template-columns:1fr;grid-template-rows:none}#asr-night .night-team-card{min-height:92px}#asr-night .night-leaders{flex-direction:column;gap:8px}}
+</style>
+<script>
+window.F1XLAsrRaceNight=(function(){
+ const el=id=>document.getElementById(id),dialog=el('asr-night');
+ const state={season:'',view:'qualifying',data:null,reading:false,generation:0};
+ const esc=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ function status(text,error){el('asr-night-status').textContent=text;el('asr-night-status').dataset.error=!!error;}
+ function render(){const d=state.data;dialog.querySelectorAll('[data-asr-night-view]').forEach(b=>b.classList.toggle('active',b.dataset.asrNightView===state.view));if(!d)return;
+  el('asr-night-title').textContent='S'+d.season+' All Star Race';el('asr-night-meta').textContent=[d.track,d.date,'100% race'].filter(Boolean).join(' · ');
+  const teams=state.view==='teams',race=state.view==='race',rows=race?d.race:d.qualifying,complete=teams||race?d.raceComplete:d.qualifyingComplete;
+  el('asr-night-phase').textContent=(teams?'Team results':race?'Race results':'Qualifying')+' · '+(complete?'Saved results':'Provisional');
+  let html='';
+  if((race||teams)&&d.race.length){const leaders=d.teams.filter(t=>t.position===1&&t.points>0),winner=d.race.find(r=>!isNaN(Number(r.position))&&r.time);if(leaders.length&&winner)html='<div class="night-leaders"><div><small>'+(leaders.length>1?(complete?'Team result tied':'Team lead tied'):(complete?'Winning team':'Leading team'))+'</small><strong>'+esc(leaders.length>2?leaders.length+' teams · '+leaders[0].points+' points':leaders.map(t=>t.team).join(' / '))+'</strong></div><div><small>'+(complete?'Winning driver':'Leading driver')+'</small><strong>'+esc(winner.driver)+'</strong></div></div>';}
+  if(teams){html+='<div class="night-team-grid" style="--night-rows:'+Math.ceil(d.teams.length/3)+'">'+d.teams.map(t=>'<article class="night-team-card"><h2><strong>'+t.points+' <small>pts</small></strong>'+t.position+'. '+esc(t.team)+'</h2>'+t.drivers.map(name=>{const row=d.race.find(r=>r.driver===name);return '<p>'+esc(name)+(row?' · '+row.points+' pts':' · awaiting result')+'</p>';}).join('')+'</article>').join('')+'</div>';}
+  else if(!rows.length)html='<div class="night-empty">Waiting for saved '+(race?'race results':'qualifying results')+'</div>';
+  else{const split=Math.ceil(d.grid/2),list=items=>'<div class="night-list" style="--night-rows:'+split+'">'+items.map(r=>'<div class="night-row"><span class="night-position">'+esc(r.position)+'</span><div><div class="night-driver" title="'+esc(r.driver)+'">'+esc(r.driver)+'</div><div class="night-team">'+esc(r.team)+(race?'':' · '+esc(r.detail||'Tyre not entered'))+'</div></div><span class="night-time">'+esc(r.time||'—')+'</span><span class="night-points">'+(race?r.points:'')+'</span></div>').join('')+'</div>';html+='<div class="night-columns">'+list(rows.slice(0,split))+list(rows.slice(split))+'</div>';}
+  el('asr-night-content').innerHTML=html;
+ }
+ async function poll(force){if(!dialog.open||state.reading||document.hidden||!force&&!el('asr-night-auto').checked)return;state.reading=true;const generation=state.generation;
+  try{const data=await new Promise((resolve,reject)=>google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).getActiveAsrPresentation({season:state.season}));
+    if(generation!==state.generation||!dialog.open)return;const changed=!state.data||state.data.revision!==data.revision;state.data=data;if(changed)render();status('Saved workbook results · checked '+new Date(data.checkedAt).toLocaleTimeString('en-GB')+(el('asr-night-auto').checked?' · auto-update on':' · auto-update paused'));
+  }catch(e){if(generation===state.generation&&dialog.open)status('Update unavailable'+(state.data?' — showing results last checked '+new Date(state.data.checkedAt).toLocaleTimeString('en-GB')+'. ':' — ')+(e.message||String(e)),true);}
+  finally{if(generation===state.generation)state.reading=false;}
+ }
+ function open(season,view){state.generation++;state.reading=false;state.season=String(season);state.view=view==='race'?'race':'qualifying';state.data=null;el('asr-night-title').textContent='S'+state.season+' All Star Race';el('asr-night-meta').textContent='';el('asr-night-phase').textContent='Loading saved results';el('asr-night-content').innerHTML='<div class="night-empty">Loading…</div>';el('asr-night-auto').checked=true;status('');if(!dialog.open)dialog.showModal();poll(true);}
+ dialog.addEventListener('close',()=>{state.generation++;state.reading=false;state.data=null;if(window.F1XLActiveAsr)window.F1XLActiveAsr.load(true);});
+ dialog.addEventListener('click',async e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.asrNightView){state.view=b.dataset.asrNightView;render();}else if(b.id==='asr-night-close'){if(document.fullscreenElement===dialog)await document.exitFullscreen();dialog.close();}else if(b.id==='asr-night-refresh')poll(true);else if(b.id==='asr-night-full'){try{if(document.fullscreenElement===dialog)await document.exitFullscreen();else await dialog.requestFullscreen();}catch(e){status('Use the browser’s full-screen option if full screen is unavailable here.',true);}}});
+ el('asr-night-auto').addEventListener('change',()=>{if(el('asr-night-auto').checked)poll(true);else status('Auto-update paused — showing the last saved results received.');});
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll(false);});setInterval(()=>poll(false),10000);
+ return {open:open};
+})();
+</script>

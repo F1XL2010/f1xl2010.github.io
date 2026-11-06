@@ -1,0 +1,41 @@
+<style>
+#view-discord-control .dc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:16px 0}#view-discord-control .dc-card{padding:20px;min-width:0}#view-discord-control h2{font-size:21px;margin:0 0 12px}#view-discord-control .dc-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:16px 0}#view-discord-control label{display:block;margin:14px 0}#view-discord-control input[type=checkbox]{width:auto;margin-right:8px}#view-discord-control .dc-state{font-size:20px;font-weight:750;color:var(--lime,#d4ef65)}#view-discord-control .dc-description{line-height:1.6}#view-discord-control .dc-history{padding-left:20px}#view-discord-control .dc-history li{margin:12px 0;overflow-wrap:anywhere}#view-discord-control .dc-setup{margin:20px 0}#view-discord-control .dc-setup summary{font-weight:700}#view-discord-control .dc-setup-body{padding:12px 0}#view-discord-control a{overflow-wrap:anywhere}#dcg-message{min-height:24px}#dcg-job{border-left:4px solid var(--lime,#d4ef65)}#dcg-job-detail{line-height:1.6}@media(max-width:720px){#view-discord-control .dc-grid{grid-template-columns:1fr}#view-discord-control .dc-card{padding:16px}}
+</style>
+<section id="view-discord-control" hidden>
+ <header class="topbar"><div><h1>Discord updates</h1></div><button class="button" id="dcg-refresh" type="button">Refresh status</button></header>
+ <p id="dcg-message" role="status" aria-live="polite">Loading…</p>
+ <p class="secondary-line">Draft and website updates here use your private test channel. Application messages have separate controls below. Existing league updates continue as before.</p>
+ <section class="panel dc-card" id="dcg-job" hidden>
+  <h2 id="dcg-job-heading">Current job</h2><p class="dc-state" id="dcg-state" role="status" aria-live="polite"></p><p id="dcg-job-detail"></p><p class="secondary-line" id="dcg-heartbeat"></p>
+  <div class="dc-actions"><button class="button" type="button" id="dcg-pause">Pause</button><button class="button" type="button" id="dcg-resume">Resume</button><button class="button" type="button" id="dcg-finish">Finish announcements</button><a class="button" id="dcg-channel" target="_blank" rel="noopener noreferrer">Open private channel ↗</a></div>
+  <details><summary id="dcg-history-title">Delivery history</summary><ol id="dcg-history" class="dc-history"></ol></details>
+  <details><summary>Technical status</summary><p class="secondary-line">Only needed if the job needs attention.</p><a id="dcg-run" target="_blank" rel="noopener noreferrer" hidden>Open this GitHub run ↗</a></details>
+ </section>
+ <div class="dc-grid">
+  <section class="panel dc-card" id="dcg-draft-card"><h2>Draft announcements</h2><p class="dc-description">Start before the show. Wait for <strong>Ready</strong>, then draft as usual. Only confirmed picks are announced; highlighting a driver does not send a message.</p>
+   <label for="dcg-season">Season<input id="dcg-season" inputmode="decimal" placeholder="e.g. 28" maxlength="6"></label>
+   <label for="dcg-mode">What would you like to run?<select id="dcg-mode"><option value="practice">Practice with example drivers</option><option value="draft">This season’s confirmed draft picks</option></select></label>
+   <label id="dcg-catchup-label" hidden><input id="dcg-catchup" type="checkbox"> Include picks already confirmed before I press Start</label>
+   <p class="secondary-line" id="dcg-draft-help">Practice lasts up to 20 minutes and sends an example once a minute. You can pause or finish at any time.</p>
+   <button class="button" type="button" id="dcg-start">Start practice</button>
+  </section>
+  <section class="panel dc-card" id="dcg-boards-card"><h2>Website updates</h2><p class="dc-description">Refresh the standings, team lists or calendar using the season entered alongside. During rehearsal, the resulting cards appear only in the private channel.</p>
+   <div class="dc-actions"><button class="button" type="button" data-dcg-board="standings">Update standings</button><button class="button" type="button" data-dcg-board="teams">Update teams</button><button class="button" type="button" data-dcg-board="calendar">Update calendar</button></div>
+   <details><summary>Existing league schedule</summary><p class="secondary-line" id="dcg-schedules"></p><p class="secondary-line">These are the current GitHub checks. Changing the league schedules will follow the private rehearsal.</p></details>
+  </section>
+ </div>
+ <details class="panel dc-card dc-setup" id="dcg-applications" hidden><summary>New application messages on Discord</summary><div class="dc-setup-body">
+  <p>A message in <strong>admin notifications</strong>, tagging the Head of Allocations. Phone alerts are controlled by each person in Discord.</p>
+  <p id="dcg-app-state" role="status" aria-live="polite">Loading settings…</p>
+  <p class="secondary-line" id="dcg-app-recipient"></p>
+  <label for="dcg-app-channel">Admin notifications channel link<input id="dcg-app-channel" type="url" placeholder="https://discord.com/channels/…/…" autocomplete="off"></label>
+  <p class="secondary-line">New arrivals only when first enabled. Applications and their answers stay in the existing private sheet. Checks run when the Form is submitted, plus a background check every 15 minutes.</p>
+  <div class="dc-actions"><button class="button" type="button" id="dcg-app-toggle" disabled>Enable Discord messages</button><button class="button" type="button" id="dcg-app-refresh">Refresh application status</button><button class="button" type="button" id="dcg-app-test">Send private example</button><button class="button" type="button" id="dcg-app-retry" hidden>Retry unconfirmed start</button></div>
+  <p class="secondary-line" id="dcg-app-history"></p>
+ </div></details>
+ <details class="panel dc-card dc-setup" id="dcg-setup" hidden><summary>Owner setup · connect GitHub once</summary><div class="dc-setup-body">
+  <p id="dcg-connection"></p><p>The bot token stays in GitHub. This connection allows the Portal to start jobs and save their controls; other users never need a GitHub account.</p>
+  <ol><li>Open <a href="https://github.com/settings/personal-access-tokens/new?name=F1XL%20Portal%20Discord&amp;description=Portal%20Discord%20job%20controls&amp;target_name=F1XL2010" target="_blank" rel="noopener noreferrer">GitHub’s token setup ↗</a> using the account that manages the F1XL website.</li><li>Select only <strong>f1xl2010.github.io</strong>. Give <strong>Actions</strong> and <strong>Contents</strong> read and write access. Use an expiry date you can renew.</li><li>Paste the token below and save. Do not paste it into chat.</li></ol>
+  <label for="dcg-token">GitHub access token<input type="password" id="dcg-token" autocomplete="new-password" maxlength="256" spellcheck="false"></label><button class="button" id="dcg-connect" type="button">Save GitHub connection</button>
+ </div></details>
+</section>

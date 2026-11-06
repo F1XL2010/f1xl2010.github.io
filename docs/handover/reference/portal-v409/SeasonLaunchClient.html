@@ -1,0 +1,74 @@
+<script>
+window.F1XLSeasonLaunch=(function(){
+  if(window.F1XLNavigation)window.F1XLNavigation.register('season-launch',()=>state.saving,()=> ({season:state.season}));
+
+  const state={season:'',data:null,busy:false,saving:false,generation:0};
+  const el=id=>document.getElementById(id),esc=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  function rpc(name,input){return new Promise(function(resolve,reject){google.script.run.withSuccessHandler(resolve).withFailureHandler(reject)[name](input);});}
+  function busy(value){state.busy=value;['launch-start','launch-refresh','launch-restart','launch-back','launch-retry','launch-tickets'].forEach(id=>el(id).disabled=value);document.querySelectorAll('#launch-divisions button,#launch-areas button,#launch-path button').forEach(b=>b.disabled=value);}
+  function status(text){el('launch-status').textContent=text;}
+  function render(){const d=state.data;el('launch-content').hidden=!d;if(!d)return;
+    el('view-season-launch').dataset.season=d.season;if(window.F1XLPreseasonHub)window.F1XLPreseasonHub.checkAttention();
+    el('launch-title').textContent='S'+d.season+(d.active?' Active season':' Season launch');el('launch-eyebrow').textContent=d.active?'Season operations':'Season launch';el('launch-master').href=d.url;
+    el('launch-back').hidden=d.active;el('launch-back').textContent='← S'+d.season+' Pre-season';
+    el('launch-refresh').textContent=d.active?'Refresh hub':'Check readiness';
+    el('launch-start').textContent=d.pending?'Continue launch':d.active?(d.navigationOnly||d.direct?'Check website connections':'Rebuild website data'):'Launch season';el('launch-start').disabled=!d.canLaunch&&!d.navigationOnly;
+    el('launch-maintenance').hidden=!d.active;
+    ['launch-start','launch-restart'].forEach(id=>el(d.active?'launch-maintenance-actions':'launch-actions').appendChild(el(id)));
+    if(d.pending)el('launch-maintenance').open=true;
+    el('launch-retry').hidden=!d.updatesPending;
+    el('launch-restart').hidden=!d.pending;el('launch-website').hidden=!d.active;el('launch-website').href=d.website;
+    el('launch-areas').hidden=!d.active;
+    const connection=el('launch-public-connection');connection.hidden=!d.pending||!d.connectionUrl;connection.href=d.connectionUrl||'#';
+    el('launch-warnings').textContent='';el('launch-warnings').hidden=true;
+    const ticketsReady=!!(d.tickets&&d.tickets.ready);
+    // Once a live season is connected, routine admins work in Tickets. Keep
+    // connection repair behind that page's Setup & help instead of repeating it
+    // as a primary Active Season action.
+    el('launch-ticket-row').hidden=!!d.active&&(ticketsReady||d.navigationOnly);
+    el('launch-ticket-status').hidden=!!d.active&&(ticketsReady||d.navigationOnly);
+    el('launch-ticket-status').textContent=ticketsReady?'Ticket season connections ready':'Ticket connections need attention';
+    const divisionsReady=d.divisions.length>0&&d.divisions.every(v=>v.state==='Prepared'&&v.connection&&v.connection.ready);
+    if(d.active){
+      el('launch-path').innerHTML='';
+      el('launch-help').innerHTML=['Choose a division to enter results in its existing workbook.','The website reads the working sheets automatically after recalculation. Manual spreadsheet edits follow the same route. Website maintenance checks the connections.','Applications and time trials stay open. Use Driver placement to compare and place individual late joiners.','Use Race calendar for dates, tracks or cancelling the remaining rounds.','Open Licences to connect the season once, then manage penalties and bans. Ticket processing stays in its permanent workbook. Preseason records stay private.'].map(t=>'<li>'+esc(t)+'</li>').join('');
+    }else{
+      const stateText=ready=>ready?'Done':'Action needed';
+      el('launch-path').innerHTML='<article class="panel preseason-card portal-stage-card portal-stage-preparation"><span class="secondary-line">Step 1</span><h2>Division workbooks</h2><span class="status '+(divisionsReady?'complete':'')+'">'+stateText(divisionsReady)+'</span><p class="secondary-line">Every division must have a created workbook and both Google Sheets connections marked ready. Return here after finishing the last division.</p><button class="button" type="button" data-launch-path="preparation">'+(divisionsReady?'Review division workbooks':'Open division preparation')+'</button></article>'+
+        '<article class="panel preseason-card portal-stage-card portal-stage-tickets"><span class="secondary-line">Step 2</span><h2>Ticket season setup</h2><span class="status '+(ticketsReady?'complete':'')+'">'+stateText(ticketsReady)+'</span><p class="secondary-line">Connect the permanent ticket workbook to this season. This is required once before launch.</p><button class="button" type="button" data-launch-path="tickets">'+(ticketsReady?'Review ticket setup':'Open ticket setup')+'</button></article>'+
+        '<article class="panel preseason-card portal-stage-card portal-stage-launch"><span class="secondary-line">Step 3</span><h2>Check readiness</h2><span class="status '+(d.canLaunch?'complete':'')+'">'+(d.canLaunch?'Ready':'Waiting on earlier steps')+'</span><p class="secondary-line">Use Check readiness once Steps 1 and 2 are complete. Any remaining issue is shown above, with the division cards below for reference.</p><button class="button" type="button" data-launch-path="check">Check readiness</button></article>'+
+        '<article class="panel preseason-card portal-stage-card portal-stage-launch"><span class="secondary-line">Step 4</span><h2>Launch the season</h2><span class="status '+(d.canLaunch?'ready':'')+'">'+(d.canLaunch?'Ready to launch':'Not ready yet')+'</span><p class="secondary-line">This connects the working division sheets, checks the public season views and marks the season active. Google may ask you to allow the Master connection once. Private preseason records stay private.</p><button class="button" type="button" data-launch-path="launch"'+(d.canLaunch?'':' disabled')+'>'+esc(d.pending?'Continue launch':'Launch season')+'</button></article>';
+      el('launch-help').innerHTML=['Work through the four steps above in order. The Back button returns to the Pre-season hub only; it does not undo work.','If a division needs a roster correction, use Roster corrections from Draft or Create division workbooks, then return here and Check readiness again.','If launch is interrupted, return here and choose Continue launch. Use Restart only when the page explicitly says the saved website preparation must be rebuilt.'].map(t=>'<li>'+esc(t)+'</li>').join('');
+    }
+    el('launch-divisions').innerHTML=d.divisions.slice().sort((a,b)=>a.division-b.division).map(v=>'<article class="panel preseason-card portal-stage-card portal-stage-'+(d.active?'results':'preparation')+'"><h2>Division '+v.division+'</h2>'+(d.active?'':'<span class="status">'+(v.state==='Prepared'&&v.connection&&v.connection.ready?'Connections ready':esc(v.state))+'</span>')+(d.active?'<button class="button" type="button" data-active-results="'+v.division+'">Enter results</button> <a class="button" target="_blank" rel="noopener" href="'+d.website+'standings.html?season='+encodeURIComponent(d.season)+'&div='+v.division+'">Standings ↗</a>':'<button class="button" type="button" data-preseason-preparation="'+esc(d.season)+'">Review / create workbook</button>')+'</article>').join('');
+    status(d.issues.length?d.issues.join(' '):d.updatesPending?'Changes are saved. A website update is pending; use Retry website update.':d.active?(d.direct?'Season active. Website reads the working sheets automatically.':'Season active. Website last updated '+new Date(d.updatedAt).toLocaleString('en-GB')+'.'):d.pending?'Website preparation is saved. Continue to finish launching.':'Ready to launch the season.');
+  }
+  async function refresh(force){if(state.busy)return;const generation=++state.generation;busy(true);status(force?'Checking season and connections…':'Opening season…');try{const d=await rpc('getTestSeasonLaunch',{season:state.season,forceRefresh:!!force,navigationOnly:true});if(generation!==state.generation)return;state.data=d;busy(false);render();}catch(e){if(generation!==state.generation)return;busy(false);status(e.message||String(e));}}
+  function open(season){if(state.saving)return;const same=state.season===String(season);state.generation++;state.busy=false;state.season=String(season);if(!same){state.data=null;el('launch-content').hidden=true;}window.F1XLNavigate('season-launch');refresh();}
+  async function launch(){if(state.busy||!state.data)return;if(state.data.navigationOnly){await refresh(true);return;}if(!state.data.canLaunch)return;state.saving=true;busy(true);try{
+    let progress=await rpc('beginTestSeasonLaunch',{season:state.season,revision:state.data.revision});
+    while(!progress.done){status(progress.step===0?'Preparing public season information…':progress.step<progress.total-1?'Preparing Division '+progress.step+' of '+(progress.total-2)+'…':'Checking the connections and launching to the website…');progress=await rpc('advanceTestSeasonLaunch',{season:state.season,step:progress.step});}
+    busy(false);state.saving=false;window.F1XLPreseasonHub.load();await refresh();
+  }catch(e){busy(false);state.saving=false;status((e.message||String(e))+' Refresh this screen to continue or restart website preparation.');}}
+  el('launch-tickets').addEventListener('click',()=>{if(!state.busy)window.F1XLTicketSeason.open(state.season,'connections');});
+  el('launch-start').addEventListener('click',launch);el('launch-refresh').addEventListener('click',()=>refresh(true));
+  el('launch-retry').addEventListener('click',async()=>{if(state.busy)return;state.saving=true;busy(true);status('Updating the saved changes on the website…');try{await rpc('retryTestSeasonUpdates',{season:state.season});busy(false);state.saving=false;await refresh();}catch(e){busy(false);state.saving=false;status('Changes are saved. Website update still pending: '+(e.message||String(e)));}});
+  el('launch-back').addEventListener('click',()=>window.F1XLPreseasonHub.open(state.season));
+  el('launch-restart').addEventListener('click',async()=>{if(state.busy)return;state.saving=true;busy(true);try{await rpc('restartTestSeasonLaunch',{season:state.season});busy(false);state.saving=false;await refresh();}catch(e){busy(false);state.saving=false;status(e.message||String(e));}});
+  el('launch-divisions').addEventListener('click',e=>{const b=e.target.closest('[data-active-results]');if(b&&!state.busy)window.F1XLResultsEntry.open(state.season,Number(b.dataset.activeResults));});
+  el('launch-path').addEventListener('click',function(e){const b=e.target.closest('[data-launch-path]');if(!b||state.busy)return;const action=b.dataset.launchPath;if(action==='preparation')window.F1XLPreseasonPreparation.open(state.season);else if(action==='tickets')window.F1XLTicketSeason.open(state.season,'connections');else if(action==='check')refresh(true);else if(action==='launch')launch();});
+  function openArea(season,area){
+    if(state.busy)return;
+    if(area==='results')window.F1XLResultsEntry.open(season,0);
+    else if(area==='intake')window.F1XLPreseasonIntake.open(season);
+    else if(area==='trials')window.F1XLPreseasonTimeTrials.open(season);
+    else if(area==='tickets')window.F1XLTicketProcessing.openSeason(season);
+    else if(area==='asr')window.F1XLActiveAsr.open(season);
+    else if(area==='licences')window.F1XLLicence.open(season);
+    else if(area==='postseason')window.F1XLPostseason.openEnd(season);
+    else if(['placement','calendar'].includes(area))window.F1XLActiveSeason.open(season,area);
+  }
+  el('launch-areas').addEventListener('click',e=>{const b=e.target.closest('[data-active-area]');if(b&&!state.busy)openArea(state.season,b.dataset.activeArea);});
+  return {open:open,openArea:openArea};
+})();
+</script>

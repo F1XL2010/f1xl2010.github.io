@@ -1,0 +1,27 @@
+<script>
+window.F1XLStaffAttention=(function(){
+  let data=null,busy=false,last=0,lastSeasons='',again=false;
+  function paint(){
+    document.querySelectorAll('[data-view="staff-applications"],[data-nav-to="staff-applications"],[data-preseason-principals]').forEach(button=>{
+      let item=data;
+      if(button.hasAttribute('data-preseason-principals'))item=data&&data.principals[button.dataset.preseasonPrincipals];
+      let badge=button.querySelector('.staff-attention');if(!badge){badge=document.createElement('span');badge.className='staff-attention application-attention';button.appendChild(badge);}
+      badge.hidden=!item||(item.available&&item.count===0);badge.textContent=item?(item.available?' · '+item.count:' · unavailable'):'';
+      badge.setAttribute('aria-label',item&&item.available?item.count+' applications awaiting review':'Application count unavailable');
+    });
+  }
+  function refresh(force){
+    const seasons=[...new Set(Array.from(document.querySelectorAll('[data-preseason-principals]')).map(b=>b.dataset.preseasonPrincipals))],signature=seasons.join(',');
+    force=force===true;if(document.hidden||!window.F1XLAccess?.can('principals'))return;if(busy){again=again||force||signature!==lastSeasons;return;}
+    if(!force&&signature===lastSeasons&&Date.now()-last<40000)return;
+    busy=true;last=Date.now();lastSeasons=signature;
+    const run=()=>{if(document.hidden||!window.F1XLAccess?.can('principals'))return Promise.resolve();return new Promise(resolve=>{
+      google.script.run.withSuccessHandler(result=>{data=result;paint();resolve();}).withFailureHandler(()=>{data={available:false,principals:{}};paint();resolve();}).getStaffApplicationAttention(seasons,force);
+    });};
+    const request=window.F1XLBackground?window.F1XLBackground.request('staff-attention',run):run();request.finally(()=>{busy=false;if(again){again=false;refresh(true);}});
+  }
+  window.addEventListener('fap-access-ready',()=>refresh());window.addEventListener('f1xl-view-change',()=>{paint();refresh();});
+  setInterval(()=>refresh(),45000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});
+  return {refresh:()=>refresh(true),paint:paint};
+})();
+</script>

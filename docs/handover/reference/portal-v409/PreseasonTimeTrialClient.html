@@ -1,0 +1,110 @@
+<script>
+window.F1XLPreseasonTimeTrials=(function() {
+  if(window.F1XLNavigation)window.F1XLNavigation.register('preseason-time-trials',()=>state.dirty||window.F1XLSelfTimeTrialSubmission?.busy(),()=> ({season:state.season}));
+
+  const state={season:'',data:null,selected:'',busy:false,dirty:false,page:0,view:'bookings',polling:false,lastPoll:0,generation:0};
+  function bookingsOnly(){return !!window.F1XLAccess&&window.F1XLAccess.can('time_trial_bookings')&&!window.F1XLAccess.can('time_trials');}
+  function resultsVisible(){return !!window.F1XLAccess?.can('tt_results');}
+  function allocationsVisible(){return !!window.F1XLAccess?.can('placement');}
+  function readMethod(){return bookingsOnly()?'getPreseasonTimeTrialBookings':'getPreseasonTimeTrials';}
+  function el(id){return document.getElementById(id);}
+  function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function message(v){el('ptt-status').textContent=v;}
+  function canLeave(){if(window.F1XLSelfTimeTrialSubmission?.busy())return false;return !state.dirty||window.confirm('Discard unsaved time-trial edits?');}
+  function busy(value){state.busy=value;el('ptt-fields').disabled=value||!state.data;['ptt-refresh','ptt-back'].forEach(function(id){el(id).disabled=value;});}
+  function rpc(name,payload){
+    if(state.busy)return;state.generation++;busy(true);message(/^(getPreseasonTimeTrials|getPreseasonTimeTrialBookings)$/.test(name)?'Loading time trials…':'Saving…');
+    google.script.run.withSuccessHandler(function(data){state.lastPoll=Date.now();state.data=data;state.dirty=false;busy(false);render();message(data.message||'Ready. Bookings and results are saved in this Season Master.');}).withFailureHandler(function(error){busy(false);message(error.message||'Unable to load or save time trials.');})[name](payload);
+  }
+  function open(season){
+    if(state.busy)return;
+    if(state.season!==season){if(!canLeave())return;state.season=season;state.data=null;state.selected='';state.dirty=false;state.page=0;state.view='bookings';}
+    window.F1XLNavigate('preseason-time-trials');if(resultsVisible())window.F1XLSelfTimeTrialSubmission?.setSeason(season);el('ptt-title').textContent='S'+season+' Time trials';el('ptt-back').textContent='← S'+season+' Pre-season';
+    el('ptt-auto-status').textContent=el('ptt-auto').checked?'Checks every 45 seconds while this screen is open':'Automatic updates paused';
+    if(bookingsOnly())state.view='bookings';showView(state.view);if(state.view==='self'&&resultsVisible())window.F1XLSelfTimeTrialSubmission.load(false);
+    if(!state.data||!state.dirty)rpc(readMethod(),season);
+  }
+  function render(){
+    const data=state.data,booking=bookingsOnly(),tracks=data.tracks||['',''];el('ptt-back').textContent='← S'+data.season+(data.active?' Active season':' Pre-season');document.getElementById('view-preseason-time-trials').dataset.activeSeason=String(!!data.active);if(data.url){el('ptt-master').href=data.url;el('ptt-master').hidden=false;}
+    el('ptt-deadline').textContent=data.active?'Bookings remain open during the season. Booking times use UK local time.':'Time trials close '+data.deadline+'. Booking times use UK local time.';
+    if(window.F1XLActiveSeason)window.F1XLActiveSeason.intakeGuide('view-preseason-time-trials',!!data.active,state.season,true);
+    el('ptt-placement').hidden=!allocationsVisible();
+    document.querySelector('[data-ptt-view="self"]').hidden=!resultsVisible();
+    el('ptt-track-one').value=tracks[0];el('ptt-track-two').value=tracks[1];
+    ['ptt-track-panel','ptt-placement','ptt-recording-guide','ptt-laps-one','ptt-laps-two','ptt-complete-label','ptt-complete-guide'].forEach(function(id){el(id).hidden=id==='ptt-placement'?!allocationsVisible():booking;});
+    document.querySelectorAll('[data-ptt-view="rankings"],[data-ptt-view="self"]').forEach(function(button){button.hidden=booking||(button.dataset.pttView==='self'&&!resultsVisible());});
+    const outstanding=data.entries.filter(function(e){return !e.complete;}).length,booked=data.entries.filter(function(e){return !!e.date&&!e.complete;}).length,completed=data.entries.filter(function(e){return e.complete;}).length;
+    el('ptt-booking-count').textContent=outstanding;el('ptt-booking-count').hidden=outstanding===0;
+    el('ptt-counts').textContent=outstanding+' outstanding · '+booked+' booked'+(booking?'':' · '+completed+' completed (see Completed trials)');
+    renderRows();renderEditor();renderRankings();showView(booking?'bookings':state.view);
+  }
+  function renderRows(){
+    const query=el('ptt-search').value.trim().toLowerCase(),filter=el('ptt-filter').value;
+    const pending=state.data.entries.filter(function(e){return !e.complete;});
+    const rows=pending.filter(function(e){return (e.gamertag+' '+e.driverId+' '+e.admin).toLowerCase().includes(query)&&(filter==='all'||(filter==='booked'?!!e.date:!e.date));}).sort(function(a,b){return (a.date||'9999').localeCompare(b.date||'9999')||(a.time||'99').localeCompare(b.time||'99')||a.gamertag.localeCompare(b.gamertag);});
+    state.page=Math.min(state.page,Math.max(0,Math.ceil(rows.length/50)-1));
+    el('ptt-rows').innerHTML=rows.slice(state.page*50,state.page*50+50).map(function(e){return '<tr><td><button type="button" class="name-button" data-ptt-driver="'+esc(e.driverId)+'">'+esc(e.gamertag)+'</button><span class="secondary-line">'+esc(e.driverId)+'</span></td><td>'+esc(e.date?(e.date+' '+(e.time||'Time TBC')):'Not booked')+'</td><td>'+esc(e.admin||'—')+'</td><td><span class="status">'+esc(e.status)+'</span></td></tr>';}).join('')||'<tr><td colspan="4">'+(pending.length?'No matching outstanding drivers.':state.data.entries.length?'No outstanding time trials. Completed drivers are listed in Completed trials.':'Process applications in Applications & tracker to add drivers here.')+'</td></tr>';
+    el('ptt-page').textContent='Page '+(state.page+1)+' of '+Math.max(1,Math.ceil(rows.length/50));el('ptt-prev').disabled=state.page===0;el('ptt-next').disabled=(state.page+1)*50>=rows.length;
+  }
+  function renderEditor(){
+    const e=state.data.entries.find(function(e){return e.driverId===state.selected&&!e.complete;});el('ptt-editor').hidden=!e;
+    if(!e){state.selected='';el('ptt-driver-title').textContent='';['date','time','admin','notes'].forEach(function(key){el('ptt-'+key).value='';});el('ptt-complete').checked=false;el('ptt-laps-one').innerHTML='';el('ptt-laps-two').innerHTML='';return;}
+    el('ptt-driver-title').textContent=e.gamertag+' · '+e.driverId;
+    ['date','time','admin','notes'].forEach(function(key){el('ptt-'+key).value=e[key]||'';});el('ptt-complete').checked=e.complete;
+    el('ptt-save').textContent=bookingsOnly()?'Save booking':'Save booking & results';
+    if(bookingsOnly()){el('ptt-laps-one').innerHTML='';el('ptt-laps-two').innerHTML='';return;}
+    ['one','two'].forEach(function(track,i){el('ptt-laps-'+track).innerHTML='<legend>'+esc((state.data.tracks||[])[i]||'Track '+(i+1))+'</legend><div class="time-trial-laps">'+e[track].map(function(lap,n){return '<label>Lap '+(n+1)+(n===0?' (excluded)':'')+'<input type="number" min="0" max="59.999" step="0.001" inputmode="decimal" placeholder="32.456" data-ptt-lap="'+track+'" aria-label="Track '+(i+1)+' lap '+(n+1)+'" value="'+esc(lap)+'"></label>';}).join('')+'</div>';});
+  }
+  function renderRankings(){
+    const full=resultsVisible();el('ptt-ranking-rows').closest('table').querySelector('thead').innerHTML=full?'<tr><th>Driver</th><th>Track 1 average</th><th>Track 2 average</th><th>Overall</th><th>Rank</th></tr>':'<tr><th>Driver</th><th>Completed</th></tr>';
+    const completed=state.data.entries.filter(function(e){return e.complete;}).sort(function(a,b){return a.gamertag.localeCompare(b.gamertag);});
+    el('ptt-ranking-count').textContent=completed.length;
+    if(full){const number=v=>v==null?'—':Number(v).toFixed(3);el('ptt-ranking-rows').innerHTML=completed.map(e=>'<tr><td>'+esc(e.gamertag)+'</td><td>'+number(e.averageOne)+'</td><td>'+number(e.averageTwo)+'</td><td>'+number(e.overall)+'</td><td>'+esc(e.rank||'—')+'</td></tr>').join('')||'<tr><td colspan="5">No completed time trials yet.</td></tr>';return;}
+    el('ptt-ranking-rows').innerHTML=completed.map(function(e){const when=e.completedAt&&new Date(e.completedAt);const label=when&&!isNaN(when.getTime())?when.toLocaleString('en-GB',{timeZone:'Europe/London',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'Not recorded';return '<tr><td>'+esc(e.gamertag)+'</td><td>'+esc(label)+'</td></tr>';}).join('')||'<tr><td colspan="2">Completed time trials will appear here.</td></tr>';
+  }
+  function showView(view){
+    if(bookingsOnly()||view==='self'&&!resultsVisible())view='bookings';state.view=view;
+    ['bookings','rankings','self'].forEach(function(name){el('ptt-view-'+name).hidden=name!==view;const button=document.querySelector('[data-ptt-view="'+name+'"]');if(button){button.classList.toggle('active',name===view);button.setAttribute('aria-pressed',String(name===view));}});
+  }
+  document.querySelectorAll('[data-ptt-view]').forEach(function(button){button.addEventListener('click',function(){if(state.busy||window.F1XLSelfTimeTrialSubmission?.busy())return;showView(button.dataset.pttView);if(state.view==='self')window.F1XLSelfTimeTrialSubmission.load(false);});});
+  el('ptt-fields').addEventListener('input',function(e){if(e.target.closest('#ptt-editor')||e.target.id==='ptt-track-one'||e.target.id==='ptt-track-two'){state.dirty=true;message('Unsaved edits');}});
+  el('ptt-rows').addEventListener('click',function(event){const button=event.target.closest('[data-ptt-driver]');if(!button||!state.data.entries.some(function(e){return e.driverId===button.dataset.pttDriver&&!e.complete;})||!canLeave())return;state.selected=button.dataset.pttDriver;state.dirty=false;render();el('ptt-editor').scrollIntoView({block:'nearest'});});
+  el('ptt-save-tracks').addEventListener('click',function(){if(bookingsOnly()||!state.data)return;if(state.selected&&state.dirty&& !window.confirm('Save track names and discard any unsaved booking/lap edits?'))return;rpc('savePreseasonTimeTrialTracks',{season:state.season,revision:state.data.revision,trackOne:el('ptt-track-one').value,trackTwo:el('ptt-track-two').value});});
+  el('ptt-save').addEventListener('click',function(){
+    if(!state.data||!state.data.entries.some(function(e){return e.driverId===state.selected&&!e.complete;}))return;
+    if(!bookingsOnly()&&(el('ptt-track-one').value!==state.data.tracks[0]||el('ptt-track-two').value!==state.data.tracks[1])){message('Save the track names before saving a driver’s trial.');return;}
+    const input={season:state.season,revision:state.data.revision,driverId:state.selected};
+    ['date','time','admin','notes'].forEach(function(key){input[key]=el('ptt-'+key).value;});
+    if(bookingsOnly()){rpc('savePreseasonTimeTrialBooking',input);return;}
+    input.complete=el('ptt-complete').checked;['one','two'].forEach(function(track){input[track]=Array.from(document.querySelectorAll('[data-ptt-lap="'+track+'"]')).map(function(e){return e.value;});});rpc('savePreseasonTimeTrial',input);
+  });
+  el('ptt-refresh').addEventListener('click',function(){if(canLeave())rpc(readMethod(),state.season);});
+  el('ptt-applications').addEventListener('click',function(){if(!state.busy&&canLeave()){state.dirty=false;window.F1XLPreseasonIntake.open(state.season);}});
+  el('ptt-placement').addEventListener('click',function(){if(!state.busy&&state.data&&canLeave()){state.dirty=false;(state.data.active?window.F1XLActiveSeason:window.F1XLPreseasonPlacement).open(state.season);}});
+  el('ptt-back').addEventListener('click',function(){if(state.busy||!canLeave())return;state.dirty=false;(state.data&&state.data.active?window.F1XLSeasonLaunch:window.F1XLPreseasonHub).open(state.season);});
+  ['ptt-search','ptt-filter'].forEach(function(id){el(id).addEventListener('input',function(){if(state.data){state.page=0;renderRows();}});});
+  el('ptt-prev').addEventListener('click',function(){state.page--;renderRows();});el('ptt-next').addEventListener('click',function(){state.page++;renderRows();});
+  function poll(force){
+    if(!state.data||state.busy||state.dirty||state.polling||document.hidden||el('view-preseason-time-trials').hidden||!el('ptt-auto').checked)return;
+    if(force!==true&&Date.now()-state.lastPoll<45000)return;
+    state.polling=true;const season=state.season,revision=state.data.revision,generation=state.generation,method=readMethod();
+    const run=()=>new Promise(resolve=>{
+      if(state.generation!==generation||state.season!==season||state.busy||state.dirty||document.hidden||el('view-preseason-time-trials').hidden||!el('ptt-auto').checked||method!==readMethod()||window.F1XLAccess&&!window.F1XLAccess.can(method==='getPreseasonTimeTrialBookings'?'time_trial_bookings':'time_trials')){resolve();return;}
+      state.lastPoll=Date.now();
+    google.script.run.withSuccessHandler(function(data){
+      resolve();if(state.generation!==generation||state.season!==season||state.busy||state.dirty||document.hidden||el('view-preseason-time-trials').hidden||!el('ptt-auto').checked||method!==readMethod())return;
+      if(data.revision===revision)return;
+      state.data=data;render();el('ptt-auto-status').textContent='Updated '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+' · checks every 45 seconds';
+    }).withFailureHandler(function(){resolve();if(state.generation===generation&&state.season===season&&!state.busy)el('ptt-auto-status').textContent='Background update unavailable. Your edits are retained.';})[method](season);
+    });
+    const request=window.F1XLBackground?window.F1XLBackground.request('tt-workspace:'+season+':'+method,run):run();
+    request.catch(()=>{}).finally(()=>{state.polling=false;});
+  }
+  el('ptt-auto').addEventListener('change',function(){el('ptt-auto-status').textContent=this.checked?'Checking for queue changes…':'Automatic updates paused';if(this.checked)poll(true);});
+  window.addEventListener('f1xl-view-change',()=>poll());
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)poll();});setInterval(poll,45000);
+  function openDriver(season,driverId){open(season);state.selected=driverId;if(state.data){state.dirty=false;render();el('ptt-editor').scrollIntoView({block:'nearest'});}}
+  function invalidate(){if(!state.busy&&!state.dirty)rpc(readMethod(),state.season);}
+  return {open:open,openDriver:openDriver,invalidate:invalidate};
+})();
+</script>

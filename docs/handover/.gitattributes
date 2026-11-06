@@ -1,0 +1,3 @@
+# Preserve the exact archived/source bytes and portable manifest hashes.
+# A Windows checkout must not silently normalize these reference files.
+** -text

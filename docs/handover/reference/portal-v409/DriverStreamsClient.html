@@ -1,0 +1,29 @@
+<style>
+.streams-table{width:100%;min-width:0;table-layout:fixed}.streams-table th,.streams-table td{white-space:normal;overflow-wrap:anywhere;vertical-align:top}.streams-table th:nth-child(1){width:30%}.streams-table th:nth-child(2){width:25%}.streams-table a{display:block;overflow-wrap:anywhere}.streams-table a+a{margin-top:6px}#streams-notes:empty{display:none}@media(max-width:600px){.streams-table th,.streams-table td{padding:10px 8px}}
+</style>
+<script>
+window.F1XLDriverStreams=(function(){
+  const el=id=>document.getElementById(id),esc=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const state={data:null,season:'',seasons:[],request:0};
+  function render(){
+    if(!state.data)return;
+    const query=el('streams-search').value.toLowerCase().trim(),all=state.data.drivers;
+    const rows=all.filter(d=>!query||[d.name,d.discord].join(' ').toLowerCase().includes(query));
+    el('streams-list').innerHTML=rows.map(d=>'<tr><td>'+esc(d.name)+'</td><td>'+esc(d.discord||'—')+'</td><td>'+(d.links.length?d.links.map(link=>'<a href="'+esc(link.url)+'" target="_blank" rel="noopener noreferrer">'+esc(link.url)+'</a>').join(''):'—')+'</td></tr>').join('')||'<tr><td colspan="3">'+(all.length?'No drivers match your search.':'No drivers have been processed or entered for this season yet.')+'</td></tr>';
+  }
+  function paint(data){
+    state.data=data;state.season=data.season||'';if(data.seasons)state.seasons=data.seasons;
+    el('streams-season').innerHTML=state.seasons.map(s=>'<option value="'+esc(s.season)+'"'+(s.season===state.season?' selected':'')+'>Season '+esc(s.season)+'</option>').join('');
+    el('streams-notes').textContent=(data.warnings||[]).join(' ');
+    el('streams-status').textContent=state.season?'Season '+state.season+' · Updated '+new Date(data.refreshedAt).toLocaleString('en-GB'):'No pre-season or active season is available yet.';render();
+  }
+  function load(initial=false){
+    const request=++state.request,season=initial?'':el('streams-season').value||state.season;
+    el('streams-refresh').disabled=true;el('streams-season').disabled=true;el('streams-status').textContent='Loading driver stream links…';
+    const run=google.script.run.withSuccessHandler(data=>{if(request!==state.request)return;el('streams-refresh').disabled=false;el('streams-season').disabled=false;paint(data);}).withFailureHandler(error=>{if(request!==state.request)return;el('streams-refresh').disabled=false;el('streams-season').disabled=false;if(state.data)el('streams-season').value=state.season;el('streams-status').textContent=(error?.message||'Stream links could not load.')+(state.data?' Still showing Season '+state.season+'.':'')+' Use Refresh to retry.';});
+    if(!season)run.getDriverStreamLinksInitial();else run.getDriverStreamLinks({season:season});
+  }
+  el('streams-refresh').onclick=()=>load();el('streams-season').onchange=()=>load();el('streams-search').oninput=render;
+  return {load:()=>load(!state.data)};
+})();
+</script>

@@ -1,88 +1,47 @@
-# Backup, ownership and recovery
+# Backups, recovery and succession
 
-Data preservation is paramount. A Git repository is not a complete backup because most live league data resides in Google.
+A repository is not a backup of live Google data or account access. This pack is a knowledge/source reference, not a full system restore image.
 
-## Assets that need independent protection
+## Verified launch recovery
 
-1. GitHub repository, including branches, tags and Actions workflows.
-2. Central configuration workbook.
-3. Every current and historical season workbook.
-4. Ticket outcomes workbook.
-5. Drivers licence workbook.
-6. Track-record and Hall of Fame/records workbooks.
-7. Google Forms and their response destinations.
-8. Published league-rules Google Doc.
-9. Discord bot configuration and channel ownership information.
-10. GitHub Pages/custom-domain settings and domain registrar/DNS access.
-11. GitHub Actions secret-name inventory and instructions for replacing values.
+Eleven private owner-only native Google copies were created on 6 November for Master, D1–D4, tickets, Config, permanent Registry, People, real intake and Reference Data. Their IDs/links are in [release.json](../reference/launch-2026-11-06/release.json). A comparison of 169,852 captured input/formula cells passed in [backup-content-verification.json](../reference/launch-2026-11-06/backup-content-verification.json).
 
-## Recommended backup set
+Original source books and website are retained. These are deliberate recovery assets, not disposable QA sheets. Native workbook formulas can still recalculate against external dependencies, so dated captured inputs/formulas matter alongside a Drive copy.
 
-Keep at least:
+Original local recovery package:
+- outputs/cutover-package-2026-11-06/recovery/published/ — old published website.
+- recovery/repository/ and recovery/owner-working-copy/ — distinct pre-switch captures.
+- recovery/portal/published-project.json — v408.
+- recovery/portal/name-compatible-recovery-project.json — pre-switch UI with TEST/FAP name compatibility.
+- outputs/cutover-execution-2026-11-06/ — actual execution, source captures and verification.
+These large raw/private captures are not all included in this transfer pack. Locate them on the owner's machine/backups if needed; the packaged selected evidence and v409 source do not replace them.
 
-- A full Git clone or repository archive outside GitHub.
-- Periodic spreadsheet exports in XLSX plus CSV exports of critical tabs.
-- A copy of Form questions/settings and response destinations.
-- A dated copy of this handover folder.
-- A private account-access register stating owner, recovery contact and transfer procedure for each service.
+## Fault-first recovery
 
-Do not put the private access register or secret values in this public repository.
+1. Pause only the affected work if necessary; preserve new submissions and unfinished saves.
+2. Determine whether the fault is public UI/cache, a feed/permission, Portal code, source input/formula, identity mapping or a failed transfer.
+3. Compare the relevant current state to the dated evidence. Never restore everything because one parser or page is wrong.
+4. Prefer a targeted code/UI fix that continues reading current operational books. Restoring old-site sources after new writes can show stale data.
+5. If restoring data is necessary, verify exact workbook/tab/range, newer records and backups; get current authorization for the concrete restore.
+6. Verify state after recovery and document what changed, including any still-pending work.
 
-Use dated, non-destructive folders. Never replace the only previous backup with a new one before verifying the new archive opens correctly.
+**Do not deploy raw v408 against FAP-renamed workbooks.** Use a verified name-compatible recovery baseline if rolling UI back, retaining current Properties/intake/roles. Never restore old Script Properties wholesale over new receipts, accounts, job state or new source connections.
 
-## Validation of a backup
+Do not reconnect a Form as a casual rollback. It may create a new response-tab ID. Preserve all raw responses, archive links and processing receipts and reconcile actual tab IDs before any switch.
 
-A backup is not complete until someone checks:
+## What a successor needs protected elsewhere
 
-- Files can be opened.
-- Sheet exports contain expected tabs and row counts.
-- Repository history exists, not only the latest files.
-- The handover documentation is present.
-- Account-recovery information is current.
-- A second authorised person can locate the backup.
+- Repository/history and current source, not only a preview.
+- Apps Script project/deployment access and securely backed up/recoverable settings.
+- Master/division/ticket/config/registry/people/reference books and required originals.
+- Form definitions, ownership and actual response destinations.
+- Rules Doc, reference Slides, historical sources and any external media assets.
+- Domain/DNS, GitHub Pages/Actions access and service-worker release behavior.
+- Discord application/server/channel access and current bot/GitHub credentials in secure storage.
+- One authorised human who can recover each owning account.
 
-## GitHub Actions secret names currently referenced
+Never place tokens, passwords, OAuth codes, recovery codes, raw People rows or private intake exports in the public repository or handover. Workbook IDs are not credentials, but private files still require correct account access.
 
-Values are intentionally omitted:
+## Testing recovery
 
-- `DISCORD_TOKEN`
-- `DISCORD_NOTIFY_CHANNEL_ID`
-- `DISCORD_CHANNEL_ID`
-- `DISCORD_CALENDAR_CHANNEL_ID`
-- `DISCORD_STANDINGS_CHANNEL_ID`
-- `GIST_ID`
-- `GIST_TOKEN`
-
-A successor must recreate or receive authorised access to the relevant Discord bot, channels and Gist, then enter replacement values in GitHub repository Actions secrets.
-
-## Recovery order
-
-If the public site fails:
-
-1. Do not edit live data immediately.
-2. Check GitHub Pages and Actions status.
-3. Confirm the custom domain/DNS still points correctly.
-4. Open static pages and then test public central-config CSV access.
-5. Check browser developer-console errors and service-worker state.
-6. Compare the last working commit with the current one.
-7. Restore website code using an ordinary revert commit where possible.
-8. Restore Google data only from a verified backup and only after identifying the damaged workbook/tab.
-9. Record the incident and recovery in the decision/change history.
-
-Do not use destructive Git commands such as a hard reset as a routine recovery method. Do not overwrite a Sheet merely because the website parser is wrong.
-
-## Migration rule
-
-For every historical-data migration:
-
-```text
-Original source (immutable)
-  → exported backup
-  → converted copy
-  → automated comparisons
-  → manual spot checks
-  → owner approval
-  → website source switch
-```
-
-Keep official final championship tables distinct from reconstructed race data when old results are incomplete or omit later penalties.
+Check files open, exact source IDs/tabs exist, saved values/formulas match intended cutoff and newer work survives. A backup folder name or successful copy call is not sufficient. Record tested scope and limitations. Preserve old checkpoints until a newer backup is verified; don't overwrite the only recovery copy.

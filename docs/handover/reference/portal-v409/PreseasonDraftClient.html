@@ -1,0 +1,110 @@
+<script>
+window.F1XLPreseasonDraft = (function() {
+  if(window.F1XLNavigation)window.F1XLNavigation.register('preseason-draft',()=>state.dirty,()=> ({season:state.season}));
+
+  const state = {season:'', data:null, busy:false, dirty:false};
+  function el(id) { return document.getElementById(id); }
+  function esc(value) { return String(value == null ? '' : value).replace(/[&<>"']/g, function(c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function status(text) { el('pdo-status').textContent = text; }
+  function canDiscard() { return !state.dirty || window.confirm('Discard the unsaved draft order preview?'); }
+  function readinessMessage(data) {
+    if(data.missing.length)return 'Draft preparation needs attention: '+data.missing.join(' ');
+    if(data.hasPicks)return 'Live picks have started. Open live draft to continue; the principal order is retained.';
+    if(data.state==='Review needed')return data.canRetain?'Placements and principals are ready. Use Confirm reviewed order to retain the saved draw, or draw a new preview.':'Placements and principals are ready. Draw a new preview to replace the outdated order.';
+    if(data.state==='Saved')return 'Saved order loaded. Open live draft when you are ready.';
+    if(data.state==='Preview')return 'Review the preview, then choose Save draft order.';
+    return 'Placements and principals are ready. Choose Draw draft order to create the preview.';
+  }
+  function controls() {
+    const d = state.data, ready = d && !d.missing.length;
+    el('pdo-refresh').disabled = state.busy;
+    el('pdo-back').disabled = state.busy;
+    el('pdo-generate').disabled = state.busy || !ready || d.hasPicks;
+    el('pdo-live').disabled = state.busy;
+    el('pdo-predictions').disabled=state.busy||!state.data||state.data.state!=='Saved';
+    el('pdo-save').disabled = state.busy || !ready || !(state.dirty || d.state === 'Review needed' && d.canRetain);
+    el('pdo-copy').disabled = state.busy || !d || d.state !== 'Saved' || state.dirty;
+  }
+  function rpc(name, input) {
+    if (state.busy) return;
+    state.busy = true; controls();
+    status(name === 'getPreseasonDraft' ? 'Loading draft preparation…' : name === 'previewPreseasonDraft' ? 'Drawing a balanced order…' : 'Saving the draft order…');
+    google.script.run.withSuccessHandler(function(data) {
+      state.data = data; state.dirty = name === 'previewPreseasonDraft'; state.busy = false;
+      render(); controls(); status(data.message || readinessMessage(data));
+    }).withFailureHandler(function(error) {
+      state.busy = false; controls(); status(error.message || 'Unable to load or save the draft order.');
+    })[name](input);
+  }
+  function open(season) {
+    if (state.busy) return;
+    if (state.season !== season) {
+      if (!canDiscard()) return;
+      state.season = season; state.data = null; state.dirty = false;
+      el('pdo-content').hidden = true; el('pdo-master').hidden = true;
+    }
+    window.F1XLNavigate('preseason-draft');
+    el('pdo-title').textContent = 'S' + season + ' Draft preparation';
+    el('pdo-back').textContent = '← S' + season + ' Pre-season';
+    if (!state.data || !state.dirty) rpc('getPreseasonDraft', season);
+  }
+  function columns(rows) { return Array.from(new Set(rows.map(function(r) { return r.division; }))).sort(function(a,b) { return a-b; }); }
+  function summary(rows) {
+    const teams = Array.from(new Set(rows.map(function(r) { return r.team; })));
+    return teams.map(function(team) {
+      const picks = rows.filter(function(r) { return r.team === team; });
+      return {team:team, principal:picks[0].principal, picks:picks, average:picks.reduce(function(sum,r) { return sum+r.pick; },0)/picks.length};
+    }).sort(function(a,b) { return a.picks[0].pick-b.picks[0].pick; });
+  }
+  function render() {
+    const d = state.data, rows = d.rows, divs = columns(rows), teams = summary(rows);
+    el('pdo-content').hidden = false; el('pdo-master').hidden = false; el('pdo-master').href = d.url;
+    el('pdo-state').textContent = d.state;
+    el('pdo-locked').textContent = d.hasPicks ? 'Live picks have started. The principal order is retained; use the live draft screen to continue or correct selections.' : '';
+    el('pdo-save').textContent = d.state === 'Review needed' && d.canRetain ? 'Confirm reviewed order' : 'Save draft order';
+    el('pdo-generate').textContent = rows.length ? 'Draw a new preview' : 'Draw draft order';
+    el('pdo-prerequisites').innerHTML = d.missing.length ? '<ul>' + d.missing.map(function(m) { return '<li>'+esc(m)+'</li>'; }).join('')+'</ul>' : 'Placements are confirmed and participating principals are ready.';
+    el('pdo-excluded').textContent = d.excluded.length ? 'Free agent teams do not take principal picks: '+d.excluded.map(function(t) { return t.team; }).join(', ')+'.' : '';
+    el('pdo-divisions').innerHTML = d.divisions.map(function(b) { return '<div class="pdo-division"><strong>Division '+b.number+'</strong><span>'+b.tierOne+' Tier 1 · '+b.tierTwo+' Tier 2</span>'+(b.partTime?'<span class="ppl-badge ppl-pt">'+b.partTime+' PT</span>':'')+'</div>'; }).join('');
+    el('pdo-participants').textContent = d.teams.length+' participating principal'+(d.teams.length===1?'':'s')+' · '+d.divisions.length+' confirmed division'+(d.divisions.length===1?'':'s');
+    el('pdo-order-content').hidden = !rows.length;
+    el('pdo-empty').hidden = !!rows.length;
+    el('pdo-first').textContent = rows.length ? rows[0].principal+' · '+rows[0].team : '';
+    el('pdo-order-label').textContent = d.state === 'Review needed' ? 'Previous saved order — needs review' : d.state === 'Preview' ? 'Order preview — not saved' : 'Saved order';
+    el('pdo-head').innerHTML = '<tr><th scope="col">Team / principal</th>'+divs.map(function(n) { return '<th scope="col">D'+n+'</th>'; }).join('')+'<th scope="col">Average pick</th></tr>';
+    el('pdo-rows').innerHTML = teams.map(function(t) {
+      return '<tr><th scope="row">'+esc(t.team)+'<span class="secondary-line">'+esc(t.principal)+'</span></th>'+divs.map(function(n) {
+        const r=t.picks.find(function(r) { return r.division===n; });
+        return '<td'+(r&&r.pick===1?' class="pdo-first-pick"':'')+'>'+(r?r.pick:'—')+'</td>';
+      }).join('')+'<td><strong>'+t.average.toFixed(2)+'</strong></td></tr>';
+    }).join('');
+    const averages=teams.map(function(t) { return t.average; });
+    const spread=averages.length?Math.max.apply(null,averages)-Math.min.apply(null,averages):0;
+    el('pdo-balance').textContent = !rows.length ? '' : divs.length===1 ? 'With one division, the order is the random draw. There are no later divisions to balance it against.' :
+      spread<0.000001 ? 'Every principal has the same average picking position across these divisions.' :
+      d.state==='Review needed' ? 'Average picking positions are shown for the previous saved order.' : 'This combination of teams and divisions cannot give identical averages. Total picking positions differ by just one — the smallest possible gap.';
+    el('pdo-saved').textContent = d.state==='Preview' ? 'Save this preview to retain the draw. Opening this page again will not redraw it.' : d.savedAt ? 'Last saved: '+new Date(d.savedAt).toLocaleString('en-GB',{timeZone:'Europe/London'})+' UK.' : '';
+    el('pdo-text').value = ['Season '+d.season+' — principal draft order', ''].concat(divs.map(function(n) {
+      return 'DIVISION '+n+'\n'+rows.filter(function(r) { return r.division===n; }).sort(function(a,b) { return a.pick-b.pick; }).map(function(r) { return r.pick+'. '+r.principal+' — '+r.team; }).join('\n');
+    })).join('\n\n');
+  }
+  el('pdo-generate').addEventListener('click', function() {
+    if (state.data.rows.length && !window.confirm('Draw a new order preview? The saved order stays in place until you save the replacement.')) return;
+    rpc('previewPreseasonDraft', {season:state.season, revision:state.data.revision});
+  });
+  el('pdo-save').addEventListener('click', function() {
+    rpc('savePreseasonDraft', {season:state.season, revision:state.data.revision, rows:state.data.rows, drawnAt:state.data.drawnAt});
+  });
+  el('pdo-refresh').addEventListener('click', function() { if (canDiscard()) rpc('getPreseasonDraft',state.season); });
+  el('pdo-back').addEventListener('click', function() { window.F1XLPreseasonHub.open(state.season); });
+  el('pdo-live').addEventListener('click', function() { window.F1XLPreseasonLiveDraft.open(state.season); });
+  el('pdo-placements').addEventListener('click', function() { window.F1XLPreseasonPlacement.open(state.season); });
+  el('pdo-principals').addEventListener('click', function() { window.F1XLPreseasonPrincipals.open(state.season); });
+  el('pdo-copy').addEventListener('click', async function() {
+    if (state.dirty || !state.data || state.data.state !== 'Saved') return;
+    try { await navigator.clipboard.writeText(el('pdo-text').value); status('Saved draft order copied.'); }
+    catch(error) { el('pdo-copy-details').open=true; el('pdo-text').focus(); el('pdo-text').select(); status('Select and copy the saved draft order below.'); }
+  });
+  return {open:open,season:function(){return state.season;}};
+})();
+</script>

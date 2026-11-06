@@ -1,0 +1,109 @@
+<script>
+(function(){
+  'use strict';
+  const inbox={data:null,loaded:false,selected:null,busy:false,season:'',importData:null};
+  const byId=function(id){return document.getElementById(id);};
+  const esc=function(value){return String(value==null?'':value).replace(/[&<>"']/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];});};
+
+  function status(message,error){const element=byId('self-time-trial-status');element.hidden=false;element.className='notice workflow-note'+(error?' error':'');element.innerHTML='<strong>'+esc(message)+'</strong>';}
+  function fail(error,fallback){status(error&&error.message?error.message:fallback,true);}
+
+  function load(force){
+    if(inbox.busy)return;
+    if(inbox.loaded&&!force){render();return;}
+    status(force?'Refreshing self-recorded time trials…':'Loading self-recorded time trials…',false);
+    google.script.run.withSuccessHandler(function(response){inbox.data=response;inbox.loaded=true;render();status('Self-recorded time-trial submissions loaded from '+response.sourceName+'.',false);}).withFailureHandler(function(error){fail(error,'The self-recorded time-trial inbox could not be loaded.');}).getSelfTimeTrialSubmissions({season:inbox.season,force:force===true});
+  }
+
+  function render(){
+    const data=inbox.data; const submissions=data.submissions;
+    byId('self-time-trial-source').textContent=data.sourceName+' · '+data.tabName;
+    byId('self-time-trial-format-note').textContent=data.formatNote;
+    byId('self-time-trial-stat-total').textContent=submissions.length;
+    byId('self-time-trial-stat-applied').textContent=submissions.filter(function(item){return /^yes$/i.test(item.applicationCompleted);}).length;
+    byId('self-time-trial-stat-videos').textContent=submissions.filter(function(item){return item.videoLinks.length>0;}).length;
+    byId('self-time-trial-stat-archives').textContent=data.archives.reduce(function(total,item){return total+item.rows;},0);
+    renderRows();
+  }
+
+  function renderRows(){
+    const query=byId('self-time-trial-search').value.trim().toLowerCase();
+    const rows=inbox.data.submissions.filter(function(item){return !query||item.gamertag.toLowerCase().includes(query);});
+    byId('self-time-trial-rows').innerHTML=rows.map(function(item){
+      const match=item.seasonMatch;const linked=match?(match.referenceAttached?'Reference attached':'S'+inbox.season+' · '+match.status):'No S'+inbox.season+' entry';
+      return '<tr><td>'+esc(item.received||'—')+'</td><td><button class="name-button" type="button" data-open-self-time-trial="'+item.id+'">'+esc(item.gamertag)+'</button></td><td>'+esc(item.applicationCompleted||'—')+'</td><td>'+item.videoLinks.length+'</td><td>'+esc(linked)+'</td><td><div class="inline-actions"><button class="button archive" type="button" data-self-time-trial-action="archive" data-self-time-trial-id="'+item.id+'">Archive</button><button class="button danger" type="button" data-self-time-trial-action="delete" data-self-time-trial-id="'+item.id+'">Delete</button></div></td></tr>';
+    }).join('');
+    byId('self-time-trial-empty').hidden=rows.length>0;
+  }
+
+  function linkOrText(value){const text=String(value||'');return /^https?:\/\//i.test(text)?'<a href="'+esc(text)+'" target="_blank" rel="noopener noreferrer">Open link ↗</a>':esc(text||'—');}
+
+  function openSubmission(id){
+    const item=inbox.data.submissions.find(function(submission){return submission.id===id;}); if(!item)return;
+    inbox.selected=item;
+    inbox.importData=null;byId('self-import-editor').hidden=true;byId('self-import-message').hidden=true;
+    byId('self-time-trial-dialog-title').textContent=item.gamertag;
+    const summary=[['Received',item.received],['Application completed',item.applicationCompleted],['Season link',item.seasonMatch?('S'+inbox.season+' · '+item.seasonMatch.status+(item.seasonMatch.referenceAttached?' · reference attached':'')):(inbox.season?'No matching S'+inbox.season+' time-trial entry':'Open from a season to link')]];
+    byId('self-time-trial-dialog-summary').innerHTML=summary.map(function(field){return '<div class="detail"><span>'+esc(field[0])+'</span><strong>'+esc(field[1]||'—')+'</strong></div>';}).join('');
+    byId('self-time-trial-dialog-videos').innerHTML=item.videoLinks.length?item.videoLinks.map(function(link,index){return '<div class="detail"><span>Video '+(index+1)+'</span><strong>'+linkOrText(link)+'</strong></div>';}).join(''):'<div class="detail wide"><span>Videos</span><strong>None supplied</strong></div>';
+    byId('self-time-trial-dialog-laps').innerHTML=item.lapGroups.map(function(group){return '<div class="review-card"><h3>'+esc(group.label)+'</h3><div class="self-time-trial-lap-grid">'+group.laps.map(function(lap,index){return '<div class="detail"><span>Lap '+(index+1)+'</span><strong>'+esc(lap||'—')+'</strong></div>';}).join('')+'</div></div>';}).join('');
+    byId('self-time-trial-dialog-additional').innerHTML=item.additionalAnswers.filter(function(answer){return answer.value;}).map(function(answer){return '<div class="detail wide"><span>'+esc(answer.label)+'</span><strong>'+linkOrText(answer.value)+'</strong></div>';}).join('');
+    const seasonal=inbox.season?'<button class="button" type="button" data-self-time-trial-action="review-import" data-self-time-trial-id="'+item.id+'">Review & complete S'+esc(inbox.season)+' trial</button>':'';
+    byId('self-time-trial-dialog-actions').innerHTML=seasonal+'<button class="button archive" type="button" data-self-time-trial-action="archive" data-self-time-trial-id="'+item.id+'">Archive</button><button class="button danger" type="button" data-self-time-trial-action="delete" data-self-time-trial-id="'+item.id+'">Delete</button>';
+    byId('self-time-trial-dialog').showModal();
+  }
+
+  function action(type,id,button){
+    if(inbox.busy)return;
+    const item=inbox.data.submissions.find(function(submission){return submission.id===id;}); if(!item)return;
+    if(type==='review-import'){previewImport(item);return;}
+    if(type==='open-season'){byId('self-time-trial-dialog').close();window.F1XLPreseasonTimeTrials.openDriver(inbox.season,item.seasonMatch.driverId);return;}
+    const warning=type==='delete'?'Permanently delete '+item.gamertag+' from the active Form responses?':type==='archive'?'Archive '+item.gamertag+' and remove the response from the active inbox?':'Attach this evidence reference to '+item.gamertag+' in S'+inbox.season+'? The seasonal lap results will remain unchanged.';
+    if(!window.confirm(warning))return;
+    inbox.busy=true;button.disabled=true; const original=button.textContent; button.textContent=type==='delete'?'Deleting…':type==='archive'?'Archiving…':'Attaching…'; status(button.textContent.replace('…','')+' '+item.gamertag+'…',false);
+    const runner=google.script.run.withSuccessHandler(function(response){inbox.busy=false;if(byId('self-time-trial-dialog').open)byId('self-time-trial-dialog').close();inbox.loaded=false;load(true);status(response.message||'Submission updated.',false);}).withFailureHandler(function(error){inbox.busy=false;fail(error,'The submission could not be updated.');button.disabled=false;button.textContent=original;});
+    const payload={sourceRow:item.sourceRow,fingerprint:item.fingerprint,season:inbox.season};if(type==='archive')runner.archiveSelfTimeTrialSubmission(payload);else if(type==='delete')runner.deleteSelfTimeTrialSubmission(payload);else runner.attachSelfTimeTrialReference(payload);
+  }
+
+  function importMessage(text,error){const n=byId('self-import-message');n.hidden=false;n.textContent=text;n.classList.toggle('error',!!error);}
+  function importBusy(value){inbox.busy=value;byId('self-import-editor').disabled=value;byId('close-self-time-trial-dialog').disabled=value;byId('self-time-trial-dialog-actions').querySelectorAll('button').forEach(b=>b.disabled=value);}
+  function sourcePayload(item){return {season:inbox.season,sourceRow:item.sourceRow,fingerprint:item.fingerprint};}
+  function previewImport(item){
+    importBusy(true);importMessage('Loading the season’s tracks and drivers…');
+    google.script.run.withSuccessHandler(data=>{
+      importBusy(false);inbox.importData=data;
+      if(data.tracks.some(t=>!t)){importMessage('Set both track names in Bookings & recording before importing laps.',true);return;}
+      const key=v=>String(v).trim().toLowerCase().replace(/[^a-z0-9]/g,''),matches=data.drivers.filter(d=>key(d.gamertag)===key(item.gamertag));
+      byId('self-import-driver').innerHTML='<option value="">Choose the season driver…</option>'+data.drivers.map(d=>'<option value="'+esc(d.driverId)+'">'+esc(d.gamertag)+'</option>').join('');
+      if(matches.length===1)byId('self-import-driver').value=matches[0].driverId;
+      byId('self-import-match-note').textContent=data.drivers.length?'Confirm this is the correct driver. If their gamertag changed, select their season entry.':'No outstanding drivers. Process their application first, or check Completed trials.';
+      byId('self-import-reviewed').checked=false;byId('self-import-replace').checked=false;
+      const groups=data.submission.lapGroups;
+      byId('self-import-tracks').innerHTML=data.tracks.map((track,i)=>'<fieldset style="min-width:0"><legend>'+esc(track)+'</legend><label>Submitted lap group<select data-self-import-group="'+i+'"><option value="">Enter reviewed laps manually</option>'+groups.map((g,n)=>'<option value="'+n+'">'+esc(g.label)+'</option>').join('')+'</select></label><div class="time-trial-laps">'+[0,1,2,3,4].map(n=>'<label>Lap '+(n+1)+'<input data-self-import-lap="'+i+'" type="number" min="0" max="59.999" step="0.001" inputmode="decimal" aria-label="'+esc(track)+' lap '+(n+1)+'"></label>').join('')+'</div></fieldset>').join('');
+      data.tracks.forEach((track,i)=>{const found=groups.map((g,n)=>({g,n})).filter(x=>key(x.g.label)===key(track));if(found.length===1){const select=document.querySelector('[data-self-import-group="'+i+'"]');select.value=String(found[0].n);fillGroup(select);}});
+      byId('self-import-editor').hidden=false;updateImportDriver();importMessage('Review the evidence and lap values, then confirm. The original response remains available to archive.');byId('self-import-editor').scrollIntoView({block:'start'});
+    }).withFailureHandler(error=>{importBusy(false);importMessage(error.message||'Unable to prepare the trial.',true);}).previewSelfTimeTrialImport(sourcePayload(item));
+  }
+  function fillGroup(select){const g=inbox.importData.submission.lapGroups[Number(select.value)];const laps=select.value!==''&&g?g.laps:['','','','',''];document.querySelectorAll('[data-self-import-lap="'+select.dataset.selfImportGroup+'"]').forEach((n,i)=>n.value=laps[i]);byId('self-import-reviewed').checked=false;}
+  function updateImportDriver(){const d=inbox.importData&&inbox.importData.drivers.find(d=>d.driverId===byId('self-import-driver').value);byId('self-import-replace-label').hidden=!d||!d.hasResults;byId('self-import-replace').checked=false;byId('self-import-reviewed').checked=false;}
+  byId('self-import-driver').addEventListener('change',updateImportDriver);
+  byId('self-import-tracks').addEventListener('change',e=>{if(e.target.matches('[data-self-import-group]'))fillGroup(e.target);});
+  byId('self-import-tracks').addEventListener('input',()=>{byId('self-import-reviewed').checked=false;});
+  byId('self-import-complete').addEventListener('click',()=>{
+    if(inbox.busy||!inbox.importData)return;
+    if(!byId('self-import-driver').value||!byId('self-import-reviewed').checked){importMessage('Choose the season driver and confirm your review first.',true);return;}
+    const data=inbox.importData,input={...sourcePayload(inbox.selected),revision:data.revision,sourceRevision:data.sourceRevision,driverId:byId('self-import-driver').value,reviewed:true,replaceExisting:byId('self-import-replace').checked,one:Array.from(document.querySelectorAll('[data-self-import-lap="0"]')).map(n=>n.value),two:Array.from(document.querySelectorAll('[data-self-import-lap="1"]')).map(n=>n.value)};
+    importBusy(true);importMessage('Saving completed trial…');
+    google.script.run.withSuccessHandler(response=>{importBusy(false);inbox.data=response;inbox.importData=null;byId('self-import-editor').hidden=true;render();importMessage(response.message);status(response.message);window.F1XLPreseasonTimeTrials?.invalidate();byId('self-time-trial-dialog-actions').querySelectorAll('[data-self-time-trial-action="review-import"]').forEach(n=>n.hidden=true);}).withFailureHandler(error=>{importBusy(false);importMessage(error.message||'Trial could not be saved. Your entries are retained.',true);}).completeSelfTimeTrialImport(input);
+  });
+  byId('self-time-trial-search').addEventListener('input',renderRows);
+  byId('refresh-self-time-trials').addEventListener('click',function(){load(true);});
+  byId('self-time-trial-rows').addEventListener('click',function(event){const open=event.target.closest('[data-open-self-time-trial]');if(open){openSubmission(open.dataset.openSelfTimeTrial);return;}const button=event.target.closest('[data-self-time-trial-action]');if(button)action(button.dataset.selfTimeTrialAction,button.dataset.selfTimeTrialId,button);});
+  byId('self-time-trial-dialog-actions').addEventListener('click',function(event){const button=event.target.closest('[data-self-time-trial-action]');if(button)action(button.dataset.selfTimeTrialAction,button.dataset.selfTimeTrialId,button);});
+  byId('close-self-time-trial-dialog').addEventListener('click',function(){byId('self-time-trial-dialog').close();});
+  byId('self-time-trial-dialog').addEventListener('click',function(event){if(!inbox.busy&&event.target===event.currentTarget)event.currentTarget.close();});
+  byId('self-time-trial-dialog').addEventListener('cancel',function(event){if(inbox.busy)event.preventDefault();});
+  function setSeason(season){season=String(season||'');if(inbox.season===season)return;inbox.season=season;inbox.loaded=false;inbox.data=null;}
+  window.F1XLSelfTimeTrialSubmission={load:load,busy:()=>inbox.busy,setSeason:setSeason};
+})();
+</script>

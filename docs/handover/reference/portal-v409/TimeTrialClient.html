@@ -1,0 +1,143 @@
+<script>
+(function() {
+  'use strict';
+  const timeTrial = { data:null, loaded:false, view:'entries', selected:null };
+  const byId = function(id) { return document.getElementById(id); };
+  const esc = function(value) { return String(value == null ? '' : value).replace(/[&<>"']/g, function(c) { return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; }); };
+
+  function status(message, error) {
+    const element=byId('time-trial-status');
+    element.hidden=false;
+    element.className='notice workflow-note'+(error?' error':'');
+    element.innerHTML='<strong>'+esc(message)+'</strong>';
+  }
+
+  function fail(error, fallback) { status(error && error.message ? error.message : fallback, true); }
+
+  function load(force) {
+    if (timeTrial.loaded && !force) { switchView(timeTrial.view); return; }
+    status(force?'Refreshing the time-trial workbook…':'Loading the time-trial workbook…',false);
+    google.script.run.withSuccessHandler(function(response) {
+      timeTrial.data=response;
+      timeTrial.loaded=true;
+      renderAll();
+      switchView(timeTrial.view);
+      status('Time-trial entries and the calculated ranking are loaded from '+response.sourceName+'.',false);
+    }).withFailureHandler(function(error) { fail(error,'The time-trial workbook could not be loaded.'); }).getTimeTrialWorkspace(force===true);
+  }
+
+  function renderAll() {
+    const data=timeTrial.data;
+    byId('time-trial-source').textContent=data.sourceName+' · '+data.entries.length+' driver'+(data.entries.length===1?'':'s');
+    byId('time-trial-track-one').value=data.trackOne;
+    byId('time-trial-track-two').value=data.trackTwo;
+    byId('time-trial-stat-drivers').textContent=data.entries.length;
+    byId('time-trial-stat-complete').textContent=data.entries.filter(function(entry){return entry.overallAverage;}).length;
+    byId('time-trial-stat-ranked').textContent=data.ranking.length;
+    byId('time-trial-stat-capacity').textContent=data.capacity.formulaBackedRowsAvailable;
+    byId('time-trial-calculation-note').innerHTML='<strong>Existing calculation:</strong> '+esc(data.calculationNote);
+    renderEntries();
+    renderRanking();
+  }
+
+  function renderEntries() {
+    const query=byId('time-trial-search').value.trim().toLowerCase();
+    const entries=timeTrial.data.entries.filter(function(entry){return !query || entry.driver.toLowerCase().includes(query);});
+    byId('time-trial-entry-rows').innerHTML=entries.map(function(entry) {
+      const complete=!!entry.overallAverage;
+      return '<tr><td><button class="name-button" type="button" data-time-trial-open="'+entry.row+'">'+esc(entry.driver)+'</button></td><td>'+esc(entry.bookedDateDisplay||entry.bookedDate||'—')+'</td><td>'+esc(entry.trackOneAverage||'—')+'</td><td>'+esc(entry.trackTwoAverage||'—')+'</td><td><strong>'+esc(entry.overallAverage||'—')+'</strong></td><td><span class="status '+(complete?'complete':'')+'">'+(complete?'Complete':'Awaiting laps')+'</span></td></tr>';
+    }).join('');
+    byId('time-trial-entry-empty').hidden=entries.length>0;
+  }
+
+  function renderRanking() {
+    const rows=timeTrial.data.ranking;
+    byId('time-trial-ranking-head').innerHTML='<tr><th>Pos</th><th>Driver</th><th>'+esc(timeTrial.data.trackOne)+' avg</th><th>'+esc(timeTrial.data.trackTwo)+' avg</th><th>Overall avg</th><th>Gap</th></tr>';
+    byId('time-trial-ranking-rows').innerHTML=rows.map(function(row,index) {
+      return '<tr><td>'+(esc(row.rank)||index+1)+'</td><td><strong>'+esc(row.driver)+'</strong></td><td>'+esc(row.trackOneAverage||'—')+'</td><td>'+esc(row.trackTwoAverage||'—')+'</td><td><strong>'+esc(row.overallAverage||'—')+'</strong></td><td>'+esc(row.gap||'—')+'</td></tr>';
+    }).join('');
+    byId('time-trial-ranking-empty').hidden=rows.length>0;
+  }
+
+  function switchView(view) {
+    timeTrial.view=view;
+    document.querySelectorAll('[data-time-trial-view]').forEach(function(button){button.classList.toggle('active',button.dataset.timeTrialView===view);});
+    byId('time-trial-entries').hidden=view!=='entries';
+    byId('time-trial-ranking').hidden=view!=='ranking';
+  }
+
+  function emptyEntry() { return { row:0, originalDriver:'', driver:'', trackOne:['','','','',''], trackTwo:['','','','',''], trackOneAverage:'', trackTwoAverage:'', overallAverage:'', bookedDate:'', notes:'' }; }
+
+  function openEntry(row) {
+    const source=row ? timeTrial.data.entries.find(function(entry){return entry.row===Number(row);}) : emptyEntry();
+    if (!source) return;
+    timeTrial.selected=JSON.parse(JSON.stringify(source));
+    byId('time-trial-dialog-title').textContent=source.driver||'Add driver';
+    byId('time-trial-driver').value=source.driver||'';
+    byId('time-trial-booked-date').value=source.bookedDate||'';
+    byId('time-trial-notes').value=source.notes||'';
+    byId('time-trial-dialog-track-one').textContent=timeTrial.data.trackOne;
+    byId('time-trial-dialog-track-two').textContent=timeTrial.data.trackTwo;
+    renderLapInputs('time-trial-track-one-laps',source.trackOne,'one');
+    renderLapInputs('time-trial-track-two-laps',source.trackTwo,'two');
+    byId('time-trial-track-one-average').textContent=source.trackOneAverage||'Calculated after save';
+    byId('time-trial-track-two-average').textContent=source.trackTwoAverage||'Calculated after save';
+    byId('time-trial-overall-average').textContent=source.overallAverage||'Calculated after save';
+    byId('time-trial-entry-save-state').textContent='No unsaved changes';
+    byId('time-trial-entry-save-state').classList.remove('dirty');
+    byId('time-trial-dialog').showModal();
+    highlightFastest('one'); highlightFastest('two');
+  }
+
+  function renderLapInputs(hostId, values, track) {
+    byId(hostId).innerHTML=values.map(function(value,index){return '<div class="field lap-field"><label>Lap '+(index+1)+'</label><input type="number" min="0" step="0.001" inputmode="decimal" value="'+esc(value)+'" data-time-trial-lap="'+track+'" data-lap-index="'+index+'" placeholder="59.842"></div>';}).join('');
+  }
+
+  function markDirty() { byId('time-trial-entry-save-state').textContent='Unsaved changes'; byId('time-trial-entry-save-state').classList.add('dirty'); }
+
+  function highlightFastest(track) {
+    const inputs=Array.from(document.querySelectorAll('[data-time-trial-lap="'+track+'"]'));
+    const times=inputs.map(function(input){const value=Number(input.value);return value>0?value:null;});
+    const valid=times.filter(function(value){return value!=null;});
+    const fastest=valid.length?Math.min.apply(null,valid):null;
+    inputs.forEach(function(input,index){input.closest('.lap-field').classList.toggle('fastest-lap',fastest!=null&&times[index]===fastest);});
+  }
+
+  function readSelectedEntry() {
+    const entry=timeTrial.selected;
+    entry.driver=byId('time-trial-driver').value.trim();
+    entry.bookedDate=byId('time-trial-booked-date').value;
+    entry.notes=byId('time-trial-notes').value.trim();
+    entry.trackOne=Array.from(document.querySelectorAll('[data-time-trial-lap="one"]')).map(function(input){return input.value;});
+    entry.trackTwo=Array.from(document.querySelectorAll('[data-time-trial-lap="two"]')).map(function(input){return input.value;});
+    return entry;
+  }
+
+  function saveEntry(button) {
+    const entry=readSelectedEntry();
+    if (!entry.driver) { status('Enter the driver gamertag before saving.',true); return; }
+    button.disabled=true; button.textContent='Saving…'; status('Saving '+entry.driver+'…',false);
+    google.script.run.withSuccessHandler(function(response){
+      timeTrial.data=response; renderAll(); button.disabled=false; button.textContent='Save driver'; byId('time-trial-dialog').close(); status(response.message||'Time-trial driver saved.',false);
+    }).withFailureHandler(function(error){fail(error,'The time-trial entry could not be saved.');button.disabled=false;button.textContent='Save driver';}).saveTimeTrialEntry({revision:timeTrial.data.revision,entry:entry});
+  }
+
+  function saveTracks(button) {
+    const one=byId('time-trial-track-one').value.trim(); const two=byId('time-trial-track-two').value.trim();
+    button.disabled=true; button.textContent='Saving…'; status('Saving time-trial track headings…',false);
+    google.script.run.withSuccessHandler(function(response){timeTrial.data=response;renderAll();button.disabled=false;button.textContent='Save tracks';status(response.message||'Track headings saved.',false);}).withFailureHandler(function(error){fail(error,'The track headings could not be saved.');button.disabled=false;button.textContent='Save tracks';}).saveTimeTrialTracks({revision:timeTrial.data.revision,trackOne:one,trackTwo:two});
+  }
+
+  byId('time-trial-subnav').addEventListener('click',function(event){const button=event.target.closest('[data-time-trial-view]');if(button)switchView(button.dataset.timeTrialView);});
+  byId('time-trial-search').addEventListener('input',renderEntries);
+  byId('refresh-time-trials').addEventListener('click',function(){load(true);});
+  byId('add-time-trial-driver').addEventListener('click',function(){openEntry(0);});
+  byId('time-trial-entry-rows').addEventListener('click',function(event){const button=event.target.closest('[data-time-trial-open]');if(button)openEntry(button.dataset.timeTrialOpen);});
+  byId('save-time-trial-tracks').addEventListener('click',function(event){saveTracks(event.currentTarget);});
+  byId('save-time-trial-entry').addEventListener('click',function(event){saveEntry(event.currentTarget);});
+  byId('close-time-trial-dialog').addEventListener('click',function(){byId('time-trial-dialog').close();});
+  byId('time-trial-dialog').addEventListener('click',function(event){if(event.target===event.currentTarget)event.currentTarget.close();});
+  byId('time-trial-dialog').addEventListener('input',function(event){if(event.target.matches('input,textarea'))markDirty();if(event.target.matches('[data-time-trial-lap]'))highlightFastest(event.target.dataset.timeTrialLap);});
+  window.F1XLTimeTrial={load:load};
+})();
+</script>

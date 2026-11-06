@@ -1,0 +1,136 @@
+{
+  "capturedAt": "2026-11-06T12:23:35.820Z",
+  "purpose": "Exact local pre-refresh Markdown, including uncommitted updates",
+  "files": [
+    {
+      "path": "ai-pack/ARCHITECTURE.md",
+      "bytes": 10498,
+      "sha256": "60c5b93e632e4e70dce249d4ef155c74deeae3ff765946fb07a4a48c76b40525"
+    },
+    {
+      "path": "ai-pack/BACKUP-AND-RECOVERY.md",
+      "bytes": 3309,
+      "sha256": "8a164106330ec156c1acc08ffe816d5ec4c4e28f02e6fa70d3042921caccedbb"
+    },
+    {
+      "path": "ai-pack/COMBINED-INTAKE-CUTOVER.md",
+      "bytes": 10143,
+      "sha256": "d79cab0f14d4fd37012c18f02687ecea26e1299fd14106ca340b13ef8784cef9"
+    },
+    {
+      "path": "ai-pack/CURRENT-STATE-CHECKPOINT-2026-08-27.md",
+      "bytes": 14056,
+      "sha256": "ab6ee17fd8ce37060534681792adba3d2946da150d50a34aec84c3e8dea11bdd"
+    },
+    {
+      "path": "ai-pack/CURRENT-STATUS.md",
+      "bytes": 294255,
+      "sha256": "479a17d6664c23e2ee9712a143dfdca90b892740a974308bec28e97a2ad7f7eb"
+    },
+    {
+      "path": "ai-pack/DATA-SOURCES.md",
+      "bytes": 6535,
+      "sha256": "74f09c0b60d8e43704e6c0420a8d89c14e5fa63df7c906156836f5f6a8d5a15e"
+    },
+    {
+      "path": "ai-pack/DECISION-HISTORY.md",
+      "bytes": 24276,
+      "sha256": "c003cd018e8b16ae652105da76e90f931a0b0603043791f19fe6eadd5244fdd5"
+    },
+    {
+      "path": "ai-pack/DRIVER-HISTORY-AUDIT.md",
+      "bytes": 12158,
+      "sha256": "c8037eaec2195e2375c38a2bfbefaf27c376ba594022b5249936bfe557dc30e2"
+    },
+    {
+      "path": "ai-pack/GLOSSARY.md",
+      "bytes": 1897,
+      "sha256": "f2003e5368bbf74c9766fe21bca7b58d449049cebfda0656b4c2ca1cee49cef7"
+    },
+    {
+      "path": "ai-pack/GO-LIVE-ROADMAP-2026-10-23.md",
+      "bytes": 31926,
+      "sha256": "2a9620c4a84e96b73247d04d79430ae3da408a19a3ef483097537117f5c75aa5"
+    },
+    {
+      "path": "ai-pack/HISTORICAL-RECONCILIATION-HANDOVER-2026-09-10.md",
+      "bytes": 105795,
+      "sha256": "b12296e4152cc7beffc98567604406404508faccd807a777db88c6e72aeb6f7d"
+    },
+    {
+      "path": "ai-pack/KNOWN-ISSUES.md",
+      "bytes": 112263,
+      "sha256": "ec0e182eb50b3d760e1f0d41a8e27b23297d4c8900bb9aa18fd5e5c4e070ae04"
+    },
+    {
+      "path": "ai-pack/LAUNCH-ACCESS-CHECK-2026-11-03.md",
+      "bytes": 5081,
+      "sha256": "8a468db0e55bc75d5d7baa6980f41f45cb1b97280c7570bb0637f42c17525852"
+    },
+    {
+      "path": "ai-pack/LAUNCH-HANDOVER-2026-11-03.md",
+      "bytes": 32486,
+      "sha256": "e64cbc0762c550b427b3c13b8de1eb28442646464a575037a6cd346c2681a9f6"
+    },
+    {
+      "path": "ai-pack/OPERATIONS.md",
+      "bytes": 4912,
+      "sha256": "1592d59f9a9c4a6b176410859577d618e17085a3e85042c6bc7cabc12904b90c"
+    },
+    {
+      "path": "ai-pack/PRESEASON-WORKFLOW.md",
+      "bytes": 33276,
+      "sha256": "4c5b1a321a8f687465ade453946d54a4e5022253b8746595890fe2ad771e7560"
+    },
+    {
+      "path": "ai-pack/PROJECT-PRINCIPLES.md",
+      "bytes": 2382,
+      "sha256": "259ee5494b8ea9e63a8a6aa12850c9789e25d0f586db443b8d8bfc3ee095e491"
+    },
+    {
+      "path": "ai-pack/RESULT-IMPORT-VALIDATION.md",
+      "bytes": 1981,
+      "sha256": "21bc44afecb6dd5dab308bcec4e517ee547bc3da20f6bfaa49885d4fbb58c28e"
+    },
+    {
+      "path": "ai-pack/START-HERE-AI.md",
+      "bytes": 3079,
+      "sha256": "98cf14774ea115478a86fc6f83f0a2513dcee2bc08b9c205c036addca3267293"
+    },
+    {
+      "path": "ai-pack/TESTING-CHECKLIST.md",
+      "bytes": 2220,
+      "sha256": "04c89e50241696ae71d0ac0116e8033839b30cce35cc1da17cc4c54287d1d4b6"
+    },
+    {
+      "path": "ai-pack/TRACKER-WALKTHROUGH-REVIEW-2026-09-14.md",
+      "bytes": 7302,
+      "sha256": "9c9f31f41731d948d64a253e991284e48f78a4be57a05b22642f3647f47f157b"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "bytes": 89947,
+      "sha256": "922a48f9deed4f2f42cdf697c16d719b2575cfdf0ebd9b5c408ff80069795df6"
+    },
+    {
+      "path": "owner-quick-start/COPY-PASTE-AI-PROMPT.md",
+      "bytes": 886,
+      "sha256": "f10a18a3ee14b0dbd03bf6ee76f1e92738b5e4d66f4d020b2ea7c0718795360d"
+    },
+    {
+      "path": "owner-quick-start/START-HERE.md",
+      "bytes": 4725,
+      "sha256": "3aa9d83adf2ba2b9c457273c979e4c5606f63ad964a3b7df7e41bbdaf79f3b35"
+    },
+    {
+      "path": "PACK-VERSION.md",
+      "bytes": 450,
+      "sha256": "53c55c0357d99342250be711c2b1b5e7b0e6fe5b8e805e4ec3925785db87a8fb"
+    },
+    {
+      "path": "README.md",
+      "bytes": 1735,
+      "sha256": "33526251070991ccbdccc31ad98a43cacf454298eba7141a62c53506e0681384"
+    }
+  ]
+}

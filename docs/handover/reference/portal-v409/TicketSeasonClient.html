@@ -1,0 +1,71 @@
+<dialog id="ticket-season-dialog" style="max-width:980px;width:94vw">
+  <div class="dialog-head"><h2 id="ts-title">Weekly tickets</h2><button class="button" type="button" id="ts-close">Close</button></div>
+  <div style="padding:18px">
+    <div class="toolbar"><label>Season <input id="ts-season" type="number" min="1" max="999" style="width:100px"></label><button class="button" id="ts-check" type="button">Refresh</button><a class="button maintenance-link" id="ts-book" target="_blank" rel="noopener" hidden>Open permanent ticket workbook ↗</a></div>
+    <div class="subnav"><button class="button" type="button" id="ts-weekly-tab">Weekly tickets</button><button class="button" type="button" id="ts-connections-tab">Season connections</button></div>
+    <p id="ts-status" role="status"></p>
+    <div id="ts-content" hidden>
+      <div id="ts-connections" hidden>
+        <details><summary>Connection help</summary><ol><li>Prepare connections once for this season. The permanent ticket workbook stays separate from the Master.</li><li>Open each source below and allow access in A1 if Google asks, then check again.</li><li>When connections are ready, setup is complete. Use Weekly tickets as each round comes around.</li></ol></details>
+        <div class="toolbar"><button class="button primary" type="button" id="ts-prepare">Prepare season connections</button><button class="button" type="button" id="ts-tp">Team Principal Hub preview</button></div>
+        <div id="ts-sources" class="toolbar"></div><div class="toolbar"><button class="button" id="ts-form-refresh" type="button">Update form driver list</button><span id="ts-form-status" role="status"></span></div>
+      </div>
+      <div id="ts-weekly">
+        <label id="ts-round-choice">Round <select id="ts-round"></select></label>
+        <div id="ts-round-fields" hidden>
+          <p id="ts-round-status"></p>
+          <div class="toolbar" id="ts-round-actions"><button class="button primary" type="button" id="ts-create">Create race workspace</button><button class="button primary" type="button" id="ts-open">Open race workspace</button></div>
+          <details id="ts-reminders"><summary>Weekly reminders · optional</summary>
+            <p class="secondary-line">Set these when needed for this round. They are visual reminders and never prevent processing or reviews. All times are UK time.</p>
+            <div class="ticket-form">
+              <label>Tickets and defence close<input type="datetime-local" id="ts-closes"></label>
+              <label>Steward reviews due<input type="datetime-local" id="ts-stewards"></label>
+              <label>Appeal reminder after publication · hours<input type="number" min="0.5" max="168" step="0.5" id="ts-hours" placeholder="Optional"></label>
+              <label>Appeal submissions close<input type="datetime-local" id="ts-appeals"></label>
+              <label class="wide">Admin notes<textarea id="ts-notes"></textarea></label>
+              <div class="wide"><button class="button" type="button" id="ts-save">Save reminders</button><span id="ts-saved" role="status"></span></div>
+            </div>
+          </details>
+          <details><summary>Weekly help</summary><ol><li>Choose this week’s round and open its workspace, creating it the first time.</li><li>Process tickets, defence and appeals when ready. Original submissions are preserved and archived.</li><li>Enter steward reviews, then prepare the final outcomes once reviews are complete.</li><li>Reminders can be added or changed at any time. There is no deadline setup or release step.</li><li>Ticket Start Here explains working directly in the workbook.</li></ol></details>
+        </div>
+      </div>
+    </div>
+  </div>
+</dialog>
+<dialog id="ticket-tp-preview" style="max-width:780px;width:94vw">
+  <div class="dialog-head"><h2>Team Principal Hub</h2><button class="button" type="button" id="ts-tp-close">Close</button></div>
+  <div style="padding:18px"><p><strong>Admin preview — principal access is not enabled yet.</strong></p>
+    <div class="preseason-grid"><article class="panel preseason-card"><h3>Team tickets</h3><p>Read relevant cases and evidence as they arrive.</p><button class="button" disabled>View tickets · planned</button></article><article class="panel preseason-card"><h3>Submit a ticket</h3><p>Select drivers, round and session, then add evidence.</p><button class="button" disabled>Submit ticket · planned</button></article><article class="panel preseason-card"><h3>Defence & appeals</h3><p>Submit against an existing case so the evidence stays linked.</p><button class="button" disabled>Open a case · planned</button></article></div>
+    <p class="secondary-line">The current submission route stays available until hub sign-in, access restrictions and submissions have been tested.</p>
+  </div>
+</dialog>
+<script>
+window.F1XLTicketSeason=(function(){
+  const state={data:null,busy:false,dirty:false,mode:'weekly',selected:''},el=id=>document.getElementById(id),esc=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const rpc=(name,input)=>new Promise((resolve,reject)=>google.script.run.withSuccessHandler(resolve).withFailureHandler(reject)[name](input));
+  function busy(v){state.busy=v;el('ticket-season-dialog').querySelectorAll('button,input,select,textarea').forEach(b=>b.disabled=v);}
+  function current(){return state.data&&state.data.rounds.find(r=>String(r.round)===state.selected);}
+  function mode(value){state.mode=value;el('ts-title').textContent=value==='connections'?'Ticket season connections':'Weekly tickets';el('ts-connections').hidden=value!=='connections';el('ts-weekly').hidden=value!=='weekly';['weekly','connections'].forEach(k=>el('ts-'+k+'-tab').classList.toggle('active',k===value));}
+  function controls(){const r=current();el('ts-prepare').disabled=state.busy||!!(state.data&&state.data.prepared);el('ts-create').disabled=state.busy||!state.data||!state.data.ready||!r||r.state==='Cancelled';}
+  function round(){const r=current();el('ts-round-fields').hidden=!r;if(!r)return;el('ts-closes').value=r.closes.replace(' ','T');el('ts-stewards').value=r.stewardsDue.replace(' ','T');el('ts-hours').value=r.appealHours;el('ts-appeals').value=r.appealsClose.replace(' ','T');el('ts-notes').value=r.notes;el('ts-saved').textContent='';el('ts-round-status').textContent=r.state==='Cancelled'?'Cancelled':r.sheetName?'Workspace ready'+(r.publishedAt?' · published '+new Date(r.publishedAt).toLocaleString('en-GB'):''):'Create the workspace when you start this round’s tickets.';el('ts-create').hidden=!!r.sheetName;el('ts-open').hidden=!r.sheetName;controls();}
+  function render(){const d=state.data;el('ts-content').hidden=!d;if(!d)return;el('ts-book').hidden=false;el('ts-book').href=d.url;el('ts-prepare').textContent=d.prepared?'Season connections prepared':'Prepare season connections';el('ts-form-refresh').hidden=!d.form?.matches;el('ts-form-status').textContent=!d.form?.connected?'Ticket form not connected.':!d.form.matches?'The ticket form currently serves S'+d.form.season+'.':d.form.error?'Form update needs attention: '+d.form.error:d.form.pending?'Driver list update queued.':d.form.count+' drivers · updated '+new Date(d.form.updatedAt).toLocaleString('en-GB');el('ts-status').textContent=d.ready?'Season connections ready.':d.issues.join(' ');el('ts-sources').innerHTML=d.sources.filter(s=>s.url).map(s=>'<a class="button" target="_blank" rel="noopener" href="'+esc(s.url)+'">'+esc(s.name)+' ↗</a>').join('');el('ts-round').innerHTML=d.rounds.map(r=>'<option value="'+r.round+'">R'+r.round+' · '+esc(r.track)+(r.state==='Cancelled'?' · Cancelled':'')+'</option>').join('');if(!d.rounds.some(r=>String(r.round)===state.selected))state.selected=d.rounds.length?String(d.rounds[0].round):'';el('ts-round').value=state.selected;round();controls();}
+  async function call(name,input){if(state.busy)return false;busy(true);el('ts-status').textContent='Working…';try{state.data=await rpc(name,input);state.dirty=false;busy(false);render();return true;}catch(e){busy(false);controls();el('ts-status').textContent=e.message||String(e);return false;}}
+  function leave(){return !state.dirty||window.confirm('Discard unsaved reminder changes?');}
+  async function open(season,view,roundNumber,reminders){if(state.busy||!leave())return;state.dirty=false;if(season&&String(season)!==el('ts-season').value){state.data=null;state.selected='';el('ts-content').hidden=true;el('ts-book').hidden=true;}if(season)el('ts-season').value=String(season);if(roundNumber)state.selected=String(roundNumber);mode(view||'connections');el('ts-round-choice').hidden=!!reminders;el('ts-round-actions').hidden=!!reminders;el('ts-reminders').open=!!reminders;if(reminders)el('ts-title').textContent='Weekly reminders · R'+roundNumber;if(!el('ticket-season-dialog').open)el('ticket-season-dialog').showModal();if(el('ts-season').value)await call('getTicketSeasonSetup',{season:el('ts-season').value});}
+  async function save(){const r=current();if(!r||state.busy)return;const ok=await call('saveTicketRound',{row:r.row,revision:r.revision,closes:el('ts-closes').value.replace('T',' '),stewardsDue:el('ts-stewards').value.replace('T',' '),appealHours:el('ts-hours').value,appealsClose:el('ts-appeals').value.replace('T',' '),notes:el('ts-notes').value});if(ok){el('ts-saved').textContent=' Saved';if(r.sheetName)window.F1XLTicketProcessing.refreshReminders(r.sheetName);}}
+  el('ts-check').onclick=()=>{if(leave())call('getTicketSeasonSetup',{season:el('ts-season').value});};
+  el('ts-prepare').onclick=()=>{if(state.data)call('prepareTicketSeason',{season:state.data.season,revision:state.data.revision});};
+  el('ts-save').onclick=save;
+  el('ts-form-refresh').onclick=()=>{if(state.data)call('updateTicketFormDrivers',{season:state.data.season});};
+  el('ts-weekly-tab').onclick=()=>{if(leave()){state.dirty=false;el('ticket-season-dialog').close();window.F1XLTicketProcessing.openSeason(el('ts-season').value);}};el('ts-connections-tab').onclick=()=>mode('connections');
+  el('ts-round').onchange=()=>{if(leave()){state.selected=el('ts-round').value;state.dirty=false;round();}else el('ts-round').value=state.selected;};
+  el('ts-round-fields').addEventListener('input',()=>{state.dirty=true;el('ts-saved').textContent=' Unsaved';});
+  el('ts-create').onclick=async()=>{const r=current();if(!r||state.busy||!leave())return;busy(true);try{const result=await rpc('createTicketRoundWorkspace',{season:r.season,round:r.round});state.data=await rpc('getTicketSeasonSetup',{season:r.season});state.dirty=false;busy(false);render();el('ts-status').textContent=result.sheetName+' is ready to open.';}catch(e){busy(false);controls();el('ts-status').textContent=e.message||String(e);}};
+  el('ts-open').onclick=()=>{const r=current();if(r&&leave()){state.dirty=false;el('ticket-season-dialog').close();window.F1XLTicketProcessing.openRace(r.sheetName);}};
+  el('ts-close').onclick=()=>{if(!state.busy&&leave()){state.dirty=false;el('ticket-season-dialog').close();}};
+  el('ticket-season-dialog').addEventListener('cancel',e=>{if(state.busy||!leave())e.preventDefault();else state.dirty=false;});
+  el('ts-tp').onclick=()=>el('ticket-tp-preview').showModal();el('ts-tp-close').onclick=()=>el('ticket-tp-preview').close();
+  document.addEventListener('click',e=>{if(e.target.closest('[data-ticket-season-setup]'))open(null,'connections');else if(e.target.closest('[data-ticket-weekly]'))open(null,'weekly');});
+  return {open:open};
+})();
+</script>

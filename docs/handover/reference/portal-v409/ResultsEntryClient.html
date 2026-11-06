@@ -1,0 +1,695 @@
+<script>
+(function() {
+  if(window.F1XLNavigation)window.F1XLNavigation.register('results-entry',()=>state.dirty,()=> ({season:state.hubSeason||state.season}));
+
+  'use strict';
+  const state = { initial:null, overview:null, round:null, loaded:false, season:'', division:'', sessionId:'', dirty:false, reorderedSessions:{},overviewGeneration:0 };
+  const publications = new Map();
+  const byId = function(id) { return document.getElementById(id); };
+  const esc = function(value) { return String(value == null ? '' : value).replace(/[&<>"']/g, function(c) { return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; }); };
+  const timeAdjustments=window.F1XLResultAdjustments.create({
+    get:()=>({season:state.season,division:state.division,round:state.round,session:currentSession(),busy:state.busy,readOnly:isReadOnly()}),
+    use:(rows,message)=>{currentSession().rows=rows;state.reorderedSessions[state.sessionId]=true;state.dirty=true;renderSession();updateSaveState();status(message||'Time preview applied to the form. Save complete round when ready.');}
+  });
+
+  function status(message, type) {
+    const element = byId('results-entry-status');
+    element.className = 'notice workflow-note' + (type ? ' ' + type : '');
+    element.innerHTML = '<strong>' + esc(message) + '</strong>';
+  }
+
+  function fail(error, fallback) {
+    status(error && error.message ? error.message : fallback, 'error');
+  }
+
+  function setBusy(button, busy, label, busyLabel) {
+    state.busy=busy;
+    ['open-results-entry-division','refresh-results-entry-list','refresh-results-entry-round','save-results-entry-round','retry-results-entry-publication','results-entry-division','ticket-results-complete'].forEach(function(id){byId(id).disabled=busy;});
+    byId('results-entry-round-nav').querySelectorAll('button').forEach(function(b){b.disabled=busy;});
+    byId('results-entry-session-nav').querySelectorAll('button').forEach(function(b){b.disabled=busy;});
+    ['results-entry-metadata','results-entry-session-rows'].forEach(function(id){byId(id).querySelectorAll('input,select,button').forEach(function(c){c.disabled=busy||isReadOnly();});});
+    paintPublication();
+    timeAdjustments.render();
+    if (!button) return;
+    button.disabled = busy;
+    button.textContent = busy ? busyLabel : label;
+  }
+
+  function load(force) {
+    if(state.busy)return;
+    force=force||state.openRequested;
+    if (state.loaded && !force) return;
+    if (state.dirty && force && !window.confirm('Discard the unsaved round changes and refresh the season list?')) return;
+    const button = byId('refresh-results-entry-list');
+    setBusy(button, true, 'Refresh', 'Refreshing…');
+    status(force ? 'Refreshing the active season…' : 'Loading the active season…');
+    google.script.run.withSuccessHandler(function(response) {
+      state.initial = response;
+      state.loaded = true;
+      resetWorkspace();
+      renderSeasonOptions();
+      setBusy(button, false, 'Refresh', 'Refreshing…');
+      status(response.message || 'Generated seasons loaded.');
+      state.openRequested=false;if(state.season&&state.division)openDivision();
+    }).withFailureHandler(function(error) {
+      setBusy(button, false, 'Refresh', 'Refreshing…');
+      fail(error, 'The generated season list could not be loaded.');
+    }).getResultsEntryInitial(force === true);
+  }
+
+  function renderSeasonOptions() {
+    const seasons = state.initial && state.initial.seasons || [];
+    const select = byId('results-entry-season');
+    const available = seasons.some(function(item) { return item.season === state.season; });
+    if (!available) state.season = seasons[0] ? seasons[0].season : '';
+    byId('results-entry-current-season').textContent=state.season?'Season '+state.season:'No active season';
+    state.hubSeason=state.season;byId('results-entry-active-back').hidden=!state.season;
+    byId('results-entry-active-back').textContent='← S'+state.season+' Active season';
+    select.innerHTML = '<option value="">Choose a season…</option>' + seasons.map(function(item) {
+      return '<option value="' + esc(item.season) + '"' + (item.season === state.season ? ' selected' : '') + '>Season ' + esc(item.season) + (item.readOnly ? ' · read-only' : '') + '</option>';
+    }).join('');
+    renderDivisionOptions();
+  }
+
+  function isReadOnly() {
+    return !!((state.round && state.round.readOnly) || (state.overview && state.overview.readOnly));
+  }
+
+  function applyReadOnlyControls() {
+    ['results-entry-metadata','results-entry-session-rows'].forEach(function(id) {
+      byId(id).querySelectorAll('input,select,button').forEach(function(control) {
+        if (isReadOnly()) control.disabled = true;
+      });
+    });
+    byId('save-results-entry-round').hidden = isReadOnly();
+    byId('results-entry-editing-note').hidden = isReadOnly();
+  }
+
+  function selectedSeason() {
+    const seasons = state.initial && state.initial.seasons || [];
+    return seasons.find(function(item) { return item.season === state.season; });
+  }
+
+  function renderDivisionOptions() {
+    const season = selectedSeason();
+    const divisions = season ? season.divisions : [];
+    const valid = divisions.some(function(item) { return Number(item.division) === Number(state.division); });
+    if (!valid) state.division = '';
+    const select = byId('results-entry-division');
+    select.disabled = !season;
+    select.innerHTML = '<option value="">Choose a Division…</option>' + divisions.map(function(item) {
+      return '<option value="' + item.division + '"' + (Number(item.division) === Number(state.division) ? ' selected' : '') + '>Division ' + item.division + '</option>';
+    }).join('');
+  }
+
+  function discardRound(message) {
+    if (!state.dirty) return true;
+    return window.confirm(message || 'Discard the unsaved round changes?');
+  }
+
+  function resetWorkspace() {
+    state.overviewGeneration++;
+    timeAdjustments.reset();
+    state.overview = null;
+    state.round = null;
+    state.sessionId = '';
+    state.dirty = false;
+    state.reorderedSessions = {};
+    byId('results-entry-workspace').hidden = true;
+    byId('results-entry-round-content').hidden = true;
+    updateSaveState();
+  }
+
+  function openDivision() {
+    if(state.busy)return;
+    const season = byId('results-entry-season').value;
+    const division = Number(byId('results-entry-division').value);
+    if (!season || !division) return status('Choose an active-season division first.', 'error');
+    if (!discardRound('Discard the unsaved round changes and open another Division?')) return;
+    state.season = season;
+    state.division = division;
+    const generation=++state.overviewGeneration;
+    state.round = null;
+    state.dirty = false;
+    byId('results-entry-round-content').hidden = true;
+    const button = byId('open-results-entry-division');
+    setBusy(button, true, 'Open Division', 'Opening…');
+    status('Opening Season ' + season + ' Division ' + division + '…');
+    google.script.run.withSuccessHandler(function(response) {
+      if(generation!==state.overviewGeneration)return;
+      state.overview = response;
+      byId('results-entry-workspace').hidden = false;
+      byId('results-entry-source').textContent = response.sourceName + ' · Season ' + response.season + ' · Division ' + response.division;
+      populateRoundOptions();
+      updateSaveState();
+      setBusy(button, false, 'Open Division', 'Opening…');
+      status(response.readOnly ? 'Completed history — read-only. Choose a round to view.' : 'Division opened. Choose the round you want to enter.');
+      if(response.progressPending)scheduleOverview(generation);
+    }).withFailureHandler(function(error) {
+      setBusy(button, false, 'Open Division', 'Opening…');
+      fail(error, 'The selected Division workbook could not be opened.');
+    }).getResultsEntryDivision({ season:season, division:division,indexOnly:true }, false);
+  }
+
+  function scheduleOverview(generation){
+    setTimeout(function(){
+      if(generation!==state.overviewGeneration||!state.overview?.progressPending)return;
+      if(byId('view-results-entry').hidden)return;
+      if(state.busy||document.hidden){scheduleOverview(generation);return;}
+      const season=state.season,division=state.division;
+      const work=()=>new Promise(function(resolve){
+        if(generation!==state.overviewGeneration||!state.overview?.progressPending||state.overviewChecking===generation||byId('view-results-entry').hidden){resolve();return;}
+        if(state.busy||document.hidden){scheduleOverview(generation);resolve();return;}
+        state.overviewChecking=generation;
+        google.script.run.withSuccessHandler(function(response){
+          if(generation===state.overviewGeneration){
+            // Navigation badges can update while typing; the results form and
+            // its revision must never be replaced by a background reply.
+            const selected=byId('results-entry-round').value,current=state.round;
+            if(current&&current.progress){const r=response.rounds.find(r=>r.sheetName===current.sheetName);if(r)r.progress=current.progress;}
+            state.overview=response;populateRoundOptions();byId('results-entry-round').value=selected;applyReadOnlyControls();resolve();
+          }else resolve();
+        }).withFailureHandler(function(){if(generation===state.overviewGeneration){state.overview.progressPending=false;byId('results-entry-round-nav').title='Progress checks unavailable. Each round is checked when opened.';}resolve();}).getResultsEntryDivision({season:season,division:division},false);
+      });
+      if(window.F1XLBackground)window.F1XLBackground.request('results-overview:'+season+':'+division,work);else work();
+    },1500);
+  }
+  window.addEventListener('f1xl-view-change',function(){if(state.overview?.progressPending&&!byId('view-results-entry').hidden)scheduleOverview(state.overviewGeneration);});
+
+  function populateRoundOptions() {
+    byId('results-entry-round-nav').title=state.overview?.progressPending?'Checking saved-round progress…':'';
+    const select = byId('results-entry-round');
+    const rounds = state.overview && state.overview.rounds || [];
+    select.innerHTML = '<option value="">Choose a round…</option>' + rounds.map(function(round) {
+      return '<option value="' + esc(round.sheetName) + '">R' + round.round + ' · ' + esc(round.circuit || 'Track not linked') + ' · ' + esc(round.format) + (round.entrants ? ' · ' + round.entrants + ' results' : '') + '</option>';
+    }).join('');
+    renderRoundButtons();
+  }
+
+  function renderRoundButtons(){
+    const rounds=state.overview&&state.overview.rounds||[];
+    byId('results-entry-round-nav').innerHTML=rounds.map(function(r){const progress=r.progress||(state.overview.progressPending?'Checking':'Unknown'),active=state.round&&state.round.sheetName===r.sheetName;
+      return '<button class="button result-round '+progress.toLowerCase()+(active?' active':'')+'" type="button" data-results-round="'+esc(r.sheetName)+'" aria-pressed="'+!!active+'" title="'+esc('R'+r.round+' · '+r.circuit+' · '+r.format+' · '+progress)+'">R'+r.round+(progress==='Complete'?' ✓':progress==='Partial'?' ◐':progress==='Cancelled'?' ×':'')+'</button>';
+    }).join('');
+  }
+
+  function loadRound(force) {
+    if(state.busy)return;
+    if (!state.overview) return status('Open a Division first.', 'error');
+    const sheetName = byId('results-entry-round').value || (state.round && state.round.sheetName);
+    if (!sheetName) return status('Choose a round first.', 'error');
+    if (!discardRound('Discard the unsaved changes and reload this round?')) {byId('results-entry-round').value=state.round?state.round.sheetName:'';return;}
+    const button = force ? byId('refresh-results-entry-round') : byId('open-results-entry-round');
+    setBusy(button, true, force ? 'Refresh round' : 'Open round', force ? 'Refreshing…' : 'Opening…');
+    status((force ? 'Refreshing ' : 'Opening ') + sheetName + '…');
+    google.script.run.withSuccessHandler(function(response) {
+      timeAdjustments.reset();state.round=response;carryReminderKey="";
+      const overviewRound=state.overview.rounds.find(function(r){return r.sheetName===response.sheetName;});if(overviewRound&&response.progress)overviewRound.progress=response.progress;
+      state.sessionId = response.sessions[0] ? response.sessions[0].id : '';
+      state.dirty = false;
+      state.reorderedSessions = {};
+      renderRound();
+      updateSaveState();
+      setBusy(button, false, force ? 'Refresh round' : 'Open round', force ? 'Refreshing…' : 'Opening…');
+      status(response.lockedReason||(response.readOnly ? 'Completed history — read-only. Deliberate corrections remain available in Google Sheets.' : response.sheetName + ' is open. Changes remain in the browser until Save complete round is pressed.'));
+    }).withFailureHandler(function(error) {
+      setBusy(button, false, force ? 'Refresh round' : 'Open round', force ? 'Refreshing…' : 'Opening…');
+      fail(error, 'The selected round could not be opened.');
+    }).getResultsEntryRound({ season:state.season, division:state.division, sheetName:sheetName }, force === true);
+  }
+
+  function ensureDatalists() {
+    const host = byId('view-results-entry');
+    const lists = {
+      'results-entry-driver-options':state.round.options.drivers || [],
+      'results-entry-team-options':state.round.options.teams || []
+    };
+    Object.keys(lists).forEach(function(id) {
+      let list = byId(id);
+      if (!list) { list = document.createElement('datalist'); list.id = id; host.appendChild(list); }
+      list.innerHTML = Array.from(new Set(lists[id])).map(function(value) { return '<option value="' + esc(value) + '"></option>'; }).join('');
+    });
+  }
+
+  function selectOptions(values, selected, blankLabel) {
+    const options = [''].concat(values || []);
+    if (selected && options.indexOf(selected) < 0) options.push(selected);
+    return Array.from(new Set(options)).map(function(value) {
+      return '<option value="' + esc(value) + '"' + (String(value) === String(selected || '') ? ' selected' : '') + '>' + esc(value || blankLabel || '—') + '</option>';
+    }).join('');
+  }
+
+  let carryReminderRows=[],carryReminderBans=[],carryReminderKey='',carryReminderError=false;
+  function renderCarryReminders(){
+    const box=byId('results-carryovers');if(!state.round){box.hidden=true;return;}
+    const key=state.season+'|'+state.division+'|'+state.round.sheetName;
+    if(key!==carryReminderKey){carryReminderKey=key;carryReminderRows=[];carryReminderBans=[];carryReminderError=false;
+      google.script.run.withSuccessHandler(data=>{if(key!==carryReminderKey)return;carryReminderRows=data.rows||[];carryReminderBans=data.bans||[];renderCarryReminders();}).withFailureHandler(()=>{if(key!==carryReminderKey)return;carryReminderError=true;renderCarryReminders();}).getResultsCarryoverReminders({season:state.season,division:state.division,round:state.round.round});
+    }
+    const session=state.round.sessions.find(s=>s.id===state.sessionId),names=(session?.rows||[]).map(r=>String(r.driver||'').trim().toLowerCase());
+    const rows=carryReminderRows.filter(r=>['race','sprintRace'].includes(state.sessionId)&&names.includes(r.driver.toLowerCase())&&(r.round<state.round.round||(r.round===state.round.round&&r.session==='sprintRace'&&state.sessionId==='race'))&&(r.scope==='any'||r.session===state.sessionId));
+    const pending=carryReminderBans.filter(b=>!b.served),count=rows.length+pending.length;
+    box.hidden=!window.F1XLAccess?.can('licences');box.innerHTML=carryReminderError?'<p>Outstanding penalties could not be checked. Open the window to try again.</p>':rows.map(r=>'<p><strong>'+esc(r.driver)+' · '+esc(r.seconds)+'s outstanding carry-over</strong> (R'+r.round+'). Check before adjusting this result.</p>').join('');
+    if(!box.hidden){const b=document.createElement('button');b.type='button';b.className='button';b.textContent='Penalties due this round'+(count?' · '+count+' to check':'');b.onclick=openResultsCarryovers;box.append(b);}
+  }
+  // This dialog never navigates, reloads or rerenders the results form beneath it.
+  let resultsCarryDialog=null,resultsCarryGeneration=0,resultsCarrySaving=false;
+  const carryRpc=(name,input)=>new Promise((resolve,reject)=>google.script.run.withSuccessHandler(resolve).withFailureHandler(reject)[name](input));
+  async function openResultsCarryovers(){
+    if(!state.round)return;
+    if(!resultsCarryDialog){
+      resultsCarryDialog=document.createElement('dialog');resultsCarryDialog.id='results-carryover-dialog';
+      resultsCarryDialog.style.cssText='width:min(760px,94vw);max-height:90vh;overflow:auto';
+      resultsCarryDialog.innerHTML='<div class="dialog-head"><h2>Penalties due this round</h2><button type="button" class="button" data-carry-return>Return to results</button></div><div class="details" style="display:block"><p data-carry-context></p><p data-carry-hint></p><p role="status" aria-live="polite" data-carry-status></p><section data-ban-rows></section><div data-carry-rows></div></div>';
+      document.body.appendChild(resultsCarryDialog);
+      const close=()=>{if(resultsCarrySaving)return;resultsCarryGeneration++;resultsCarryDialog.close();renderCarryReminders();};
+      resultsCarryDialog.querySelector('[data-carry-return]').onclick=close;
+      resultsCarryDialog.addEventListener('cancel',e=>{e.preventDefault();close();});
+    }
+    const generation=++resultsCarryGeneration,season=state.season,division=state.division,round=state.round.round,sessionId=state.sessionId;
+    const status=resultsCarryDialog.querySelector('[data-carry-status]'),list=resultsCarryDialog.querySelector('[data-carry-rows]');
+    const names=new Set(state.round.sessions.flatMap(s=>s.rows.map(r=>String(r.driver||'').trim().toLowerCase())).filter(Boolean));
+    resultsCarryDialog.querySelector('[data-carry-context]').textContent='S'+season+' · Division '+division+' · R'+round;
+    resultsCarryDialog.querySelector('[data-carry-hint]').textContent=state.dirty?'Your unsaved results are kept here. Return and save them before confirming any penalties served.':'Tick bans served at this round. For time penalties, check the next participation and confirm only after adjusting and saving the result.';
+    list.innerHTML='';resultsCarryDialog.querySelector('[data-ban-rows]').innerHTML='';status.textContent='Loading outstanding penalties…';resultsCarryDialog.showModal();
+    const current=()=>generation===resultsCarryGeneration&&resultsCarryDialog.open;
+    try{
+      const data=await carryRpc('getResultsRoundPenalties',{season,division,round});if(!current())return;
+      renderResultsBans(data.bans||[],{season,division,round},current);
+      const rows=data.rows.filter(r=>r.status==='Pending'&&names.has(r.driver.toLowerCase())&&(r.round<round||(r.round===round&&r.session==='sprintRace')));
+      status.textContent=rows.length||(data.bans||[]).length?'':'No outstanding penalties to check for this division and round.';
+      if(rows.length){const title=document.createElement('h3');title.textContent='Time penalties';list.append(title);}
+      rows.forEach(r=>{
+        const card=document.createElement('article');card.className='panel';
+        card.innerHTML='<strong>'+esc(r.driver)+' · '+esc(r.seconds)+' seconds</strong><p>'+esc(r.reference||'No ticket reference')+' · D'+esc(r.division)+' · '+esc(r.originLabel)+'</p><p data-message></p><button type="button" class="button" data-check>Check next participation</button> <button type="button" class="button" data-confirm hidden></button>';
+        list.appendChild(card);const check=card.querySelector('[data-check]'),confirm=card.querySelector('[data-confirm]'),message=card.querySelector('[data-message]');
+        let preview=null;
+        check.onclick=async()=>{
+          if(resultsCarrySaving)return;
+          check.disabled=true;confirm.hidden=true;message.textContent='Checking saved results…';
+          try{preview=await carryRpc('previewLicenceCarryover',{season,id:r.id,revision:r.revision});if(!current())return;
+            message.textContent=preview.message+(state.dirty?' Unsaved results have not been included in this check. Return to results and save before confirming.':'');
+            const sameResult=preview.result&&Number(preview.result.division)===Number(division)&&Number(preview.result.round)===Number(round)&&preview.result.session===sessionId;
+            confirm.hidden=!preview.ready||state.dirty||!sameResult||!window.F1XLAccess?.can('licences',2);
+            confirm.textContent=preview.action==='Cleared'?'Clear — second DNF':'Confirm seconds included in saved result';
+            if(preview.ready&&!sameResult)message.textContent+=' This belongs to another saved session. Finish these results first; then open that session to check its adjustment.';
+          }catch(e){if(current())message.textContent=e.message||'Could not check this penalty. Try again.';}finally{if(current())check.disabled=false;}
+        };
+        confirm.onclick=async()=>{
+          if(resultsCarrySaving||state.dirty||!preview?.ready)return;
+          resultsCarrySaving=true;resultsCarryDialog.querySelectorAll('button,input,select').forEach(b=>b.disabled=true);
+          try{await carryRpc('saveLicenceCarryover',{season,id:r.id,revision:r.revision,action:'resolve',preview:preview.revision});
+            message.textContent=preview.action==='Cleared'?'Cleared after the second DNF.':'Carry-over recorded as applied.';check.hidden=true;confirm.hidden=true;carryReminderKey='';
+          }catch(e){message.textContent=e.message||'Save was not confirmed. Check again before retrying.';confirm.hidden=true;}
+          finally{resultsCarrySaving=false;resultsCarryDialog.querySelectorAll('button,input,select').forEach(b=>b.disabled=b.dataset.keepDisabled==='true');}
+        };
+      });
+    }catch(e){if(current())status.textContent=(e.message||'Could not load penalties.')+' Your results are still here. Return to results and try again later.';}
+  }
+  function renderResultsBans(bans,context,current){
+    const area=resultsCarryDialog.querySelector('[data-ban-rows]');area.innerHTML='';if(!bans.length)return;
+    const title=document.createElement('h3');title.textContent='Race and qualifying bans';area.append(title);
+    const note=document.createElement('p');note.textContent='Confirm race bans even when the driver is absent. Only tick earlier or unscheduled bans if they were served at this round.';area.append(note);
+    const cards=[];bans.forEach(b=>{
+      const card=document.createElement('article');card.className='panel';card.style.cssText='padding:14px;margin:10px 0';
+      const reason=String(b.reason||'').replace(/\[Ticket [^\]]+\]/g,'').trim();
+      card.innerHTML='<strong>'+esc(b.driver)+' · '+esc(b.type)+'</strong><p>'+esc(b.status)+(b.scheduled?' · Listed for '+esc(b.scheduled):'')+'</p><p>Incurred: '+esc(b.incurred||'Not recorded')+(reason?' · '+esc(reason):'')+'</p>';
+      if(!b.served&&b.sessions.length){
+        const disabled=state.dirty||!window.F1XLAccess?.can('licences',2);
+        card.innerHTML+='<label style="display:flex;align-items:center;gap:8px"><input type="checkbox" style="width:auto;margin:0" data-ban-tick'+(disabled?' disabled data-keep-disabled="true"':'')+'> Served at R'+esc(context.round)+'</label><label style="display:block;margin-top:10px">Session <select data-ban-session'+(disabled?' disabled data-keep-disabled="true"':'')+'>'+b.sessions.map(s=>'<option value="'+esc(s.id)+'">'+esc(s.label)+'</option>').join('')+'</select></label>';
+        // A generic ban on a sprint weekend needs an explicit session choice.
+        const select=card.querySelector('select');if(b.sessions.length>1){const option=document.createElement('option');option.value='';option.textContent='Choose session';select.prepend(option);select.value='';}
+        cards.push({b,card});
+      }else if(!b.served){const p=document.createElement('p');p.textContent=b.kind==='season'?'This driver is banned for the rest of the season. Do not mark the whole ban served after this race.':'This ban type needs checking in Licences & bans after you finish these results.';card.append(p);}
+      area.append(card);
+    });
+    if(cards.length){
+      const feedback=document.createElement('p');feedback.setAttribute('role','status');const save=document.createElement('button');save.type='button';save.className='button';save.textContent='Save selected bans as served';save.disabled=state.dirty||!window.F1XLAccess?.can('licences',2);save.dataset.keepDisabled=String(save.disabled);
+      save.onclick=async()=>{
+        if(resultsCarrySaving||state.dirty)return;
+        const selected=cards.filter(x=>x.card.querySelector('[data-ban-tick]').checked).map(x=>({row:x.b.row,revision:x.b.revision,session:x.card.querySelector('select').value}));
+        if(!selected.length){feedback.textContent='Tick the bans that were served at this round.';return;}
+        if(selected.some(b=>!b.session)){feedback.textContent='Choose the session for each selected ban.';return;}
+        resultsCarrySaving=true;resultsCarryDialog.querySelectorAll('button,input,select').forEach(b=>b.disabled=true);feedback.textContent='Saving served bans…';
+        try{const response=await carryRpc('saveResultsServedBans',{...context,bans:selected});if(!current())return;carryReminderKey='';renderResultsBans(response.bans,context,current);resultsCarryDialog.querySelector('[data-carry-status]').textContent=response.message;}
+        catch(e){if(current())feedback.textContent=e.message||'Save was not confirmed. Reopen the window to check.';}
+        finally{resultsCarrySaving=false;resultsCarryDialog.querySelectorAll('button,input,select').forEach(b=>b.disabled=b.dataset.keepDisabled==='true');}
+      };
+      area.append(feedback,save);
+    }
+  }
+  function renderRound() {
+    if (!state.round) return;
+    ensureDatalists();
+    byId('results-entry-round-content').hidden = false;
+    byId('results-entry-round').value = state.round.sheetName;
+    renderRoundButtons();
+    byId('results-entry-round-title').textContent = 'Season ' + state.season + ' · Division ' + state.division + ' · R' + state.round.round + ' · ' + (state.round.circuit || 'Track not linked');
+    byId('results-entry-round-format').textContent = state.round.format;
+    byId('results-entry-workbook-link').href = state.round.workbookUrl;
+    renderMetadata();
+    byId('results-entry-session-nav').innerHTML = state.round.sessions.map(function(session) {
+      return '<button class="button' + (session.id === state.sessionId ? ' active' : '') + '" type="button" data-results-entry-session="' + esc(session.id) + '">' + esc(session.label) + '</button>';
+    }).join('');
+    renderSession();
+  }
+
+  function metadataField(label, key, values) {
+    const value = state.round.metadata[key] || '';
+    if (values) return '<div class="field"><label>' + esc(label) + '</label><select data-results-entry-meta="' + key + '">' + selectOptions(values, value, '—') + '</select></div>';
+    return '<div class="field"><label>' + esc(label) + '</label><input type="text" value="' + esc(value) + '" data-results-entry-meta="' + key + '"></div>';
+  }
+
+  function renderMetadata() {
+    let html = metadataField('Qualifying weather','qualiWeather',state.round.options.weather)
+      + metadataField('Race weather','raceWeather',state.round.options.weather)
+      + metadataField('Safety cars','safetyCars')
+      + metadataField('Red flags','redFlags')
+      + metadataField('Cancelled','cancelled');
+    if (state.round.isSprint) html += (state.round.isLegacySprint ? '' : metadataField('Sprint qualifying weather','sprintQualiWeather',state.round.options.weather))
+      + metadataField('Sprint race weather','sprintRaceWeather',state.round.options.weather)
+      + metadataField('Sprint safety cars','sprintSafetyCars')
+      + metadataField('Sprint red flags','sprintRedFlags');
+    byId('results-entry-metadata').innerHTML = html;
+    applyReadOnlyControls();
+  }
+
+  function currentSession() {
+    return state.round && state.round.sessions.find(function(session) { return session.id === state.sessionId; });
+  }
+
+  function input(value, row, field, className, list) {
+    return '<input class="' + (className || '') + '" type="text" value="' + esc(value) + '" data-results-entry-row="' + row + '" data-results-entry-field="' + field + '"' + (list ? ' list="' + list + '"' : '') + '>';
+  }
+
+  function teamSelect(value, row) {
+    return '<select data-results-entry-row="' + row + '" data-results-entry-field="team">' + selectOptions(state.round.options.teams,value,'Choose team…') + '</select>';
+  }
+
+  function sprintQualifyingTeam(driver) {
+    if (!state.round || !state.round.isSprint || state.round.isLegacySprint || !driver) return '';
+    const sprintQualifying = state.round.sessions.find(function(item) { return item.id === 'sprintQualifying'; });
+    const match = sprintQualifying && sprintQualifying.rows.find(function(row) { return String(row.driver || '').trim().toLowerCase() === String(driver).trim().toLowerCase(); });
+    return match ? match.team || '' : '';
+  }
+
+  function positionLabel(session, row, index) {
+    if (!row.driver) return '';
+    if (session.kind === 'race' && /^(DNF|DSQ)$/i.test(String(row.gap || ''))) return String(row.gap).toUpperCase();
+    return index + 1;
+  }
+
+  function moveButtons(index, total) {
+    return '<div class="results-entry-move"><button class="button" type="button" data-results-entry-move="up" data-results-entry-move-row="' + index + '"' + (index === 0 ? ' disabled' : '') + ' aria-label="Move result up">↑</button><button class="button" type="button" data-results-entry-move="down" data-results-entry-move-row="' + index + '"' + (index === total - 1 ? ' disabled' : '') + ' aria-label="Move result down">↓</button></div>';
+  }
+
+  function renderSession() {
+    renderCarryReminders();
+    const session = currentSession();
+    if (!session) return;
+    renderDriverOptions(session);
+    if (session.kind === 'qualifying') {
+      byId('results-entry-session-head').innerHTML = '<tr><th>Pos</th><th>Move</th><th>Nat</th><th>#</th><th>Driver</th><th>Team</th><th>Time</th><th>Tyre</th><th>Penalty points</th><th>Penalty</th></tr>';
+      byId('results-entry-session-rows').innerHTML = session.rows.map(function(row, index) {
+        const team = state.round.isSprint && !state.round.isLegacySprint && session.id === 'qualifying' ? '<span class="results-entry-auto">' + esc(row.team || 'From Sprint Qualifying') + '</span>' : teamSelect(row.team,index);
+        return '<tr><td>' + esc(positionLabel(session,row,index)) + '</td><td>' + moveButtons(index,session.rows.length) + '</td><td><span class="results-entry-auto">' + esc(row.nationality || 'Auto') + '</span></td><td><span class="results-entry-auto">' + esc(row.number || 'Auto') + '</span></td><td>' + input(row.driver,index,'driver','driver-cell','results-entry-driver-'+index) + '</td><td>' + team + '</td><td>' + input(row.time,index,'time') + '</td><td><select data-results-entry-row="' + index + '" data-results-entry-field="tyre">' + selectOptions(state.round.options.tyres,row.tyre,'—') + '</select></td><td>' + esc(row.licencePoints || '—') + '</td><td>' + esc(row.licencePenalty || '—') + '</td></tr>';
+      }).join('');
+    } else {
+      byId('results-entry-session-head').innerHTML = '<tr><th>Pos</th><th>Move</th><th>Nat</th><th>#</th><th>Driver</th><th>Team</th><th>Stops</th><th>Gap / status</th><th>Points</th><th class="results-entry-fl">FL</th><th>Penalty points</th><th>Penalty</th></tr>';
+      byId('results-entry-session-rows').innerHTML = session.rows.map(function(row, index) {
+        const points = state.reorderedSessions[session.id] ? 'Recalc on save' : (row.points || '0');
+        return '<tr><td>' + esc(positionLabel(session,row,index)) + '</td><td>' + moveButtons(index,session.rows.length) + '</td><td><span class="results-entry-auto">' + esc(row.nationality || 'Auto') + '</span></td><td><span class="results-entry-auto">' + esc(row.number || 'Auto') + '</span></td><td>' + input(row.driver,index,'driver','driver-cell','results-entry-driver-'+index) + '</td><td><span class="results-entry-auto">' + esc(row.team || 'Auto') + '</span></td><td>' + input(row.stops,index,'stops','short-cell') + '</td><td>' + input(row.gap,index,'gap') + '</td><td>' + esc(points) + '</td><td class="results-entry-fl"><label class="inline-check"><input type="checkbox" aria-label="Fastest lap" data-results-entry-row="' + index + '" data-results-entry-field="fastestLap"' + (String(row.fastestLap).toUpperCase() === 'Y' ? ' checked' : '') + '></label></td><td>' + esc(row.licencePoints || '—') + '</td><td>' + esc(row.licencePenalty || '—') + '</td></tr>';
+      }).join('');
+    }
+    applyReadOnlyControls();
+    timeAdjustments.render();
+  }
+
+  function driverDetail(name) {
+    const key = String(name || '').trim().toLowerCase();
+    return (state.round.options.driverDetails || []).find(function(item) { return String(item.driver || '').trim().toLowerCase() === key; });
+  }
+
+  function renderDriverOptions(session){
+    document.querySelectorAll('[data-results-driver-list]').forEach(function(e){e.remove();});
+    session.rows.forEach(function(row,index){
+      const taken=new Set(session.rows.filter(function(r,i){return i!==index;}).map(function(r){return String(r.driver||'').trim().toLowerCase();}));
+      const list=document.createElement('datalist');list.id='results-entry-driver-'+index;list.dataset.resultsDriverList='';
+      list.innerHTML=(state.round.options.drivers||[]).filter(function(name){return !taken.has(String(name).trim().toLowerCase());}).map(function(name){return '<option value="'+esc(name)+'"></option>';}).join('');
+      byId('view-results-entry').appendChild(list);
+    });
+  }
+
+  function fillQualifyingDefaults(session){
+    if(session.kind!=='qualifying'||!session.rows[0]||!session.rows[0].driver)return;
+    const first=session.rows[0];
+    session.rows.slice(1).forEach(function(row,index){
+      if(!row.driver)return;
+      ['tyre'].forEach(function(field){
+        if(row.tyreEdited||String(row[field]||'').trim()||!first[field])return;
+        row[field]=first[field];
+        const control=byId('results-entry-session-rows').querySelector('[data-results-entry-row="'+(index+1)+'"][data-results-entry-field="'+field+'"]');if(control)control.value=row[field];
+      });
+    });
+  }
+
+  function changeValue(target, committed) {
+    if (isReadOnly()) return;
+    const session = currentSession();
+    if (!session) return;
+    const row = Number(target.dataset.resultsEntryRow);
+    const field = target.dataset.resultsEntryField;
+    if (!session.rows[row] || !field) return;
+    if(field==='driver'&&!committed){state.dirty=true;updateSaveState();return;}
+    if(field==='driver'&&target.value.trim()&&session.rows.some(function(r,i){return i!==row&&String(r.driver||'').trim().toLowerCase()===target.value.trim().toLowerCase();})){
+      target.value=session.rows[row].driver||'';status('That driver is already entered in this session.','error');return;
+    }
+    session.rows[row][field] = target.type === 'checkbox' ? (target.checked ? 'Y' : '') : target.value;
+    if(field==='tyre'&&committed)session.rows[row].tyreEdited=true;
+    if (field === 'driver') {
+      const detail = driverDetail(target.value);
+      if (detail) {
+        session.rows[row].nationality = detail.nationality || '';
+        session.rows[row].number = detail.number || '';
+        session.rows[row].team = state.round.isSprint && !state.round.isLegacySprint && session.id === 'qualifying' ? (sprintQualifyingTeam(target.value) || detail.team || '') : (detail.team || '');
+      } else {
+        session.rows[row].nationality = '';
+        session.rows[row].number = '';
+        session.rows[row].team = '';
+      }
+      session.rows[row].licencePoints = 'Recalc on save';
+      session.rows[row].licencePenalty = 'Recalc on save';
+    }
+    const teamEntrySession = state.round.isSprint && !state.round.isLegacySprint ? 'sprintQualifying' : 'qualifying';
+    if (field === 'team' && session.id === teamEntrySession) {
+      state.round.sessions.forEach(function(otherSession) {
+        if (otherSession.id === session.id) return;
+        otherSession.rows.forEach(function(item) {
+          if (String(item.driver || '').trim().toLowerCase() === String(session.rows[row].driver || '').trim().toLowerCase()) item.team = target.value;
+        });
+      });
+    }
+    state.dirty = true;
+    if(committed&&(field==='driver'||field==='tyre'))fillQualifyingDefaults(session);
+    updateSaveState();
+    if (field === 'driver') renderSession();
+  }
+
+  function moveResult(direction, rowIndex) {
+    if (isReadOnly()) return;
+    const session = currentSession();
+    if (!session) return;
+    const destination = direction === 'up' ? rowIndex - 1 : rowIndex + 1;
+    if (destination < 0 || destination >= session.rows.length) return;
+    const temporary = session.rows[rowIndex];
+    session.rows[rowIndex] = session.rows[destination];
+    session.rows[destination] = temporary;
+    state.reorderedSessions[session.id] = true;
+    state.dirty = true;
+    updateSaveState();
+    renderSession();
+    status('Order adjusted in the browser. Position and points will recalculate when the complete round is saved.');
+  }
+
+  function changeMetadata(target) {
+    if (isReadOnly()) return;
+    if (!state.round || !target.dataset.resultsEntryMeta) return;
+    state.round.metadata[target.dataset.resultsEntryMeta] = target.value;
+    state.dirty = true;
+    updateSaveState();
+  }
+
+  function savePayload() {
+    return state.round.sessions.map(function(session) {
+      return { id:session.id, rows:session.rows.map(function(row) {
+        return session.kind === 'qualifying'
+          ? [row.nationality,row.number,row.driver,row.team,row.time,row.tyre]
+          : [row.nationality,row.driver,row.stops,row.gap,row.fastestLap];
+      }) };
+    });
+  }
+
+  function saveRound() {
+    if(state.busy)return;
+    if (isReadOnly()) return;
+    if (!state.round) return status('Open a round before saving.', 'error');
+    if (!state.dirty) return status('There are no unsaved changes.');
+    const button = byId('save-results-entry-round');
+    setBusy(button, true, 'Save complete round', 'Saving…');
+    status('Saving Season ' + state.season + ' Division ' + state.division + ' ' + state.round.sheetName + '…');
+    google.script.run.withSuccessHandler(function(response) {
+      timeAdjustments.reset();state.round=response;carryReminderKey="";
+      const overviewRound=state.overview.rounds.find(function(r){return r.sheetName===response.sheetName;});if(overviewRound)overviewRound.progress=response.progress||'Partial';
+      state.dirty = false;
+      state.reorderedSessions = {};
+      renderRound();
+      updateSaveState();
+      setBusy(button, false, 'Save complete round', 'Saving…');
+      status(response.message || 'The complete round was saved.', 'success');
+      if(response.publicationPending)publishSavedResults(null,true).catch(()=>{});
+    }).withFailureHandler(function(error) {
+      setBusy(button, false, 'Save complete round', 'Saving…');
+      fail(error, 'The round could not be saved. Your entries remain on this screen.');
+    }).saveResultsEntryRound({
+      season:state.season,
+      division:state.division,
+      sheetName:state.round.sheetName,
+      revision:state.round.revision,
+      metadata:state.round.metadata,
+      sessions:savePayload(),
+      timeAdjustments:timeAdjustments.payload()
+    });
+  }
+
+  function publicationKey(selection){return selection.season+'/'+selection.division;}
+  function paintPublication(){
+    const label=byId('results-entry-publication-state'),button=byId('retry-results-entry-publication');
+    const job=publications.get(publicationKey(state)),pending=!!state.round&&!!(job?.pending||state.round.publicationPending);
+    button.hidden=!pending||!!job?.flight;button.disabled=!!state.busy||!!job?.flight;
+    label.textContent=!state.round?'':job?.flight?'Saved results: website updating…':pending?'Saved results: website update pending'+(job?.error?' — '+job.error:''):job?'Saved results: website updated':'';
+    label.classList.toggle('error',!!job?.error);
+  }
+  // One publication in flight per division. A later save schedules another
+  // pass, and an earlier reply never clears the later save's pending status.
+  function publishSavedResults(selection,changed){
+    selection=selection||{season:state.season,division:state.division};
+    const key=publicationKey(selection);let job=publications.get(key);
+    if(!job){job={version:0,pending:true,flight:null,error:''};publications.set(key,job);}
+    if(changed)job.version++;job.pending=true;
+    if(job.flight)return job.flight;
+    const version=job.version;job.error='';
+    job.flight=new Promise((resolve,reject)=>google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).publishResultsEntryRound(selection)).then(function(){
+      job.flight=null;
+      if(version!==job.version)return publishSavedResults(selection,false);
+      job.pending=false;
+      if(publicationKey(state)===key&&state.round)state.round.publicationPending=false;
+      paintPublication();return true;
+    },function(error){job.flight=null;job.error=error.message||String(error);paintPublication();throw error;});
+    paintPublication();return job.flight;
+  }
+
+  function updateSaveState() {
+    const element = byId('results-entry-save-state');
+    applyReadOnlyControls();
+    element.textContent = !state.round ? 'No round opened' : isReadOnly() ? (state.round.lockedReason?'Cancelled round · read-only':'Completed history · read-only') : (state.dirty ? 'Unsaved changes' : 'No unsaved changes');
+    paintPublication();
+    element.classList.toggle('dirty', state.dirty);
+    byId('results-entry-season').disabled = state.dirty;
+    byId('results-entry-division').disabled = state.dirty || !selectedSeason();
+    byId('results-entry-round').disabled = state.dirty;
+  }
+
+  byId('results-entry-season').addEventListener('change', function(event) {
+    state.season = event.target.value;
+    state.division = '';
+    resetWorkspace();
+    renderDivisionOptions();
+  });
+  byId('results-entry-division').addEventListener('change', function(event) { state.division = Number(event.target.value) || ''; resetWorkspace(); });
+  byId('open-results-entry-division').addEventListener('click', openDivision);
+  byId('refresh-results-entry-list').addEventListener('click', function() { load(true); });
+  byId('open-results-entry-round').addEventListener('click', function() { loadRound(false); });
+  byId('results-entry-round-nav').addEventListener('click',function(event){const b=event.target.closest('[data-results-round]');if(!b||state.busy)return;byId('results-entry-round').value=b.dataset.resultsRound;loadRound(false);});
+  byId('refresh-results-entry-round').addEventListener('click', function() { loadRound(true); });
+  byId('save-results-entry-round').addEventListener('click', saveRound);
+  byId('retry-results-entry-publication').addEventListener('click',()=>{if(!state.busy&&state.round)publishSavedResults().catch(()=>{});});
+  byId('results-entry-session-nav').addEventListener('click', function(event) {
+    const button = event.target.closest('[data-results-entry-session]');
+    if (!button) return;
+    state.sessionId = button.dataset.resultsEntrySession;
+    renderRound();
+  });
+  byId('results-entry-session-rows').addEventListener('click', function(event) {
+    const button = event.target.closest('[data-results-entry-move]');
+    if (button) moveResult(button.dataset.resultsEntryMove, Number(button.dataset.resultsEntryMoveRow));
+  });
+  byId('view-results-entry').addEventListener('input', function(event) {
+    if (event.target.matches('[data-results-entry-field]')) changeValue(event.target,false);
+    if (event.target.matches('[data-results-entry-meta]')) changeMetadata(event.target);
+  });
+  byId('view-results-entry').addEventListener('change', function(event) {
+    if (event.target.matches('[data-results-entry-field]')) changeValue(event.target,true);
+    if (event.target.matches('[data-results-entry-meta]')) changeMetadata(event.target);
+  });
+  window.addEventListener('beforeunload', function(event) {
+    if (!state.dirty&&!state.busy) return;
+    event.preventDefault();
+    event.returnValue = '';
+  });
+  byId('results-entry-active-back').addEventListener('click',function(){window.F1XLSeasonLaunch.open(state.hubSeason);});
+  const ticketDialog=byId('ticket-results-dialog'),resultsView=byId('view-results-entry');
+  let ticketHome=null,ticketCompletion=null,ticketCompleteCallback=null;
+  const ticketCall=(name,...args)=>new Promise((resolve,reject)=>google.script.run.withSuccessHandler(resolve).withFailureHandler(reject)[name](...args));
+  function closeTicketResults(event){
+    if(event)event.preventDefault();
+    if(state.busy){status('Wait for the save and website update to finish.');return;}
+    if(!discardRound('Discard these unsaved result changes and return to penalties?'))return;
+    timeAdjustments.reset();state.dirty=false;ticketDialog.close();ticketCompletion=null;ticketCompleteCallback=null;byId('ticket-results-complete').hidden=true;
+    if(ticketHome){ticketHome.parent.insertBefore(resultsView,ticketHome.next);ticketHome=null;}
+    resultsView.hidden=true;
+  }
+  ticketDialog.addEventListener('cancel',closeTicketResults);
+  byId('ticket-results-close').onclick=closeTicketResults;
+  async function openTicketRound(season,division,round,summary,group){
+    if(state.busy)throw Error('The results editor is saving. Wait for it to finish.');
+    if(!discardRound())return;
+    state.overviewGeneration++;
+    const call=(name,...args)=>new Promise((resolve,reject)=>google.script.run.withSuccessHandler(resolve).withFailureHandler(reject)[name](...args));
+    setBusy(null,true);try{
+      const initial=await call('getResultsEntryInitial',true);
+      if(!initial.seasons.some(s=>s.season===String(season)))throw Error('This ticket is not for the active season.');
+      const overview=await call('getResultsEntryDivision',{season:String(season),division:Number(division),indexOnly:true},true);
+      const data=group?await call('getTicketDivisionResults',{raceName:group.raceName,division:Number(division)}):await call('getTicketResultsRound',{season:String(season),division:Number(division),sheetName:'R'+round},true);
+      ticketCompletion=data.ticketCompletion||null;ticketCompleteCallback=group?.onComplete||null;byId('ticket-results-complete').hidden=!ticketCompletion;
+      timeAdjustments.reset();state.initial=initial;state.loaded=true;state.season=String(season);state.division=Number(division);state.overview=overview;state.round=data;state.dirty=false;state.reorderedSessions={};state.sessionId=data.sessions.find(s=>s.id==='race')?.id||data.sessions[0]?.id||'';
+      renderSeasonOptions();populateRoundOptions();renderRound();updateSaveState();byId('results-entry-workspace').hidden=false;
+      ticketHome={parent:resultsView.parentNode,next:resultsView.nextSibling};byId('ticket-results-mount').appendChild(resultsView);resultsView.hidden=false;
+      byId('ticket-results-title').textContent='Division '+division+' · Round '+round+' · Adjust results';byId('ticket-results-penalties').textContent=summary;
+      if(ticketCompletion){byId('ticket-results-penalties').innerHTML='<strong>Outstanding adjustments included in completion</strong><ul>'+ticketCompletion.items.map(t=>'<li><strong>Ticket #'+esc(t.ticketNumber)+' · '+esc(t.label)+'</strong> — '+t.penalties.map(p=>esc(p.driver)+' · '+esc(p.session)+': '+(p.removedSeconds?'Remove '+p.removedSeconds+' seconds from result':p.previousRemovedSeconds?'Cancel previous '+p.previousRemovedSeconds+' second removal':p.seconds+' sec added')+' (licence seconds change '+(p.secondsDelta>0?'+':'')+p.secondsDelta+')').join('; ')+'</li>').join('')+'</ul>'+(ticketCompletion.unapplied.length?'<p>Tickets '+ticketCompletion.unapplied.map(n=>'#'+esc(n)).join(', ')+' have not been applied and are not included.</p>':'');}
+      ticketDialog.showModal();status('Check the imported penalty columns, then adjust times and positions as needed. Save complete round updates the website.');if(overview.progressPending)scheduleOverview(state.overviewGeneration);
+    }finally{setBusy(null,false);}
+  }
+  byId('ticket-results-complete').onclick=async function(){
+    if(state.busy||!ticketCompletion||isReadOnly())return;
+    const button=byId('ticket-results-complete');setBusy(button,true,'Save and complete division','Saving…');
+    let saved=!state.dirty;
+    try{
+      if(state.dirty){
+        const response=await ticketCall('saveResultsEntryRound',{season:state.season,division:state.division,sheetName:state.round.sheetName,revision:state.round.revision,metadata:state.round.metadata,sessions:savePayload(),timeAdjustments:timeAdjustments.payload()});
+        timeAdjustments.reset();state.round=response;carryReminderKey="";state.dirty=false;state.reorderedSessions={};saved=true;renderRound();updateSaveState();
+      }
+      if(state.round.publicationPending){status('Results saved. Updating the website…');await publishSavedResults(null,true);state.round.publicationPending=false;}
+      const complete=await ticketCall('confirmTicketDivisionResults',{raceName:ticketCompletion.raceName,division:ticketCompletion.division,tickets:ticketCompletion.tickets,resultsRevision:state.round.revision});
+      if(ticketCompleteCallback)ticketCompleteCallback(complete);ticketCompletion=null;button.hidden=true;status(complete.message,'success');
+    }catch(error){status((saved?'Results are saved; ticket completion is unfinished. ':'Save not confirmed; ticket adjustments remain outstanding. ')+(error.message||error),'error');}
+    finally{setBusy(button,false,'Save and complete division','Saving…');updateSaveState();}
+  };
+  window.F1XLResultsEntry = { load:load, openTicketRound:openTicketRound, open:function(season,division){
+    if(state.busy)return;
+    if(!discardRound())return;
+    state.hubSeason=String(season);byId('results-entry-active-back').hidden=false;byId('results-entry-active-back').textContent='← S'+season+' Active season';
+    state.season=String(season);state.division=Number(division);resetWorkspace();
+    state.openRequested=true;state.loaded=false;window.F1XLNavigate('results-entry');
+  } };
+})();
+</script>

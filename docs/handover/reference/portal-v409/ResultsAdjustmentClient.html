@@ -1,0 +1,100 @@
+<style>
+#results-adjustment-dialog{width:min(1120px,96vw);max-height:92vh;padding:0;overflow:auto;background:var(--panel,#132219);color:var(--text,#eff7f1);border:1px solid var(--line,#45604b);border-radius:16px}
+#results-adjustment-dialog .adjustment-head,#results-adjustment-dialog .adjustment-footer{position:sticky;background:var(--panel,#132219);padding:16px 20px;z-index:2;display:flex;gap:12px;align-items:center;justify-content:space-between}
+#results-adjustment-dialog .adjustment-head{top:0;border-bottom:1px solid var(--line,#45604b)}#results-adjustment-dialog .adjustment-footer{bottom:0;border-top:1px solid var(--line,#45604b)}
+#results-adjustment-dialog h2,#results-adjustment-dialog h3{margin:0}#results-adjustment-dialog .adjustment-body{padding:18px 20px}#results-adjustment-dialog table{width:100%;border-collapse:collapse}#results-adjustment-dialog th,#results-adjustment-dialog td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line,#45604b)}
+#results-adjustment-dialog input[type=number]{width:112px;min-width:85px;padding:9px}#results-adjustment-dialog small{display:block;color:var(--muted,#acbdb3)}#results-adjustment-dialog .adjustment-winner{padding:15px;margin:16px 0;border-left:4px solid #99db71;background:rgba(107,173,81,.12);font-size:19px}#results-adjustment-dialog .adjustment-winner strong{font-variant-numeric:tabular-nums}
+#results-adjustment-dialog .adjustment-changed{background:rgba(100,180,120,.12)}#results-adjustment-dialog .adjustment-table{overflow-x:auto}#results-adjustment-dialog .adjustment-table table{min-width:620px}#results-adjustment-dialog .adjustment-confirm{display:flex;gap:9px;align-items:flex-start;margin:15px 0}#results-adjustment-dialog .adjustment-confirm input{width:auto;min-width:0;margin-top:4px}#results-adjustment-dialog .adjustment-manual{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:8px 0}#results-adjustment-dialog .adjustment-manual select{max-width:300px}#results-adjustment-dialog details{margin:16px 0}#results-adjustment-dialog .error{color:#ffada6}#results-adjustment-dialog button{min-height:38px}
+@media(max-width:600px){#results-adjustment-dialog .adjustment-head,#results-adjustment-dialog .adjustment-footer{padding:12px;align-items:flex-start}#results-adjustment-dialog .adjustment-body{padding:12px}#results-adjustment-dialog h2{font-size:20px}#results-adjustment-dialog .adjustment-footer{flex-wrap:wrap}}
+</style>
+<script>
+(function(){
+  'use strict';
+  // BEGIN SHARED TIME CALCULATOR
+function resultsAdjustmentCalculate_(rows, adjustments) {
+  const clean=v=>String(v==null?'':v).trim().replace(/^'/,'').trim();
+  const key=v=>clean(v).toLowerCase();
+  function millis(value, gap) {
+    const s=clean(value),m=s.match(gap?/^\+(?:(\d+):)?(\d+)(?:\.(\d{1,3}))?$/:/^(?:(\d+):)?(\d+):(\d{2})(?:\.(\d{1,3}))?$/);
+    if(!m)return null;
+    if(gap){if(m[1]&&Number(m[2])>=60)return null;return (Number(m[1]||0)*60+Number(m[2]))*1000+Number((m[3]||'').padEnd(3,'0'));}
+    if(Number(m[3])>=60||(m[1]&&Number(m[2])>=60))return null;
+    return (Number(m[1]||0)*3600+Number(m[2])*60+Number(m[3]))*1000+Number((m[4]||'').padEnd(3,'0'));
+  }
+  function time(ms) {const s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor(s/60)%60;return (h?h+':'+String(m).padStart(2,'0'):String(Math.floor(s/60)))+':'+String(s%60).padStart(2,'0')+'.'+String(ms%1000).padStart(3,'0');}
+  function gap(ms){return '+'+Math.floor(ms/1000)+'.'+String(ms%1000).padStart(3,'0');}
+  const entries=[],seen=new Set(),deltas=new Map();
+  (adjustments||[]).forEach(a=>{const n=Number(a.seconds),k=key(a.driver);if(!k||!Number.isFinite(n)||Math.abs(n)>3600||Math.abs(n*1000-Math.round(n*1000))>0.00001)throw Error('Enter seconds to three decimal places or fewer (up to 3600 seconds).');deltas.set(k,(deltas.get(k)||0)+Math.round(n*1000));});
+  (rows||[]).forEach((r,i)=>{if(!clean(r.driver)){if(clean(r.gap))throw Error('A finishing time has no driver. Complete that row first.');return;}const k=key(r.driver);if(seen.has(k))throw Error('A driver appears twice. Remove the duplicate first.');seen.add(k);entries.push({row:r,index:i,key:k});});
+  if(!entries.length)throw Error('Enter the race results first.');
+  if(entries[0].index!==0)throw Error('Put the winner in the first row before calculating.');
+  const leader=millis(entries[0].row.gap,false);
+  if(leader===null||leader<=0)throw Error('Enter the winner’s full race time, for example 45:32.218.');
+  let last=-1,untimed=false;const timed=[],other=[];
+  entries.forEach((e,i)=>{const s=clean(e.row.gap),offset=i===0?0:millis(s,true),delta=deltas.get(e.key)||0;
+    if(offset===null){if(!/^(?:\+?\d+\s+Laps?|DNF|DSQ|DNS|DNC)$/i.test(s))throw Error('Check '+e.row.driver+'’s gap: use +seconds, +1 Lap, DNF or DSQ.');untimed=true;if(delta)throw Error(e.row.driver+' has '+s+'. Adjust this driver manually; an exact finishing time is unavailable.');other.push({...e,delta:0,oldGap:s,newGap:s,oldTime:'',newTime:'',manual:true});return;}
+    if(untimed||offset<last)throw Error('The current gaps are out of finishing order. Correct them before calculating.');last=offset;
+    const finish=leader+offset+delta;if(finish<=0)throw Error('The adjustment would give '+e.row.driver+' an invalid finishing time.');
+    timed.push({...e,delta,oldGap:s,oldTime:time(leader+offset),newTime:time(finish),finish});
+  });
+  for(const [k,n] of deltas)if(n&&!seen.has(k))throw Error('An adjusted driver is missing from this race.');
+  timed.sort((a,b)=>a.finish-b.finish||a.index-b.index);
+  const winner=timed[0],ordered=timed.concat(other),warnings=[];
+  if(other.length)warnings.push('Lapped drivers and DNFs retain their relative order. Their time penalties need a manual check.');
+  timed.forEach((e,i)=>{e.newGap=i?gap(e.finish-winner.finish):time(e.finish);if(i&&e.finish===timed[i-1].finish)warnings.push(e.row.driver+' and '+timed[i-1].row.driver+' have equal times; their existing order is retained.');});
+  const output=ordered.map((e,i)=>({...e.row,gap:e.newGap}));
+  (rows||[]).filter(r=>!clean(r.driver)).forEach(r=>output.push({...r}));
+  return {rows:output,winner:winner.row.driver,winnerTime:time(winner.finish),warnings,changes:ordered.map((e,i)=>({driver:e.row.driver,oldPosition:e.index+1,newPosition:i+1,oldGap:e.oldGap,newGap:e.newGap,oldTime:e.oldTime,newTime:e.newTime,seconds:e.delta/1000,manual:!!e.manual}))};
+}
+
+  // END SHARED TIME CALCULATOR
+  const esc=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+  const clone=v=>JSON.parse(JSON.stringify(v)),key=v=>String(v||'').trim().toLowerCase();
+  const seconds=v=>(v>0?'+':'')+Number(v).toFixed(3).replace(/\.?0+$/,'')+'s';
+  function create(hooks){
+    const byId=id=>document.getElementById(id),plans=new Map();let dialog=null,model=null,loading=false,generation=0;
+    function render(){
+      const s=hooks.get(),race=s.session?.kind==='race'&&!s.readOnly,staged=plans.has(s.session?.id);
+      byId('results-adjustment-tools').hidden=!race;
+      byId('results-adjustment-open').disabled=!!s.busy||staged;
+      byId('results-adjustment-undo').hidden=!staged;byId('results-adjustment-undo').disabled=!!s.busy;
+      byId('results-adjustment-state').textContent=staged?'Preview applied to this form — save the round when ready.':'';
+      if(staged)byId('results-entry-session-rows').querySelectorAll('[data-results-entry-field="gap"],[data-results-entry-field="driver"],[data-results-entry-move]').forEach(e=>e.disabled=true);
+    }
+    function reset(){plans.clear();generation++;if(dialog?.open)dialog.close();model=null;loading=false;render();}
+    function payload(){return Array.from(plans.values()).map(p=>p.plan);}
+    function undo(){const s=hooks.get(),p=plans.get(s.session?.id);if(!p||s.busy)return;const current=new Map(s.session.rows.filter(r=>r.driver).map(r=>[key(r.driver),r]));const rows=p.before.map(r=>r.driver?{...r,...(current.get(key(r.driver))||{}),gap:r.gap}:r);plans.delete(s.session.id);hooks.use(rows,'Time preview undone. Your other edits are kept.');render();}
+    function close(){generation++;loading=false;if(dialog?.open)dialog.close();model=null;}
+    function ensure(){if(dialog)return;dialog=document.createElement('dialog');dialog.id='results-adjustment-dialog';dialog.setAttribute('aria-labelledby','results-adjustment-title');dialog.innerHTML='<div class="adjustment-head"><div><h2 id="results-adjustment-title">Preview adjusted results</h2><small data-adjust-context></small></div><button type="button" class="button" data-adjust-close>Return to results</button></div><div class="adjustment-body"><p role="status" aria-live="polite" data-adjust-status></p><div data-adjust-content></div></div><div class="adjustment-footer"><span data-adjust-footer>Nothing is saved until you save the round.</span><button type="button" class="button primary" data-adjust-use disabled>Use these results</button></div>';document.body.appendChild(dialog);dialog.querySelector('[data-adjust-close]').onclick=close;dialog.addEventListener('cancel',e=>{e.preventDefault();close();});dialog.querySelector('[data-adjust-use]').onclick=use;}
+    async function open(){
+      const s=hooks.get();if(s.busy||s.readOnly||s.session?.kind!=='race'||plans.has(s.session.id))return;
+      ensure();const gen=++generation;loading=true;model=null;dialog.querySelector('[data-adjust-context]').textContent='S'+s.season+' · Division '+s.division+' · R'+s.round.round+' · '+s.session.label;dialog.querySelector('[data-adjust-content]').innerHTML='';dialog.querySelector('[data-adjust-status]').textContent='Checking saved time adjustments…';dialog.querySelector('[data-adjust-use]').disabled=true;dialog.showModal();
+      try{const data=await new Promise((resolve,reject)=>google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).getResultsTimeAdjustments({season:s.season,division:s.division,sheetName:s.round.sheetName,revision:s.round.revision,sessionId:s.session.id}));if(gen!==generation||!dialog.open)return;
+        const draftTimes=s.session.rows.filter(r=>r.driver).map(r=>[key(r.driver),String(r.gap||'').trim().replace(/^'/,'')]);
+        if(JSON.stringify(draftTimes)!==JSON.stringify(data.savedTimes)){data.drift=true;data.sources=data.sources.map(t=>({...t,tracked:false,included:t.tracked||t.checked?null:t.included}));}
+        model={data,before:clone(s.session.rows),sessionId:s.session.id,contextKey:[s.season,s.division,s.round.sheetName,s.round.revision].join('|'),manual:[],result:null};loading=false;draw();
+      }catch(e){if(gen===generation&&dialog.open){loading=false;dialog.querySelector('[data-adjust-status]').textContent=e.message||String(e);}}
+    }
+    function draw(){
+      const m=model,content=dialog.querySelector('[data-adjust-content]');
+      content.innerHTML='<p>Check the seconds below. Positive adds time; negative removes time. The preview recalculates the winner’s time and everyone’s gaps.</p>'+(m.data.drift?'<p class="error">These results were edited since the last calculation. Check how many penalty seconds are already included before continuing.</p>':'')+
+        (m.data.sources.length?'<div class="adjustment-table"><table><thead><tr><th>Use</th><th>Driver / ticket</th><th>Decision</th><th>Already included</th><th>Change now</th></tr></thead><tbody>'+m.data.sources.map((t,i)=>{const row=m.before.find(r=>key(r.driver)===key(t.driver)),eligible=row&&!/lap|DNF|DSQ|DNS|DNC/i.test(row.gap||'');return '<tr><td><input type="checkbox" aria-label="Use ticket '+esc(t.ticket)+' for '+esc(t.driver)+'" data-adjust-source="'+i+'"'+(eligible?' checked':'')+'></td><td>'+esc(t.driver)+'<small>Ticket #'+esc(t.ticket)+(t.tracked?' · recorded in these times':t.checked?' · previously marked checked':'')+'</small>'+(!eligible?'<small>Manual check: '+esc(row?.gap||'not in this race')+'</small>':'')+'</td><td>'+seconds(t.target)+'</td><td><input type="number" step="0.001" min="-3600" max="3600" data-adjust-included="'+i+'" aria-label="Seconds already included for '+esc(t.driver)+' ticket '+esc(t.ticket)+'" value="'+(t.included==null?'':esc(t.included))+'"'+(t.tracked?' readonly':'')+'></td><td data-adjust-delta="'+i+'"></td></tr>';}).join('')+'</tbody></table></div><small>“Already included” is the number of seconds previously added to these finishing times. Use 0 for a new penalty; use a negative number for a previous removal.</small>':'<p>No ticket time adjustments are recorded for this session. You can enter a manual correction below.</p>')+
+        '<details'+(!m.data.sources.length?' open':'')+'><summary>Extra time correction or carryover</summary><p>Enter only extra seconds to change now. Check a carryover’s next participation in “Penalties due this round” first.</p><div data-adjust-manual></div><button type="button" class="button" data-adjust-add>Add time correction</button></details>'+
+        (m.data.sources.some(t=>!t.tracked)?'<label class="adjustment-confirm"><input type="checkbox" data-adjust-confirm>I have checked which seconds are already included in these times.</label>':'')+
+        '<div data-adjust-preview></div>';
+      content.querySelectorAll('[data-adjust-source],[data-adjust-included],[data-adjust-confirm]').forEach(e=>e.addEventListener('input',preview));content.querySelector('[data-adjust-add]').onclick=()=>{m.manual.push({driver:'',seconds:''});manualRows();preview();};manualRows();preview();
+    }
+    function manualRows(){const host=dialog.querySelector('[data-adjust-manual]');host.innerHTML=model.manual.map((m,i)=>'<div class="adjustment-manual"><select data-adjust-driver="'+i+'" aria-label="Driver for extra correction">'+ '<option value="">Choose driver…</option>'+model.before.filter(r=>r.driver).map(r=>'<option value="'+esc(r.driver)+'"'+(r.driver===m.driver?' selected':'')+'>'+esc(r.driver)+'</option>').join('')+'</select><input type="number" step="0.001" min="-3600" max="3600" data-adjust-seconds="'+i+'" aria-label="Extra seconds to add or remove" value="'+esc(m.seconds)+'" placeholder="e.g. -3"><button type="button" class="button" data-adjust-remove="'+i+'">Remove</button></div>').join('');host.querySelectorAll('select,input').forEach(e=>e.oninput=()=>{const i=Number(e.dataset.adjustDriver??e.dataset.adjustSeconds);model.manual[i][e.dataset.adjustDriver!=null?'driver':'seconds']=e.value;preview();});host.querySelectorAll('[data-adjust-remove]').forEach(e=>e.onclick=()=>{model.manual.splice(Number(e.dataset.adjustRemove),1);manualRows();preview();});}
+    function selected(){const selections=[],deltas=[];model.data.sources.forEach((t,i)=>{const checked=dialog.querySelector('[data-adjust-source="'+i+'"]').checked,v=dialog.querySelector('[data-adjust-included="'+i+'"]').value;dialog.querySelector('[data-adjust-delta="'+i+'"]').textContent=checked&&v!==''?seconds(t.target-Number(v)):'—';if(!checked)return;if(v===''||!Number.isFinite(Number(v)))throw Error('Enter seconds already included for '+t.driver+'.');selections.push({key:t.key,included:Number(v)});deltas.push({driver:t.driver,seconds:t.target-Number(v)});});model.manual.forEach(m=>{if(!m.driver||m.seconds===''||!Number.isFinite(Number(m.seconds)))throw Error('Choose a driver and enter the extra seconds.');deltas.push({driver:m.driver,seconds:Number(m.seconds)});});return {selections,deltas};}
+    function preview(){if(!model||loading)return;const status=dialog.querySelector('[data-adjust-status]'),host=dialog.querySelector('[data-adjust-preview]'),use=dialog.querySelector('[data-adjust-use]');use.disabled=true;model.result=null;status.className='';try{const chosen=selected(),result=resultsAdjustmentCalculate_(model.before,chosen.deltas);model.result=result;model.selections=chosen.selections;
+        host.innerHTML='<div class="adjustment-winner">New winner: <strong>'+esc(result.winner)+'</strong> · <strong>'+esc(result.winnerTime)+'</strong></div><div class="adjustment-table"><table><thead><tr><th>Position</th><th>Driver</th><th>Finishing time now</th><th>Change</th><th>Adjusted time</th><th>New gap / time</th></tr></thead><tbody>'+result.changes.map(r=>'<tr class="'+(r.seconds||r.oldPosition!==r.newPosition?'adjustment-changed':'')+'"><td>'+(r.manual?esc(r.oldGap):r.oldPosition+' → '+r.newPosition)+'</td><td>'+esc(r.driver)+'</td><td>'+esc(r.oldTime||'—')+'</td><td>'+seconds(r.seconds)+'</td><td>'+esc(r.newTime||'—')+'</td><td><strong>'+esc(r.newGap)+'</strong></td></tr>').join('')+'</tbody></table></div>'+result.warnings.map(w=>'<p>'+esc(w)+'</p>').join('');
+        const confirmed=dialog.querySelector('[data-adjust-confirm]'),hasChange=chosen.deltas.some(d=>Number(d.seconds))||chosen.selections.some(s=>!model.data.sources.find(t=>t.key===s.key)?.tracked);
+        status.textContent=!hasChange?'No further time adjustment is needed.':confirmed&&!confirmed.checked?'Check the “already included” amounts, then tick the confirmation below.':'Ready to put these results into the open form.';use.disabled=!hasChange||!!confirmed&&!confirmed.checked;
+      }catch(e){status.textContent=e.message||String(e);status.className='error';host.innerHTML='';}}
+    function use(){const s=hooks.get();if(!model?.result||dialog.querySelector('[data-adjust-use]').disabled)return;if(model.contextKey!==[s.season,s.division,s.round.sheetName,s.round.revision].join('|')||model.sessionId!==s.session?.id){dialog.querySelector('[data-adjust-status]').textContent='The open round changed. Reopen the preview.';return;}const m=model;const plan={sessionId:m.sessionId,contextRevision:m.data.revision,beforeRows:clone(m.before),selections:m.selections,manual:m.manual.map(x=>({driver:x.driver,seconds:Number(x.seconds)}))};plans.set(m.sessionId,{plan,before:m.before});close();hooks.use(m.result.rows);render();}
+    byId('results-adjustment-open').onclick=open;byId('results-adjustment-undo').onclick=undo;
+    return {render,reset,payload};
+  }
+  window.F1XLResultAdjustments={create};
+})();
+</script>

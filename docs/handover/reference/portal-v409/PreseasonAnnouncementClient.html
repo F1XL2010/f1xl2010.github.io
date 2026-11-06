@@ -1,0 +1,41 @@
+<style>
+ #pa-dialog{width:min(1000px,94vw);max-height:90vh;overflow:auto;box-sizing:border-box;background:#111e19;color:#eef5f0;border:1px solid #496459;border-radius:12px;padding:24px;}
+ #pa-dialog::backdrop{background:#000b;}#pa-dialog .toolbar{flex-wrap:wrap;}#pa-dialog select{max-width:100%;}#pa-report{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;line-height:1.55;}#pa-dialog fieldset{min-width:0;border:0;padding:0;}#pa-dialog a{color:#95edb4;}
+ #pa-dialog label:has(input[type="checkbox"]){display:flex;align-items:center;gap:8px;}#pa-dialog input[type="checkbox"]{width:auto;flex:none;margin:0;}
+</style>
+<dialog id="pa-dialog" aria-labelledby="pa-title">
+ <div class="toolbar"><h2 id="pa-title">Track statistics &amp; presentation</h2><button type="button" class="button" id="pa-close">Close</button></div>
+ <p>Use the saved track draw to prepare statistics and an optional editable presentation. Choose the history range, review each round’s figures, then create the deck. Edit backgrounds and check the slides before your reveal; this does not publish the website.</p>
+ <p id="pa-status" role="status" aria-live="polite"></p>
+ <fieldset id="pa-fields" disabled><p id="pa-scope"></p><div class="toolbar"><label>Statistics from<select id="pa-from"></select></label><label>Through / previous results<select id="pa-to"></select></label><button class="button" type="button" id="pa-load">Prepare statistics</button></div></fieldset>
+ <fieldset id="pa-review" hidden><div class="toolbar"><label>Round<select id="pa-round"></select></label><button class="button" type="button" id="pa-download">Download statistics</button></div><div id="pa-report"></div><details><summary>Sources and driver matching</summary><div id="pa-sources"></div></details><p><label><input type="checkbox" id="pa-checked">I have reviewed the statistics and source range.</label></p><button class="button" type="button" id="pa-create" disabled>Create editable presentation</button><p class="secondary-line">Creates a private draft and reusable template in Google Drive. The website is unchanged. Long statistics continue onto additional slides.</p></fieldset>
+ <p id="pa-output" hidden></p>
+</dialog>
+<script>
+window.F1XLPreseasonAnnouncement=(function(){
+ const el=id=>document.getElementById(id),state={season:'',revision:'',busy:false,report:null,token:'',task:null,next:0};
+ const esc=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ function status(text){el('pa-status').textContent=text;}
+ function busy(value){state.busy=value;el('pa-fields').disabled=value;el('pa-review').disabled=value;el('pa-close').disabled=value;}
+ function call(name,input){return new Promise((resolve,reject)=>google.script.run.withSuccessHandler(resolve).withFailureHandler(reject)[name](input));}
+ async function open(season,revision){
+  if(state.busy)return;state.season=season;state.revision=revision;state.report=null;state.task=null;state.token='';el('pa-review').hidden=true;el('pa-output').hidden=true;el('pa-load').textContent='Prepare statistics';el('pa-title').textContent='S'+season+' Track statistics & presentation';el('pa-dialog').showModal();busy(true);status('Loading available history…');
+  try{const o=await call('getPreseasonAnnouncementOptions',{season,revision});['from','to'].forEach(k=>{el('pa-'+k).innerHTML=o.seasons.map(s=>'<option value="'+esc(s)+'">Season '+esc(s)+'</option>').join('');el('pa-'+k).value=o[k]||'';});el('pa-scope').textContent=o.message;status(o.seasons.length?'Choose the history range, then prepare the statistics.':'No completed history is connected.');}catch(e){status(e.message||String(e));}finally{busy(false);}
+ }
+ async function prepare(){
+  if(state.busy)return;busy(true);el('pa-review').hidden=true;el('pa-output').hidden=true;state.report=null;el('pa-checked').checked=false;el('pa-create').disabled=true;
+  try{
+   if(!state.task){status('Preparing source list…');state.task=await call('beginPreseasonAnnouncement',{season:state.season,revision:state.revision,from:el('pa-from').value,to:el('pa-to').value});state.token=state.task.token;state.next=0;}
+   for(;state.next<state.task.total;state.next++){status('Reading '+state.task.labels[state.next]+' · '+(state.next+1)+' of '+state.task.total);await call('readPreseasonAnnouncementDivision',{token:state.token,index:state.next});}
+   status('Combining driver records and reading permanent lap records…');state.report=await call('finishPreseasonAnnouncement',{token:state.token});state.task=null;el('pa-load').textContent='Refresh statistics';el('pa-review').hidden=false;el('pa-round').innerHTML=state.report.races.map((r,i)=>'<option value="'+i+'">Round '+r.round+' — '+esc(r.track)+'</option>').join('');render();status('Statistics ready. Review the figures before creating the presentation.');
+  }catch(e){const message=e.message||String(e);if(/expired/i.test(message)){state.task=null;state.token='';}el('pa-load').textContent=state.task?'Retry remaining sources':'Prepare statistics';status(message+' No presentation has been created.');}finally{busy(false);}
+ }
+ function trackText(r){const t=state.report.tracks.find(t=>t.track===r.track),lines=['Round '+r.round+' — '+r.track+' · '+r.date+' · '+r.weekend,'','CURRENT TRACK RECORDS'];lines.push(...(t.records.length?t.records.map(v=>'D'+v.division+' · '+v.time+' — '+v.driver+' (S'+v.season+')'):['No recorded lap record']));lines.push('','RESULTS S'+state.report.from+'–S'+state.report.to);['poles','wins','podiums'].forEach(k=>{const l=t.leaders[k];lines.push('Most '+k+': '+(l.count?l.names.join(', ')+' ('+l.count+')':'No recorded result'));});lines.push('','S'+state.report.to+' RESULTS',...(t.previous.length?t.previous.map(p=>'D'+p.division+' · R'+p.round+' — Pole: '+(p.pole||'No recorded pole')+'; Win: '+(p.win||'No recorded winner')):['Not raced']));return lines.join('\n');}
+ function render(){el('pa-report').textContent=trackText(state.report.races[Number(el('pa-round').value)]);el('pa-sources').innerHTML='<p>Read '+esc(state.report.created)+'. Names without a confirmed driver link are kept separate: '+esc(state.report.unlinked.join(', ')||'None')+'.</p>'+state.report.sources.map(s=>'<a target="_blank" rel="noopener" href="'+esc(s.url)+'">S'+esc(s.season)+' D'+s.division+'</a>').join(' · ')+'<p><a target="_blank" rel="noopener" href="'+esc(state.report.recordSource)+'">Permanent track records</a></p>';}
+ async function create(){if(state.busy||!state.report||!el('pa-checked').checked)return;busy(true);status('Creating the editable private presentation…');try{const result=await call('createPreseasonAnnouncementPresentation',{token:state.token});el('pa-output').innerHTML='<a class="button" target="_blank" rel="noopener" href="'+esc(result.url)+'">Open presentation ↗</a> · <a target="_blank" rel="noopener" href="'+esc(result.templateUrl)+'">Open reusable template ↗</a>';el('pa-output').hidden=false;status('Private draft ready · '+result.slides+' slides. Open it to review the layout, edit or download as PowerPoint.');}catch(e){status(e.message||String(e));}finally{busy(false);}}
+ el('pa-close').addEventListener('click',()=>el('pa-dialog').close());el('pa-dialog').addEventListener('cancel',e=>{if(state.busy)e.preventDefault();});el('pa-load').addEventListener('click',prepare);el('pa-create').addEventListener('click',create);el('pa-round').addEventListener('change',render);el('pa-checked').addEventListener('change',()=>el('pa-create').disabled=!el('pa-checked').checked);
+ ['from','to'].forEach(k=>el('pa-'+k).addEventListener('change',()=>{state.task=null;state.report=null;el('pa-review').hidden=true;el('pa-output').hidden=true;el('pa-load').textContent='Prepare statistics';}));
+ el('pa-download').addEventListener('click',()=>{if(!state.report)return;const text=state.report.races.map(trackText).join('\n\n--------------------\n\n')+'\n\nSources\n'+state.report.sources.map(s=>'S'+s.season+' D'+s.division+' '+s.url).join('\n')+'\n'+state.report.recordSource;const url=URL.createObjectURL(new Blob([text],{type:'text/plain;charset=utf-8'})),a=document.createElement('a');a.href=url;a.download='S'+state.season+' announcement statistics.txt';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});
+ return {open};
+})();
+</script>

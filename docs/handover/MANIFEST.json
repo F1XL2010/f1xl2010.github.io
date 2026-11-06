@@ -1,0 +1,996 @@
+{
+  "edition": "3.0",
+  "date": "2026-11-06",
+  "files": [
+    {
+      "path": ".gitattributes",
+      "bytes": 154,
+      "sha256": "b98db8e0da6a49cfb81953eb94814fc0838e25249f7d1610fa6dddf616e82717"
+    },
+    {
+      "path": "ai-pack/ARCHITECTURE.md",
+      "bytes": 4453,
+      "sha256": "7acba76f7823d2dc099e53f9d673ec10b3727b88621fab518a63b522dbaad2ef"
+    },
+    {
+      "path": "ai-pack/BACKUP-AND-RECOVERY.md",
+      "bytes": 4035,
+      "sha256": "fdb1a2a46665b19226037a02f06bfe539d69ed5c9dc1ce0866daf9ed59e990ef"
+    },
+    {
+      "path": "ai-pack/CODE-MAP.md",
+      "bytes": 3232,
+      "sha256": "282292e64de2ae058bd338c88a8ca532c5135a7d195eddc4e36d6997053c4080"
+    },
+    {
+      "path": "ai-pack/COMBINED-INTAKE-CUTOVER.md",
+      "bytes": 448,
+      "sha256": "cb9069f1a0737f91934d4b9e72ef53f890b71af373910d37b18da8b6838ab7ca"
+    },
+    {
+      "path": "ai-pack/CURRENT-STATE-CHECKPOINT-2026-08-27.md",
+      "bytes": 361,
+      "sha256": "3bc376bdc2e8be60d0c20291b5daed99f765dd2489ff134d95a3c578d4584729"
+    },
+    {
+      "path": "ai-pack/CURRENT-STATUS.md",
+      "bytes": 4248,
+      "sha256": "3fbd270a696f74049022bc216989b483edba984663da38c35b5f4774b3679412"
+    },
+    {
+      "path": "ai-pack/DATA-SOURCES.md",
+      "bytes": 5764,
+      "sha256": "f7ab56c076b26f85bd61913090b77977ef352f6e09cf1522febf0277f6fff359"
+    },
+    {
+      "path": "ai-pack/DECISION-HISTORY.md",
+      "bytes": 6788,
+      "sha256": "228523fa9914bdd39aafa55135665bf28c9877f1006b0557d80b5ba0ad624353"
+    },
+    {
+      "path": "ai-pack/DISCORD.md",
+      "bytes": 4581,
+      "sha256": "4f5d7f26eabbf80023fc928a2c89258fd3fae2d6e5b9830334b12ff6b48ba42b"
+    },
+    {
+      "path": "ai-pack/DRIVER-HISTORY-AUDIT.md",
+      "bytes": 469,
+      "sha256": "e0945e66ec097be8f02f7c403c4e160b2a12b3f5b41e7fd1d1bb0dbfe01c57fc"
+    },
+    {
+      "path": "ai-pack/EVIDENCE-AND-COVERAGE.md",
+      "bytes": 5737,
+      "sha256": "d5dc2908a19c3285baadadbb22079bc1b239055902eadee09647296f0a4c72b5"
+    },
+    {
+      "path": "ai-pack/GLOSSARY.md",
+      "bytes": 2340,
+      "sha256": "56c19cec9ec981eb932c5e9cb19f1a0204aa9625b7b4eab887fbf8cbfd482c0e"
+    },
+    {
+      "path": "ai-pack/GO-LIVE-ROADMAP-2026-10-23.md",
+      "bytes": 414,
+      "sha256": "72ba8adf7cd9174621cb492531d39392a0bf94766ccdea0397bed1ebd0759efe"
+    },
+    {
+      "path": "ai-pack/HISTORICAL-RECONCILIATION-HANDOVER-2026-09-10.md",
+      "bytes": 479,
+      "sha256": "2950857985742eccce506da8fe4e831510c89bf126ed73958223d198d2822b47"
+    },
+    {
+      "path": "ai-pack/KNOWN-ISSUES.md",
+      "bytes": 4540,
+      "sha256": "3e02d22fca3dacb8ece0624c5d90c05b47208a54851955eee0d2489a6a17d925"
+    },
+    {
+      "path": "ai-pack/LAUNCH-ACCESS-CHECK-2026-11-03.md",
+      "bytes": 467,
+      "sha256": "d1a90499d070ddf08d2c54d478b5be6c52ba2f0c8a6d2b3b8699f8e3a3b60457"
+    },
+    {
+      "path": "ai-pack/LAUNCH-HANDOVER-2026-11-03.md",
+      "bytes": 464,
+      "sha256": "aba14d7a4389cc38c32ac6c8ff63e74867aee8c93858bcf6cc5a9a79dfefeec0"
+    },
+    {
+      "path": "ai-pack/LEAGUE-RULES-AND-EXCEPTIONS.md",
+      "bytes": 5518,
+      "sha256": "71dbc59f1b269604034f6a60f76c66d5c8999cd55decdc16199599a71f2a1d31"
+    },
+    {
+      "path": "ai-pack/OPERATIONS.md",
+      "bytes": 5777,
+      "sha256": "577bfb83afdb0fee793b32f98797f15d3d5f9d264aba1ff17a1d22d4ccfdda50"
+    },
+    {
+      "path": "ai-pack/PRESEASON-WORKFLOW.md",
+      "bytes": 6905,
+      "sha256": "1eb32354090d883da41ab9d4fe231c84534e9221d28b24ba2ad60fa664512cb7"
+    },
+    {
+      "path": "ai-pack/PROJECT-PRINCIPLES.md",
+      "bytes": 4101,
+      "sha256": "4a3782c2bb33a4ffc28858d491c11cd039bfc431f9fa5dd8a0ee33a31f52067e"
+    },
+    {
+      "path": "ai-pack/RESULT-IMPORT-VALIDATION.md",
+      "bytes": 2487,
+      "sha256": "04fa1eb54f2962627879e4e4241e3e3f71d9e49287c36ab870a36fec5e725c60"
+    },
+    {
+      "path": "ai-pack/ROLES-AND-ACCESS.md",
+      "bytes": 5427,
+      "sha256": "61d8cf843a05ed54cd1a7c76969f85a002015977a4f53d43e58af941f0dbdb75"
+    },
+    {
+      "path": "ai-pack/START-HERE-AI.md",
+      "bytes": 4180,
+      "sha256": "4b5656d0aea31504344196df565a0b080efcb032ee77e3244335fc6615b19b98"
+    },
+    {
+      "path": "ai-pack/STATISTICS-AND-HISTORY.md",
+      "bytes": 5515,
+      "sha256": "ac3479334e96f9cc03ceebd33ffbd5181b0445ac1859274ac1056aeceeba9a03"
+    },
+    {
+      "path": "ai-pack/TESTING-CHECKLIST.md",
+      "bytes": 3944,
+      "sha256": "cb9eab73336c297c71ce0c1fee75dec2297557dea632ff50acc92420824468e7"
+    },
+    {
+      "path": "ai-pack/TICKETS-AND-PENALTIES.md",
+      "bytes": 8317,
+      "sha256": "a90c06e8523222436da259e096d757cfc6c86d55356b43eafd501308b35d46c1"
+    },
+    {
+      "path": "ai-pack/TRACKER-WALKTHROUGH-REVIEW-2026-09-14.md",
+      "bytes": 422,
+      "sha256": "7094470885b9664817d014f35b5ac91393c86d08aca9d4a0815044fd2755560a"
+    },
+    {
+      "path": "ai-pack/TRANSFER-AND-MAINTENANCE.md",
+      "bytes": 3617,
+      "sha256": "ad0fa6ae74727c82052b350a9940660e98d7b2b7df3a4601d66bd86536a7127d"
+    },
+    {
+      "path": "ai-pack/WORKFLOWS.md",
+      "bytes": 6334,
+      "sha256": "7a2de28248c6ebf892f344e04722790dcd44d4188be34ff6f9eff0f53e0076c1"
+    },
+    {
+      "path": "archive/2026-11-06-before-refresh/ai-pack/ARCHITECTURE.md",
+      "bytes": 10498,
+      "sha256": "60c5b93e632e4e70dce249d4ef155c74deeae3ff765946fb07a4a48c76b40525"
+    },
+    {
+      "path": "archive/2026-11-06-before-refresh/ai-pack/BACKUP-AND-RECOVERY.md",
+      "bytes": 3309,
+      "sha256": "8a164106330ec156c1acc08ffe816d5ec4c4e28f02e6fa70d3042921caccedbb"
+    },
+    {
+      "path": "archive/2026-11-06-before-refresh/ai-pack/COMBINED-INTAKE-CUTOVER.md",
+      "bytes": 10143,
+      "sha256": "d79cab0f14d4fd37012c18f02687ecea26e1299fd14106ca340b13ef8784cef9"
+    },
+    {
+      "path": "archive/2026-11-06-before-refresh/ai-pack/CURRENT-STATE-CHECKPOINT-2026-08-27.md",
+      "bytes": 14056,
+      "sha256": "ab6ee17fd8ce37060534681792adba3d2946da150d50a34aec84c3e8dea11bdd"
+    },
+    {
+      "path": "archive/2026-11-06-before-refresh/ai-pack/CURRENT-STATUS.md",
+      "bytes": 294255,
+      "sha256": "479a17d6664c23e2ee9712a143dfdca90b892740a974308bec28e97a2ad7f7eb"
+    },
+    {
+      "path": "archive/2026-11-06-before-refresh/ai-pack/DATA-SOURCES.md",
+      "bytes": 6535,
+      "sha256": "74f09c0b60d8e43704e6c0420a8d89c14e5fa63df7c906156836f5f6a8d5a15e"
+    },
+    {
+      "path": "archive/2026-11-06-before-refresh/ai-pack/DECISION-HISTORY.md",
+      "bytes": 24276,
+      "sha256": "c003cd018e8b16ae652105da76e90f931a0b0603043791f19fe6eadd5244fdd5"
+    },
+    {
+      "path": "archive/2026-11-06-before-refresh/ai-pack/DRIVER-HISTORY-AUDIT.md",
+      "bytes": 12158,
+      "sha256": "c8037eaec2195e2375c38a2bfbefaf27c376ba594022b5249936bfe557dc30e2"
+    },
+    {
+      "path": "archive/2026-11-06-before-refresh/ai-pack/GLOSSARY.md",
+      "bytes": 1897,
+      "sha256": "f2003e5368bbf74c9766fe21bca7b58d449049cebfda0656b4c2ca1cee49cef7"
+    },
+    {
+      "path": "archive/2026-11-06-before-refresh/ai-pack/GO-LIVE-ROADMAP-2026-10-23.md",
+      "bytes": 31926,
+      "sha256": "2a9620c4a84e96b73247d04d79430ae3da408a19a3ef483097537117f5c75aa5"
+    },
+    {
+      "path": "archive/2026-11-06-before-refresh/ai-pack/HISTORICAL-RECONCILIATION-HANDOVER-2026-09-10.md",
+      "bytes": 105795,
+      "sha256": "b12296e4152cc7beffc98567604406404508faccd807a777db88c6e72aeb6f7d"
+    },
+    {
+      "path": "archive/2026-11-06-before-refresh/ai-pack/KNOWN-ISSUES.md",
+      "bytes": 112263,
+      "sha256": "ec0e182eb50b3d760e1f0d41a8e27b23297d4c8900bb9aa18fd5e5c4e070ae04"
+    },
+    {
+      "path": "archive/2026-11-06-before-refresh/ai-pack/LAUNCH-ACCESS-CHECK-2026-11-03.md",
+      "bytes": 5081,
+      "sha256": "8a468db0e55bc75d5d7baa6980f41f45cb1b97280c7570bb0637f42c17525852"
+    },
+    {
+      "path": "archive/2026-11-06-before-refresh/ai-pack/LAUNCH-HANDOVER-2026-11-03.md",
+      "bytes": 32486,
+      "sha256": "e64cbc0762c550b427b3c13b8de1eb28442646464a575037a6cd346c2681a9f6"
+    },
+    {
+      "path": "archive/2026-11-06-before-refresh/ai-pack/OPERATIONS.md",
+      "bytes": 4912,
+      "sha256": "1592d59f9a9c4a6b176410859577d618e17085a3e85042c6bc7cabc12904b90c"
+    },
+    {
+      "path": "archive/2026-11-06-before-refresh/ai-pack/PRESEASON-WORKFLOW.md",
+      "bytes": 33276,
+      "sha256": "4c5b1a321a8f687465ade453946d54a4e5022253b8746595890fe2ad771e7560"
+    },
+    {
+      "path": "archive/2026-11-06-before-refresh/ai-pack/PROJECT-PRINCIPLES.md",
+      "bytes": 2382,
+      "sha256": "259ee5494b8ea9e63a8a6aa12850c9789e25d0f586db443b8d8bfc3ee095e491"
+    },
+    {
+      "path": "archive/2026-11-06-before-refresh/ai-pack/RESULT-IMPORT-VALIDATION.md",
+      "bytes": 1981,
+      "sha256": "21bc44afecb6dd5dab308bcec4e517ee547bc3da20f6bfaa49885d4fbb58c28e"
+    },
+    {
+      "path": "archive/2026-11-06-before-refresh/ai-pack/START-HERE-AI.md",
+      "bytes": 3079,
+      "sha256": "98cf14774ea115478a86fc6f83f0a2513dcee2bc08b9c205c036addca3267293"
+    },
+    {
+      "path": "archive/2026-11-06-before-refresh/ai-pack/TESTING-CHECKLIST.md",
+      "bytes": 2220,
+      "sha256": "04c89e50241696ae71d0ac0116e8033839b30cce35cc1da17cc4c54287d1d4b6"
+    },
+    {
+      "path": "archive/2026-11-06-before-refresh/ai-pack/TRACKER-WALKTHROUGH-REVIEW-2026-09-14.md",
+      "bytes": 7302,
+      "sha256": "9c9f31f41731d948d64a253e991284e48f78a4be57a05b22642f3647f47f157b"
+    },
+    {
+      "path": "archive/2026-11-06-before-refresh/CHANGELOG.md",
+      "bytes": 89947,
+      "sha256": "922a48f9deed4f2f42cdf697c16d719b2575cfdf0ebd9b5c408ff80069795df6"
+    },
+    {
+      "path": "archive/2026-11-06-before-refresh/owner-quick-start/COPY-PASTE-AI-PROMPT.md",
+      "bytes": 886,
+      "sha256": "f10a18a3ee14b0dbd03bf6ee76f1e92738b5e4d66f4d020b2ea7c0718795360d"
+    },
+    {
+      "path": "archive/2026-11-06-before-refresh/owner-quick-start/START-HERE.md",
+      "bytes": 4725,
+      "sha256": "3aa9d83adf2ba2b9c457273c979e4c5606f63ad964a3b7df7e41bbdaf79f3b35"
+    },
+    {
+      "path": "archive/2026-11-06-before-refresh/PACK-VERSION.md",
+      "bytes": 450,
+      "sha256": "53c55c0357d99342250be711c2b1b5e7b0e6fe5b8e805e4ec3925785db87a8fb"
+    },
+    {
+      "path": "archive/2026-11-06-before-refresh/preservation-manifest.json",
+      "bytes": 4441,
+      "sha256": "6c49ea98b6b3c3f8c2beb17bdabd7751ee4b511ae04b8cfc986d3df098ceaca6"
+    },
+    {
+      "path": "archive/2026-11-06-before-refresh/README.md",
+      "bytes": 1735,
+      "sha256": "33526251070991ccbdccc31ad98a43cacf454298eba7141a62c53506e0681384"
+    },
+    {
+      "path": "archive/HISTORICAL-INDEX.md",
+      "bytes": 38394,
+      "sha256": "a297eb3e0765abd12ae1c085786c769b86867d3985928d6e62e447b9af9619f1"
+    },
+    {
+      "path": "archive/README.md",
+      "bytes": 1037,
+      "sha256": "5a3b81cba89dd1b63d40af0b805298d2612c987468a5ec88da1e7ff31bdeef3b"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "bytes": 1238,
+      "sha256": "c6d14401d26887a78b4f57c1d33700ae0a4e70fcd54920327d0171e1c3f3a1e5"
+    },
+    {
+      "path": "HANDOVER-FOR-ANOTHER-AI.md",
+      "bytes": 111274,
+      "sha256": "ea8b66d6ba1524f9412b0d29e927cd2f8612c03cd16ee641d71fc3ccd1015c4a"
+    },
+    {
+      "path": "maintenance/build-briefing.cjs",
+      "bytes": 2579,
+      "sha256": "257a9dd7e81150e9bd3abbd80d137a7209a7e4a0396ba8b0763f951602d4b224"
+    },
+    {
+      "path": "maintenance/validate-pack.cjs",
+      "bytes": 3739,
+      "sha256": "75024a355dbfe79e825eeffb6159da204df380e6d270e4bc206f099dc65fb157"
+    },
+    {
+      "path": "owner-quick-start/COPY-PASTE-AI-PROMPT.md",
+      "bytes": 1746,
+      "sha256": "23bd81934681d10e2f4a03a9ce0623408ba15850e9221a63582c36c0ca47ee2c"
+    },
+    {
+      "path": "owner-quick-start/START-HERE.md",
+      "bytes": 1251,
+      "sha256": "6d3e976b1576a7147e614d937f765fa01966b14a1b4616ec0639f08fb7a9192b"
+    },
+    {
+      "path": "PACK-VERSION.md",
+      "bytes": 1187,
+      "sha256": "b768afedc3cd9e904636288d4fe490d86209e1a053248ef34a3020b743d81b6c"
+    },
+    {
+      "path": "README.md",
+      "bytes": 2347,
+      "sha256": "8a59463f363b41cbe6a7db1a4180c363e2d8057c59b8fe007461eb52960bf199"
+    },
+    {
+      "path": "reference/launch-2026-11-06/backup-content-verification.json",
+      "bytes": 2673,
+      "sha256": "7e39532636fa93dc34b951fb6fa7ebe578e7ad9c6ec6a36a70ffa68b48f8b79c"
+    },
+    {
+      "path": "reference/launch-2026-11-06/portal-final-verification.json",
+      "bytes": 233,
+      "sha256": "02902cef31aa7099f63e1024bc8ba7e9e4055354498e8d747eb0ace55dd2ceb9"
+    },
+    {
+      "path": "reference/launch-2026-11-06/public-feed-verification.json",
+      "bytes": 3839,
+      "sha256": "82909f08c9bbc2ab9b91082ff6b1313bffff702dc99447b53339703bdff8db5a"
+    },
+    {
+      "path": "reference/launch-2026-11-06/public-publication-verification.json",
+      "bytes": 11550,
+      "sha256": "d1937e8bb981d9f7384ba0857b6b21d080ce0735031bd2d62e2201121e44afa5"
+    },
+    {
+      "path": "reference/launch-2026-11-06/release.json",
+      "bytes": 6685,
+      "sha256": "d9e41dba5e6555e31a7938bbe2397df87ca43df3ba9952b03a3cea546cf4b585"
+    },
+    {
+      "path": "reference/launch-2026-11-06/rename-progress.json",
+      "bytes": 39625,
+      "sha256": "b56368c6f89cf02bc323793ce78c854fb580b49184dc0785d610aedaed99da0d"
+    },
+    {
+      "path": "reference/launch-2026-11-06/resolved-test-config.json",
+      "bytes": 4584,
+      "sha256": "21030ec45fa4451e84891436510be64790d193d3e588cc3bccbb3273e44bb8a4"
+    },
+    {
+      "path": "reference/portal-v409/AccessClient.html",
+      "bytes": 32806,
+      "sha256": "5c24fb75ae7a4c7e12e64fe3fb2c97c95442de038e07b186c22e135b704cb0ce"
+    },
+    {
+      "path": "reference/portal-v409/AccessPolicy.gs",
+      "bytes": 36915,
+      "sha256": "df275596de654935d608f854394785bc96fcf6da2e5fcc3c228357c544bda761"
+    },
+    {
+      "path": "reference/portal-v409/AccessService.gs",
+      "bytes": 31803,
+      "sha256": "fedf62258ecb65b19356817a572c5be81ea20d03d593b91bdaf31b8d9c12a7cf"
+    },
+    {
+      "path": "reference/portal-v409/AccoladeService.gs",
+      "bytes": 23431,
+      "sha256": "65a9695710e123395af55c34b52a0dd8a04d9fa842504534dd3a1d4cd1e4f8c4"
+    },
+    {
+      "path": "reference/portal-v409/ActiveAsrClient.html",
+      "bytes": 18370,
+      "sha256": "43e2a22cd681a50138846cee3c1c54551e65378b618d23b5327af4ac3e52c105"
+    },
+    {
+      "path": "reference/portal-v409/ActiveAsrRaceNightClient.html",
+      "bytes": 9154,
+      "sha256": "c973ab7984eebb1ec751e84a5e0d7ecacee2ce37c60253124f2ed59b6302019d"
+    },
+    {
+      "path": "reference/portal-v409/ActiveAsrService.gs",
+      "bytes": 26251,
+      "sha256": "6c997bcac2e7a69e38a975e6f003e6a5f905222318127c0f0b5a839f0db85495"
+    },
+    {
+      "path": "reference/portal-v409/ActiveSeasonClient.html",
+      "bytes": 25443,
+      "sha256": "d172e3de093d41eb02f00e686d750b7fdf99be54903bcbaf6ecf51be7bb3b6cd"
+    },
+    {
+      "path": "reference/portal-v409/ActiveSeasonService.gs",
+      "bytes": 22536,
+      "sha256": "45d0506698d1579d1d6379e013edd9b23a4439f4bf42e3dafc7619945c4f56b9"
+    },
+    {
+      "path": "reference/portal-v409/AdminCentreDesign.html",
+      "bytes": 50692,
+      "sha256": "534de975398982eb374ccf226bf1eb04a057435a24a1429590f382601dd55b22"
+    },
+    {
+      "path": "reference/portal-v409/ApplicationService.gs",
+      "bytes": 17765,
+      "sha256": "2f63dee15ada5bd9664b5e3a035f98593b08c1c72d3ba419a5f7aa59ccc7e2dc"
+    },
+    {
+      "path": "reference/portal-v409/appsscript.json",
+      "bytes": 800,
+      "sha256": "5a3393201dd981497879a3a78c8ece6a210bb8b80c953fa7f00febb1dfd0321e"
+    },
+    {
+      "path": "reference/portal-v409/AsrClient.html",
+      "bytes": 16210,
+      "sha256": "19a24df1c762aaba90a152fb2d23d277cbc653a66b5ce46331e596e949cc27f3"
+    },
+    {
+      "path": "reference/portal-v409/AsrService.gs",
+      "bytes": 15304,
+      "sha256": "dae0d52c29d6b6ddecef621ca7eb166ffd7044b03e08feeb91555a60c1bf0f1d"
+    },
+    {
+      "path": "reference/portal-v409/CalendarService.gs",
+      "bytes": 5427,
+      "sha256": "4783b67f3a1de0dfaf54192e8313302a0c57163a24c4354276b7270f23f7c217"
+    },
+    {
+      "path": "reference/portal-v409/CapacityConfig.gs",
+      "bytes": 845,
+      "sha256": "8f783051feb1eb8135451e087221deffa527375975d3507a48288d2ab693c10d"
+    },
+    {
+      "path": "reference/portal-v409/CareerFormulaService.gs",
+      "bytes": 29376,
+      "sha256": "827dcaf8cd53629cc68238a0512d3e9fc03477757c36a15e9365dc2298ef1528"
+    },
+    {
+      "path": "reference/portal-v409/Code.gs",
+      "bytes": 2552,
+      "sha256": "ab93164f098fc60e104a7c7799be5cc73daf59992161a1399a047f347a35b974"
+    },
+    {
+      "path": "reference/portal-v409/DiscordApplicationService.gs",
+      "bytes": 15438,
+      "sha256": "0c947912aecf57c80e10865bb6359b1012b88cc77af30306120b021d0a9b2424"
+    },
+    {
+      "path": "reference/portal-v409/DiscordControlClient.html",
+      "bytes": 7276,
+      "sha256": "b3004df666a8651966d8e9a2c643800478a52dbe4ae02d91515c37eee6795848"
+    },
+    {
+      "path": "reference/portal-v409/DiscordControlService.gs",
+      "bytes": 15827,
+      "sha256": "2f430dbf48577830d20f745928ff15be1bbcca12e7a4276e2943299f6530cde3"
+    },
+    {
+      "path": "reference/portal-v409/DiscordControlView.html",
+      "bytes": 5035,
+      "sha256": "c33ae4b5845f0bde9c79203fb7f0d96c27685fecf6fabf52914998a0821250d9"
+    },
+    {
+      "path": "reference/portal-v409/DiscordGithubClient.html",
+      "bytes": 9210,
+      "sha256": "a531c1c1fa3d4d086e086b329e3d96fd7bbbd3c53242fe92426803fc3fb9e9bd"
+    },
+    {
+      "path": "reference/portal-v409/DiscordGithubService.gs",
+      "bytes": 16682,
+      "sha256": "e0c88105399412cbd5e3cc4c7745396b79d676413f6261ee4d122cd8611a3bc4"
+    },
+    {
+      "path": "reference/portal-v409/DiscordGithubView.html",
+      "bytes": 6896,
+      "sha256": "d0e55d5fe09a138ee6e94404c05f4aeb8671351ff145df72d5ecd0df3e408313"
+    },
+    {
+      "path": "reference/portal-v409/DivisionDataClient.html",
+      "bytes": 20422,
+      "sha256": "226b9407452353e917a0ced9b980982ad3a0498ae2cb57b9fbe4a11f23952201"
+    },
+    {
+      "path": "reference/portal-v409/DivisionDataServices.gs",
+      "bytes": 34053,
+      "sha256": "47de5944da3dc6907569fa82a13ecad0e93d7ef8474d2d19e0d84035de44a4bc"
+    },
+    {
+      "path": "reference/portal-v409/DivisionTemplateService.gs",
+      "bytes": 121349,
+      "sha256": "0f72be9c0d1c26a7412d74c050d12a5bd1a99507c343c5add24f78658d9ca255"
+    },
+    {
+      "path": "reference/portal-v409/DriverCareerTemplateClient.html",
+      "bytes": 3124,
+      "sha256": "dbd884828d9d2c02e5278ddb705aff1bf94b201beee79539dc7bd114336fbe6f"
+    },
+    {
+      "path": "reference/portal-v409/DriverCareerTemplateService.gs",
+      "bytes": 13952,
+      "sha256": "0c276139d573b51c7b365cba21b112dba5daf7f572dc0dcc889a61e95f7a6376"
+    },
+    {
+      "path": "reference/portal-v409/DriverDatabaseClient.html",
+      "bytes": 17165,
+      "sha256": "e44471847fd41c85de2c4d12dfe76e63a7b5b1b82480829b0fce203f35f0c466"
+    },
+    {
+      "path": "reference/portal-v409/DriverDatabaseService.gs",
+      "bytes": 16936,
+      "sha256": "f7a6e5fca9915b07361d4a97190ec8ab2897faf61d793d87553694304280246a"
+    },
+    {
+      "path": "reference/portal-v409/DriverMovementService.gs",
+      "bytes": 26450,
+      "sha256": "f9583f4bb60ff476068feb8140727c6e73c3ebfc832c8bec0f73df4f79bd118e"
+    },
+    {
+      "path": "reference/portal-v409/DriverRenameService.gs",
+      "bytes": 22436,
+      "sha256": "d4b658b73a4c173c31f352c66c358ce0b1b1376e23894b4d1b1b02e8dba28f8d"
+    },
+    {
+      "path": "reference/portal-v409/DriverStreamsClient.html",
+      "bytes": 3039,
+      "sha256": "dbf967e586aab1219df201c064482a29ac6e74903e0103fe4ec5b96e80e3f442"
+    },
+    {
+      "path": "reference/portal-v409/DriverStreamsService.gs",
+      "bytes": 6762,
+      "sha256": "4f7cb4e3d28ff2ede3119aa027a1ee61eaaf5906db26c8de97aaf0b1417b472d"
+    },
+    {
+      "path": "reference/portal-v409/FreeAgentHubClient.html",
+      "bytes": 20403,
+      "sha256": "3858037e9ec463ae999064406ba634bf0d59b62e68fcc750fd50ebd17461becd"
+    },
+    {
+      "path": "reference/portal-v409/FreeAgentHubService.gs",
+      "bytes": 5451,
+      "sha256": "f925ff97b2c2d62f00540168cf78b0953cab4f8be1e9fae62585fb62c92c731c"
+    },
+    {
+      "path": "reference/portal-v409/HistoricalSeasonService.gs",
+      "bytes": 3923,
+      "sha256": "2ce793cb9d169503e2276ca0d90073785fc7fa32927542d6f1a93af52cc0009d"
+    },
+    {
+      "path": "reference/portal-v409/Index.html",
+      "bytes": 371470,
+      "sha256": "d728fcac5b8a2e2fa8fbb613322c47734c5b46501503fdf6070e51a87a85e66d"
+    },
+    {
+      "path": "reference/portal-v409/IntakeConnections.gs",
+      "bytes": 1703,
+      "sha256": "9d5bd4903480d915e0dc0096e0fe1c8a7ffbf8e97f924fe6137160489239fa2f"
+    },
+    {
+      "path": "reference/portal-v409/LeagueRulesClient.html",
+      "bytes": 5589,
+      "sha256": "9debeb8adca81e3df7368cb8780e72a96ecbbe73e9c62f29ec24623994a1f62e"
+    },
+    {
+      "path": "reference/portal-v409/LeagueRulesService.gs",
+      "bytes": 1941,
+      "sha256": "3cba4d738f69da3e1e4ffb01f9d1fe48ed4de1d3447c880782b13d046b5671fa"
+    },
+    {
+      "path": "reference/portal-v409/LicenceService.gs",
+      "bytes": 33347,
+      "sha256": "87ec7474c24d403304cf93d72c1f3d51588284daef3172d7f5e4a224ad9d3daa"
+    },
+    {
+      "path": "reference/portal-v409/LicenceSetupService.gs",
+      "bytes": 11856,
+      "sha256": "97015f21d3d9581055c3f4e521ee23e24563c51dee4a0ffd661678b45b81c804"
+    },
+    {
+      "path": "reference/portal-v409/manifest.json",
+      "bytes": 38253,
+      "sha256": "cd07be6f5d82cf090a3bfd6592612f2c9f55834630c3ad5a64c3f88e4f7e0a39"
+    },
+    {
+      "path": "reference/portal-v409/NavigationClient.html",
+      "bytes": 3389,
+      "sha256": "2b95c728cf88e57fa654f42488a9c437d54f8e024d7ebda1686c850cf75a2d14"
+    },
+    {
+      "path": "reference/portal-v409/PlacementClient.html",
+      "bytes": 8960,
+      "sha256": "01f301595b9500e02ddc80798b7ab0c520988652d12d405b2ec362f4315ca597"
+    },
+    {
+      "path": "reference/portal-v409/PlacementService.gs",
+      "bytes": 7721,
+      "sha256": "c2c04393aeb9fe68dbea2e4d2293d6eef54022670a91016b82ca0484829b36f6"
+    },
+    {
+      "path": "reference/portal-v409/PortalProgressClient.html",
+      "bytes": 2907,
+      "sha256": "eff08f66346f4a19b45132f7d8822fbe7a810727a193cc1fe2d980cff39c522e"
+    },
+    {
+      "path": "reference/portal-v409/PostseasonClient.html",
+      "bytes": 7289,
+      "sha256": "579f33008dcac3fb1eafebd0b11436898499fd5078f9015421b60c28a31371e9"
+    },
+    {
+      "path": "reference/portal-v409/PostseasonService.gs",
+      "bytes": 17717,
+      "sha256": "31ea2ab8aa63acd1fa3a63b5507f193ffb7cbcc189a3105033f0f7bde3459d7d"
+    },
+    {
+      "path": "reference/portal-v409/PreseasonAllocationClient.html",
+      "bytes": 10881,
+      "sha256": "18c473e5d3c8e8008da5c71db0c008e8c20dc92ea9547e5de984940fc535ea9b"
+    },
+    {
+      "path": "reference/portal-v409/PreseasonAllocationService.gs",
+      "bytes": 14046,
+      "sha256": "01d8a6c49cf19be3da4ce701778261e514587390fcfb97a062b21d1c237e6ef3"
+    },
+    {
+      "path": "reference/portal-v409/PreseasonAnnouncementClient.html",
+      "bytes": 8311,
+      "sha256": "ae5213c0da4d7a36301cad66a0d4fe999fc7bc0367b696990ac2906a0ca3f107"
+    },
+    {
+      "path": "reference/portal-v409/PreseasonAnnouncementService.gs",
+      "bytes": 12979,
+      "sha256": "1c61597e616863f28a00f7e209e1fe3cd659f6f0bfc8ae8940cc3fc22170eaab"
+    },
+    {
+      "path": "reference/portal-v409/PreseasonAnnouncementSlidesService.gs",
+      "bytes": 9915,
+      "sha256": "97d8f9866797dab0900fa00aa1ea6c6b90900c20cea284a47e92908e7d7770f7"
+    },
+    {
+      "path": "reference/portal-v409/PreseasonDraftClient.html",
+      "bytes": 9294,
+      "sha256": "6bdc28463778676af6aea1fcd5138e6a162fff1b779345a3d062b415b8aba327"
+    },
+    {
+      "path": "reference/portal-v409/PreseasonDraftService.gs",
+      "bytes": 11276,
+      "sha256": "73b1cf2bccff47cbfd842bebd625b3e8071b8c1b80ea2a5f1731ad88ca65017a"
+    },
+    {
+      "path": "reference/portal-v409/PreseasonGuideClient.html",
+      "bytes": 13398,
+      "sha256": "1efc924dc41247dad766b17794438b79b6248b33a444b59518344a137a4685c3"
+    },
+    {
+      "path": "reference/portal-v409/PreseasonHubClient.html",
+      "bytes": 16447,
+      "sha256": "de67607209d969ab4bc49ebf781cc8ffc4c0226593b4debf59e4de1215e8f026"
+    },
+    {
+      "path": "reference/portal-v409/PreseasonIntakeClient.html",
+      "bytes": 36254,
+      "sha256": "a3a9688e6c98986682da3612d5b89a63de358a2268fa2283c7d1245c2e628f00"
+    },
+    {
+      "path": "reference/portal-v409/PreseasonIntakeService.gs",
+      "bytes": 40376,
+      "sha256": "155a2acfdf5f34959867131a9ece8c56f236d85ba80e310274c5a83ab03cc0fb"
+    },
+    {
+      "path": "reference/portal-v409/PreseasonLiveDraftClient.html",
+      "bytes": 70798,
+      "sha256": "fe686d6829fd25dc2bfbd2bafb7c9bcbc1aa7645177bf298773425966933441c"
+    },
+    {
+      "path": "reference/portal-v409/PreseasonLiveDraftService.gs",
+      "bytes": 41263,
+      "sha256": "badf601a3a6423092bbc2ba7d88342e40429d2dad2b4d54884ac20a0bb0b9a56"
+    },
+    {
+      "path": "reference/portal-v409/PreseasonPlacementClient.html",
+      "bytes": 22643,
+      "sha256": "10bd2da813312b2407ae402a0acca0f1b900a1299bf807fe226fdd7c6a05c924"
+    },
+    {
+      "path": "reference/portal-v409/PreseasonPlacementService.gs",
+      "bytes": 12101,
+      "sha256": "8c755cce179311b8ba25452016c351cf89354a15d9f412f5183b5d2f5b9665d6"
+    },
+    {
+      "path": "reference/portal-v409/PreseasonPreparationClient.html",
+      "bytes": 9163,
+      "sha256": "bcf23b53abbdc4f6434ad249cfd188439e4e2c3ebce2c41ebe62bd16fd07db1d"
+    },
+    {
+      "path": "reference/portal-v409/PreseasonPreparationService.gs",
+      "bytes": 22923,
+      "sha256": "4afed199f4160202d3afa1a1527de068f74464a3d1a4c801e8456396de837639"
+    },
+    {
+      "path": "reference/portal-v409/PreseasonPreperationService.gs",
+      "bytes": 22735,
+      "sha256": "e048bac4dfbb956497a7b49fab33332917eb3ff621fdae02b8ed188f9eec7819"
+    },
+    {
+      "path": "reference/portal-v409/PreseasonPrincipalsClient.html",
+      "bytes": 14744,
+      "sha256": "cdbb7e43e5b16ac14de73cfe5098d4cae7945ba66840ec23b933293c60c81d81"
+    },
+    {
+      "path": "reference/portal-v409/PreseasonPrincipalSeatService.gs",
+      "bytes": 7094,
+      "sha256": "878f003498d410a8edfe5cf104652d807615f78901d0730229bfc5a188197c7b"
+    },
+    {
+      "path": "reference/portal-v409/PreseasonPrincipalSelectionService.gs",
+      "bytes": 11822,
+      "sha256": "7f2702136d5b8043d260a1f3d1272117e76eab0b652aba66e24c588c534254aa"
+    },
+    {
+      "path": "reference/portal-v409/PreseasonPrincipalsService.gs",
+      "bytes": 7069,
+      "sha256": "dc8e81260c77686890f7d2f8536ceb8f9160ea20e42aaa5d0d0cbc27869fa35b"
+    },
+    {
+      "path": "reference/portal-v409/PreseasonSocialRacesClient.html",
+      "bytes": 8658,
+      "sha256": "7e96bd2a7e52153334d28a8cf2f53307ba1e153ea2b83dc5eb0b8550cdcdcfdc"
+    },
+    {
+      "path": "reference/portal-v409/PreseasonSocialRacesService.gs",
+      "bytes": 13325,
+      "sha256": "8a6756c5f5ce2677743472f9368157598092265dfb23df9cfe90bb350d2b1520"
+    },
+    {
+      "path": "reference/portal-v409/PreseasonTimeTrialClient.html",
+      "bytes": 14584,
+      "sha256": "64f4fd2a11722d776cd333203b93c39d1f99072ba62b6390aa0be7f9d512fb97"
+    },
+    {
+      "path": "reference/portal-v409/PreseasonTimeTrialService.gs",
+      "bytes": 13611,
+      "sha256": "24c10c43f48b4bd315a9532ef9182c81bf88a25e6266b9a6b10f65f3d9559289"
+    },
+    {
+      "path": "reference/portal-v409/PreseasonTrackDrawClient.html",
+      "bytes": 8047,
+      "sha256": "3f54fa3104d726c6ecc1fb6fc05d8d5b0b735de88c8aa7df0d982f21078b90b4"
+    },
+    {
+      "path": "reference/portal-v409/PreseasonTrackDrawService.gs",
+      "bytes": 11190,
+      "sha256": "7e5c53bdc585396aedc98dc8dcc53a5290f67101945044e8bdae8d8b710ee63a"
+    },
+    {
+      "path": "reference/portal-v409/PublicHistoryService.gs",
+      "bytes": 9058,
+      "sha256": "a876a4ff3826c527140c3a77014f3a0d71d4ef74c2c1f11a1eedf966887c4532"
+    },
+    {
+      "path": "reference/portal-v409/ReferenceDataClient.html",
+      "bytes": 9791,
+      "sha256": "15c554a27163776745694616e22c2408a032a6b0f500840c0f09e3a9838db61c"
+    },
+    {
+      "path": "reference/portal-v409/ReferenceDataService.gs",
+      "bytes": 21622,
+      "sha256": "c8c617ce13d642d01f9ab89fed0bbaf8bcdf2fc142bee5369ff8d1647647fdff"
+    },
+    {
+      "path": "reference/portal-v409/ResultsAdjustmentClient.html",
+      "bytes": 17947,
+      "sha256": "686be81e9f4bbe0bca476be03388c33b6dceb1e6dbe1d9b1bd59270f10ad0772"
+    },
+    {
+      "path": "reference/portal-v409/ResultsAdjustmentService.gs",
+      "bytes": 13827,
+      "sha256": "0d9ad9942722cb55f45de4d48bf1673eb12f0536d35a5fc99aaa45478bebce73"
+    },
+    {
+      "path": "reference/portal-v409/ResultsEntryClient.html",
+      "bytes": 51154,
+      "sha256": "9de387ec1e8c3a525371b7dee83f8aabd6ae83d62e811f7d89d6c0283ebeb31c"
+    },
+    {
+      "path": "reference/portal-v409/ResultsEntryService.gs",
+      "bytes": 15584,
+      "sha256": "4cfabcbd2ad9035ca548208fdb379ae35fab170e09a17c2461aff848815edec3"
+    },
+    {
+      "path": "reference/portal-v409/SeasonDiscardService.gs",
+      "bytes": 13560,
+      "sha256": "1ca10a30c052341424d5797c562fb1d1690974e84d2b25b0cfeb5e9c41bd8843"
+    },
+    {
+      "path": "reference/portal-v409/SeasonDriverIdentityClient.html",
+      "bytes": 5670,
+      "sha256": "2350820b708feeb97286e068d5b8fa0fc29ddcc4d0280e56b61d062a2e5f4c2b"
+    },
+    {
+      "path": "reference/portal-v409/SeasonDriverIdentityService.gs",
+      "bytes": 7911,
+      "sha256": "baeaa2df574fc5f46f4253baa463528ed99271c4d66bd05bc73506fb7125a645"
+    },
+    {
+      "path": "reference/portal-v409/SeasonLaunchClient.html",
+      "bytes": 11934,
+      "sha256": "ad619f911c52fe7887fd341961004d7bff4fe879f5b120d99468748c1d550119"
+    },
+    {
+      "path": "reference/portal-v409/SeasonLaunchService.gs",
+      "bytes": 46239,
+      "sha256": "2b4d99fc03ef07fa644dbb85e2ecb078553a9ffd464bc97bb83b976e53a6a8b4"
+    },
+    {
+      "path": "reference/portal-v409/SeasonMasterClient.html",
+      "bytes": 40477,
+      "sha256": "fcc7dd46a9dec241544a8400fa4659495c6430bb18ddb280e9c699aef394dc90"
+    },
+    {
+      "path": "reference/portal-v409/SeasonMasterService.gs",
+      "bytes": 66340,
+      "sha256": "8eb356f78a6a7e1884c4f4815b2dfff092076893fb23d10be905193e579edb63"
+    },
+    {
+      "path": "reference/portal-v409/SeasonPlanningClient.html",
+      "bytes": 13101,
+      "sha256": "09a10874bc7091338b841dea33c32fff897c0d6dee22fefe837538de42877b99"
+    },
+    {
+      "path": "reference/portal-v409/SeasonPlanningService.gs",
+      "bytes": 25184,
+      "sha256": "eaad5217cd085ba6b4e6b93fdc50ce545d0be25b249a0cfb994b56e04abcac59"
+    },
+    {
+      "path": "reference/portal-v409/SeasonProtectionService.gs",
+      "bytes": 2815,
+      "sha256": "da4690531a198a8e9d6e5046a43ac9e1abb6a8b81f03a4dfb0039f4dbb4291a8"
+    },
+    {
+      "path": "reference/portal-v409/SeasonStatisticsPreviewClient.html",
+      "bytes": 10110,
+      "sha256": "1ee28bdd1ca66b051869098da5aeefe538c1a1e482befb2d94a4a0ffbb449a87"
+    },
+    {
+      "path": "reference/portal-v409/SeasonStatisticsPreviewService.gs",
+      "bytes": 10202,
+      "sha256": "cbe33717d1ed73bf72b4bbf7a233b6a7217b2c100656c419833ddce3866c32c3"
+    },
+    {
+      "path": "reference/portal-v409/SelfTimeTrialSubmissionClient.html",
+      "bytes": 14146,
+      "sha256": "d08a356f9f7013d0d997b697656d296c4c6d1b2aac2884d7394180db2c0af40e"
+    },
+    {
+      "path": "reference/portal-v409/SelfTimeTrialSubmissionService.gs",
+      "bytes": 15389,
+      "sha256": "452f97dc58798cd2d35a7c82468aa34d3e4fd598e0c4d90a4622f077d8480598"
+    },
+    {
+      "path": "reference/portal-v409/SheetPresentationService.gs",
+      "bytes": 16660,
+      "sha256": "205659d645fb010cc48f2873a072631660981bc4a55b9076083281a88978e30a"
+    },
+    {
+      "path": "reference/portal-v409/StaffApplicationService.gs",
+      "bytes": 10717,
+      "sha256": "632cff667c995766c3e33f71c37ab2ffdb8fcb57f9cf48941813cf28a0a112af"
+    },
+    {
+      "path": "reference/portal-v409/StaffAttentionClient.html",
+      "bytes": 2209,
+      "sha256": "4e50da34b5fc9ea0466f24019e6001b0cb2744a525e7728660b3149bdf55c12a"
+    },
+    {
+      "path": "reference/portal-v409/StewardAccessClient.html",
+      "bytes": 19655,
+      "sha256": "0cfba24c3dc13077c8f99433532a6d2922935ff364ce37fb45cb6c7dd3809ccc"
+    },
+    {
+      "path": "reference/portal-v409/StewardAccessService.gs",
+      "bytes": 6011,
+      "sha256": "34caf86eff8c134465241a15aa57f3ce178a00ddc1648a5addd2d34ee318a3b6"
+    },
+    {
+      "path": "reference/portal-v409/TeamPrincipalHubClient.html",
+      "bytes": 47387,
+      "sha256": "c33f3655989265535d8b8ba034a3d440f370c5aa9b7a4be57defd2e7c4d37e76"
+    },
+    {
+      "path": "reference/portal-v409/TeamPrincipalHubService.gs",
+      "bytes": 34969,
+      "sha256": "6c51c477a687c65c4e617eafc6b5b592e66d871b12f86e9f28621c1bcfebd10c"
+    },
+    {
+      "path": "reference/portal-v409/TicketDeliveryService.gs",
+      "bytes": 83963,
+      "sha256": "bbd5c4a66472e72e2939de0bcd71cf2720e560a0585b2aff7b9301f9d22d3653"
+    },
+    {
+      "path": "reference/portal-v409/TicketFormService.gs",
+      "bytes": 7032,
+      "sha256": "86a0210e06be4ee2438119103524dac8175c68615ac813a3e18214045987a944"
+    },
+    {
+      "path": "reference/portal-v409/TicketIntakeService.gs",
+      "bytes": 9523,
+      "sha256": "353f6fc1ea624a0d574bd1126e70e67efafe2f98227c0387b6610cabaff99a3c"
+    },
+    {
+      "path": "reference/portal-v409/TicketProcessingClient.html",
+      "bytes": 133199,
+      "sha256": "8f93a905e2bcce9b06ddde93af9540af9bf2dc31bdb43ea9a3b9fe58547a4164"
+    },
+    {
+      "path": "reference/portal-v409/TicketProcessingService.gs",
+      "bytes": 82118,
+      "sha256": "004fe5fd2f280f9fc282550382b8ac7b62e01882c83a6c157fdeabda1e266184"
+    },
+    {
+      "path": "reference/portal-v409/TicketSeasonClient.html",
+      "bytes": 11607,
+      "sha256": "be59a757ac7d3cad1ce7075137ad808e73d526f6b13ab1c421f8bd15373cdedf"
+    },
+    {
+      "path": "reference/portal-v409/TicketSeasonService.gs",
+      "bytes": 30053,
+      "sha256": "9f53a60362a77f9e64358d3e7eb2e32a7ed5f4b60e0182e5632926388a40a9d3"
+    },
+    {
+      "path": "reference/portal-v409/TicketSubmissionService.gs",
+      "bytes": 11979,
+      "sha256": "6907c679bd626cb33a765b31f7f16ca31ea9673cbef224456a30db5d550abebd"
+    },
+    {
+      "path": "reference/portal-v409/TimeTrialClient.html",
+      "bytes": 10013,
+      "sha256": "4c471a2b82490efc793d73ab553da3edd6757d3e66819a9eb723ac858dc00238"
+    },
+    {
+      "path": "reference/portal-v409/TimeTrialService.gs",
+      "bytes": 10831,
+      "sha256": "6247e57428377ca6b79e7eeaaed86964a568b9fc557959fb76f3d89ac06ebb31"
+    },
+    {
+      "path": "reference/portal-v409/TrackerService.gs",
+      "bytes": 5637,
+      "sha256": "c5f4421d284f5926bf612d361b2eecbfedb280d603556a744b1666d36ab40888"
+    },
+    {
+      "path": "reference/portal-v409/TrackRecordsService.gs",
+      "bytes": 6847,
+      "sha256": "11091b323086fe9f5e25333a523ad0277e2abaa4c3480ab78d8e072ebe81e084"
+    },
+    {
+      "path": "reference/portal-v409/WebsiteDataClient.html",
+      "bytes": 6047,
+      "sha256": "15d3448dfbcd3f2e8c847d204155fbccae8d93f5a431ce6091d5dd8528f9c8a6"
+    },
+    {
+      "path": "reference/portal-v409/WebsiteDataServices.gs",
+      "bytes": 27743,
+      "sha256": "92660983b8e10c0218eceda9577184e4803c99853912314a9dd71efb0bc0c270"
+    },
+    {
+      "path": "reference/role-defaults-v409.json",
+      "bytes": 4882,
+      "sha256": "c45e01c45fb8f7586e2438fa13f2d68699d03b74db03b1b4e7316619b32aee35"
+    }
+  ]
+}

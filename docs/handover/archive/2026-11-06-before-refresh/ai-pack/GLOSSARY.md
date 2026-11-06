@@ -1,0 +1,23 @@
+# Glossary
+
+- **AI pack**: Detailed project information supplied to a replacement AI assistant.
+- **Browser/front end**: Code running on a visitor’s device, primarily the HTML pages in this repository.
+- **Central configuration**: The Google workbook that identifies seasons, workbooks, tabs and global data sources.
+- **CSV**: Plain-text table format downloaded from Google Sheets by the website.
+- **Division workbook**: A Google spreadsheet holding one division’s calendar, standings, results and statistics.
+- **GID**: Google’s numeric identifier for a tab within a spreadsheet.
+- **Git**: Version history for repository files.
+- **GitHub Actions**: Automated jobs defined in `.github/workflows/`.
+- **GitHub Pages**: Static website hosting used by this repository.
+- **Legacy parser/renderer**: Code that understands an older Sheet layout and turns it into current page content.
+- **Local preview**: The website served from the owner’s computer over `http://127.0.0.1`, before publishing.
+- **Main branch**: The repository branch currently associated with live project work.
+- **Owner quick-start pack**: Short instructions that help a non-developer establish accounts, upload the AI pack and continue operation.
+- **Parser**: Code that interprets Sheet rows/columns.
+- **PWA**: Installable website features supplied by `manifest.json` and `sw.js`.
+- **Repository**: The versioned collection of website code and assets.
+- **Service worker**: Browser code that caches website files and supplies offline fallback behaviour.
+- **Sheet ID/workbook ID**: The long identifier between `/d/` and `/edit` in a Google Sheets URL.
+- **Source of truth**: The authoritative place from which a value should be taken.
+- **Static website**: A site served as files without a per-request application server/database.
+- **Working tree**: The local repository files, including changes not yet committed.

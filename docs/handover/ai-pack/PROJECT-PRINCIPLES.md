@@ -1,49 +1,20 @@
-# Project principles
+# Owner principles and working style
 
-These principles were established by the project owner and apply to all work.
+These are owner decisions extracted from the conversation, not generic advice.
 
-## 1. Assume the operator is not a developer
+1. **Make the job easier than Sheets.** The Portal is valuable only if routine work is clear and fast. The owner has repeatedly said slow saves/loads could make it not worth using. Prefer fewer round trips, focused/background saves, retained state and useful next/back links. Do not remove integrity checks merely to report faster timings.
+2. **Sheets remain usable manually.** They are an operational fallback, not just unreadable storage. Multiple workbooks are acceptable if that helps, but no unnecessary copies, publication steps or complicated databases. Database migration and overnight-only synchronization are not approved.
+3. **Assume a first-time operator.** Make actions, purpose, save state and next step obvious without walls of explanation. Do not add a hub inside a hub when a simple tab suffices. Keep technical connection/workbook links in maintenance where appropriate.
+4. **Preserve data and identity.** Protect original history, literal corrections, permanent driver/case IDs, movement history, appeal reversals and raw submissions. A failure to join a record is not permission to invent one or merge similar names.
+5. **Separate public access from staff authority.** Public pages need no account. Staff use Google identity and server-side roles. Ordinary admins can assist across routine jobs but confidential allocations, maintenance and permissions remain restricted.
+6. **Keep costs and dependencies minimal.** No Firebase. Cloudflare relay was explored but not approved. Do not promise “free forever” for third-party services. Existing GitHub/Google/Discord infrastructure is preferred, with its real limits stated.
+7. **Recommend model and effort before substantive work.** Let the owner switch; do not pretend to change it yourself. Use the cheapest reliable current option. As of this refresh, Astra High was selected for nuanced multi-source reconciliation; Sol High suits scoped implementation and routine follow-up. Reassess models when available options change; old Terra/Sol recommendations are not timeless policy.
+8. **Act within existing authorization.** Do not repeatedly ask to do already-approved routine steps. For a genuinely new consequential scope, prepare a concrete reviewable change first. An old approval in the archive is not standing authority for new destructive work. Explain an actual approval block and its source plainly.
+9. **Communicate concisely.** Main outcome first, plain words, small numbered steps for the owner. The owner can be tired/unwell and has said huge inventories are not useful to read. Keep detailed evidence for the AI; avoid jargon, mystery “snapshots” and speculative task lists.
+10. **Protect discoverability and design continuity.** Preserve established public URLs, sitemap/canonical behavior and readable content. Staff entry stays off public menus. FAP is fine internally and as a workbook prefix; use Admin Portal and admincentre externally.
+11. **Do not create unsolicited notifications.** Role-relevant information in the TP hub is not a request for Discord posts. Parked/rejected ideas stay that way.
+12. **Finish verifiably.** Distinguish local edits from deployed Portal, committed source from pushed website, and fixtures from actual user transactions. Preserve unrelated dirty work; never stage all files by default. Keep handover current after material changes.
 
-Give plain-English explanations, exact instructions and appropriate warnings. Do not require the operator to infer technical steps or recovery procedures.
+## Historical incident that explains the caution
 
-## 2. Continually simplify without losing capability
-
-Reduce duplicate entry, duplicate code, special cases and reliance on memory. Simplification must not remove working features, historical fidelity or recoverability.
-
-## 3. Improve useful functionality when sensible
-
-Suggest improvements to reliability, usability, accessibility, mobile behaviour, validation, performance and administration. Do not add features whose complexity outweighs their value.
-
-## 4. Preserve all past and present data
-
-Original data is irreplaceable. Migrate by copying, converting, comparing and validating. Never destroy or silently rewrite the source archive.
-
-## 5. Design for succession
-
-The project must be transferable to a non-developer using a new AI account. Knowledge must live in the repository and backups, not only in conversations or one person’s memory.
-
-Two handover packs are maintained:
-
-- A comprehensive AI pack.
-- A short human quick-start pack.
-
-## 6. Avoid public user accounts
-
-The public website should remain open without registration. Restricted administrator access is acceptable for tools that write data, but write credentials must never be exposed to visitors.
-
-Avoiding accounts reduces privacy exposure but does not remove all data-protection considerations: Forms, analytics, cookies and logs may still process personal information.
-
-## 7. Protect search and AI visibility
-
-Preserve established URLs, titles, meaningful wording, crawlability, mobile performance and accessibility. Assess SEO and AI-discovery effects before redesigns, routing changes or moving readable content behind client-side code.
-
-## Questions to apply to every significant change
-
-- Does it make the project easier to operate?
-- Does it preserve all functionality and data?
-- Is it reversible?
-- Can a non-developer understand and verify it?
-- Can a successor continue without this conversation or account?
-- Does it introduce an account, privacy, security or ownership dependency?
-- Could it affect search-engine or AI-platform visibility?
-- Has the handover documentation been updated?
+A 4 September formula repair cleared/rebuilt derived historical ranges and overwrote manually preserved literals/formulas. The 69 S1–S19 division books were restored to the owner-selected pre-repair cutoff and compared exactly. Therefore “calculated” does not mean disposable, and manual historical overrides may be the only surviving authoritative facts. Historical Results Matrix was retired; do not revive it or perform blanket formula regeneration. Current template repair is intended to recognise and replace formulas only with backups and exact range checks.

@@ -1,32 +1,25 @@
-# F1XL handover centre
+# F1XL AI handover — 6 November 2026
 
-Last reviewed: 14 August 2026
+**Pack 3.0. The public switchover is complete. This is the maintained handover for the live Admin Portal and website.**
 
-This folder is the durable project memory. It must remain useful if the current owner, current AI account or current conversation is unavailable.
+For the owner: [start here](owner-quick-start/START-HERE.md). For another AI: [START-HERE-AI](ai-pack/START-HERE-AI.md). A generated [single-file briefing](HANDOVER-FOR-ANOTHER-AI.md) provides the current narrative in one attachment.
 
-There are two audiences:
+## What to give another AI
 
-- `ai-pack/` is the detailed technical pack for a new AI assistant. The AI should read it before advising or changing the project.
-- `owner-quick-start/` is the short guide for a person taking over without coding experience.
+Give it this whole handover folder and the website repository when possible. If attachments are limited, start with HANDOVER-FOR-ANOTHER-AI.md and the [copy/paste prompt](owner-quick-start/COPY-PASTE-AI-PROMPT.md). The briefing explains decisions and current wiring; it is not a copy of live spreadsheet data or credentials.
 
-The owner is not expected to read the entire AI pack. The replacement AI is expected to read it and translate it into plain-English guidance.
+The folder includes:
+- A short current-state guide and focused operating/decision references.
+- Every previous handover Markdown document, preserved unchanged in [the archive](archive/README.md), with a searchable topic index.
+- A dated 121-file Apps Script v409 source reference, its hashes, and selected launch proof. These are reference material, not instructions to deploy an old version.
+- Account/access requirements and recovery instructions, without tokens, passwords or private account/session exports.
 
-## Important limits
+This edition is maintained in the repository under docs/handover. Use a clone/download containing the handover update, or copy this entire folder from the owner's computer; older clones may contain only the original pack. The website's Jekyll configuration excludes docs/handover; retain that exclusion. Exclusion from Pages does not make a public Git repository private.
 
-- These files must never contain passwords, access tokens, recovery codes or private credentials.
-- Google Sheet and tab IDs already exposed by the public website may be documented here.
-- The original historical data must not be overwritten during migration or simplification work.
-- A generated ZIP is a delivery copy, not the master copy. These maintained source files are authoritative.
-- Update `PACK-VERSION.md`, `CHANGELOG.md` and `ai-pack/CURRENT-STATUS.md` after material changes.
+## How to read it
 
-## Preparing a handover
+Read START-HERE-AI, CURRENT-STATUS and PROJECT-PRINCIPLES first. Then select the relevant topic from START-HERE-AI. Do not require the owner or a new AI to reread months of historical notes before a small task.
 
-Provide the successor with:
+The current documents reconcile the available conversation and local evidence. The archive preserves additional older detail; it is **not** a complete verbatim export of every chat. Unavailable evidence and uncertainty are labelled. No claim is made that every function has just been retested.
 
-1. A current copy of this repository, including this folder.
-2. A current backup/export of the Google Sheets and Forms.
-3. The short owner guide in `owner-quick-start/START-HERE.md`.
-4. Access to the relevant GitHub, Google and Discord administration—not passwords copied into this pack.
-5. The copy-and-paste AI instruction in `owner-quick-start/COPY-PASTE-AI-PROMPT.md`.
-
-The weekly review configured in the present Codex task belongs to the current AI account and is not transferable. A successor should recreate an equivalent weekly review on their chosen platform.
+After material work, update the current facts, decisions, open items and version; regenerate the briefing and validate the pack. Do not silently reintroduce old plans from the archive.

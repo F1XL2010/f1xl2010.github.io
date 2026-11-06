@@ -1,0 +1,37 @@
+<script>
+window.F1XLDiscordControl=(function(){
+ const el=id=>document.getElementById(id),esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const rpc=(name,...args)=>new Promise((resolve,reject)=>window.F1XLRpc.withSuccessHandler(resolve).withFailureHandler(reject)[name](...args));
+ let data=null,dirty=false,writing=false,loading=false,preview=null,sending=false;
+ function message(text,error=false){el('dc-status').textContent=text;el('dc-status').style.color=error?'var(--red)':'';}
+ function state(){
+  const editable=!!data?.canEdit;el('dc-save').disabled=!editable||!dirty||writing;el('dc-discard').disabled=!dirty||writing;el('dc-refresh').disabled=dirty||writing||loading;
+  el('dc-save-state').textContent=writing?'Saving…':dirty?'Unsaved changes':data?'Settings saved':'';
+  el('dc-allow-tests').disabled=!editable||writing;el('dc-check').disabled=!editable||!data?.hasToken||writing;
+  el('dc-connect').disabled=!data?.canSetToken||writing;
+  el('dc-send').disabled=!editable||!data?.hasToken||data?.paused!==false||dirty||sending||!preview;
+  el('dc-preview-close').disabled=sending;
+ }
+ function render(){
+  el('dc-bot-state').textContent=data.hasToken?'F1XLDataBot is connected.':'Not connected yet.';el('dc-owner-connection').hidden=!data.canSetToken;el('dc-owner-note').hidden=data.canSetToken;
+  el('dc-channel-link').href=data.pilot.url;el('dc-allow-tests').checked=!data.paused;
+  el('dc-routes').innerHTML=data.routes.map(r=>'<details class="panel dc-route" data-dc-route="'+esc(r.key)+'"><summary><span>'+esc(r.label)+'</span><span>'+esc(r.channel)+'</span></summary><div class="dc-route-body"><p class="secondary-line">'+esc(r.recipient)+' · '+esc(r.cadence)+'</p><button class="button" type="button" data-dc-preview="'+esc(r.key)+'">Preview private test</button><details><summary>Prepare league destination'+(['standings','teams'].includes(r.key)?' & schedule':'')+'</summary><p class="secondary-line">These preferences are saved for the later switch. Automatic posting is off.</p><label>League channel link or ID<input data-dc-channel value="'+esc(r.channelId)+'" placeholder="Paste the Discord channel link"'+(!data.canEdit?' disabled':'')+'></label>'+(r.key==='standings'?'<div class="dc-days">'+['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map((d,i)=>'<label><input type="checkbox" data-dc-day="'+i+'"'+(r.days.includes(i)?' checked':'')+(!data.canEdit?' disabled':'')+'>'+d+'</label>').join('')+'</div>':'')+(['standings','teams'].includes(r.key)?'<label class="dc-time">UK posting time<input type="time" data-dc-time value="'+esc(r.time)+'"'+(!data.canEdit?' disabled':'')+'></label>':'')+'</details></div></details>').join('');
+  renderHistory();state();
+ }
+ function renderHistory(){el('dc-history').innerHTML=data.history.length?'<ul>'+data.history.map(r=>'<li>'+esc(new Date(r.at).toLocaleString('en-GB',{timeZone:'Europe/London'}))+' · '+esc(data.routes.find(t=>t.key===r.route)?.label||r.route)+' · '+esc(r.state)+(r.elapsedMs?' · '+(r.elapsedMs/1000).toFixed(1)+' sec':'')+'</li>').join('')+'</ul>':'<p class="secondary-line">No private tests have been sent.</p>';}
+ async function load(){if(loading||dirty||writing)return;loading=true;state();try{data=await rpc('getDiscordControls');render();message('Private test ready. Automatic posting is off.');}catch(e){message(e.message,true);}finally{loading=false;state();}}
+ function values(){return {revision:data.revision,paused:!el('dc-allow-tests').checked,automaticSending:false,routes:Array.from(el('dc-routes').querySelectorAll('[data-dc-route]')).map(row=>({key:row.dataset.dcRoute,channelId:row.querySelector('[data-dc-channel]').value,days:Array.from(row.querySelectorAll('[data-dc-day]:checked')).map(n=>Number(n.dataset.dcDay)),time:row.querySelector('[data-dc-time]')?.value||''}))};}
+ async function save(){if(!data?.canEdit||writing)return;writing=true;state();try{data=await rpc('saveDiscordControls',values());dirty=false;render();message('Settings saved. '+(data.paused?'Private tests are paused.':'Private tests are allowed. Automatic posting stays off.'));}catch(e){message(e.message,true);}finally{writing=false;state();}}
+ async function connect(){if(!data?.canSetToken||writing)return;const token=el('dc-token').value;el('dc-token').value='';writing=true;state();try{await rpc('setDiscordBotCredential',{token:token});data=await rpc('getDiscordControls');el('dc-bot-state').textContent='F1XLDataBot is connected.';el('dc-token-details').open=false;message('Existing bot connected. Next, check its access to the private test channel.');}catch(e){message(e.message,true);}finally{writing=false;state();}}
+ async function check(){if(writing||!data?.hasToken)return;el('dc-check').disabled=true;el('dc-connection').textContent='Checking the bot and channel permissions…';try{const r=await rpc('checkDiscordPilot');el('dc-connection').textContent=r.bot+' can post messages in #'+r.name+'.';}catch(e){el('dc-connection').textContent=e.message;}finally{state();}}
+ async function openPreview(key){if(dirty){message('Save or discard the changed settings before previewing.',true);return;}try{preview=await rpc('previewDiscordPilot',{route:key});el('dc-preview-title').textContent=preview.title;el('dc-preview-text').textContent=preview.text;el('dc-preview-result').textContent=!data.hasToken?'Connect the existing bot before sending.':data.paused?'Private tests are paused. Close this preview, allow private tests and save settings.':'';el('dc-message-link').hidden=true;state();el('dc-preview-dialog').showModal();}catch(e){message(e.message,true);}}
+ async function send(){if(!preview||sending)return;sending=true;state();el('dc-preview-result').textContent='Sending to the private test channel…';try{const result=await rpc('sendDiscordPilot',{requestId:preview.requestId});preview=null;el('dc-preview-result').textContent='Sent'+(result.alreadySent?' previously':'')+' · '+(result.elapsedMs/1000).toFixed(1)+' seconds'+(result.logPending?' · history update pending':'');el('dc-message-link').href=data.pilot.url+'/'+result.messageId;el('dc-message-link').hidden=false;data.history=(await rpc('getDiscordControls')).history;renderHistory();}catch(e){preview=null;el('dc-preview-result').textContent=e.message;}finally{sending=false;state();}}
+ el('dc-save').addEventListener('click',save);el('dc-discard').addEventListener('click',()=>{dirty=false;render();message('Unsaved settings discarded.');});el('dc-refresh').addEventListener('click',load);
+ el('dc-connect').addEventListener('click',connect);el('dc-check').addEventListener('click',check);el('dc-send').addEventListener('click',send);el('dc-preview-close').addEventListener('click',()=>{if(!sending)el('dc-preview-dialog').close();});
+ el('dc-preview-dialog').addEventListener('cancel',e=>{if(sending)e.preventDefault();});
+ el('view-discord-control').addEventListener('input',e=>{if(e.target.id==='dc-token')return;if(e.target.matches('input')){dirty=true;state();}});
+ el('dc-routes').addEventListener('click',e=>{const b=e.target.closest('[data-dc-preview]');if(b)openPreview(b.dataset.dcPreview);});
+ window.F1XLNavigation?.register('discord-control',()=>dirty||writing||sending||!!el('dc-token').value);
+ return {load:load};
+})();
+</script>

@@ -1,23 +1,23 @@
-# Glossary
+# Project glossary
 
-- **AI pack**: Detailed project information supplied to a replacement AI assistant.
-- **Browser/front end**: Code running on a visitor’s device, primarily the HTML pages in this repository.
-- **Central configuration**: The Google workbook that identifies seasons, workbooks, tabs and global data sources.
-- **CSV**: Plain-text table format downloaded from Google Sheets by the website.
-- **Division workbook**: A Google spreadsheet holding one division’s calendar, standings, results and statistics.
-- **GID**: Google’s numeric identifier for a tab within a spreadsheet.
-- **Git**: Version history for repository files.
-- **GitHub Actions**: Automated jobs defined in `.github/workflows/`.
-- **GitHub Pages**: Static website hosting used by this repository.
-- **Legacy parser/renderer**: Code that understands an older Sheet layout and turns it into current page content.
-- **Local preview**: The website served from the owner’s computer over `http://127.0.0.1`, before publishing.
-- **Main branch**: The repository branch currently associated with live project work.
-- **Owner quick-start pack**: Short instructions that help a non-developer establish accounts, upload the AI pack and continue operation.
-- **Parser**: Code that interprets Sheet rows/columns.
-- **PWA**: Installable website features supplied by `manifest.json` and `sw.js`.
-- **Repository**: The versioned collection of website code and assets.
-- **Service worker**: Browser code that caches website files and supplies offline fallback behaviour.
-- **Sheet ID/workbook ID**: The long identifier between `/d/` and `/edit` in a Google Sheets URL.
-- **Source of truth**: The authoritative place from which a value should be taken.
-- **Static website**: A site served as files without a per-request application server/database.
-- **Working tree**: The local repository files, including changes not yet committed.
+- **FAP / Admin Portal:** league administration application, running in Apps Script. Public short entry is /admincentre/. FAP is the approved working workbook prefix.
+- **TEST:** historical environment naming still present in keys/functions; after 6 November it is not proof of isolated/nonproduction data.
+- **LIVE / old LIVE:** before 6 November meant the original manual system. After launch, root website uses FAP sources. Specify date and workbook ID to avoid ambiguity.
+- **Legacy:** preserved previous public pages at /legacy/ and original source books; reference/recovery, not today's second write target.
+- **Master:** private season coordination workbook.
+- **Division workbook:** one division's session input, standings and statistics, intentionally publicly readable for website use.
+- **Website Config:** public routing and selected imported views; deliberate public alias for some Master-derived data.
+- **Permanent Driver ID:** identity key, unlike a gamertag or team-seat number.
+- **Seat/driver number:** number belonging to a team/tier position, not permanently to a person.
+- **Free agent / reserve:** distinct result/constructor treatment; combined only for the coordinator's review experience.
+- **Case ID:** stable ticket identity; display ticket numbers restart by round and are not durable IDs.
+- **Receipt / journal:** records of processed imports/applied effects enabling retry/reversal without duplication.
+- **Already included:** result time/order already incorporates the decision; do not add it twice.
+- **Carryover:** a time penalty deferred to the next participating sprint/feature, once only.
+- **Feature race:** main race, distinct from sprint and ASR.
+- **ASR:** All Star Race; separate points/honours.
+- **GID:** numeric Sheet tab ID, not workbook ID.
+- **Snapshot:** a dated captured state; say source/date/purpose explicitly. It is not automatically a current feed, backup or publication.
+- **HEAD / published version:** editable Apps Script source vs immutable deployment version; verify both.
+- **Direct-source mode:** public readers use working division data plus selected Config imports rather than a manually refreshed duplicate season workbook.
+- **Source reference:** bundled dated code for understanding/recovery planning; never blindly deploy it over a newer live project.

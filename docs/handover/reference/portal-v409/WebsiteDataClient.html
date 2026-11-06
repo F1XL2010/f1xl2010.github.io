@@ -1,0 +1,52 @@
+<script>
+  window.F1XLWebsiteData = (function() {
+    const state = { data:null, bound:false };
+    function el(id) { return document.getElementById(id); }
+    function esc(value) { return String(value == null ? '' : value).replace(/[&<>"']/g, function(c) { return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; }); }
+    function status(message, error) { const target=el('website-data-status'); target.innerHTML='<strong>'+esc(message)+'</strong>'; target.classList.toggle('error',!!error); }
+    function load(force) {
+      if (!window.google || !google.script || !google.script.run) return status('Open the deployed Admin Platform to manage the Website Config.', true);
+      status(force ? 'Refreshing Website Config…' : 'Loading Website Config…');
+      google.script.run.withSuccessHandler(function(response){ state.data=response; render(); }).withFailureHandler(fail).getWebsiteConfigStatus(force===true);
+    }
+    function fail(error) { status(error && error.message ? error.message : 'The Website Config operation failed.', true); }
+    function render() {
+      const config=state.data && state.data.config || {configured:false,available:false};
+      const seasons=state.data && state.data.seasons || [];
+      const prototype=state.data && state.data.prototype || {obsoleteFeeds:[]};
+      el('website-config-state').textContent=config.available?'Connected':(config.configured?'Unavailable':(prototype.canReuse?'Prototype ready to rebuild':'Not created'));
+      el('website-config-state').classList.toggle('active',!!config.available);
+      el('create-website-config').hidden=!!config.configured;
+      if (prototype.canReuse) el('create-website-config').textContent='Rebuild prototype as Website Config';
+      el('open-website-config').hidden=!config.available;
+      if(config.available) el('open-website-config').href=config.url;
+      el('website-season-controls').hidden=!config.available;
+      el('website-season-list').hidden=!config.available;
+      el('website-config-season-rows').innerHTML=seasons.map(function(item){
+        const ready=!!String(item.divisions||'').trim();
+        return '<tr><td>Season '+esc(item.season)+'</td><td>'+(ready?esc(item.divisions):'—')+'</td><td><span class="status '+(ready?'complete':'')+'">'+esc(item.status)+'</span></td><td>'+esc(item.gid)+'</td></tr>';
+      }).join('');
+      el('website-config-season-empty').hidden=seasons.length>0;
+      el('website-config-id-note').innerHTML=config.available?'<div class="notice"><strong>Website Config ID:</strong> <span style="overflow-wrap:anywhere">'+esc(config.spreadsheetId)+'</span><p style="margin:6px 0 0">The website reads its connections from this workbook.</p></div>':'';
+      el('website-prototype-cleanup').hidden=!(prototype.obsoleteFeeds&&prototype.obsoleteFeeds.length);
+      status(state.data && state.data.message || 'Website Config loaded.');
+    }
+    function run(button,busy,label,method,input,confirmText) {
+      if(confirmText&&!window.confirm(confirmText)) return;
+      const original=button.textContent; button.disabled=true; button.textContent=busy; status(busy+'…');
+      let call=google.script.run.withSuccessHandler(function(response){ button.disabled=false; button.textContent=original; status(response.message||label+' complete.'); load(true); if(response.config&&response.config.url&&method==='createTestWebsiteConfigWorkbook') window.open(response.config.url,'_blank','noopener'); }).withFailureHandler(function(error){ button.disabled=false; button.textContent=original; fail(error); });
+      if(input===undefined) call[method](); else call[method](input);
+    }
+    function bind() {
+      if(state.bound) return; state.bound=true;
+      el('create-website-config').addEventListener('click',function(event){ run(event.currentTarget,'Building Config','Website Config','createTestWebsiteConfigWorkbook',undefined,'Build the correct Website Config?\n\nIf the old Registry prototype exists, its prototype tabs will be replaced in that same file. The live Website Config and Season 28 will not be touched.'); });
+      el('prepare-website-season').addEventListener('click',function(event){ const season=el('website-config-season').value.trim(); run(event.currentTarget,'Preparing draft','Draft preparation','prepareSeasonWebsiteConfig',{season:season}); });
+      el('publish-website-season').addEventListener('click',function(event){ const season=el('website-config-season').value.trim(); const divisions=Number(el('website-config-divisions').value); run(event.currentTarget,'Publishing divisions','Division confirmation','publishSeasonWebsiteDivisions',{season:season,divisions:divisions},'Confirm '+divisions+' division'+(divisions===1?'':'s')+' for Season '+season+'?\n\nThis makes the Season Master, Division workbooks and permanent reference data readable to the public website, then changes the website from its blank pre-season state to showing this season structure.'); });
+      el('draft-website-season').addEventListener('click',function(event){ const season=el('website-config-season').value.trim(); run(event.currentTarget,'Returning to draft','Draft reset','returnSeasonWebsiteConfigToDraft',{season:season},'Return Season '+season+' to draft?\n\nIts stored source details will remain, but divisions will be blank and the website will stop showing its teams and standings.'); });
+      el('retire-website-feeds').addEventListener('click',function(event){ run(event.currentTarget,'Moving Feed to bin','Prototype cleanup','retireObsoleteWebsiteFeedPrototypes',undefined,'Move the obsolete seasonal Website Feed prototype to the Google Drive bin?\n\nIt is not used by the replacement Website Config. This can be restored from the bin if necessary.'); });
+      el('refresh-website-data').addEventListener('click',function(){load(true);});
+    }
+    return {load:load,bind:bind};
+  })();
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',function(){window.F1XLWebsiteData.bind();}); else window.F1XLWebsiteData.bind();
+</script>

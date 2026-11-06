@@ -1,56 +1,61 @@
-# Testing checklist
+# Verification checklist — choose checks for the change
 
-Apply checks in proportion to the change. Record what was actually tested.
+This is an AI checklist, not a demand that the owner recheck the whole system each task. Record fixtures, source inspection, published readback, physical phone use and real transactions separately.
 
-## Before editing
+## Any change
 
-- [ ] `git status --short --branch` recorded.
-- [ ] Relevant page, shared files and live data inspected.
-- [ ] Unrelated owner changes identified and preserved.
-- [ ] Data backup confirmed for any approved Sheet change.
+1. Record relevant baseline, branch/dirty files, deployed version and source mappings.
+2. Preserve unrelated changes and back up intended mutable data.
+3. Check exact diff, syntax and encoding; no secrets/private record exports.
+4. Test relevant behavior and failure/retry/stale-state cases. Don't write tests that merely repeat a trivial implementation.
+5. Verify actual saved/published state, not just the outgoing payload.
+6. Report outcome, scope, evidence and limits, then update the handover.
 
-## Static checks
+## Results / movements
 
-- [ ] HTML/JavaScript syntax checked.
-- [ ] `git diff --check` passes.
-- [ ] Complete diff contains only intended files/lines.
-- [ ] No passwords, tokens, private URLs or personal information added.
-- [ ] File encoding and visible punctuation remain correct.
+- Permanent identity and historical team/tier/seat travel with result rows through reordering.
+- Reserve/FA distinction, intra-division move, up/down and return to old division preserve correct balances.
+- Blank tyre-only sessions, DNS/DNF/DSQ, qualifying and sprint layouts, plus-gap/time formats remain correct.
+- Source-already-adjusted results do not receive a second penalty.
+- Historical validation across affected rounds and unaffected formulas passes.
+- Saved result, standings, constructors and public display agree within the correct definition.
 
-## Browser checks
+## Tickets / appeals
 
-- [ ] Served through a local HTTP server, not opened directly.
-- [ ] Page loads without console errors.
-- [ ] Live Google data loads.
-- [ ] Desktop layout checked.
-- [ ] Mobile breakpoint/layout checked.
-- [ ] Navigation and keyboard access checked where affected.
-- [ ] Empty, zero, decimal, missing and long-text cases checked where relevant.
-- [ ] Existing unaffected sections spot-checked.
-- [ ] Service-worker caching considered; reload/update behaviour checked when needed.
+- Legacy/improved Form schemas, session, both involved parties, admin reporter and game target.
+- Import receipts, wrong-round correction, linked defence, permanent case ID and real driver match.
+- Own-review edit / peer read-only / recusal and appealed-only reviewer scope.
+- Final effective decisions, upheld/reduced/overturned appeals, licence deltas and threshold bans once.
+- Positive time, removal, DSQ, carried seconds, first next participating race and second DNF expiry.
+- Served/waived/unknown-round bans distinguish facts from guesses.
+- UI stays open across background refresh and preserves unsaved fields; no navigation away from Results to settle a penalty.
+- Website Export/public readback and honest round completion state.
 
-## Data checks
+## Roles / mobile
 
-- [ ] Correct Sheet ID and GID confirmed from live configuration.
-- [ ] Header names and column positions confirmed.
-- [ ] Representative rows compared manually.
-- [ ] Row counts/totals compared for migrations.
-- [ ] Multiple divisions and session/race formats considered.
-- [ ] Historical official totals preserved.
+- Effective multi-role/exception policy, direct action denial and own-team/reviewer scoping.
+- Admin routine work available, restricted maintenance/reference/allocations remain protected.
+- Time Trial Team application processing and TT landing.
+- TP/coordinator relevant submitted statements/evidence and correct current/former driver scope.
+- Actual viewport dimensions, navigation, readable large forms, keyboard/touch and no horizontal overflow. A file called “phone.png” is not proof it was captured on a narrow viewport.
 
-## Search/accessibility checks
+## History / records
 
-- [ ] Existing URL preserved or an approved redirect plan exists.
-- [ ] `<title>`, headings and visible descriptive text remain meaningful.
-- [ ] `sitemap.xml`, navigation and `robots.txt` updated if page discovery changed.
-- [ ] Important public information remains readable without login.
-- [ ] Images retain useful alternative text where affected.
-- [ ] No important content was unnecessarily hidden from crawlers behind interaction-only UI.
+- Official final classifications vs reconstructed session stats remain distinct.
+- Feature-only overall metrics, separate sprints/ASR and legitimate championship sprint points.
+- Verified aliases only; unknown values remain unknown.
+- Qualifying-only track candidates and correct source/circuit/session.
+- Team principals recorded only where supported; current season excluded from completed archive.
+- Accepted corrections not overwritten just to match old LIVE.
 
-## Finish
+## Publishing / recovery
 
-- [ ] Final `git status --short` reported.
-- [ ] Exact changed files and outcome explained in plain English.
-- [ ] Tests and uncertainties reported honestly.
-- [ ] Documentation updated if architecture, data or operations changed.
-- [ ] No commit/push unless separately authorised.
+- Root URLs/canonicals/sitemap, /legacy/ noindex and /next/ redirects preserved.
+- Google callback untouched/noncached; /admincentre/ off menu.
+- Current Config/private boundaries and history feeds remain reachable.
+- Existing-cache browser upgrade and fresh browser work without losing form input.
+- Only reviewed files staged; published commit/Pages build/content verified.
+- No bot messages unless explicitly authorised for that destination.
+- No old version rollback incompatible with FAP names; newer raw submissions/receipts/accounts preserved.
+
+Pack-only validation is provided by maintenance/validate-pack.cjs. It checks documentation links, exact archived bytes, reference hashes and common credential patterns; it does not certify live product behavior.

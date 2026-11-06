@@ -1,0 +1,48 @@
+<script>
+  window.F1XLDriverCareerTemplates = (function() {
+    const state = { loaded: false };
+    function el(id) { return document.getElementById(id); }
+    function esc(value) { return String(value == null ? '' : value).replace(/[&<>"']/g, function(character) { return ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[character]; }); }
+    function showStatus(message, error) {
+      const target = el('driver-career-template-status');
+      target.hidden = false;
+      target.innerHTML = '<strong>' + esc(message) + '</strong>';
+      target.classList.toggle('error', !!error);
+    }
+    function render(response) {
+      state.loaded = true;
+      el('create-driver-career-templates').hidden = !!response.created;
+      el('open-driver-career-stats').hidden = !response.careerUrl;
+      el('open-driver-accolades').hidden = !response.accoladesUrl;
+      el('open-driver-career-backup').hidden = !response.backupUrl;
+      if (response.careerUrl) el('open-driver-career-stats').href = response.careerUrl;
+      if (response.accoladesUrl) el('open-driver-accolades').href = response.accoladesUrl;
+      if (response.backupUrl) el('open-driver-career-backup').href = response.backupUrl;
+      showStatus(response.message || 'Career record structure checked.', !!response.partial);
+      el('driver-career-template-status').hidden = !!response.created && !response.partial && !!response.careerUrl && !!response.accoladesUrl;
+    }
+    function load(force) {
+      if (state.loaded && force !== true) return;
+      if (!window.google || !google.script || !google.script.run) return showStatus('Open this through the deployed Admin Platform to check the career record tabs.', true);
+      showStatus('Checking Career Stats and Accolades…');
+      google.script.run.withSuccessHandler(render).withFailureHandler(function(error) { showStatus(error && error.message ? error.message : 'The career record tabs could not be checked.', true); }).getDriverCareerTemplateStatus();
+    }
+    function create(button) {
+      if (!window.confirm('Create Career Stats and Accolades inside the existing TEST Driver Registry?\n\nA full verified backup of the current registry will be made first. The old Full Stats workbook will not be changed, and no historical figures will be imported yet.')) return;
+      button.disabled = true;
+      button.textContent = 'Backing up and creating…';
+      showStatus('Creating and verifying a full registry backup first…');
+      google.script.run.withSuccessHandler(function(response) {
+        button.disabled = false;
+        button.textContent = 'Create backed-up career tabs';
+        render(response);
+      }).withFailureHandler(function(error) {
+        button.disabled = false;
+        button.textContent = 'Create backed-up career tabs';
+        showStatus(error && error.message ? error.message : 'The career record tabs could not be created.', true);
+      }).createDriverCareerTemplates();
+    }
+    el('create-driver-career-templates').addEventListener('click', function(event) { create(event.currentTarget); });
+    return { load: load };
+  })();
+</script>

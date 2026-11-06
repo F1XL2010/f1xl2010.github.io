@@ -1,0 +1,855 @@
+{
+  "date": "2026-11-06",
+  "version": 409,
+  "files": [
+    {
+      "name": "AccessClient",
+      "type": "HTML",
+      "path": "reference/portal-v409/AccessClient.html",
+      "sha256": "5c24fb75ae7a4c7e12e64fe3fb2c97c95442de038e07b186c22e135b704cb0ce",
+      "sourceSha256": "5c24fb75ae7a4c7e12e64fe3fb2c97c95442de038e07b186c22e135b704cb0ce"
+    },
+    {
+      "name": "AccessPolicy",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/AccessPolicy.gs",
+      "sha256": "df275596de654935d608f854394785bc96fcf6da2e5fcc3c228357c544bda761",
+      "sourceSha256": "df275596de654935d608f854394785bc96fcf6da2e5fcc3c228357c544bda761"
+    },
+    {
+      "name": "AccessService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/AccessService.gs",
+      "sha256": "fedf62258ecb65b19356817a572c5be81ea20d03d593b91bdaf31b8d9c12a7cf",
+      "sourceSha256": "fedf62258ecb65b19356817a572c5be81ea20d03d593b91bdaf31b8d9c12a7cf"
+    },
+    {
+      "name": "AccoladeService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/AccoladeService.gs",
+      "sha256": "65a9695710e123395af55c34b52a0dd8a04d9fa842504534dd3a1d4cd1e4f8c4",
+      "sourceSha256": "65a9695710e123395af55c34b52a0dd8a04d9fa842504534dd3a1d4cd1e4f8c4"
+    },
+    {
+      "name": "ActiveAsrClient",
+      "type": "HTML",
+      "path": "reference/portal-v409/ActiveAsrClient.html",
+      "sha256": "43e2a22cd681a50138846cee3c1c54551e65378b618d23b5327af4ac3e52c105",
+      "sourceSha256": "43e2a22cd681a50138846cee3c1c54551e65378b618d23b5327af4ac3e52c105"
+    },
+    {
+      "name": "ActiveAsrRaceNightClient",
+      "type": "HTML",
+      "path": "reference/portal-v409/ActiveAsrRaceNightClient.html",
+      "sha256": "c973ab7984eebb1ec751e84a5e0d7ecacee2ce37c60253124f2ed59b6302019d",
+      "sourceSha256": "c973ab7984eebb1ec751e84a5e0d7ecacee2ce37c60253124f2ed59b6302019d"
+    },
+    {
+      "name": "ActiveAsrService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/ActiveAsrService.gs",
+      "sha256": "6c997bcac2e7a69e38a975e6f003e6a5f905222318127c0f0b5a839f0db85495",
+      "sourceSha256": "6c997bcac2e7a69e38a975e6f003e6a5f905222318127c0f0b5a839f0db85495"
+    },
+    {
+      "name": "ActiveSeasonClient",
+      "type": "HTML",
+      "path": "reference/portal-v409/ActiveSeasonClient.html",
+      "sha256": "d172e3de093d41eb02f00e686d750b7fdf99be54903bcbaf6ecf51be7bb3b6cd",
+      "sourceSha256": "d172e3de093d41eb02f00e686d750b7fdf99be54903bcbaf6ecf51be7bb3b6cd"
+    },
+    {
+      "name": "ActiveSeasonService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/ActiveSeasonService.gs",
+      "sha256": "45d0506698d1579d1d6379e013edd9b23a4439f4bf42e3dafc7619945c4f56b9",
+      "sourceSha256": "45d0506698d1579d1d6379e013edd9b23a4439f4bf42e3dafc7619945c4f56b9"
+    },
+    {
+      "name": "AdminCentreDesign",
+      "type": "HTML",
+      "path": "reference/portal-v409/AdminCentreDesign.html",
+      "sha256": "534de975398982eb374ccf226bf1eb04a057435a24a1429590f382601dd55b22",
+      "sourceSha256": "534de975398982eb374ccf226bf1eb04a057435a24a1429590f382601dd55b22"
+    },
+    {
+      "name": "ApplicationService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/ApplicationService.gs",
+      "sha256": "2f63dee15ada5bd9664b5e3a035f98593b08c1c72d3ba419a5f7aa59ccc7e2dc",
+      "sourceSha256": "2f63dee15ada5bd9664b5e3a035f98593b08c1c72d3ba419a5f7aa59ccc7e2dc"
+    },
+    {
+      "name": "appsscript",
+      "type": "JSON",
+      "path": "reference/portal-v409/appsscript.json",
+      "sha256": "5a3393201dd981497879a3a78c8ece6a210bb8b80c953fa7f00febb1dfd0321e",
+      "sourceSha256": "5a3393201dd981497879a3a78c8ece6a210bb8b80c953fa7f00febb1dfd0321e"
+    },
+    {
+      "name": "AsrClient",
+      "type": "HTML",
+      "path": "reference/portal-v409/AsrClient.html",
+      "sha256": "19a24df1c762aaba90a152fb2d23d277cbc653a66b5ce46331e596e949cc27f3",
+      "sourceSha256": "19a24df1c762aaba90a152fb2d23d277cbc653a66b5ce46331e596e949cc27f3"
+    },
+    {
+      "name": "AsrService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/AsrService.gs",
+      "sha256": "dae0d52c29d6b6ddecef621ca7eb166ffd7044b03e08feeb91555a60c1bf0f1d",
+      "sourceSha256": "dae0d52c29d6b6ddecef621ca7eb166ffd7044b03e08feeb91555a60c1bf0f1d"
+    },
+    {
+      "name": "CalendarService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/CalendarService.gs",
+      "sha256": "4783b67f3a1de0dfaf54192e8313302a0c57163a24c4354276b7270f23f7c217",
+      "sourceSha256": "4783b67f3a1de0dfaf54192e8313302a0c57163a24c4354276b7270f23f7c217"
+    },
+    {
+      "name": "CapacityConfig",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/CapacityConfig.gs",
+      "sha256": "8f783051feb1eb8135451e087221deffa527375975d3507a48288d2ab693c10d",
+      "sourceSha256": "8f783051feb1eb8135451e087221deffa527375975d3507a48288d2ab693c10d"
+    },
+    {
+      "name": "CareerFormulaService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/CareerFormulaService.gs",
+      "sha256": "827dcaf8cd53629cc68238a0512d3e9fc03477757c36a15e9365dc2298ef1528",
+      "sourceSha256": "827dcaf8cd53629cc68238a0512d3e9fc03477757c36a15e9365dc2298ef1528"
+    },
+    {
+      "name": "Code",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/Code.gs",
+      "sha256": "ab93164f098fc60e104a7c7799be5cc73daf59992161a1399a047f347a35b974",
+      "sourceSha256": "ab93164f098fc60e104a7c7799be5cc73daf59992161a1399a047f347a35b974"
+    },
+    {
+      "name": "DivisionDataClient",
+      "type": "HTML",
+      "path": "reference/portal-v409/DivisionDataClient.html",
+      "sha256": "226b9407452353e917a0ced9b980982ad3a0498ae2cb57b9fbe4a11f23952201",
+      "sourceSha256": "226b9407452353e917a0ced9b980982ad3a0498ae2cb57b9fbe4a11f23952201"
+    },
+    {
+      "name": "DivisionDataServices",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/DivisionDataServices.gs",
+      "sha256": "47de5944da3dc6907569fa82a13ecad0e93d7ef8474d2d19e0d84035de44a4bc",
+      "sourceSha256": "47de5944da3dc6907569fa82a13ecad0e93d7ef8474d2d19e0d84035de44a4bc"
+    },
+    {
+      "name": "DivisionTemplateService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/DivisionTemplateService.gs",
+      "sha256": "0f72be9c0d1c26a7412d74c050d12a5bd1a99507c343c5add24f78658d9ca255",
+      "sourceSha256": "0f72be9c0d1c26a7412d74c050d12a5bd1a99507c343c5add24f78658d9ca255"
+    },
+    {
+      "name": "DriverCareerTemplateClient",
+      "type": "HTML",
+      "path": "reference/portal-v409/DriverCareerTemplateClient.html",
+      "sha256": "dbd884828d9d2c02e5278ddb705aff1bf94b201beee79539dc7bd114336fbe6f",
+      "sourceSha256": "dbd884828d9d2c02e5278ddb705aff1bf94b201beee79539dc7bd114336fbe6f"
+    },
+    {
+      "name": "DriverCareerTemplateService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/DriverCareerTemplateService.gs",
+      "sha256": "0c276139d573b51c7b365cba21b112dba5daf7f572dc0dcc889a61e95f7a6376",
+      "sourceSha256": "0c276139d573b51c7b365cba21b112dba5daf7f572dc0dcc889a61e95f7a6376"
+    },
+    {
+      "name": "DriverDatabaseClient",
+      "type": "HTML",
+      "path": "reference/portal-v409/DriverDatabaseClient.html",
+      "sha256": "e44471847fd41c85de2c4d12dfe76e63a7b5b1b82480829b0fce203f35f0c466",
+      "sourceSha256": "e44471847fd41c85de2c4d12dfe76e63a7b5b1b82480829b0fce203f35f0c466"
+    },
+    {
+      "name": "DriverDatabaseService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/DriverDatabaseService.gs",
+      "sha256": "f7a6e5fca9915b07361d4a97190ec8ab2897faf61d793d87553694304280246a",
+      "sourceSha256": "f7a6e5fca9915b07361d4a97190ec8ab2897faf61d793d87553694304280246a"
+    },
+    {
+      "name": "DriverMovementService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/DriverMovementService.gs",
+      "sha256": "f9583f4bb60ff476068feb8140727c6e73c3ebfc832c8bec0f73df4f79bd118e",
+      "sourceSha256": "f9583f4bb60ff476068feb8140727c6e73c3ebfc832c8bec0f73df4f79bd118e"
+    },
+    {
+      "name": "HistoricalSeasonService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/HistoricalSeasonService.gs",
+      "sha256": "2ce793cb9d169503e2276ca0d90073785fc7fa32927542d6f1a93af52cc0009d",
+      "sourceSha256": "2ce793cb9d169503e2276ca0d90073785fc7fa32927542d6f1a93af52cc0009d"
+    },
+    {
+      "name": "Index",
+      "type": "HTML",
+      "path": "reference/portal-v409/Index.html",
+      "sha256": "d728fcac5b8a2e2fa8fbb613322c47734c5b46501503fdf6070e51a87a85e66d",
+      "sourceSha256": "d728fcac5b8a2e2fa8fbb613322c47734c5b46501503fdf6070e51a87a85e66d"
+    },
+    {
+      "name": "LicenceService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/LicenceService.gs",
+      "sha256": "87ec7474c24d403304cf93d72c1f3d51588284daef3172d7f5e4a224ad9d3daa",
+      "sourceSha256": "87ec7474c24d403304cf93d72c1f3d51588284daef3172d7f5e4a224ad9d3daa"
+    },
+    {
+      "name": "LicenceSetupService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/LicenceSetupService.gs",
+      "sha256": "97015f21d3d9581055c3f4e521ee23e24563c51dee4a0ffd661678b45b81c804",
+      "sourceSha256": "97015f21d3d9581055c3f4e521ee23e24563c51dee4a0ffd661678b45b81c804"
+    },
+    {
+      "name": "NavigationClient",
+      "type": "HTML",
+      "path": "reference/portal-v409/NavigationClient.html",
+      "sha256": "2b95c728cf88e57fa654f42488a9c437d54f8e024d7ebda1686c850cf75a2d14",
+      "sourceSha256": "2b95c728cf88e57fa654f42488a9c437d54f8e024d7ebda1686c850cf75a2d14"
+    },
+    {
+      "name": "PlacementClient",
+      "type": "HTML",
+      "path": "reference/portal-v409/PlacementClient.html",
+      "sha256": "01f301595b9500e02ddc80798b7ab0c520988652d12d405b2ec362f4315ca597",
+      "sourceSha256": "01f301595b9500e02ddc80798b7ab0c520988652d12d405b2ec362f4315ca597"
+    },
+    {
+      "name": "PlacementService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/PlacementService.gs",
+      "sha256": "c2c04393aeb9fe68dbea2e4d2293d6eef54022670a91016b82ca0484829b36f6",
+      "sourceSha256": "c2c04393aeb9fe68dbea2e4d2293d6eef54022670a91016b82ca0484829b36f6"
+    },
+    {
+      "name": "PostseasonClient",
+      "type": "HTML",
+      "path": "reference/portal-v409/PostseasonClient.html",
+      "sha256": "579f33008dcac3fb1eafebd0b11436898499fd5078f9015421b60c28a31371e9",
+      "sourceSha256": "579f33008dcac3fb1eafebd0b11436898499fd5078f9015421b60c28a31371e9"
+    },
+    {
+      "name": "PostseasonService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/PostseasonService.gs",
+      "sha256": "31ea2ab8aa63acd1fa3a63b5507f193ffb7cbcc189a3105033f0f7bde3459d7d",
+      "sourceSha256": "31ea2ab8aa63acd1fa3a63b5507f193ffb7cbcc189a3105033f0f7bde3459d7d"
+    },
+    {
+      "name": "PreseasonAllocationClient",
+      "type": "HTML",
+      "path": "reference/portal-v409/PreseasonAllocationClient.html",
+      "sha256": "18c473e5d3c8e8008da5c71db0c008e8c20dc92ea9547e5de984940fc535ea9b",
+      "sourceSha256": "18c473e5d3c8e8008da5c71db0c008e8c20dc92ea9547e5de984940fc535ea9b"
+    },
+    {
+      "name": "PreseasonAllocationService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/PreseasonAllocationService.gs",
+      "sha256": "01d8a6c49cf19be3da4ce701778261e514587390fcfb97a062b21d1c237e6ef3",
+      "sourceSha256": "01d8a6c49cf19be3da4ce701778261e514587390fcfb97a062b21d1c237e6ef3"
+    },
+    {
+      "name": "PreseasonAnnouncementClient",
+      "type": "HTML",
+      "path": "reference/portal-v409/PreseasonAnnouncementClient.html",
+      "sha256": "ae5213c0da4d7a36301cad66a0d4fe999fc7bc0367b696990ac2906a0ca3f107",
+      "sourceSha256": "ae5213c0da4d7a36301cad66a0d4fe999fc7bc0367b696990ac2906a0ca3f107"
+    },
+    {
+      "name": "PreseasonAnnouncementService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/PreseasonAnnouncementService.gs",
+      "sha256": "1c61597e616863f28a00f7e209e1fe3cd659f6f0bfc8ae8940cc3fc22170eaab",
+      "sourceSha256": "1c61597e616863f28a00f7e209e1fe3cd659f6f0bfc8ae8940cc3fc22170eaab"
+    },
+    {
+      "name": "PreseasonAnnouncementSlidesService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/PreseasonAnnouncementSlidesService.gs",
+      "sha256": "97d8f9866797dab0900fa00aa1ea6c6b90900c20cea284a47e92908e7d7770f7",
+      "sourceSha256": "97d8f9866797dab0900fa00aa1ea6c6b90900c20cea284a47e92908e7d7770f7"
+    },
+    {
+      "name": "PreseasonDraftClient",
+      "type": "HTML",
+      "path": "reference/portal-v409/PreseasonDraftClient.html",
+      "sha256": "6bdc28463778676af6aea1fcd5138e6a162fff1b779345a3d062b415b8aba327",
+      "sourceSha256": "6bdc28463778676af6aea1fcd5138e6a162fff1b779345a3d062b415b8aba327"
+    },
+    {
+      "name": "PreseasonDraftService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/PreseasonDraftService.gs",
+      "sha256": "73b1cf2bccff47cbfd842bebd625b3e8071b8c1b80ea2a5f1731ad88ca65017a",
+      "sourceSha256": "73b1cf2bccff47cbfd842bebd625b3e8071b8c1b80ea2a5f1731ad88ca65017a"
+    },
+    {
+      "name": "PreseasonGuideClient",
+      "type": "HTML",
+      "path": "reference/portal-v409/PreseasonGuideClient.html",
+      "sha256": "1efc924dc41247dad766b17794438b79b6248b33a444b59518344a137a4685c3",
+      "sourceSha256": "1efc924dc41247dad766b17794438b79b6248b33a444b59518344a137a4685c3"
+    },
+    {
+      "name": "PreseasonHubClient",
+      "type": "HTML",
+      "path": "reference/portal-v409/PreseasonHubClient.html",
+      "sha256": "de67607209d969ab4bc49ebf781cc8ffc4c0226593b4debf59e4de1215e8f026",
+      "sourceSha256": "de67607209d969ab4bc49ebf781cc8ffc4c0226593b4debf59e4de1215e8f026"
+    },
+    {
+      "name": "PreseasonIntakeClient",
+      "type": "HTML",
+      "path": "reference/portal-v409/PreseasonIntakeClient.html",
+      "sha256": "a3a9688e6c98986682da3612d5b89a63de358a2268fa2283c7d1245c2e628f00",
+      "sourceSha256": "a3a9688e6c98986682da3612d5b89a63de358a2268fa2283c7d1245c2e628f00"
+    },
+    {
+      "name": "PreseasonIntakeService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/PreseasonIntakeService.gs",
+      "sha256": "155a2acfdf5f34959867131a9ece8c56f236d85ba80e310274c5a83ab03cc0fb",
+      "sourceSha256": "155a2acfdf5f34959867131a9ece8c56f236d85ba80e310274c5a83ab03cc0fb"
+    },
+    {
+      "name": "PreseasonLiveDraftClient",
+      "type": "HTML",
+      "path": "reference/portal-v409/PreseasonLiveDraftClient.html",
+      "sha256": "fe686d6829fd25dc2bfbd2bafb7c9bcbc1aa7645177bf298773425966933441c",
+      "sourceSha256": "fe686d6829fd25dc2bfbd2bafb7c9bcbc1aa7645177bf298773425966933441c"
+    },
+    {
+      "name": "PreseasonLiveDraftService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/PreseasonLiveDraftService.gs",
+      "sha256": "badf601a3a6423092bbc2ba7d88342e40429d2dad2b4d54884ac20a0bb0b9a56",
+      "sourceSha256": "badf601a3a6423092bbc2ba7d88342e40429d2dad2b4d54884ac20a0bb0b9a56"
+    },
+    {
+      "name": "PreseasonPlacementClient",
+      "type": "HTML",
+      "path": "reference/portal-v409/PreseasonPlacementClient.html",
+      "sha256": "10bd2da813312b2407ae402a0acca0f1b900a1299bf807fe226fdd7c6a05c924",
+      "sourceSha256": "10bd2da813312b2407ae402a0acca0f1b900a1299bf807fe226fdd7c6a05c924"
+    },
+    {
+      "name": "PreseasonPlacementService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/PreseasonPlacementService.gs",
+      "sha256": "8c755cce179311b8ba25452016c351cf89354a15d9f412f5183b5d2f5b9665d6",
+      "sourceSha256": "8c755cce179311b8ba25452016c351cf89354a15d9f412f5183b5d2f5b9665d6"
+    },
+    {
+      "name": "PreseasonPreparationClient",
+      "type": "HTML",
+      "path": "reference/portal-v409/PreseasonPreparationClient.html",
+      "sha256": "bcf23b53abbdc4f6434ad249cfd188439e4e2c3ebce2c41ebe62bd16fd07db1d",
+      "sourceSha256": "bcf23b53abbdc4f6434ad249cfd188439e4e2c3ebce2c41ebe62bd16fd07db1d"
+    },
+    {
+      "name": "PreseasonPreperationService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/PreseasonPreperationService.gs",
+      "sha256": "e048bac4dfbb956497a7b49fab33332917eb3ff621fdae02b8ed188f9eec7819",
+      "sourceSha256": "e048bac4dfbb956497a7b49fab33332917eb3ff621fdae02b8ed188f9eec7819"
+    },
+    {
+      "name": "PreseasonPrincipalsClient",
+      "type": "HTML",
+      "path": "reference/portal-v409/PreseasonPrincipalsClient.html",
+      "sha256": "cdbb7e43e5b16ac14de73cfe5098d4cae7945ba66840ec23b933293c60c81d81",
+      "sourceSha256": "cdbb7e43e5b16ac14de73cfe5098d4cae7945ba66840ec23b933293c60c81d81"
+    },
+    {
+      "name": "PreseasonPrincipalSeatService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/PreseasonPrincipalSeatService.gs",
+      "sha256": "878f003498d410a8edfe5cf104652d807615f78901d0730229bfc5a188197c7b",
+      "sourceSha256": "878f003498d410a8edfe5cf104652d807615f78901d0730229bfc5a188197c7b"
+    },
+    {
+      "name": "PreseasonPrincipalSelectionService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/PreseasonPrincipalSelectionService.gs",
+      "sha256": "7f2702136d5b8043d260a1f3d1272117e76eab0b652aba66e24c588c534254aa",
+      "sourceSha256": "7f2702136d5b8043d260a1f3d1272117e76eab0b652aba66e24c588c534254aa"
+    },
+    {
+      "name": "PreseasonPrincipalsService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/PreseasonPrincipalsService.gs",
+      "sha256": "dc8e81260c77686890f7d2f8536ceb8f9160ea20e42aaa5d0d0cbc27869fa35b",
+      "sourceSha256": "dc8e81260c77686890f7d2f8536ceb8f9160ea20e42aaa5d0d0cbc27869fa35b"
+    },
+    {
+      "name": "PreseasonTimeTrialClient",
+      "type": "HTML",
+      "path": "reference/portal-v409/PreseasonTimeTrialClient.html",
+      "sha256": "64f4fd2a11722d776cd333203b93c39d1f99072ba62b6390aa0be7f9d512fb97",
+      "sourceSha256": "64f4fd2a11722d776cd333203b93c39d1f99072ba62b6390aa0be7f9d512fb97"
+    },
+    {
+      "name": "PreseasonTimeTrialService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/PreseasonTimeTrialService.gs",
+      "sha256": "24c10c43f48b4bd315a9532ef9182c81bf88a25e6266b9a6b10f65f3d9559289",
+      "sourceSha256": "24c10c43f48b4bd315a9532ef9182c81bf88a25e6266b9a6b10f65f3d9559289"
+    },
+    {
+      "name": "PreseasonTrackDrawClient",
+      "type": "HTML",
+      "path": "reference/portal-v409/PreseasonTrackDrawClient.html",
+      "sha256": "3f54fa3104d726c6ecc1fb6fc05d8d5b0b735de88c8aa7df0d982f21078b90b4",
+      "sourceSha256": "3f54fa3104d726c6ecc1fb6fc05d8d5b0b735de88c8aa7df0d982f21078b90b4"
+    },
+    {
+      "name": "PreseasonTrackDrawService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/PreseasonTrackDrawService.gs",
+      "sha256": "7e5c53bdc585396aedc98dc8dcc53a5290f67101945044e8bdae8d8b710ee63a",
+      "sourceSha256": "7e5c53bdc585396aedc98dc8dcc53a5290f67101945044e8bdae8d8b710ee63a"
+    },
+    {
+      "name": "ReferenceDataClient",
+      "type": "HTML",
+      "path": "reference/portal-v409/ReferenceDataClient.html",
+      "sha256": "15c554a27163776745694616e22c2408a032a6b0f500840c0f09e3a9838db61c",
+      "sourceSha256": "15c554a27163776745694616e22c2408a032a6b0f500840c0f09e3a9838db61c"
+    },
+    {
+      "name": "ReferenceDataService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/ReferenceDataService.gs",
+      "sha256": "c8c617ce13d642d01f9ab89fed0bbaf8bcdf2fc142bee5369ff8d1647647fdff",
+      "sourceSha256": "c8c617ce13d642d01f9ab89fed0bbaf8bcdf2fc142bee5369ff8d1647647fdff"
+    },
+    {
+      "name": "ResultsEntryClient",
+      "type": "HTML",
+      "path": "reference/portal-v409/ResultsEntryClient.html",
+      "sha256": "9de387ec1e8c3a525371b7dee83f8aabd6ae83d62e811f7d89d6c0283ebeb31c",
+      "sourceSha256": "9de387ec1e8c3a525371b7dee83f8aabd6ae83d62e811f7d89d6c0283ebeb31c"
+    },
+    {
+      "name": "ResultsEntryService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/ResultsEntryService.gs",
+      "sha256": "4cfabcbd2ad9035ca548208fdb379ae35fab170e09a17c2461aff848815edec3",
+      "sourceSha256": "4cfabcbd2ad9035ca548208fdb379ae35fab170e09a17c2461aff848815edec3"
+    },
+    {
+      "name": "SeasonDiscardService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/SeasonDiscardService.gs",
+      "sha256": "1ca10a30c052341424d5797c562fb1d1690974e84d2b25b0cfeb5e9c41bd8843",
+      "sourceSha256": "1ca10a30c052341424d5797c562fb1d1690974e84d2b25b0cfeb5e9c41bd8843"
+    },
+    {
+      "name": "SeasonDriverIdentityClient",
+      "type": "HTML",
+      "path": "reference/portal-v409/SeasonDriverIdentityClient.html",
+      "sha256": "2350820b708feeb97286e068d5b8fa0fc29ddcc4d0280e56b61d062a2e5f4c2b",
+      "sourceSha256": "2350820b708feeb97286e068d5b8fa0fc29ddcc4d0280e56b61d062a2e5f4c2b"
+    },
+    {
+      "name": "SeasonDriverIdentityService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/SeasonDriverIdentityService.gs",
+      "sha256": "baeaa2df574fc5f46f4253baa463528ed99271c4d66bd05bc73506fb7125a645",
+      "sourceSha256": "baeaa2df574fc5f46f4253baa463528ed99271c4d66bd05bc73506fb7125a645"
+    },
+    {
+      "name": "SeasonLaunchClient",
+      "type": "HTML",
+      "path": "reference/portal-v409/SeasonLaunchClient.html",
+      "sha256": "ad619f911c52fe7887fd341961004d7bff4fe879f5b120d99468748c1d550119",
+      "sourceSha256": "ad619f911c52fe7887fd341961004d7bff4fe879f5b120d99468748c1d550119"
+    },
+    {
+      "name": "SeasonLaunchService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/SeasonLaunchService.gs",
+      "sha256": "2b4d99fc03ef07fa644dbb85e2ecb078553a9ffd464bc97bb83b976e53a6a8b4",
+      "sourceSha256": "2b4d99fc03ef07fa644dbb85e2ecb078553a9ffd464bc97bb83b976e53a6a8b4"
+    },
+    {
+      "name": "SeasonMasterClient",
+      "type": "HTML",
+      "path": "reference/portal-v409/SeasonMasterClient.html",
+      "sha256": "fcc7dd46a9dec241544a8400fa4659495c6430bb18ddb280e9c699aef394dc90",
+      "sourceSha256": "fcc7dd46a9dec241544a8400fa4659495c6430bb18ddb280e9c699aef394dc90"
+    },
+    {
+      "name": "SeasonMasterService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/SeasonMasterService.gs",
+      "sha256": "8eb356f78a6a7e1884c4f4815b2dfff092076893fb23d10be905193e579edb63",
+      "sourceSha256": "8eb356f78a6a7e1884c4f4815b2dfff092076893fb23d10be905193e579edb63"
+    },
+    {
+      "name": "SeasonPlanningClient",
+      "type": "HTML",
+      "path": "reference/portal-v409/SeasonPlanningClient.html",
+      "sha256": "09a10874bc7091338b841dea33c32fff897c0d6dee22fefe837538de42877b99",
+      "sourceSha256": "09a10874bc7091338b841dea33c32fff897c0d6dee22fefe837538de42877b99"
+    },
+    {
+      "name": "SeasonPlanningService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/SeasonPlanningService.gs",
+      "sha256": "eaad5217cd085ba6b4e6b93fdc50ce545d0be25b249a0cfb994b56e04abcac59",
+      "sourceSha256": "eaad5217cd085ba6b4e6b93fdc50ce545d0be25b249a0cfb994b56e04abcac59"
+    },
+    {
+      "name": "SeasonProtectionService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/SeasonProtectionService.gs",
+      "sha256": "da4690531a198a8e9d6e5046a43ac9e1abb6a8b81f03a4dfb0039f4dbb4291a8",
+      "sourceSha256": "da4690531a198a8e9d6e5046a43ac9e1abb6a8b81f03a4dfb0039f4dbb4291a8"
+    },
+    {
+      "name": "SeasonStatisticsPreviewClient",
+      "type": "HTML",
+      "path": "reference/portal-v409/SeasonStatisticsPreviewClient.html",
+      "sha256": "1ee28bdd1ca66b051869098da5aeefe538c1a1e482befb2d94a4a0ffbb449a87",
+      "sourceSha256": "1ee28bdd1ca66b051869098da5aeefe538c1a1e482befb2d94a4a0ffbb449a87"
+    },
+    {
+      "name": "SeasonStatisticsPreviewService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/SeasonStatisticsPreviewService.gs",
+      "sha256": "cbe33717d1ed73bf72b4bbf7a233b6a7217b2c100656c419833ddce3866c32c3",
+      "sourceSha256": "cbe33717d1ed73bf72b4bbf7a233b6a7217b2c100656c419833ddce3866c32c3"
+    },
+    {
+      "name": "SelfTimeTrialSubmissionClient",
+      "type": "HTML",
+      "path": "reference/portal-v409/SelfTimeTrialSubmissionClient.html",
+      "sha256": "d08a356f9f7013d0d997b697656d296c4c6d1b2aac2884d7394180db2c0af40e",
+      "sourceSha256": "d08a356f9f7013d0d997b697656d296c4c6d1b2aac2884d7394180db2c0af40e"
+    },
+    {
+      "name": "SelfTimeTrialSubmissionService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/SelfTimeTrialSubmissionService.gs",
+      "sha256": "452f97dc58798cd2d35a7c82468aa34d3e4fd598e0c4d90a4622f077d8480598",
+      "sourceSha256": "452f97dc58798cd2d35a7c82468aa34d3e4fd598e0c4d90a4622f077d8480598"
+    },
+    {
+      "name": "StaffApplicationService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/StaffApplicationService.gs",
+      "sha256": "632cff667c995766c3e33f71c37ab2ffdb8fcb57f9cf48941813cf28a0a112af",
+      "sourceSha256": "632cff667c995766c3e33f71c37ab2ffdb8fcb57f9cf48941813cf28a0a112af"
+    },
+    {
+      "name": "StewardAccessClient",
+      "type": "HTML",
+      "path": "reference/portal-v409/StewardAccessClient.html",
+      "sha256": "0cfba24c3dc13077c8f99433532a6d2922935ff364ce37fb45cb6c7dd3809ccc",
+      "sourceSha256": "0cfba24c3dc13077c8f99433532a6d2922935ff364ce37fb45cb6c7dd3809ccc"
+    },
+    {
+      "name": "StewardAccessService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/StewardAccessService.gs",
+      "sha256": "34caf86eff8c134465241a15aa57f3ce178a00ddc1648a5addd2d34ee318a3b6",
+      "sourceSha256": "34caf86eff8c134465241a15aa57f3ce178a00ddc1648a5addd2d34ee318a3b6"
+    },
+    {
+      "name": "TeamPrincipalHubClient",
+      "type": "HTML",
+      "path": "reference/portal-v409/TeamPrincipalHubClient.html",
+      "sha256": "c33f3655989265535d8b8ba034a3d440f370c5aa9b7a4be57defd2e7c4d37e76",
+      "sourceSha256": "c33f3655989265535d8b8ba034a3d440f370c5aa9b7a4be57defd2e7c4d37e76"
+    },
+    {
+      "name": "TeamPrincipalHubService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/TeamPrincipalHubService.gs",
+      "sha256": "6c51c477a687c65c4e617eafc6b5b592e66d871b12f86e9f28621c1bcfebd10c",
+      "sourceSha256": "6c51c477a687c65c4e617eafc6b5b592e66d871b12f86e9f28621c1bcfebd10c"
+    },
+    {
+      "name": "TicketDeliveryService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/TicketDeliveryService.gs",
+      "sha256": "bbd5c4a66472e72e2939de0bcd71cf2720e560a0585b2aff7b9301f9d22d3653",
+      "sourceSha256": "bbd5c4a66472e72e2939de0bcd71cf2720e560a0585b2aff7b9301f9d22d3653"
+    },
+    {
+      "name": "TicketIntakeService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/TicketIntakeService.gs",
+      "sha256": "353f6fc1ea624a0d574bd1126e70e67efafe2f98227c0387b6610cabaff99a3c",
+      "sourceSha256": "353f6fc1ea624a0d574bd1126e70e67efafe2f98227c0387b6610cabaff99a3c"
+    },
+    {
+      "name": "TicketProcessingClient",
+      "type": "HTML",
+      "path": "reference/portal-v409/TicketProcessingClient.html",
+      "sha256": "8f93a905e2bcce9b06ddde93af9540af9bf2dc31bdb43ea9a3b9fe58547a4164",
+      "sourceSha256": "8f93a905e2bcce9b06ddde93af9540af9bf2dc31bdb43ea9a3b9fe58547a4164"
+    },
+    {
+      "name": "TicketProcessingService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/TicketProcessingService.gs",
+      "sha256": "004fe5fd2f280f9fc282550382b8ac7b62e01882c83a6c157fdeabda1e266184",
+      "sourceSha256": "004fe5fd2f280f9fc282550382b8ac7b62e01882c83a6c157fdeabda1e266184"
+    },
+    {
+      "name": "TicketSeasonClient",
+      "type": "HTML",
+      "path": "reference/portal-v409/TicketSeasonClient.html",
+      "sha256": "be59a757ac7d3cad1ce7075137ad808e73d526f6b13ab1c421f8bd15373cdedf",
+      "sourceSha256": "be59a757ac7d3cad1ce7075137ad808e73d526f6b13ab1c421f8bd15373cdedf"
+    },
+    {
+      "name": "TicketSeasonService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/TicketSeasonService.gs",
+      "sha256": "9f53a60362a77f9e64358d3e7eb2e32a7ed5f4b60e0182e5632926388a40a9d3",
+      "sourceSha256": "9f53a60362a77f9e64358d3e7eb2e32a7ed5f4b60e0182e5632926388a40a9d3"
+    },
+    {
+      "name": "TicketSubmissionService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/TicketSubmissionService.gs",
+      "sha256": "6907c679bd626cb33a765b31f7f16ca31ea9673cbef224456a30db5d550abebd",
+      "sourceSha256": "6907c679bd626cb33a765b31f7f16ca31ea9673cbef224456a30db5d550abebd"
+    },
+    {
+      "name": "TimeTrialClient",
+      "type": "HTML",
+      "path": "reference/portal-v409/TimeTrialClient.html",
+      "sha256": "4c471a2b82490efc793d73ab553da3edd6757d3e66819a9eb723ac858dc00238",
+      "sourceSha256": "4c471a2b82490efc793d73ab553da3edd6757d3e66819a9eb723ac858dc00238"
+    },
+    {
+      "name": "TimeTrialService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/TimeTrialService.gs",
+      "sha256": "6247e57428377ca6b79e7eeaaed86964a568b9fc557959fb76f3d89ac06ebb31",
+      "sourceSha256": "6247e57428377ca6b79e7eeaaed86964a568b9fc557959fb76f3d89ac06ebb31"
+    },
+    {
+      "name": "TrackerService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/TrackerService.gs",
+      "sha256": "c5f4421d284f5926bf612d361b2eecbfedb280d603556a744b1666d36ab40888",
+      "sourceSha256": "c5f4421d284f5926bf612d361b2eecbfedb280d603556a744b1666d36ab40888"
+    },
+    {
+      "name": "WebsiteDataClient",
+      "type": "HTML",
+      "path": "reference/portal-v409/WebsiteDataClient.html",
+      "sha256": "15d3448dfbcd3f2e8c847d204155fbccae8d93f5a431ce6091d5dd8528f9c8a6",
+      "sourceSha256": "15d3448dfbcd3f2e8c847d204155fbccae8d93f5a431ce6091d5dd8528f9c8a6"
+    },
+    {
+      "name": "WebsiteDataServices",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/WebsiteDataServices.gs",
+      "sha256": "92660983b8e10c0218eceda9577184e4803c99853912314a9dd71efb0bc0c270",
+      "sourceSha256": "92660983b8e10c0218eceda9577184e4803c99853912314a9dd71efb0bc0c270"
+    },
+    {
+      "name": "PreseasonSocialRacesClient",
+      "type": "HTML",
+      "path": "reference/portal-v409/PreseasonSocialRacesClient.html",
+      "sha256": "7e96bd2a7e52153334d28a8cf2f53307ba1e153ea2b83dc5eb0b8550cdcdcfdc",
+      "sourceSha256": "7e96bd2a7e52153334d28a8cf2f53307ba1e153ea2b83dc5eb0b8550cdcdcfdc"
+    },
+    {
+      "name": "PreseasonSocialRacesService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/PreseasonSocialRacesService.gs",
+      "sha256": "8a6756c5f5ce2677743472f9368157598092265dfb23df9cfe90bb350d2b1520",
+      "sourceSha256": "8a6756c5f5ce2677743472f9368157598092265dfb23df9cfe90bb350d2b1520"
+    },
+    {
+      "name": "StaffAttentionClient",
+      "type": "HTML",
+      "path": "reference/portal-v409/StaffAttentionClient.html",
+      "sha256": "4e50da34b5fc9ea0466f24019e6001b0cb2744a525e7728660b3149bdf55c12a",
+      "sourceSha256": "4e50da34b5fc9ea0466f24019e6001b0cb2744a525e7728660b3149bdf55c12a"
+    },
+    {
+      "name": "PortalProgressClient",
+      "type": "HTML",
+      "path": "reference/portal-v409/PortalProgressClient.html",
+      "sha256": "eff08f66346f4a19b45132f7d8822fbe7a810727a193cc1fe2d980cff39c522e",
+      "sourceSha256": "eff08f66346f4a19b45132f7d8822fbe7a810727a193cc1fe2d980cff39c522e"
+    },
+    {
+      "name": "DriverRenameService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/DriverRenameService.gs",
+      "sha256": "d4b658b73a4c173c31f352c66c358ce0b1b1376e23894b4d1b1b02e8dba28f8d",
+      "sourceSha256": "d4b658b73a4c173c31f352c66c358ce0b1b1376e23894b4d1b1b02e8dba28f8d"
+    },
+    {
+      "name": "ResultsAdjustmentService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/ResultsAdjustmentService.gs",
+      "sha256": "0d9ad9942722cb55f45de4d48bf1673eb12f0536d35a5fc99aaa45478bebce73",
+      "sourceSha256": "0d9ad9942722cb55f45de4d48bf1673eb12f0536d35a5fc99aaa45478bebce73"
+    },
+    {
+      "name": "ResultsAdjustmentClient",
+      "type": "HTML",
+      "path": "reference/portal-v409/ResultsAdjustmentClient.html",
+      "sha256": "686be81e9f4bbe0bca476be03388c33b6dceb1e6dbe1d9b1bd59270f10ad0772",
+      "sourceSha256": "686be81e9f4bbe0bca476be03388c33b6dceb1e6dbe1d9b1bd59270f10ad0772"
+    },
+    {
+      "name": "SheetPresentationService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/SheetPresentationService.gs",
+      "sha256": "205659d645fb010cc48f2873a072631660981bc4a55b9076083281a88978e30a",
+      "sourceSha256": "205659d645fb010cc48f2873a072631660981bc4a55b9076083281a88978e30a"
+    },
+    {
+      "name": "LeagueRulesService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/LeagueRulesService.gs",
+      "sha256": "3cba4d738f69da3e1e4ffb01f9d1fe48ed4de1d3447c880782b13d046b5671fa",
+      "sourceSha256": "3cba4d738f69da3e1e4ffb01f9d1fe48ed4de1d3447c880782b13d046b5671fa"
+    },
+    {
+      "name": "LeagueRulesClient",
+      "type": "HTML",
+      "path": "reference/portal-v409/LeagueRulesClient.html",
+      "sha256": "9debeb8adca81e3df7368cb8780e72a96ecbbe73e9c62f29ec24623994a1f62e",
+      "sourceSha256": "9debeb8adca81e3df7368cb8780e72a96ecbbe73e9c62f29ec24623994a1f62e"
+    },
+    {
+      "name": "PublicHistoryService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/PublicHistoryService.gs",
+      "sha256": "a876a4ff3826c527140c3a77014f3a0d71d4ef74c2c1f11a1eedf966887c4532",
+      "sourceSha256": "a876a4ff3826c527140c3a77014f3a0d71d4ef74c2c1f11a1eedf966887c4532"
+    },
+    {
+      "name": "DiscordControlService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/DiscordControlService.gs",
+      "sha256": "2f430dbf48577830d20f745928ff15be1bbcca12e7a4276e2943299f6530cde3",
+      "sourceSha256": "2f430dbf48577830d20f745928ff15be1bbcca12e7a4276e2943299f6530cde3"
+    },
+    {
+      "name": "DiscordControlView",
+      "type": "HTML",
+      "path": "reference/portal-v409/DiscordControlView.html",
+      "sha256": "c33ae4b5845f0bde9c79203fb7f0d96c27685fecf6fabf52914998a0821250d9",
+      "sourceSha256": "c33ae4b5845f0bde9c79203fb7f0d96c27685fecf6fabf52914998a0821250d9"
+    },
+    {
+      "name": "DiscordControlClient",
+      "type": "HTML",
+      "path": "reference/portal-v409/DiscordControlClient.html",
+      "sha256": "b3004df666a8651966d8e9a2c643800478a52dbe4ae02d91515c37eee6795848",
+      "sourceSha256": "b3004df666a8651966d8e9a2c643800478a52dbe4ae02d91515c37eee6795848"
+    },
+    {
+      "name": "DiscordGithubService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/DiscordGithubService.gs",
+      "sha256": "e0c88105399412cbd5e3cc4c7745396b79d676413f6261ee4d122cd8611a3bc4",
+      "sourceSha256": "e0c88105399412cbd5e3cc4c7745396b79d676413f6261ee4d122cd8611a3bc4"
+    },
+    {
+      "name": "DiscordGithubView",
+      "type": "HTML",
+      "path": "reference/portal-v409/DiscordGithubView.html",
+      "sha256": "d0e55d5fe09a138ee6e94404c05f4aeb8671351ff145df72d5ecd0df3e408313",
+      "sourceSha256": "d0e55d5fe09a138ee6e94404c05f4aeb8671351ff145df72d5ecd0df3e408313"
+    },
+    {
+      "name": "DiscordGithubClient",
+      "type": "HTML",
+      "path": "reference/portal-v409/DiscordGithubClient.html",
+      "sha256": "a531c1c1fa3d4d086e086b329e3d96fd7bbbd3c53242fe92426803fc3fb9e9bd",
+      "sourceSha256": "a531c1c1fa3d4d086e086b329e3d96fd7bbbd3c53242fe92426803fc3fb9e9bd"
+    },
+    {
+      "name": "TicketFormService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/TicketFormService.gs",
+      "sha256": "86a0210e06be4ee2438119103524dac8175c68615ac813a3e18214045987a944",
+      "sourceSha256": "86a0210e06be4ee2438119103524dac8175c68615ac813a3e18214045987a944"
+    },
+    {
+      "name": "FreeAgentHubService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/FreeAgentHubService.gs",
+      "sha256": "f925ff97b2c2d62f00540168cf78b0953cab4f8be1e9fae62585fb62c92c731c",
+      "sourceSha256": "f925ff97b2c2d62f00540168cf78b0953cab4f8be1e9fae62585fb62c92c731c"
+    },
+    {
+      "name": "FreeAgentHubClient",
+      "type": "HTML",
+      "path": "reference/portal-v409/FreeAgentHubClient.html",
+      "sha256": "3858037e9ec463ae999064406ba634bf0d59b62e68fcc750fd50ebd17461becd",
+      "sourceSha256": "3858037e9ec463ae999064406ba634bf0d59b62e68fcc750fd50ebd17461becd"
+    },
+    {
+      "name": "DriverStreamsService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/DriverStreamsService.gs",
+      "sha256": "4f7cb4e3d28ff2ede3119aa027a1ee61eaaf5906db26c8de97aaf0b1417b472d",
+      "sourceSha256": "4f7cb4e3d28ff2ede3119aa027a1ee61eaaf5906db26c8de97aaf0b1417b472d"
+    },
+    {
+      "name": "DriverStreamsClient",
+      "type": "HTML",
+      "path": "reference/portal-v409/DriverStreamsClient.html",
+      "sha256": "dbf967e586aab1219df201c064482a29ac6e74903e0103fe4ec5b96e80e3f442",
+      "sourceSha256": "dbf967e586aab1219df201c064482a29ac6e74903e0103fe4ec5b96e80e3f442"
+    },
+    {
+      "name": "PreseasonPreparationService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/PreseasonPreparationService.gs",
+      "sha256": "4afed199f4160202d3afa1a1527de068f74464a3d1a4c801e8456396de837639",
+      "sourceSha256": "4afed199f4160202d3afa1a1527de068f74464a3d1a4c801e8456396de837639"
+    },
+    {
+      "name": "TrackRecordsService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/TrackRecordsService.gs",
+      "sha256": "11091b323086fe9f5e25333a523ad0277e2abaa4c3480ab78d8e072ebe81e084",
+      "sourceSha256": "11091b323086fe9f5e25333a523ad0277e2abaa4c3480ab78d8e072ebe81e084"
+    },
+    {
+      "name": "IntakeConnections",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/IntakeConnections.gs",
+      "sha256": "9d5bd4903480d915e0dc0096e0fe1c8a7ffbf8e97f924fe6137160489239fa2f",
+      "sourceSha256": "9d5bd4903480d915e0dc0096e0fe1c8a7ffbf8e97f924fe6137160489239fa2f"
+    },
+    {
+      "name": "DiscordApplicationService",
+      "type": "SERVER_JS",
+      "path": "reference/portal-v409/DiscordApplicationService.gs",
+      "sha256": "0c947912aecf57c80e10865bb6359b1012b88cc77af30306120b021d0a9b2424",
+      "sourceSha256": "0c947912aecf57c80e10865bb6359b1012b88cc77af30306120b021d0a9b2424"
+    }
+  ],
+  "provenance": "Reviewed release payload; published/HEAD parity verified at 2026-11-06T11:35:32.973Z",
+  "warning": "Read-only reference; fetch fresh deployed source before any release. Includes no Script Properties or account sessions."
+}

@@ -1,0 +1,203 @@
+<script>
+(function() {
+  'use strict';
+  const asr = { overview:null, setup:null, results:null, view:'setup', division:0, resultSession:'qualifying', workbookView:null, loaded:false, setupDirty:false, resultsDirty:false };
+  const byId = function(id) { return document.getElementById(id); };
+  const esc = function(value) { return String(value == null ? '' : value).replace(/[&<>"']/g, function(c) { return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; }); };
+
+  function status(message, error) {
+    const element = byId('asr-status');
+    element.hidden = false;
+    element.className = 'notice workflow-note' + (error ? ' error' : '');
+    element.innerHTML = '<strong>' + esc(message) + '</strong>';
+  }
+
+  function fail(error, fallback) { status(error && error.message ? error.message : fallback, true); }
+
+  function load(force) {
+    if (asr.loaded && !force) { switchView(asr.view); return; }
+    if ((asr.setupDirty || asr.resultsDirty) && force && !window.confirm('Discard unsaved ASR changes and reload the workbook?')) return;
+    if (force) { asr.results=null; asr.workbookView=null; }
+    status(force ? 'Refreshing the ASR workbook…' : 'Loading the ASR workbook…', false);
+    google.script.run.withSuccessHandler(function(response) {
+      asr.overview = response.overview;
+      asr.setup = response.setup;
+      asr.loaded = true;
+      asr.setupDirty = false;
+      asr.resultsDirty = false;
+      if (!asr.division && asr.setup.divisions[0]) asr.division = asr.setup.divisions[0].number;
+      byId('asr-source').textContent = 'All Star Race · ' + (asr.setup.event.seasonLabel || 'season not labelled') + ' · ' + (asr.setup.event.track || 'track not entered');
+      byId('asr-subnav').hidden = false;
+      ensureDatalists();
+      populateDivisionSelect();
+      populateWorkbookSelect();
+      renderSetup();
+      renderQualifiers();
+      switchView(asr.view);
+      updateSaveStates();
+      status('ASR loaded as a standalone event. It uses drivers from the closing season but does not alter championship standings.', false);
+    }).withFailureHandler(function(error) { fail(error, 'The ASR workbook could not be loaded.'); }).getAsrInitial(force === true);
+  }
+
+  function switchView(view) {
+    asr.view = view;
+    document.querySelectorAll('[data-asr-view]').forEach(function(button) { button.classList.toggle('active', button.dataset.asrView === view); });
+    ['setup','qualifiers','results','workbook'].forEach(function(name) { byId('asr-' + name).hidden = name !== view; });
+    if (view === 'results' && !asr.results) loadResults(false);
+  }
+
+  function unique(values) { return Array.from(new Set((values || []).map(function(value) { return String(value || '').trim(); }).filter(Boolean))).sort(); }
+  function options(values, selected, blank) { return (blank == null ? values : [''].concat(values)).map(function(value) { return '<option value="' + esc(value) + '"' + (String(value) === String(selected || '') ? ' selected' : '') + '>' + esc(value || blank || '—') + '</option>'; }).join(''); }
+
+  function ensureDatalists() {
+    const host = byId('view-asr');
+    const qualifierDrivers = [];
+    asr.setup.divisions.forEach(function(division) { division.qualifiers.concat(division.reserves).forEach(function(row) { qualifierDrivers.push(row[0]); }); });
+    const lists = {
+      'asr-driver-options':unique(qualifierDrivers.concat(asr.setup.roster.map(function(row) { return row[0]; }))),
+      'asr-nationality-options':asr.setup.options.nationalities,
+      'asr-team-options':asr.setup.options.teams
+    };
+    Object.keys(lists).forEach(function(id) {
+      let list = byId(id);
+      if (!list) { list=document.createElement('datalist'); list.id=id; host.appendChild(list); }
+      list.innerHTML=lists[id].map(function(value) { return '<option value="' + esc(value) + '"></option>'; }).join('');
+    });
+  }
+
+  function setupInput(value, group, row, column, className, list) {
+    return '<input class="' + (className || '') + '" type="text" value="' + esc(value) + '" data-asr-setup-group="' + group + '" data-row="' + row + '" data-column="' + column + '"' + (list ? ' list="' + list + '"' : '') + '>';
+  }
+
+  function renderSetup() {
+    if (!asr.setup) return;
+    const event = asr.setup.event;
+    byId('asr-event-fields').innerHTML = [
+      ['Closing-season label','seasonLabel'],['Circuit','track'],['Qualifying label','qualifyingLabel'],['Race label','raceLabel']
+    ].map(function(field) { return '<div class="field"><label>' + field[0] + '</label><input type="text" value="' + esc(event[field[1]]) + '" data-asr-event-field="' + field[1] + '"></div>'; }).join('');
+    byId('asr-roster-rows').innerHTML = asr.setup.roster.map(function(row, index) {
+      const calculated=asr.setup.rosterCalculated[index] || {};
+      return '<tr><td>' + (index+1) + '</td><td>' + setupInput(row[0],'roster',index,0,'driver-cell','asr-driver-options') + '</td><td>' + setupInput(row[1],'roster',index,1,'','asr-nationality-options') + '</td><td>' + setupInput(row[2],'roster',index,2,'','asr-team-options') + '</td><td>' + esc(calculated.teamCode || '—') + '</td><td>' + setupInput(row[3],'roster',index,3,'short-cell') + '</td></tr>';
+    }).join('');
+  }
+
+  function populateDivisionSelect() {
+    const select=byId('asr-division-select');
+    select.innerHTML=asr.setup.divisions.map(function(division) { return '<option value="' + division.number + '"' + (division.number===asr.division?' selected':'') + '>' + esc(division.title) + '</option>'; }).join('');
+  }
+
+  function currentDivision() { return asr.setup && asr.setup.divisions.find(function(division) { return division.number===Number(asr.division); }); }
+
+  function qualifierRow(row, index, kind) {
+    return '<tr><td>' + (index+1) + '</td><td>' + setupInput(row[0],kind,index,0,'driver-cell','asr-driver-options') + '</td><td><input type="checkbox" data-asr-selection-kind="' + kind + '" data-row="' + index + '" data-column="1"' + (row[1]?' checked':'') + '></td><td><input type="checkbox" data-asr-selection-kind="' + kind + '" data-row="' + index + '" data-column="2"' + (row[2]?' checked':'') + '></td><td>' + setupInput(row[3],kind,index,3,'') + '</td></tr>';
+  }
+
+  function renderQualifiers() {
+    const division=currentDivision();
+    if (!division) return;
+    byId('asr-qualifier-title').textContent=division.title;
+    byId('asr-qualified-rows').innerHTML=division.qualifiers.map(function(row,index) { return qualifierRow(row,index,'qualifiers'); }).join('');
+    byId('asr-reserve-rows').innerHTML=division.reserves.map(function(row,index) { return qualifierRow(row,index,'reserves'); }).join('');
+  }
+
+  function updateSetup(target) {
+    if (target.dataset.asrEventField) asr.setup.event[target.dataset.asrEventField]=target.value;
+    if (target.dataset.asrSetupGroup==='roster') asr.setup.roster[Number(target.dataset.row)][Number(target.dataset.column)]=target.value;
+    if (target.dataset.asrSetupGroup==='qualifiers' || target.dataset.asrSetupGroup==='reserves') {
+      const division=currentDivision(); if (division) division[target.dataset.asrSetupGroup][Number(target.dataset.row)][Number(target.dataset.column)]=target.value;
+    }
+    if (target.dataset.asrSelectionKind) {
+      const division=currentDivision(); if (division) division[target.dataset.asrSelectionKind][Number(target.dataset.row)][Number(target.dataset.column)]=target.checked;
+    }
+    asr.setupDirty=true; updateSaveStates();
+  }
+
+  function saveSetup(button) {
+    if (!asr.setup || !asr.setupDirty) return;
+    button.disabled=true; button.textContent='Saving…'; status('Saving the ASR setup…',false);
+    google.script.run.withSuccessHandler(function(response) {
+      asr.setup=response; asr.setupDirty=false; ensureDatalists(); populateDivisionSelect(); renderSetup(); renderQualifiers(); updateSaveStates();
+      byId('asr-source').textContent='All Star Race · '+(asr.setup.event.seasonLabel||'season not labelled')+' · '+(asr.setup.event.track||'track not entered');
+      button.disabled=false; button.textContent='Save ASR setup'; status(response.message||'ASR setup saved.',false);
+    }).withFailureHandler(function(error) { fail(error,'The ASR setup could not be saved.'); button.disabled=false; button.textContent='Save ASR setup'; }).saveAsrSetup({revision:asr.setup.revision,event:asr.setup.event,roster:asr.setup.roster,divisions:asr.setup.divisions});
+  }
+
+  function loadResults(force) {
+    if (asr.results && !force) { renderResults(); return; }
+    if (asr.resultsDirty && !window.confirm('Discard unsaved ASR result changes?')) return;
+    status('Loading ASR qualifying and race results…',false);
+    google.script.run.withSuccessHandler(function(response) { asr.results=response; asr.resultsDirty=false; renderResults(); updateSaveStates(); status('ASR results loaded. Changes remain in the browser until Save ASR results is pressed.',false); }).withFailureHandler(function(error) { fail(error,'ASR results could not be loaded.'); }).getAsrResults(force===true);
+  }
+
+  function resultInput(value,row,field,className,list) { return '<input class="'+(className||'')+'" type="text" value="'+esc(value)+'" data-asr-result-row="'+row+'" data-asr-result-field="'+field+'"'+(list?' list="'+list+'"':'')+'>'; }
+
+  function renderResults() {
+    if (!asr.results) return;
+    document.querySelectorAll('[data-asr-session]').forEach(function(button) { button.classList.toggle('active',button.dataset.asrSession===asr.resultSession); });
+    const rows=asr.results[asr.resultSession];
+    if (asr.resultSession==='qualifying') {
+      byId('asr-results-head').innerHTML='<tr><th>Pos</th><th>Nat</th><th>#</th><th>Driver</th><th>Team</th><th>Tyre</th><th>Time</th></tr>';
+      byId('asr-results-rows').innerHTML=rows.map(function(row,index) { return '<tr><td>'+esc(row.position||index+1)+'</td><td>'+esc(row.nationality||'—')+'</td><td>'+esc(row.number||'—')+'</td><td>'+resultInput(row.driver,index,'driver','driver-cell','asr-driver-options')+'</td><td>'+esc(row.team||'—')+'</td><td><select data-asr-result-row="'+index+'" data-asr-result-field="tyre">'+options(asr.results.options.tyres,row.tyre,'—')+'</select></td><td>'+resultInput(row.time,index,'time','')+'</td></tr>'; }).join('');
+    } else {
+      byId('asr-results-head').innerHTML='<tr><th>Pos</th><th>Nat</th><th>#</th><th>Driver</th><th>Team</th><th>Stops</th><th>Gap / status</th><th>Points</th></tr>';
+      byId('asr-results-rows').innerHTML=rows.map(function(row,index) { return '<tr><td>'+esc(row.position||index+1)+'</td><td>'+esc(row.nationality||'—')+'</td><td>'+esc(row.number||'—')+'</td><td>'+resultInput(row.driver,index,'driver','driver-cell','asr-driver-options')+'</td><td>'+esc(row.team||'—')+'</td><td>'+resultInput(row.stops,index,'stops','short-cell')+'</td><td>'+resultInput(row.gap,index,'gap','')+'</td><td>'+esc(row.points||'0')+'</td></tr>'; }).join('');
+    }
+  }
+
+  function updateResult(target) {
+    if (!asr.results) return;
+    const rows=asr.results[asr.resultSession]; const row=rows[Number(target.dataset.asrResultRow)]; const field=target.dataset.asrResultField;
+    if (!row||!field) return; row[field]=target.value; asr.resultsDirty=true; updateSaveStates();
+  }
+
+  function saveResults(button) {
+    if (!asr.results||!asr.resultsDirty) return;
+    button.disabled=true; button.textContent='Saving…'; status('Saving ASR qualifying and race results…',false);
+    const qualifying=asr.results.qualifying.map(function(row) { return [row.driver,row.tyre,row.time]; });
+    const race=asr.results.race.map(function(row) { return [row.driver,row.stops,row.gap]; });
+    google.script.run.withSuccessHandler(function(response) { asr.results=response; asr.resultsDirty=false; renderResults(); updateSaveStates(); button.disabled=false; button.textContent='Save ASR results'; status(response.message||'ASR results saved.',false); }).withFailureHandler(function(error) { fail(error,'ASR results could not be saved.'); button.disabled=false; button.textContent='Save ASR results'; }).saveAsrResults({revision:asr.results.revision,qualifying:qualifying,race:race});
+  }
+
+  function populateWorkbookSelect() {
+    const select=byId('asr-workbook-select');
+    select.innerHTML='<option value="">Choose a tab…</option>'+asr.overview.views.filter(function(view){return view.available;}).map(function(view){return '<option value="'+esc(view.name)+'">'+esc(view.name)+(view.hidden?' · hidden in Sheet':'')+'</option>';}).join('');
+  }
+
+  function loadWorkbookView(force) {
+    const name=byId('asr-workbook-select').value; if(!name){status('Choose an ASR workbook tab first.',true);return;}
+    status('Loading the read-only '+name+' view…',false);
+    google.script.run.withSuccessHandler(function(response){asr.workbookView=response; renderWorkbookView(); status(name+' loaded read-only.',false);}).withFailureHandler(function(error){fail(error,'The ASR workbook view could not be loaded.');}).getAsrWorkbookView(name,force===true);
+  }
+
+  function renderWorkbookView() {
+    const view=asr.workbookView; if(!view)return;
+    byId('asr-workbook-meta').textContent=(view.hidden?'Hidden tab':'Visible tab')+' · read only';
+    if (!view.rows.length) {
+      byId('asr-workbook-grid').innerHTML='<div class="empty">'+(view.sheetName==='Position Tracker'?'This hidden tab contains the position chart rather than cell data. Open Sheet8 to inspect the imported tracker values.':'This tab contains no displayed cell values.')+'</div>';
+      return;
+    }
+    const head='<thead><tr><th></th>'+view.columns.map(function(column){return '<th>'+esc(column)+'</th>';}).join('')+'</tr></thead>';
+    const body='<tbody>'+view.rows.map(function(row,index){return '<tr><td>'+(index+1)+'</td>'+view.columns.map(function(_,column){const value=row[column]||'';return '<td title="'+esc(value)+'">'+esc(value)+'</td>';}).join('')+'</tr>';}).join('')+'</tbody>';
+    byId('asr-workbook-grid').innerHTML='<table>'+head+body+'</table>';
+  }
+
+  function updateSaveStates() {
+    byId('asr-setup-save-state').textContent=asr.setupDirty?'Unsaved changes':'No unsaved changes'; byId('asr-setup-save-state').classList.toggle('dirty',asr.setupDirty);
+    byId('asr-qualifier-save-state').textContent=asr.setupDirty?'Unsaved changes':'No unsaved changes'; byId('asr-qualifier-save-state').classList.toggle('dirty',asr.setupDirty);
+    byId('asr-results-save-state').textContent=asr.resultsDirty?'Unsaved changes':'No unsaved changes'; byId('asr-results-save-state').classList.toggle('dirty',asr.resultsDirty);
+  }
+
+  byId('asr-subnav').addEventListener('click',function(event){const button=event.target.closest('[data-asr-view]');if(button)switchView(button.dataset.asrView);});
+  byId('view-asr').addEventListener('input',function(event){if(event.target.matches('[data-asr-event-field],[data-asr-setup-group],[data-asr-selection-kind]'))updateSetup(event.target);if(event.target.matches('[data-asr-result-field]'))updateResult(event.target);});
+  byId('view-asr').addEventListener('change',function(event){if(event.target.matches('[data-asr-event-field],[data-asr-setup-group],[data-asr-selection-kind]'))updateSetup(event.target);if(event.target.matches('[data-asr-result-field]'))updateResult(event.target);});
+  byId('asr-division-select').addEventListener('change',function(event){asr.division=Number(event.target.value);renderQualifiers();});
+  byId('save-asr-setup').addEventListener('click',function(event){saveSetup(event.currentTarget);});
+  byId('save-asr-qualifiers').addEventListener('click',function(event){saveSetup(event.currentTarget);});
+  byId('refresh-asr').addEventListener('click',function(){load(true);});
+  byId('asr-session-subnav').addEventListener('click',function(event){const button=event.target.closest('[data-asr-session]');if(button){asr.resultSession=button.dataset.asrSession;renderResults();}});
+  byId('save-asr-results').addEventListener('click',function(event){saveResults(event.currentTarget);});
+  byId('refresh-asr-results').addEventListener('click',function(){loadResults(true);});
+  byId('open-asr-workbook-view').addEventListener('click',function(){loadWorkbookView(false);});
+  window.F1XLAsr={load:load};
+})();
+</script>

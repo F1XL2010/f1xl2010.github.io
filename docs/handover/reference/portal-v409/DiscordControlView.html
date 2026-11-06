@@ -1,0 +1,33 @@
+<style>
+ #view-discord-control .dc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:16px 0}
+ #view-discord-control .dc-card{padding:20px;min-width:0}#view-discord-control .dc-card h2{font-size:19px;margin:0 0 10px}
+ #view-discord-control .dc-card p{margin:8px 0 14px}#view-discord-control .dc-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:14px 0}
+ #view-discord-control label{display:block;margin:12px 0}#view-discord-control input[type=checkbox]{width:auto;margin-right:8px}
+ #view-discord-control .dc-destination{overflow-wrap:anywhere;display:block;color:var(--text);margin:8px 0}
+ #view-discord-control .dc-state{display:inline-block;padding:5px 10px;background:var(--panel2);border:1px solid var(--line);border-radius:18px;color:var(--amber)}
+ #view-discord-control .dc-route{padding:0 18px;margin:10px 0}#view-discord-control .dc-route summary{display:flex;justify-content:space-between;gap:12px;align-items:center}
+ #view-discord-control .dc-route summary span:last-child{font-weight:400;color:var(--muted);font-size:12px}
+ #view-discord-control .dc-route-body{padding:0 0 16px}#view-discord-control .dc-days{display:flex;flex-wrap:wrap;gap:10px}
+ #view-discord-control .dc-days label{margin:8px 0}#view-discord-control .dc-time{max-width:190px}
+ #dc-preview-dialog{width:min(640px,94vw)}#dc-preview-dialog .dc-preview-body{padding:20px}
+ .dc-message{padding:20px;border-left:4px solid #39ac73;background:#17211f;border-radius:7px}.dc-message h3{font-size:19px;margin:0 0 12px}.dc-message p{white-space:pre-wrap;line-height:1.6}
+ #dc-preview-result{overflow-wrap:anywhere}#dc-connection{overflow-wrap:anywhere}
+ @media(max-width:720px){#view-discord-control .dc-grid{grid-template-columns:1fr}#view-discord-control .dc-route summary{align-items:flex-start;flex-direction:column;gap:4px}#view-discord-control .dc-card{padding:16px}}
+</style>
+<section id="view-discord-control" hidden>
+ <header class="topbar"><div><h1>Discord updates</h1></div><span class="dc-state">Private test</span></header>
+ <div class="dc-actions"><button class="button" type="button" id="dc-save" disabled>Save settings</button><button class="button" type="button" id="dc-discard" disabled>Discard changes</button><button class="button" type="button" id="dc-refresh">Refresh</button><span id="dc-save-state" class="secondary-line"></span></div>
+ <p id="dc-status" role="status" aria-live="polite">Loading Discord settings…</p>
+ <div class="dc-grid">
+  <section class="panel dc-card"><h2>1. Bot connection</h2><p id="dc-bot-state">Checking…</p>
+   <div id="dc-owner-connection" hidden><details id="dc-token-details"><summary>Connect the existing F1XLDataBot</summary><p class="secondary-line">Use its saved token. Do not reset it: the existing Discord jobs may still use it.</p><label for="dc-token">Existing bot token<input id="dc-token" type="password" autocomplete="new-password" spellcheck="false" maxlength="256"></label><button class="button" type="button" id="dc-connect">Save bot connection</button><p class="secondary-line">Stored privately by the F1XL account and never displayed again.</p></details></div>
+   <p id="dc-owner-note" class="secondary-line" hidden>The F1XL owner manages the bot connection.</p>
+  </section>
+  <section class="panel dc-card"><h2>2. Private test channel</h2><a id="dc-channel-link" class="dc-destination" target="_blank" rel="noopener noreferrer">Open private test channel ↗</a><p class="secondary-line">Tests go only to this channel. They contain demonstration text and do not ping anyone.</p><button class="button" type="button" id="dc-check" data-access-area="maintenance" data-access-level="2" disabled>Check bot access</button><p id="dc-connection" role="status"></p>
+  </section>
+ </div>
+ <section class="panel dc-card"><h2>3. Try a message</h2><p>Choose an update below to preview its message, then send it to the private test channel.</p><label><input id="dc-allow-tests" type="checkbox" disabled> Allow private test messages</label><p class="secondary-line">Automatic and league-channel posting stay off. Existing Discord jobs continue as before.</p></section>
+ <div id="dc-routes"></div>
+ <details><summary>Recent private tests</summary><div id="dc-history"></div></details>
+</section>
+<dialog id="dc-preview-dialog"><div class="dialog-head"><h2>Private message preview</h2><button class="close" id="dc-preview-close" type="button" aria-label="Close preview">×</button></div><div class="dc-preview-body"><p class="secondary-line">Destination: your private test channel · no pings</p><div class="dc-message"><h3 id="dc-preview-title"></h3><p id="dc-preview-text"></p></div><p id="dc-preview-result" role="status" aria-live="polite"></p><div class="dc-actions"><button class="button" id="dc-send" type="button" data-access-area="maintenance" data-access-level="2" disabled>Send this private test</button><a class="button" id="dc-message-link" target="_blank" rel="noopener noreferrer" hidden>View message in Discord ↗</a></div></div></dialog>

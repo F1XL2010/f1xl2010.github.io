@@ -1,0 +1,494 @@
+<script>
+  window.F1XLSeasonMaster = (function() {
+    const state = { data: null, bound: false, accoladesPreview: null, teamRepairRunning: false, loadRequest: 0 };
+    function el(id) { return document.getElementById(id); }
+    function esc(value) {
+      return String(value == null ? '' : value).replace(/[&<>"']/g, function(character) {
+        return ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[character];
+      });
+    }
+    function status(message, error) { const target = el('season-master-status'); target.innerHTML = '<strong>' + esc(message) + '</strong>'; target.classList.toggle('error', !!error); }
+    function load(force) {
+      if (!window.google || !google.script || !google.script.run) return status('Open the deployed Admin Platform to create or connect a Season Master.', true);
+      status(force ? 'Refreshing the Season Master list…' : 'Loading Season Master workbooks…');
+      const request = ++state.loadRequest;
+      let combined = null;
+      function readPage(offset) {
+        const timer = setTimeout(function() {
+          if (request === state.loadRequest) status('Google is taking longer to load the archive. Loaded seasons remain usable; press Refresh to retry if this continues.', true);
+        }, 45000);
+        function failed(error) {
+          clearTimeout(timer);
+          if (request !== state.loadRequest) return;
+          status('Archive loading stopped' + (combined ? ' after ' + combined.workbooks.length + ' seasons' : '') + ': ' + (error && error.message || error || 'Unknown error') + '. Press Refresh to retry.', true);
+        }
+        google.script.run.withSuccessHandler(function(response) {
+          clearTimeout(timer);
+          if (request !== state.loadRequest) return;
+          try {
+            if (!response || !Array.isArray(response.workbooks)) throw new Error('The server returned no workbook list');
+            if (!combined) combined = Object.assign({}, response, {workbooks:[]});
+            combined.workbooks = combined.workbooks.concat(response.workbooks);
+            if (response.divisionTemplate) combined.divisionTemplate = response.divisionTemplate;
+            combined.message = response.nextOffset === null ? 'Season Master workbooks loaded.' : 'Loaded ' + combined.workbooks.length + ' of ' + response.total + ' seasons. Loading older seasons…';
+            state.data = combined;
+            render();
+            if (response.nextOffset !== null && response.nextOffset !== undefined) readPage(response.nextOffset);
+          } catch (error) { failed(error); }
+        }).withFailureHandler(failed).getSeasonMasterPage({offset:offset, force:force === true});
+      }
+      readPage(0);
+    }
+    function render() {
+      const workbooks = state.data && state.data.workbooks || [];
+      const template = state.data && state.data.divisionTemplate || { configured:false };
+      el('division-template-state').textContent = template.configured ? 'Connected' : 'Not created';
+      el('division-template-state').classList.toggle('active', !!template.configured);
+      el('create-division-template').hidden = !!template.configured;
+      el('repair-division-template').hidden = !template.configured;
+      el('open-division-template').hidden = !template.configured;
+      if (template.configured) el('open-division-template').href = template.url;
+      el('season-master-rows').innerHTML = workbooks.map(function(item) {
+        const divisions = item.divisionWorkbooks || [];
+        const divisionActions = divisions.map(function(division) {
+          if (division.available) {
+            const ready = division.connection && division.connection.ready;
+            const connectionLabel = division.connection ? (ready ? 'Connections ready' : 'Connection needed') : 'Not checked';
+            return '<a class="button" target="_blank" rel="noopener" href="' + esc(division.url) + '">Open D' + division.division + ' ↗</a>' + ' <span class="status ' + (ready ? 'complete' : '') + '">' + connectionLabel + '</span>';
+          }
+          if (item.readOnly) return '<span class="status">D' + division.division + ' unavailable · completed history</span>';
+          if (division.configured) return '<span class="status">D' + division.division + ' unavailable</span>';
+          if (!template.configured) return '<span class="status">Create Template before D' + division.division + '</span>';
+          return '<button class="button" type="button" data-create-division="' + division.division + '" data-season="' + esc(item.season) + '">Create D' + division.division + '</button>';
+        }).join(' ');
+        const connectionAction = item.available && !item.planning ? '<button class="button" type="button" data-check-connections="' + esc(item.season) + '">Check connections</button>' : '';
+        return '<tr><td>Season ' + esc(item.season) + '<div class="secondary-line">' + esc(item.readOnly ? 'Completed history · read-only' : (item.planning ? 'Preseason · divisions undecided' : item.mode || 'Modern')) + '</div></td><td>' + esc(item.name) + '<div class="inline-actions" style="margin-top:8px">' + divisionActions + '</div></td><td>' + (item.available ? '<span class="status active">Connected</span>' : '<span class="status">Unavailable</span>') + '</td><td>' + (item.url ? '<a class="button" target="_blank" rel="noopener" href="' + esc(item.url) + '">Open Master ↗</a> ' + connectionAction + (item.planning ? '' : ' <button class="button" type="button" data-season-checks="' + esc(item.season) + '">Season checks</button>') : '—') + '</td></tr>';
+      }).join('');
+      el('season-master-empty').hidden = workbooks.length > 0;
+      const accoladesSeason = el('season-accolades-season');
+      if (accoladesSeason) {
+        const selected = accoladesSeason.value;
+        accoladesSeason.innerHTML = '<option value="">Choose a season…</option>' + workbooks.filter(function(item) { return item.available && !item.planning; }).map(function(item) {
+          return '<option value="' + esc(item.season) + '">Season ' + esc(item.season) + ' · ' + esc(item.mode || 'Modern') + '</option>';
+        }).join('');
+        if (workbooks.some(function(item) { return item.available && String(item.season) === selected; })) accoladesSeason.value = selected;
+      }
+      if (window.F1XLSeasonStatisticsPreview) window.F1XLSeasonStatisticsPreview.setSeasons(workbooks.filter(function(item) { return !item.planning; }));
+      renderMaintenance();
+      renderConnectionGuide(workbooks);
+      if (window.F1XLSeasonDriverIdentity) window.F1XLSeasonDriverIdentity.setSeasons(workbooks.filter(function(item) { return !item.planning; }));
+      status(state.data && state.data.message || 'Season Master list loaded.');
+    }
+    function renderMaintenance() {
+      const selected = el('season-statistics-preview-season').value;
+      const item = (state.data && state.data.workbooks || []).find(function(item) { return String(item.season) === selected && item.available; });
+      el('season-maintenance-actions').innerHTML = '';
+      el('season-maintenance-note').textContent = !item ? 'Choose a season to see its maintenance tools.' : item.readOnly ? 'Season ' + selected + ' is completed history. Maintenance is disabled.' : 'Maintenance for Season ' + selected + '. Run a statistics preview before refreshing its permanent Career Stats.';
+      if (!item || item.readOnly || item.planning) return;
+        const lineupsAction = item.available && !item.readOnly ? '<button class="button" type="button" data-refresh-lineups="' + esc(item.season) + '">Repair Master line-up formulas</button>' : '';
+        const referenceAction = item.available && !item.readOnly ? '<button class="button" type="button" data-refresh-references="' + esc(item.season) + '">Refresh reference lists</button>' : '';
+        const careerReady = item.careerExport && item.careerExport.ready;
+        const careerPopulated = careerReady && item.careerExport.populated;
+        const careerLabel = careerPopulated ? 'Career export populated' : (careerReady ? 'Career export empty' : 'Career export missing');
+        const careerAction = item.available && !item.readOnly ? '<button class="button" type="button" data-repair-career="' + esc(item.season) + '">Repair Career Stats</button> <span class="status ' + (careerPopulated ? 'complete' : '') + '">' + careerLabel + '</span>' : '';
+        const cleanupAction = !item.readOnly && item.obsoleteHistoricalTabs ? '<button class="button danger" type="button" data-cleanup-historical="' + esc(item.season) + '">Remove obsolete historical tabs</button>' : '';
+        const discardAction = item.available && !item.readOnly ? '<button class="button danger" type="button" data-discard-season="' + esc(item.season) + '">Discard TEST season</button>' : '';
+      const divisionRepairs = (item.divisionWorkbooks || []).filter(function(division) { return division.available; }).map(function(division) { return '<button class="button" type="button" data-repair-division="' + division.division + '" data-season="' + esc(item.season) + '">Repair D' + division.division + ' formulas</button>'; }).join(' ');
+      const teamRepair = divisionRepairs ? '<button class="button" type="button" data-repair-team-stats="' + esc(item.season) + '"' + (state.teamRepairRunning ? ' disabled' : '') + '>Repair team statistics · all divisions</button>' : '';
+      el('season-maintenance-actions').innerHTML = teamRepair + ' ' + divisionRepairs + ' ' + careerAction + ' ' + referenceAction + ' ' + lineupsAction + ' ' + cleanupAction + ' ' + discardAction;
+    }
+    function renderConnectionGuide(workbooks) {
+      const guide = el('season-connection-guide');
+      const pending = [];
+      workbooks.forEach(function(item) {
+        (item.divisionWorkbooks || []).forEach(function(division) {
+          const connection = division.connection;
+          if (!connection || connection.ready) return;
+          (connection.tasks || []).forEach(function(task) {
+            pending.push({ season:item.season, area:'D' + division.division, task:task });
+          });
+        });
+        const career = item.careerConnection;
+        if (career && career.configured && !career.ready) {
+          (career.tasks || []).forEach(function(task) {
+            pending.push({ season:item.season, area:'Career Stats', task:task });
+          });
+        }
+      });
+      if (!pending.length) {
+        guide.innerHTML = workbooks.length ? '<div class="notice"><strong>Workbook connections ready.</strong> No Google Sheets approval is outstanding.</div>' : '';
+        return;
+      }
+      guide.innerHTML = '<div class="notice workflow-note"><strong>Google Sheets connection needed</strong><p style="margin:6px 0 10px">Complete each line once. After pressing Allow access, close the Sheet and press Check connections again.</p>' + pending.map(function(item, index) {
+        const task = item.task;
+        const link = task.url ? '<a class="button" target="_blank" rel="noopener" href="' + esc(task.url) + '">Open step ' + (index + 1) + ' ↗</a>' : '';
+        return '<div style="display:flex;align-items:center;gap:10px;margin-top:8px"><span style="flex:1"><strong>Season ' + esc(item.season) + ', ' + esc(item.area) + ':</strong> ' + esc(task.instruction) + '</span>' + link + '</div>';
+      }).join('') + '</div>';
+    }
+    function createTemplate(button) {
+      if (!window.confirm('Create the clean reusable Division Template in Google Drive? The trusted current workbook is copied first and is never edited.')) return;
+      button.disabled = true; button.textContent = 'Creating Template…';
+      status('Creating the clean Division Template and preserving the familiar layouts…');
+      google.script.run.withSuccessHandler(function(response) {
+        button.disabled = false; button.textContent = 'Create Division Template';
+        status(response.message || 'Division Template created.'); load(true);
+        if (response.url) window.open(response.url, '_blank', 'noopener');
+      }).withFailureHandler(function(error) {
+        button.disabled = false; button.textContent = 'Create Division Template';
+        status(error && error.message ? error.message : 'The Division Template could not be created.', true);
+      }).createDivisionWorkbookTemplate();
+    }
+    function createDivision(button) {
+      const season = button.dataset.season, division = Number(button.dataset.createDivision);
+      if (!window.confirm('Create the separate TEST Season ' + season + ' Division ' + division + ' workbook?')) return;
+      button.disabled = true; button.textContent = 'Creating D' + division + '…';
+      status('Copying the clean Division Template and connecting it to the Season Master. This can take a little while…');
+      google.script.run.withSuccessHandler(function(response) {
+        window.alert('One-time Google Sheets setup\n\n1. Open the new Division Sheet.\n2. On Start Here, click cell B13.\n3. Press Allow access.\n4. Close the Sheet and return here.\n5. Press Check connections for this season and follow any remaining instruction.');
+        status(response.message || 'Division workbook created.'); load(true);
+        if (response.workbook && response.workbook.url) window.open(response.workbook.url, '_blank', 'noopener');
+      }).withFailureHandler(function(error) {
+        button.disabled = false; button.textContent = 'Create D' + division;
+        const message = error && error.message ? error.message : 'The Division workbook could not be created.';
+        if (message.indexOf('LICENCE_RESET_REQUIRED:') !== -1) {
+          const reset = window.confirm('This older TEST Season Master contains copied licence values from the previous source template.\n\nResetting will rebuild only this Division\'s licence working area in the TEST Master. It will not change your entrants, teams, calendar or race results.\n\nReset that copied licence area now?');
+          if (reset) {
+            button.disabled = true; button.textContent = 'Resetting licence template…';
+            status('Clearing copied licence template entries in this TEST Season Master…');
+            google.script.run.withSuccessHandler(function(response) {
+              button.disabled = false; button.textContent = 'Create D' + division;
+              status(response.message || 'The licence template has been reset. You can now create the Division workbook.');
+            }).withFailureHandler(function(resetError) {
+              button.disabled = false; button.textContent = 'Create D' + division;
+              status(resetError && resetError.message ? resetError.message : 'The TEST licence template could not be reset.', true);
+            }).resetTestMasterLicenceTemplate({ season:season, division:division });
+            return;
+          }
+        }
+        if (!error || !error.message) {
+          button.disabled = true;
+          confirmDivisionCreationAfterLostResponse(season, division, button, 0);
+          return;
+        }
+        status(message, true);
+      }).createDivisionWorkbook({ season:season, division:division });
+    }
+    function confirmDivisionCreationAfterLostResponse(season, division, button, attempt) {
+      const maximumAttempts = 12;
+      status('Google stopped waiting for the long workbook build. Waiting for Division ' + division + ' to finish registering…');
+      window.setTimeout(function() {
+        google.script.run.withSuccessHandler(function(check) {
+          if (check && check.created) {
+            button.disabled = false; button.textContent = 'Create D' + division;
+            window.alert('The Division workbook was created successfully. Google completed it after the browser stopped waiting.');
+            status(check.message || 'Division workbook created.');
+            load(true);
+            if (check.workbook && check.workbook.url) window.open(check.workbook.url, '_blank', 'noopener');
+            return;
+          }
+          if (attempt + 1 < maximumAttempts) return confirmDivisionCreationAfterLostResponse(season, division, button, attempt + 1);
+          button.disabled = false; button.textContent = 'Create D' + division;
+          status(check && check.message ? check.message : 'The Division workbook was not registered. Refresh the Season Master list before trying again.', true);
+        }).withFailureHandler(function(checkError) {
+          if (attempt + 1 < maximumAttempts) return confirmDivisionCreationAfterLostResponse(season, division, button, attempt + 1);
+          button.disabled = false; button.textContent = 'Create D' + division;
+          status(checkError && checkError.message ? checkError.message : 'Google did not return enough information to verify the workbook. Refresh the Season Master list before trying again.', true);
+        }).getDivisionWorkbookCreationStatus({ season:season, division:division });
+      }, 5000);
+    }
+    function checkConnections(button) {
+      const season = button.dataset.checkConnections;
+      button.disabled = true; button.textContent = 'Checking…';
+      status('Checking both directions between the Season Master and its Division workbooks…');
+      google.script.run.withSuccessHandler(function(response) {
+        button.disabled = false; button.textContent = 'Check connections';
+        state.data = response; render();
+      }).withFailureHandler(function(error) {
+        button.disabled = false; button.textContent = 'Check connections';
+        status(error && error.message ? error.message : 'Connections could not be checked.', true);
+      }).checkSeasonMasterConnections({ season:season });
+    }
+    function repairDivision(button) {
+      const season = button.dataset.season, division = Number(button.dataset.repairDivision);
+      if (!window.confirm('Restore recognised formulas in TEST Season ' + season + ' Division ' + division + ' from the current Division Template?\n\nA temporary backup will be created first. No tab will be cleared, rebuilt, deleted or added. Existing non-formula cells will not be changed, but a manually entered value occupying a recognised formula cell will be replaced by the template formula.')) return;
+      button.disabled = true; button.textContent = 'Repairing…';
+      status('Building and checking a clean formula source, then creating the temporary backup before any formulas are changed…');
+      google.script.run.withSuccessHandler(function(response) {
+        button.disabled = false; button.textContent = 'Repair formulas';
+        status(response.message || 'Division formulas repaired.');
+        if (response.backupUrl) window.alert((response.message || 'Division formulas repaired.') + '\n\nTemporary backup: ' + response.backupUrl);
+        load(true);
+      }).withFailureHandler(function(error) {
+        button.disabled = false; button.textContent = 'Repair formulas';
+        status(error && error.message ? error.message : 'The Division formulas could not be repaired.', true);
+      }).repairTestDivisionWorkbook({ season:season, division:division });
+    }
+    async function repairTeamStatistics(button) {
+      if (state.teamRepairRunning) return;
+      const season = button.dataset.repairTeamStats;
+      const item = (state.data && state.data.workbooks || []).find(function(item) { return String(item.season) === season; });
+      if (!item || item.readOnly || item.planning) return;
+      const divisions = (item.divisionWorkbooks || []).filter(function(d) { return d.available; });
+      if (!divisions.length) return;
+      if (!window.confirm('Repair team statistics for TEST Season ' + season + ' (' + divisions.length + ' divisions)?\n\nEach division is backed up first. Only derived team statistics are replaced. Race entries, championship points and permanent driver records stay as they are.')) return;
+      state.teamRepairRunning = true;
+      button.disabled = true;
+      const completed = [];
+      try {
+        for (const division of divisions) {
+          const message = 'S' + season + ': backing up and repairing D' + division.division + ' (' + (completed.length + 1) + '/' + divisions.length + ')…';
+          button.textContent = message;
+          el('season-maintenance-note').textContent = message;
+          const response = await new Promise(function(resolve, reject) {
+            google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).repairTestDivisionTeamStatistics({season:season, division:division.division});
+          });
+          completed.push(response);
+        }
+        status('S' + season + ': team statistics repaired in ' + completed.length + ' divisions. Open the Active season hub and press Update website, then refresh the website.');
+        el('season-maintenance-note').textContent = 'Team statistics repaired. Use Update website in the Active season hub to publish the corrected values.';
+      } catch (error) {
+        const message = 'S' + season + ': repair stopped after ' + completed.length + '/' + divisions.length + ' divisions. ' + (error && error.message || error);
+        status(message, true);
+        el('season-maintenance-note').textContent = message;
+      } finally {
+        state.teamRepairRunning = false;
+        button.disabled = false;
+        button.textContent = 'Repair team statistics · all divisions';
+        document.querySelectorAll('[data-repair-team-stats]').forEach(function(b) { b.disabled = false; });
+        if (completed.length) el('season-maintenance-note').innerHTML += '<br>Pre-repair backups: ' + completed.map(function(r) { return '<a target="_blank" rel="noopener" href="' + esc(r.backupUrl) + '">D' + esc(r.division) + '</a>'; }).join(' · ');
+      }
+    }
+    function repairCareer(button) {
+      const season = button.dataset.repairCareer;
+      if (!window.confirm('Repair the formula-controlled Career Stats export and permanent Registry connection for TEST Season ' + season + '?\n\nEntered results and manual historical information will not be changed.')) return;
+      button.disabled = true; button.textContent = 'Repairing Career Stats…';
+      status('Rebuilding and verifying the Season ' + season + ' Career Stats export, then refreshing its permanent Registry formulas…');
+      google.script.run.withSuccessHandler(function(response) {
+        button.disabled = false; button.textContent = 'Repair Career Stats';
+        status(response.message || 'Career Stats repaired.');
+        load(true);
+      }).withFailureHandler(function(error) {
+        button.disabled = false; button.textContent = 'Repair Career Stats';
+        status(error && error.message ? error.message : 'Career Stats could not be repaired.', true);
+      }).repairTestSeasonCareerStats({ season:season });
+    }
+    function repairTemplate(button) {
+      if (!window.confirm('Repair the reusable Division Template formulas?\n\nThis upgrades its Standard and Sprint prototypes plus the clean driver-stat and constructor calculation blocks without recreating the template.')) return;
+      button.disabled = true; button.textContent = 'Repairing…';
+      status('Repairing the reusable round, driver-stat and constructor template formulas…');
+      google.script.run.withSuccessHandler(function(response) {
+        button.disabled = false; button.textContent = 'Repair Template formulas';
+        status(response.message || 'Division Template formulas repaired.'); load(true);
+      }).withFailureHandler(function(error) {
+        button.disabled = false; button.textContent = 'Repair Template formulas';
+        status(error && error.message ? error.message : 'The Division Template formulas could not be repaired.', true);
+      }).repairDivisionWorkbookTemplate();
+    }
+    function refreshLineups(button) {
+      const season = button.dataset.refreshLineups;
+      button.disabled = true; button.textContent = 'Refreshing…';
+      status('Refreshing fixed team and tier seats while preserving entered driver names…');
+      google.script.run.withSuccessHandler(function(response) {
+        button.disabled = false; button.textContent = 'Repair Master line-up formulas';
+        status(response.message || 'Division line-ups refreshed.');
+      }).withFailureHandler(function(error) {
+        button.disabled = false; button.textContent = 'Repair Master line-up formulas';
+        status(error && error.message ? error.message : 'Division line-ups could not be refreshed.', true);
+      }).activateSeasonMasterLineupSafety({ season:season });
+    }
+    function refreshReferences(button) {
+      const season = button.dataset.refreshReferences;
+      button.disabled = true; button.textContent = 'Refreshing…';
+      status('Refreshing Permanent Reference Data lists in the Season Master and connected Divisions…');
+      google.script.run.withSuccessHandler(function(response) {
+        button.disabled = false; button.textContent = 'Refresh reference lists';
+        status(response.message || 'Reference dropdowns refreshed.');
+      }).withFailureHandler(function(error) {
+        button.disabled = false; button.textContent = 'Refresh reference lists';
+        status(error && error.message ? error.message : 'Reference dropdowns could not be refreshed.', true);
+      }).refreshSeasonMasterReferenceData({ season:season });
+    }
+    function discardSeason(button) {
+      const season = button.dataset.discardSeason;
+      button.disabled = true; button.textContent = 'Preparing preview…';
+      status('Inspecting every TEST connection for Season ' + season + '. Nothing is being removed yet…');
+      google.script.run.withSuccessHandler(function(preview) {
+        button.disabled = false; button.textContent = 'Discard TEST season';
+        const details = [
+          'Season Master: ' + preview.master.name,
+          'Connected Divisions: ' + preview.divisions,
+          'Career Stats block: ' + (preview.careerBlock ? 'Yes' : 'No'),
+          'Career Imports connection: ' + (preview.careerImport ? 'Yes' : 'No'),
+          'Accolade records: ' + preview.accoladeRecords,
+          'Website Config entry: ' + (preview.websiteConfig ? 'Yes' : 'No')
+        ];
+        if (preview.warnings && preview.warnings.length) details.push('', 'Warnings:', preview.warnings.join('\n'));
+        const confirmation = window.prompt(
+          'READ-ONLY DISCARD PREVIEW\n\n' + details.join('\n') +
+          '\n\nThe Season Master and connected Division workbooks will be renamed and moved to the recoverable Google Drive bin. The Permanent Reference Data and Driver Registry files themselves will not be deleted.\n\nType exactly:\n' + preview.confirmationPhrase
+        );
+        if (confirmation !== preview.confirmationPhrase) {
+          status('Season ' + season + ' was not discarded. Nothing was changed.');
+          return;
+        }
+        button.disabled = true; button.textContent = 'Backing up and discarding…';
+        status('Backing up dependent TEST records, disconnecting Season ' + season + ' and moving its workbooks to the recoverable Drive bin…');
+        google.script.run.withSuccessHandler(function(response) {
+          status(response.message || ('TEST Season ' + season + ' was discarded.'));
+          const backups = [];
+          if (response.registryBackupUrl) backups.push('Driver Registry backup: ' + response.registryBackupUrl);
+          if (response.websiteBackupUrl) backups.push('Website Config backup: ' + response.websiteBackupUrl);
+          window.alert((response.message || ('TEST Season ' + season + ' was discarded.')) + (backups.length ? '\n\n' + backups.join('\n') : ''));
+          load(true);
+        }).withFailureHandler(function(error) {
+          button.disabled = false; button.textContent = 'Discard TEST season';
+          status(error && error.message ? error.message : 'The TEST season could not be discarded.', true);
+          window.alert(error && error.message ? error.message : 'The TEST season could not be discarded.');
+        }).discardTestSeason({ season:season, confirmation:confirmation });
+      }).withFailureHandler(function(error) {
+        button.disabled = false; button.textContent = 'Discard TEST season';
+        status(error && error.message ? error.message : 'The discard preview could not be prepared.', true);
+      }).getTestSeasonDiscardPreview({ season:season });
+    }
+    function ensureAccoladesDialog() {
+      let dialog = el('season-accolades-dialog');
+      if (!dialog) throw new Error('The permanent Season-end accolades panel is missing from Index.html.');
+      if (!dialog.dataset.f1xlBound) {
+        dialog.dataset.f1xlBound = 'true';
+        el('close-season-accolades').addEventListener('click', function() { dialog.close(); });
+        dialog.addEventListener('click', function(event) { if (event.target === dialog) dialog.close(); });
+        el('finalise-season-accolades').addEventListener('click', finaliseAccolades);
+      }
+      return dialog;
+    }
+    function renderAccoladesPreview(preview) {
+      const dialog = ensureAccoladesDialog();
+      state.accoladesPreview = preview;
+      el('season-accolades-title').textContent = 'Season ' + preview.season + ' accolades';
+      el('season-accolades-subtitle').textContent = (preview.mode || 'Modern') + ' season · read-only preview';
+      const message = el('season-accolades-message');
+      message.className = 'notice' + (preview.canFinalise ? ' success' : ' error');
+      message.innerHTML = '<strong>' + esc(preview.message) + '</strong><p style="margin:6px 0 0">Nothing shown here has been written to the Driver Registry. Team Principal awards are inferred from the overall champion and runner-up teams. Constructor driver entries use the drivers shown for those teams in the final Division standings.</p>';
+      const issues = [];
+      if (preview.blockers && preview.blockers.length) issues.push('<div class="notice error"><strong>Must be resolved</strong><ul>' + preview.blockers.map(function(item) { return '<li>' + esc(item) + '</li>'; }).join('') + '</ul></div>');
+      if (preview.warnings && preview.warnings.length) issues.push('<div class="notice"><strong>Historical gaps / warnings</strong><ul>' + preview.warnings.map(function(item) { return '<li>' + esc(item) + '</li>'; }).join('') + '</ul></div>');
+      el('season-accolades-issues').innerHTML = issues.join('');
+      el('season-accolades-rows').innerHTML = (preview.rows || []).map(function(row) {
+        return '<tr><td>' + esc(row.result) + '</td><td>' + esc(row.category) + '</td><td>' + (row.division ? 'D' + esc(row.division) : '—') + '</td><td>' + (row.recipientType === 'Driver' ? esc(row.gamertag) + '<div class="secondary-line">' + esc(row.driverId) + '</div>' : esc(row.team)) + '</td><td>' + esc(row.team || '—') + '</td></tr>';
+      }).join('') || '<tr><td colspan="5">No accolade records were found.</td></tr>';
+      const finalise = el('finalise-season-accolades');
+      finalise.disabled = !preview.canFinalise;
+      finalise.hidden = !!preview.seasonReadOnly;
+      finalise.textContent = preview.alreadyFinalised ? 'Already finalised' : 'Finalise permanent records';
+      el('open-accolade-records').hidden = true;
+      el('open-accolade-summary').hidden = true;
+      if (!dialog.open) dialog.showModal();
+    }
+    function previewAccolades(button) {
+      const season = button.dataset.previewAccolades || (el('season-accolades-season') && el('season-accolades-season').value);
+      if (!season) return status('Choose a season before previewing its accolades.', true);
+      button.disabled = true; button.textContent = 'Reading…';
+      status('Reading final standings for Season ' + season + '. This preview does not change any Sheet.');
+      google.script.run.withSuccessHandler(function(response) {
+        button.disabled = false; button.textContent = 'Preview accolades';
+        status(response.message || 'Accolades preview ready.');
+        renderAccoladesPreview(response);
+      }).withFailureHandler(function(error) {
+        button.disabled = false; button.textContent = 'Preview accolades';
+        status(error && error.message ? error.message : 'Accolades could not be previewed.', true);
+      }).getSeasonAccoladesPreview({ season:season });
+    }
+    function finaliseAccolades() {
+      const preview = state.accoladesPreview;
+      if (!preview || !preview.canFinalise) return;
+      const phrase = 'FINALISE SEASON ' + preview.season + ' ACCOLADES';
+      const confirmation = window.prompt('This makes a verified backup, then adds permanent Season ' + preview.season + ' accolade records to the Driver Registry. It does not alter the original Winners and Awards Sheet.\n\nType exactly:\n' + phrase);
+      if (confirmation !== phrase) return window.alert('The wording did not match. Nothing was changed.');
+      const button = el('finalise-season-accolades');
+      button.disabled = true; button.textContent = 'Backing up and finalising…';
+      google.script.run.withSuccessHandler(function(response) {
+        button.textContent = 'Finalised';
+        const message = el('season-accolades-message');
+        message.className = 'notice success';
+        message.innerHTML = '<strong>' + esc(response.message) + '</strong><p style="margin:6px 0 0">A verified backup was made before the permanent records were added.</p>';
+        const records = el('open-accolade-records'), summary = el('open-accolade-summary');
+        records.href = response.recordsUrl; records.hidden = false;
+        summary.href = response.summaryUrl; summary.hidden = false;
+        status(response.message || 'Season accolades finalised.');
+      }).withFailureHandler(function(error) {
+        button.disabled = false; button.textContent = 'Finalise permanent records';
+        status(error && error.message ? error.message : 'Season accolades could not be finalised.', true);
+        window.alert(error && error.message ? error.message : 'Season accolades could not be finalised.');
+      }).finaliseSeasonAccolades({ season:preview.season, revision:preview.revision, confirmation:confirmation });
+    }
+    function create(button) {
+      const input = { mode:el('season-master-mode').value, season: el('season-master-season').value, rounds: Number(el('season-master-rounds').value), divisions: Number(el('season-master-divisions').value), teams:Number(el('season-master-teams').value), teamPrincipals:el('season-master-team-principals').value, scoringSystem:el('season-master-scoring').value };
+      if (!window.confirm('Create a normal TEST Season ' + input.season + ' Master in ' + input.mode + ' mode? It will not be connected to the live website.')) return;
+      button.disabled = true; button.textContent = 'Creating Sheet…'; status('Creating the Season Master. Copying the familiar Licence and Overall calculation tabs can take a little while…');
+      google.script.run.withSuccessHandler(function(response) {
+        button.disabled = false; button.textContent = 'Create Season Master'; status(response.message || 'Season Master created.'); load(true);
+        if (response.workbook && response.workbook.url) window.open(response.workbook.url, '_blank', 'noopener');
+      }).withFailureHandler(function(error) { button.disabled = false; button.textContent = 'Create Season Master'; status(error && error.message ? error.message : 'The Season Master could not be created.', true); }).createSeasonMasterWorkbook(input);
+    }
+    function connect(button) {
+      const input = { season: el('season-master-connect-season').value, rounds: 1, divisions: 1, teams:8, teamPrincipals:'Unknown', scoringSystem:'Standard', spreadsheetId: el('season-master-connect-id').value };
+      button.disabled = true; button.textContent = 'Connecting…';
+      google.script.run.withSuccessHandler(function(response) { button.disabled = false; button.textContent = 'Connect existing'; status(response.message || 'Season Master connected.'); load(true); }).withFailureHandler(function(error) { button.disabled = false; button.textContent = 'Connect existing'; status(error && error.message ? error.message : 'The Season Master could not be connected.', true); }).connectSeasonMasterWorkbook(input);
+    }
+    function bind() {
+      if (state.bound) return;
+      state.bound = true;
+      el('create-season-master').addEventListener('click', function(event) { create(event.currentTarget); });
+      el('create-division-template').addEventListener('click', function(event) { createTemplate(event.currentTarget); });
+      el('repair-division-template').addEventListener('click', function(event) { repairTemplate(event.currentTarget); });
+      el('connect-season-master').addEventListener('click', function(event) { connect(event.currentTarget); });
+      el('refresh-season-masters').addEventListener('click', function() { load(true); });
+      el('preview-season-accolades').addEventListener('click', function(event) { previewAccolades(event.currentTarget); });
+      el('season-master-mode').addEventListener('change', function() {
+        const historical = el('season-master-mode').value === 'Historical';
+        el('season-master-mode-note').innerHTML = historical ? '<strong>Historical mode:</strong> missing calendar, line-up, result and accolade information may remain blank. Zero means a confirmed zero.' : '<strong>Modern mode:</strong> uses the same sheets, with normal complete-data expectations. Use it when setting up a new season.';
+      });
+      el('season-statistics-preview-season').addEventListener('change', renderMaintenance);
+      el('view-season-master').addEventListener('click', function(event) {
+        const checksButton = event.target.closest('[data-season-checks]');
+        if (checksButton) {
+          const select = el('season-statistics-preview-season');
+          select.value = checksButton.dataset.seasonChecks;
+          select.dispatchEvent(new Event('change'));
+          el('driver-statistics-preview-panel').scrollIntoView({ behavior:'smooth', block:'start' });
+          return;
+        }
+        const createButton = event.target.closest('[data-create-division]');
+        if (createButton) return createDivision(createButton);
+        const repairButton = event.target.closest('[data-repair-division]');
+        if (repairButton) repairDivision(repairButton);
+        const teamRepairButton = event.target.closest('[data-repair-team-stats]');
+        if (teamRepairButton) return repairTeamStatistics(teamRepairButton);
+        const connectionButton = event.target.closest('[data-check-connections]');
+        if (connectionButton) return checkConnections(connectionButton);
+        const careerButton = event.target.closest('[data-repair-career]');
+        if (careerButton) return repairCareer(careerButton);
+        const lineupsButton = event.target.closest('[data-refresh-lineups]');
+        if (lineupsButton) refreshLineups(lineupsButton);
+        const referencesButton = event.target.closest('[data-refresh-references]');
+        if (referencesButton) refreshReferences(referencesButton);
+        const cleanupButton = event.target.closest('[data-cleanup-historical]');
+        if (cleanupButton) {
+          const season = cleanupButton.dataset.cleanupHistorical;
+          if (!window.confirm('Remove only the five obsolete historical staging tabs from TEST Season ' + season + '?\n\nA complete backup of the Season Master will be made and verified first. The normal Season Master tabs and any Division workbooks will remain.')) return;
+          cleanupButton.disabled = true; cleanupButton.textContent = 'Backing up…';
+          status('Backing up the Season Master before removing the obsolete staging tabs…');
+          google.script.run.withSuccessHandler(function(response) { status(response.message || 'Obsolete historical tabs removed.'); load(true); }).withFailureHandler(function(error) { cleanupButton.disabled = false; cleanupButton.textContent = 'Remove obsolete historical tabs'; status(error && error.message ? error.message : 'The obsolete tabs could not be removed.', true); }).removeObsoleteHistoricalWorkspace({ season:season, confirmation:'REMOVE OBSOLETE HISTORICAL TABS' });
+        }
+        const discardButton = event.target.closest('[data-discard-season]');
+        if (discardButton) discardSeason(discardButton);
+      });
+    }
+    return { load: load, bind: bind };
+  })();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() { window.F1XLSeasonMaster.bind(); });
+  } else {
+    window.F1XLSeasonMaster.bind();
+  }
+</script>

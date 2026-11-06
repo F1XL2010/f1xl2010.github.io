@@ -1,0 +1,905 @@
+<script>
+(function(){
+  if(window.F1XLNavigation)window.F1XLNavigation.register('ticket-processing',()=>tp.busy||boardPending()||outcomePending()||noteDirty(),()=> ({season:tp.season}));
+
+  'use strict';
+  const tp={season:'',setup:null,overview:null,publicFeed:null,key:'',race:null,submissions:[],outcomes:null,exportData:null,view:'inbox',loaded:false,loading:false,busy:false,edit:null,incoming:null,outcome:null,published:null,caseTab:'evidence'};
+  const el=id=>document.getElementById(id),byId=el,esc=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const rpc=(name,...args)=>new Promise((resolve,reject)=>google.script.run.withSuccessHandler(data=>{resolve(data);if(data&&data.publicationPending&&data.season)queueWebsiteUpdate(data.season);}).withFailureHandler(reject)[name](...args));
+  const websiteUpdates=new Map();
+  function queueWebsiteUpdate(season){
+    season=String(season);if(websiteUpdates.has(season)){websiteUpdates.get(season).again=true;return;}
+    const job={again:false,attempt:0};websiteUpdates.set(season,job);
+    const run=async()=>{
+      job.again=false;job.attempt++;
+      try{
+        const data=await rpc('processTicketWebsiteUpdates',{season});
+        if(String(tp.season)===season&&data.feed){tp.publicFeed=data.feed;renderTicketPublicConnection();if(penalties&&String(penalties.season)===season){penalties.feed=data.feed;if(!tp.busy&&!activeTicketDialog())el('ticket-penalty-status').textContent=data.message;}}
+        if((data.busy||job.again)&&job.attempt<4){setTimeout(run,5000);return;}
+      }catch(error){/* The durable server queue retries even if this tab closes. */}
+      websiteUpdates.delete(season);
+    };
+    setTimeout(run,100);
+  }
+  const options=(values,selected,blank)=>(blank?[''].concat(values||[]):values||[]).map(v=>'<option value="'+esc(v)+'"'+(String(v)===String(selected||'')?' selected':'')+'>'+esc(v||'—')+'</option>').join('');
+  const textField=(label,id,v,wide)=>'<label class="'+(wide?'wide':'')+'">'+esc(label)+'<input id="'+id+'" value="'+esc(v)+'"></label>';
+  const areaField=(label,id,v)=>'<label class="wide">'+esc(label)+'<textarea id="'+id+'">'+esc(v)+'</textarea></label>';
+  const baseline=new Map(),revisions=new Map();
+  const inboxPoll={request:0,flight:0};
+  function formValues(id){return Array.from(el(id).querySelectorAll('input,textarea,select')).filter(e=>e.id!=='ticket-reviewers-scope').map(e=>[e.id,e.type==='checkbox'?e.checked:e.value]);}
+  function mark(id){baseline.set(id,JSON.stringify(formValues(id)));}
+  function dirty(id){return baseline.has(id)&&baseline.get(id)!==JSON.stringify(formValues(id));}
+  const ticketDialogs=['carry-dialog','ticket-incoming-dialog','ticket-race-dialog','ticket-outcome-dialog','ticket-export-dialog','ticket-reviewers-dialog','ticket-conflicts-dialog','ticket-threshold-ban-dialog','ticket-admin-note-dialog'];
+  function activeTicketDialog(){return ticketDialogs.map(el).find(d=>d&&d.open);}
+  function dialogFeedback(dialog,message,kind){
+    if(!dialog)return;
+    let notice=dialog.querySelector('[data-ticket-save-feedback]');
+    if(!notice){
+      const head=dialog.querySelector('.dialog-head');if(!head)return;
+      let container=head.firstElementChild;
+      if(container.tagName!=='DIV'){const wrap=document.createElement('div');head.insertBefore(wrap,container);wrap.appendChild(container);container=wrap;}
+      container.style.minWidth='0';container.style.flex='1';head.style.zIndex='2';
+      notice=document.createElement('div');notice.dataset.ticketSaveFeedback='';notice.setAttribute('aria-live','polite');
+      notice.style.cssText='margin-top:4px;font-size:13px;line-height:1.4;overflow-wrap:anywhere;';container.appendChild(notice);
+    }
+    notice.textContent=message||'';notice.hidden=!message;notice.dataset.kind=kind||'';
+    notice.className='ticket-save-feedback';notice.style.color=kind==='error'?'var(--red)':kind==='success'?'var(--green)':'var(--muted)';notice.setAttribute('role',kind==='error'?'alert':'status');
+  }
+  function clearDialogFeedback(id){dialogFeedback(el(id),'','');}
+  function status(message,error){el('ticket-processing-status').textContent=message||'';el('ticket-processing-status').classList.toggle('error',!!error);dialogFeedback(activeTicketDialog(),message,error?'error':'success');}
+  async function work(action){
+    if(tp.busy)return;tp.busy=true;
+    // Discard any inbox read started before processing or editing a submission.
+    inboxPoll.request++;
+    const dialog=activeTicketDialog(),button=dialog&&document.activeElement?.closest('button'),label=button?.textContent,saving=!!button&&/^save\b/i.test(label);
+    // Keep the current operation stable without freezing filters, the sidebar or
+    // the rest of the portal. Navigation is separately guarded while tp.busy.
+    const active=dialog||el('ticket-processing-'+tp.view)||el('view-ticket-processing');
+    // Refresh would discard or replace the active response, so it is one of the
+    // few page-level actions that must wait with the active work.
+    const roots=[active,el('ticket-round-select'),el('ticket-processing-subnav'),el('refresh-ticket-processing')].filter(Boolean);
+    const controlSelector='button,input,select,textarea';
+    const controls=Array.from(new Set(roots.flatMap(root=>[
+      ...(root.matches(controlSelector)?[root]:[]),...root.querySelectorAll(controlSelector)
+    ])));
+    const disabled=controls.map(e=>e.disabled);controls.forEach(e=>e.disabled=true);
+    dialogFeedback(dialog,saving?'Saving…':'Working…','busy');if(saving)button.textContent='Saving…';
+    try{await boardFlush();await outcomeFlush();await action();}
+    catch(e){status((saving?'Save not confirmed: ':'')+(e.message||String(e)),true);if(dialog?.id==='ticket-race-dialog'&&caseDirty())el('ticket-discard-changes').hidden=false;}
+    finally{
+      controls.forEach((e,i)=>{if(e.isConnected)e.disabled=disabled[i];});
+      if(saving&&button.isConnected&&button.textContent==='Saving…')button.textContent=label;
+      const notice=dialog?.querySelector('[data-ticket-save-feedback]');if(notice?.dataset.kind==='busy')dialogFeedback(dialog,'','');
+      tp.busy=false;if(el('ticket-round-select'))el('ticket-round-select').value=tp.key;
+      if(el('ticket-incoming-dialog').open)previewTarget();
+    }
+  }
+  function links(values){return (values||[]).filter(Boolean).map((v,i)=>{let ok=false;try{ok=['https:','http:'].includes(new URL(v).protocol);}catch(e){}return ok?'<a class="button" href="'+esc(v)+'" target="_blank" rel="noopener noreferrer">Evidence '+(i+1)+' ↗</a>':'<span>'+esc(v)+'</span>';}).join(' ');}
+  function prose(value){const text=String(value||'');let result='',last=0;for(const match of text.matchAll(/https?:\/\/[^\s<>"']+/g)){result+=esc(text.slice(last,match.index))+'<a href="'+esc(match[0])+'" target="_blank" rel="noopener noreferrer">'+esc(match[0])+'</a>';last=match.index+match[0].length;}return result+esc(text.slice(last));}
+  function evidence(t){return '<p><strong>'+esc(t.submitter||t.fromDriver)+' · '+esc(t.submitterTeam||t.fromTeam)+' → '+esc(t.offender||t.againstDriver)+' · '+esc(t.offenderTeam||t.againstTeam)+'</strong></p><p style="white-space:pre-wrap">'+prose(t.description)+'</p><div class="toolbar">'+links(t.evidence)+'</div>'+(t.defenceComments||(t.defenceEvidence||[]).some(Boolean)?'<h3>Defence</h3><p style="white-space:pre-wrap">'+prose(t.defenceComments)+'</p><div class="toolbar">'+links(t.defenceEvidence)+'</div>':'<p class="secondary-line">No defence attached.</p>');}
+  function appealEvidence(t){return '<p style="white-space:pre-wrap">'+prose(t.appealDescription||'No appeal attached.')+'</p><div class="toolbar">'+links(t.appealEvidence)+'</div>';}
+  function noteDirty(){return !!el('ticket-admin-note-dialog')?.open&&dirty('ticket-admin-note-form');}
+  function rememberRound(){try{if(tp.key)localStorage.setItem('f1xl-ticket-round:'+tp.season,tp.key);}catch(e){}destination();}
+  function rememberedRound(){try{return localStorage.getItem('f1xl-ticket-round:'+tp.season)||'';}catch(e){return '';}}
+  function destination(){
+    const r=currentRound(),selected=intakeRound(el('ticket-batch-round').value),label=selected?'R'+selected.round+' · '+selected.track:'';
+    el('ticket-process-selected').textContent=label?'Process selected into '+label:'Choose a destination round';
+    el('ticket-edit-note').hidden=!r;el('ticket-edit-note').textContent=r?.notes?'Head Steward Note · saved':'Head Steward Note';
+  }
+  function intakeRound(key){return (tp.setup?.rounds||[]).find(r=>'r:'+r.round===key&&r.state!=='Cancelled');}
+  function intakeRoundOptions(){return '<option value="">Choose destination round…</option>'+(tp.setup?.rounds||[]).filter(r=>r.state!=='Cancelled').map(r=>'<option value="r:'+r.round+'">R'+r.round+' · '+esc(r.track)+(r.publishedAt||r.state==='Published'?' · Already published':'')+'</option>').join('');}
+  function intakeRoundWarning(r){return r&&(r.publishedAt||r.state==='Published')?'This round already has published decisions. Only choose it for a late ticket belonging to that round.':'';}
+  function currentRound(){return tp.setup&&(tp.setup.rounds||[]).find(r=>'r:'+r.round===tp.key);}
+  function roundName(){const r=currentRound();return r?'S'+tp.season+' · R'+r.round+' · '+r.track:tp.key.slice(2)||'Choose a round';}
+  function blankRace(){const overview=tp.overview||{};return {sheetName:'',round:currentRound(),tickets:[],stewardReviewers:overview.stewardReviewers||[],appealReviewers:overview.appealReviewers||[],options:{penalties:[],timePenalties:[]}};}
+  function selections(){const linked=(tp.setup?.rounds||[]).find(r=>r.sheetName&&'s:'+r.sheetName===tp.key);if(linked)tp.key='r:'+linked.round;const select=el('ticket-round-select'),registered=new Set((tp.setup?.rounds||[]).map(r=>r.sheetName));select.innerHTML='<option value="">Choose a round…</option>'+(tp.setup?.rounds||[]).map(r=>'<option value="r:'+r.round+'">R'+r.round+' · '+esc(r.track)+(r.state==='Cancelled'?' · Cancelled':'')+'</option>').join('')+'<optgroup label="Other race sheets">'+(tp.overview?.races||[]).filter(r=>!registered.has(r.name)).map(r=>'<option value="s:'+esc(r.name)+'">'+esc(r.name)+'</option>').join('')+'</optgroup>';if(!Array.from(select.options).some(o=>o.value===tp.key))tp.key='';select.value=tp.key;}
+  async function load(force){
+    if(tp.loading||tp.busy||tp.loaded&&!force)return;
+    tp.loading=true;
+    await work(async()=>{
+      status('Opening ticket workspace…');
+      const d=await rpc('getTicketProcessingInitial',{season:tp.season,forceRefresh:!!force,navigationOnly:true});
+      tp.season=d.season;tp.setup=d.setup;tp.overview=d.overview;tp.publicFeed=d.publicFeed||{};tp.loaded=true;
+      if(tp.publicFeed.pending)queueWebsiteUpdate(tp.season);
+      el('ticket-page-title').textContent=tp.season?'S'+tp.season+' Tickets':'Tickets';
+      el('ticket-processing-source').textContent=d.overview.sourceName;
+      el('ticket-workbook-link').href=tp.setup?tp.setup.url:'https://docs.google.com/spreadsheets/d/1xW2UqxG2joO1gpsUZobMM2qkTFDPLsZZQ78TvsmnlbI/edit';
+      if(!tp.key)tp.key=rememberedRound();
+      selections();
+      el('ticket-batch-round').innerHTML=intakeRoundOptions();el('ticket-batch-round').value='';
+      // With no remembered round, ask the admin instead of silently assuming R1.
+      rememberRound();
+      el('ticket-round-select').value=tp.key;
+      if(force){invalidateCompletion();tp.outcomes=null;tp.exportData=null;tp.penaltyOptions=[];}
+      tp.race=blankRace();renderTicketPublicConnection();renderRace();renderDivisionFilter();renderInbox();
+      if(tp.view!=='inbox')await view(tp.view);
+      status(tp.view==='inbox'?'Checking for new submissions…':'Ready · '+roundName());
+    });
+    tp.loading=false;
+    // The inbox is independent of the selected race. Do not block the page on a
+    // full 85-column race-tab read before the admin chooses to review it.
+    inbox(!!force).then(()=>{if(tp.view==='inbox'&&!activeTicketDialog())status(tp.key?'Ready · '+roundName():'Choose the destination round before processing submissions.');}).catch(e=>{if(!activeTicketDialog())status(e.message||String(e),true);});
+  }
+  async function loadRace(force){const r=currentRound(),name=r?r.sheetName:tp.key.startsWith('s:')?tp.key.slice(2):'';if(!force&&name&&tp.race?.sheetName===name)return tp.race;tp.race=name?await rpc('getTicketRaceWorkspace',name,!!force):blankRace();renderRace();return tp.race;}
+  async function selectRound(key,force){completion=null;el('ticket-completion').hidden=true;tp.key=key;rememberRound();tp.outcomes=null;tp.exportData=null;tp.penaltyOptions=[];tp.race=blankRace();if(tp.view!=='inbox')await loadRace(force);await view(tp.view);}
+  async function ensureRace(){
+    if(tp.race?.sheetName)return;
+    const r=currentRound();if(!r)throw Error('Choose a season round first.');
+    if(r.sheetName){await loadRace(false);return;}
+    const created=await rpc('createTicketRoundWorkspace',{season:tp.season,round:r.round});r.sheetName=created.sheetName;await loadRace(true);
+  }
+  async function view(name){
+    tp.view=name;
+    if(name!=='inbox'&&!tp.race?.sheetName&&tp.key)await loadRace(false);
+    if(name==='penalties')await loadPenalties();
+    ['inbox','race','outcomes','appeals','penalties'].forEach(k=>el('ticket-processing-'+k).hidden=k!==name);document.querySelectorAll('[data-ticket-processing-view]').forEach(b=>b.classList.toggle('active',b.dataset.ticketProcessingView===name));
+    // Imports, case edits and outcome preparation maintain numbering. Tab navigation only reads.
+    if(name==='race')renderRace();
+    if(name==='outcomes'){await exports(false);if(!publishedRows().length)await outcomes(false);else renderOutcomes();if(publishedRows().length&&window.F1XLAccess?.can('licences',1))await loadCompletion();}
+    if(name==='appeals'){await exports(false);renderAppeals();}
+    if(!activeTicketDialog())status(tp.key?'Ready · '+roundName():'Choose a round to continue.');
+  }
+  function inboxPollingActive(){return tp.loaded&&tp.view==='inbox'&&!document.hidden&&!el('view-ticket-processing').hidden&&!tp.loading&&!tp.busy&&!activeTicketDialog()&&!boardPending()&&!outcomePending();}
+  async function inbox(force,background){
+    const request=++inboxPoll.request,season=tp.season;inboxPoll.flight++;
+    try{
+      const d=await rpc('getTicketSubmissions',!!force);
+      if(request!==inboxPoll.request||season!==tp.season||background&&!inboxPollingActive())return;
+      const submissions=d.submissions||[];
+      if(background&&JSON.stringify(submissions)===JSON.stringify(tp.submissions))return;
+      const selected=new Set(Array.from(el('ticket-incoming-rows').querySelectorAll('[data-ticket-select]:checked')).map(e=>e.dataset.ticketSelect));
+      tp.submissions=submissions;renderDivisionFilter();renderInbox();
+      el('ticket-incoming-rows').querySelectorAll('[data-ticket-select]').forEach(e=>{e.checked=selected.has(e.dataset.ticketSelect);});
+    }finally{inboxPoll.flight--;}
+  }
+  function pollInbox(){
+    if(inboxPoll.flight||!inboxPollingActive())return;
+    // Bypass the two-minute source cache; no page reload, spinner or form render.
+    inbox(true,true).catch(()=>{});
+  }
+  setInterval(pollInbox,30000);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)pollInbox();});
+  function renderInbox(){const visible=filtered(tp.submissions,true).filter(t=>!el('ticket-inbox-type').value||typeOf(t)===el('ticket-inbox-type').value);el('ticket-inbox-count').textContent=tp.submissions.length?'('+tp.submissions.length+')':'';el('ticket-incoming-rows').innerHTML=visible.map(t=>'<tr><td>'+(typeOf(t)==='ticket'?'<input type="checkbox" aria-label="Select submission from '+esc(t.fromDriver)+'" data-ticket-select="'+esc(t.submissionRevision)+'">':'')+'</td><td>'+esc(t.received)+'</td><td>'+esc(t.type)+(t.session?'<small style="display:block">'+esc(t.session)+'</small>':'')+'</td><td>'+esc(t.division)+'</td><td>'+esc(t.fromDriver)+'</td><td>'+esc(t.againstDriver)+'</td><td>'+esc(relatedLabel(t))+'</td><td><button class="button" type="button" data-ticket-incoming="'+esc(t.id)+'">Review</button></td></tr>').join('');el('ticket-incoming-empty').hidden=!!visible.length;el('ticket-incoming-empty').textContent=tp.submissions.length?'No submissions match these filters.':'No unprocessed submissions.';}
+  function typeOf(t){return /appeal/i.test(t.type)?'appeal':/defen[cs]e/i.test(t.type)?'defence':'ticket';}
+  const normal=v=>String(v||'').trim().toLowerCase().replace(/\s+/g,' ');
+  function divisionOf(t){return String(t.division||'').trim();}
+  function matching(a,b){
+    if(divisionOf(a)!==divisionOf(b))return false;
+    const names=t=>[normal(t.fromDriver||t.submitter),normal(t.againstDriver||t.offender)].sort();
+    const x=names(a),y=names(b);return x.every(Boolean)&&x[0]===y[0]&&x[1]===y[1];
+  }
+  function relatedLabel(t){
+    if(typeOf(t)==='ticket'){const count=tp.submissions.filter(d=>typeOf(d)==='defence'&&matching(d,t)).length;return count?count+' possible defence'+(count===1?'':'s'):'';}
+    const count=(tp.race?.tickets||[]).filter(c=>matching(t,c)).length+tp.submissions.filter(c=>typeOf(c)==='ticket'&&matching(t,c)).length;
+    return count?count+' possible match'+(count===1?'':'es'):'Choose case';
+  }
+  function renderDivisionFilter(){const select=el('ticket-division-filter'),old=select.value;const values=Array.from(new Set(tp.submissions.concat(tp.race?.tickets||[]).map(divisionOf).filter(Boolean))).sort((a,b)=>Number(a)-Number(b));select.innerHTML='<option value="">All divisions</option>'+options(values,old);select.value=values.includes(old)?old:'';}
+  function filtered(items,incoming){
+    const div=el('ticket-division-filter').value,q=normal(el('ticket-list-search').value),order=el('ticket-list-order').value;
+    return items.filter(t=>(!div||divisionOf(t)===div)&&(!q||normal([t.fromDriver||t.submitter,t.againstDriver||t.offender,t.fromTeam||t.submitterTeam,t.againstTeam||t.offenderTeam,t.description,t.defenceComments,t.appealDescription,t.ticketNumber].join(' ')).includes(q))).slice().sort((a,b)=>{
+      if(order==='division')return Number(a.division)-Number(b.division)||(incoming?a.sourceRow-b.sourceRow:Number(a.ticketNumber)-Number(b.ticketNumber));
+      if(order==='from'||order==='against'){const value=t=>order==='from'?(t.fromDriver||t.submitter):(t.againstDriver||t.offender);return String(value(a)||'').localeCompare(String(value(b)||''),undefined,{numeric:true,sensitivity:'base'});}
+      const value=t=>incoming?t.sourceRow:Number(t.ticketNumber)||t.sheetRow;return (order==='oldest'?1:-1)*(value(a)-value(b));
+    });
+  }
+  function caseList(){return filtered(tp.race?.tickets||[],false).filter(t=>{const filter=el('ticket-review-filter').value,done=t.stewardVotes.every(v=>tp.race.round?['Submitted','Recused'].includes(v.state):v.penalty||v.comments);return !filter||filter==='no-defence'&&!t.defenceComments&&!t.defenceEvidence.some(Boolean)||filter==='complete'&&done||filter==='pending'&&!done;});}
+  function refreshLists(){renderPenalties();renderInbox();renderRace();renderOutcomes();renderExport();}
+  function invalidateRoundViews(){invalidateCompletion();tp.outcomes=null;tp.exportStale=true;tp.penaltyOptions=[];}
+  function targetCandidates(){return (tp.race?.tickets||[]).filter(t=>divisionOf(t)===divisionOf(tp.incoming)).map(t=>({key:String(t.sheetRow),ticket:t,pending:false})).concat((tp.race?.sheetName&&!tp.race.round?[]:tp.submissions).filter(t=>typeOf(t)==='ticket'&&divisionOf(t)===divisionOf(tp.incoming)).map(t=>({key:'inbox:'+t.id,ticket:t,pending:true})));}
+  function updateImportControls(){
+    el('ticket-import-message').textContent='';
+    const mode=el('ticket-import-mode').value,isTicket=mode==='ticket';el('ticket-import-target-field').hidden=isTicket;
+    const candidates=targetCandidates().sort((a,b)=>Number(matching(tp.incoming,b.ticket))-Number(matching(tp.incoming,a.ticket)));
+    el('ticket-import-target').innerHTML='<option value="">Choose the matching ticket…</option>'+candidates.map(c=>'<option value="'+esc(c.key)+'">'+(matching(tp.incoming,c.ticket)?'Suggested · ':'')+(c.pending?'Inbox · ':('#'+esc(c.ticket.ticketNumber)+' · '+esc(c.ticket.session||'')+' · '))+esc(c.ticket.fromDriver||c.ticket.submitter)+' v '+esc(c.ticket.againstDriver||c.ticket.offender)+'</option>').join('');
+    const likely=candidates.filter(c=>matching(tp.incoming,c.ticket));if(likely.length===1)el('ticket-import-target').value=likely[0].key;
+    el('ticket-match-hint').textContent=isTicket?relatedLabel(tp.incoming)+(relatedLabel(tp.incoming)?'. Process this ticket, then review and attach the defence.':''):'Check the round, drivers and incident below before attaching. A suggestion is not an automatic match.';
+    previewTarget();
+  }
+  function previewTarget(){
+    const isTicket=el('ticket-import-mode').value==='ticket',candidate=targetCandidates().find(c=>c.key===el('ticket-import-target').value);
+    const needsRound=isTicket||candidate?.pending,chosen=intakeRound(el('ticket-import-round').value),label=chosen?'S'+tp.season+' · R'+chosen.round+' · '+chosen.track:'';
+    el('ticket-import-round-field').hidden=!needsRound;el('ticket-import-round-warning').textContent=needsRound?intakeRoundWarning(chosen):'';
+    el('ticket-match-preview').innerHTML=!isTicket&&candidate?'<h3>'+(candidate.pending?'Original ticket still in inbox':'Selected ticket')+'</h3>'+evidence(candidate.ticket):'';
+    el('ticket-import-session').disabled=!!tp.incoming?.session||!isTicket&&!!candidate&&!candidate.pending;
+    if(tp.incoming?.session)el('ticket-import-session').value=tp.incoming.session;
+    else if(candidate&&!candidate.pending)el('ticket-import-session').value=candidate.ticket.session||'Race';
+    el('import-ticket-submission').disabled=!!needsRound&&!chosen;
+    el('import-ticket-submission').textContent=needsRound?(!chosen?'Choose destination round':isTicket?'Process into '+label:'Process ticket into '+label+' and attach '+el('ticket-import-mode').value):'Attach '+el('ticket-import-mode').value+' to '+roundName();
+  }
+  async function importIncoming(){
+    el('ticket-import-message').textContent='Processing…';
+    const item=tp.incoming,mode=el('ticket-import-mode').value,session=el('ticket-import-session').value,candidate=targetCandidates().find(c=>c.key===el('ticket-import-target').value);
+    const needsRound=mode==='ticket'||candidate?.pending,chosen=intakeRound(el('ticket-import-round').value);
+    if(needsRound&&!chosen)throw Error('Choose the destination round for this new ticket.');
+    if(needsRound&&intakeRoundWarning(chosen)&&!confirm('Add a late ticket to S'+tp.season+' · R'+chosen.round+' · '+chosen.track+'? This round already has published decisions.')){el('ticket-import-message').textContent='Nothing processed. Choose the correct destination round.';return;}
+    try{
+      if(needsRound&&tp.key!=='r:'+chosen.round)await selectRound('r:'+chosen.round);
+      let row=Number(el('ticket-import-target').value);
+      if(mode!=='ticket'&&candidate?.pending){await process(candidate.ticket,'ticket',candidate.ticket.session||session,0);const created=tp.race.tickets.filter(t=>t.sourceSubmissionId===candidate.ticket.submissionRevision);if(created.length!==1)throw Error('The original ticket was processed. Refresh and select its case before attaching the remaining material.');row=created[0].sheetRow;}
+      await process(item,mode,session,row);el('ticket-incoming-dialog').close();await inbox();status('Submission processed into '+roundName()+' and archived.');
+    }catch(e){try{await inbox();if(tp.race?.sheetName){tp.race=await rpc('getTicketRaceWorkspace',tp.race.sheetName,true);invalidateRoundViews();renderRace();}updateImportControls();}finally{el('ticket-import-message').textContent=e.message+' Any completed import is retained. Check the selected case and retry the remaining submission.';}throw e;}
+  }
+  function incoming(id){clearDialogFeedback('ticket-incoming-dialog');tp.incoming=tp.submissions.find(t=>t.id===id);if(!tp.incoming)return;el('ticket-incoming-detail').innerHTML='<p><strong>Division '+esc(tp.incoming.division)+'</strong></p>'+evidence(tp.incoming);el('ticket-import-round').innerHTML=intakeRoundOptions();el('ticket-import-round').value='';el('ticket-import-message').textContent='';el('ticket-import-mode').value=typeOf(tp.incoming);el('ticket-import-session').value=tp.incoming.session||'Race';updateImportControls();el('ticket-incoming-dialog').showModal();mark('ticket-incoming-dialog');}
+  async function process(item,mode,session,targetRow){await ensureRace();const target=tp.race.tickets.find(t=>t.sheetRow===targetRow);if(mode!=='ticket'&&!target)throw Error('Choose the existing case this material belongs to.');const request={sheetName:tp.race.sheetName,mode,session:item.session||session,targetRow,sourceSheetId:item.sourceSheetId,sourceRow:item.sourceRow,fingerprint:item.fingerprint,submissionRevision:item.submissionRevision,targetRevision:target?.recordRevision};try{tp.race=await rpc('importTicketSubmissionToRace',request);}catch(e){if(/already contains/i.test(e.message||'')&&confirm(e.message+'\nReplace it, retaining its history?'))tp.race=await rpc('importTicketSubmissionToRace',Object.assign(request,{overwrite:true}));else throw e;}invalidateRoundViews();renderRace();}
+  async function batch(){const selected=new Set(Array.from(document.querySelectorAll('[data-ticket-select]:checked')).map(e=>e.dataset.ticketSelect));const items=tp.submissions.filter(t=>selected.has(t.submissionRevision));if(!items.length)throw Error('Select one or more new tickets first.');const chosen=intakeRound(el('ticket-batch-round').value);if(!chosen)throw Error('Choose the destination round for the selected new tickets.');const session=el('ticket-batch-session').value,label='S'+tp.season+' · R'+chosen.round+' · '+chosen.track;if(!confirm('Process '+items.length+' new ticket(s) into '+label+' · '+(items.every(t=>t.session)?'submitted incident sessions':'submitted sessions where supplied; '+session+' for older entries')+'? '+(intakeRoundWarning(chosen)||'Check every selected ticket belongs to this round.')))return;if(tp.key!=='r:'+chosen.round)await selectRound('r:'+chosen.round);let count=0,failure='';for(const item of items){try{await process(item,'ticket',session,0);count++;}catch(e){failure=e.message||String(e);break;}}el('ticket-batch-round').value='';destination();await inbox();status(count+' processed into '+label+' and archived.'+(failure?' Stopped: '+failure+' Remaining submissions are still in the inbox.':''),!!failure);}
+  function progress(t,type){const votes=type==='appeal'?t.appealVotes:t.stewardVotes;return votes.filter(v=>tp.race.round?['Submitted','Recused'].includes(v.state):v.penalty||v.comments).length+' / '+votes.length;}
+  function renderRace(){const race=tp.race||blankRace();el('ticket-race-title').textContent=roundName();el('ticket-race-count').textContent=race.tickets.length+' tickets';renderDivisionFilter();renderBoard();const r=race.round||currentRound();el('ticket-weekly-reminders').hidden=true;el('ticket-edit-reminders').hidden=!r;if(r){const dates=[['Tickets / defence',r.closes],['Stewards',r.stewardsDue],['Appeals',r.appealsClose]].filter(p=>p[1]);el('ticket-weekly-reminders').hidden=!dates.length;el('ticket-reminder-summary').textContent=dates.length?dates.map(p=>p.join(': ')).join(' · ')+' (UK)':'';}renderAppeals();}
+  function renderTicketPublicConnection(){const feed=tp.publicFeed||{},button=el('ticket-connect-test-website');button.disabled=!(tp.setup&&(tp.setup.ready||tp.setup.navigationOnly&&tp.setup.connectionsReady));button.textContent=feed.mode==='direct'?'Check website connection':'Connect website';el('ticket-test-website-state').textContent=feed.pending?'Website update pending: '+(feed.error||'retry the connection.'):feed.mode==='direct'?'Connected directly to Website Export. Saved final outcomes and manual export edits appear when the website reloads.':'Connect the website to the existing Website Export tab.';}
+  function renderAppeals(){appealBoard.render();}
+  function renderAppealEvidence(t,board,panel){
+    const pub=publishedCase(t),tab=board.side;
+    const tabs=[['appeal','Appeal'],['original','Original ticket'],['original-decision','Original decision'],['decisions','Appeal reviews']];
+    const judgements=(votes,names)=>votes.map((v,i)=>'<section class="ticket-board-decision"><strong>'+esc(names[i].name)+'</strong><small>'+esc(v.state||'Draft')+' · '+esc(v.penalty||'—')+' · '+esc(v.timePenalty||'—')+'</small><p>'+esc(v.atFault||'No driver named')+'</p><p>'+prose(v.comments||'No saved reasoning yet.')+'</p></section>').join('');
+    let content='';
+    if(tab==='appeal')content='<div class="ticket-board-prose">'+prose(t.appealDescription||'No appeal comments attached.')+'</div><div class="toolbar">'+links(t.appealEvidence)+'</div>';
+    if(tab==='original')content=evidence(t);
+    if(tab==='original-decision')content=(pub?'<h3>Published outcome</h3><p><strong>'+esc(pub.outcome[0]||'No driver named')+' · '+esc(pub.outcome[2]||'—')+'</strong></p><div class="ticket-board-prose">'+prose(pub.outcome[3])+'</div><p>Time penalties: '+esc(t.submitter)+' '+esc(pub.outcome[6]||'—')+' · '+esc(t.offender)+' '+esc(pub.outcome[9]||'—')+'</p>':'<p>No published outcome for this ticket yet.</p>')+'<h3>Original steward judgements</h3>'+judgements(t.stewardVotes,tp.race.stewardReviewers);
+    if(tab==='decisions')content=judgements(t.appealVotes,tp.race.appealReviewers);
+    panel.innerHTML='<div class="toolbar"><strong>Appeal · ticket #'+esc(t.ticketNumber)+' · Division '+esc(t.division)+'</strong><button class="button" type="button" data-open-appeal="'+t.sheetRow+'">Full ticket</button></div><p>'+esc(t.submitter)+' · '+esc(t.submitterTeam)+'<br>'+esc(t.offender)+' · '+esc(t.offenderTeam)+'</p><div class="toolbar">'+tabs.map(([key,label])=>'<button class="button'+(tab===key?' active':'')+'" type="button" data-board-side="'+key+'" aria-pressed="'+(tab===key)+'">'+label+'</button>').join('')+'</div>'+
+      (board.mode==='head'?(pub?'<p><strong>Final appeal outcome</strong></p><div class="ticket-board-prose">'+prose(pub.appeal[4]||'Not recorded yet.')+'</div><button class="button" type="button" data-open-ticket-export="'+pub.sheetRow+'">'+(pub.appeal[4]?'View / amend decision':'Decide appeal')+'</button>':'<p>Publish the original outcome before recording its final appeal amendment.</p>'):'')+content;
+  }
+  function publishedCase(t){const matches=(tp.exportData?.tickets||[]).filter(p=>p.race===tp.race.sheetName&&(p.caseId&&t.caseId?p.caseId===t.caseId:p.ticketNumber===t.ticketNumber&&p.submitter===t.submitter&&p.offender===t.offender));return matches.length===1?matches[0]:null;}
+  function caseFor(t){const matches=(tp.race?.tickets||[]).filter(c=>t.caseId&&c.caseId?c.caseId===t.caseId:c.ticketNumber===t.ticketNumber&&c.submitter===t.submitter&&c.offender===t.offender);return matches.length===1?matches[0]:null;}
+  function comparison(t,type){if(!t)return '<p>Reviewer details unavailable for this record.</p>';const names=type==='appeal'?tp.race.appealReviewers:tp.race.stewardReviewers,votes=type==='appeal'?t.appealVotes:t.stewardVotes;return '<div class="table-scroll"><table><thead><tr><th>Reviewer</th><th>Penalty</th><th>Time</th><th>At fault</th><th>Reasoning</th><th>Status</th></tr></thead><tbody>'+votes.map((v,i)=>'<tr><td>'+esc(names[i].name)+'</td><td>'+esc(v.penalty||'—')+'</td><td>'+esc(v.timePenalty||'—')+'</td><td>'+esc(v.atFault||'—')+'</td><td style="white-space:pre-wrap">'+esc(v.comments)+'</td><td>'+esc(v.state||'—')+'</td></tr>').join('')+'</tbody></table></div>';}
+  function reviewFields(t,type){const names=type==='appeal'?tp.race.appealReviewers:tp.race.stewardReviewers,votes=type==='appeal'?t.appealVotes:t.stewardVotes;return '<div class="table-scroll"><table class="ticket-review-table"><thead><tr><th>Reviewer</th><th>Penalty / time</th><th>At fault</th><th>Reasoning</th><th>Completion</th><th></th></tr></thead><tbody>'+votes.map((v,i)=>{const prefix='tr-'+type+'-'+i;revisions.set(prefix,v.revision);return '<tr id="'+prefix+'"><td>'+esc(names[i].name)+'</td><td><select aria-label="Licence penalty" id="'+prefix+'-penalty">'+options(tp.race.options.penalties,v.penalty)+'</select><select aria-label="Time penalty" id="'+prefix+'-time">'+options(tp.race.options.timePenalties,v.timePenalty)+'</select></td><td><input aria-label="Driver at fault" id="'+prefix+'-fault" value="'+esc(v.atFault)+'">'+faultOptions(t,v.atFault,prefix)+'</td><td><textarea aria-label="Reasoning" rows="3" id="'+prefix+'-comments">'+esc(v.comments)+'</textarea></td><td>'+(tp.race.round?'<select aria-label="Review state" id="'+prefix+'-state">'+options(['Draft','Submitted','Recused'],v.state||'Draft')+'</select>':'')+'</td><td><button class="button" type="button" data-save-ticket-review="'+type+'" data-review-index="'+i+'">Save now</button><span id="'+prefix+'-saved" role="status"></span></td></tr>';}).join('')+'</tbody></table></div>';}
+  function caseTab(tab){tp.caseTab=tab;['evidence','steward','appeal'].forEach(k=>el('ticket-case-'+k).hidden=k!==tab);el('ticket-race-form').hidden=tab!=='edit';document.querySelectorAll('[data-ticket-case-tab]').forEach(b=>b.classList.toggle('active',b.dataset.ticketCaseTab===tab));}
+  function caseDirty(){return dirty('ticket-race-form')||Array.from(revisions.keys()).some(k=>el(k)&&dirty(k));}
+  function leaveCase(){return !caseDirty()||confirm('Discard unsaved ticket or review changes?');}
+  function openRaceTicket(row,tab){if(el('ticket-race-dialog').open&&!leaveCase())return;clearDialogFeedback('ticket-race-dialog');el('ticket-discard-changes').hidden=true;const t=row?tp.race.tickets.find(c=>c.sheetRow===row):{sheetRow:0,ticketNumber:'New',division:'',session:'',submitter:'',submitterTeam:'',offender:'',offenderTeam:'',description:'',evidence:[],defenceComments:'',defenceEvidence:[],appealed:'',appealDescription:'',appealEvidence:[],stewardVotes:[],appealVotes:[]};if(!t)return;tp.edit=JSON.parse(JSON.stringify(t));if(!tp.caseQueue?.includes(row))tp.caseQueue=(tab==='appeal'?filtered(tp.race.tickets,false).filter(c=>/^yes$/i.test(c.appealed)):caseList()).map(c=>c.sheetRow);revisions.clear();el('ticket-race-dialog-title').textContent='Ticket #'+t.ticketNumber;el('ticket-race-dialog-meta').textContent=roundName();el('ticket-case-evidence').innerHTML=evidence(t);el('ticket-case-steward').innerHTML=row?reviewFields(t,'steward'):'';const pub=publishedCase(t);if(pub)el('ticket-case-evidence').insertAdjacentHTML('beforeend',publishedCarryActions(pub));el('ticket-case-appeal').innerHTML=appealEvidence(t)+(pub?'<p><strong>Original outcome: '+esc(pub.outcome[2])+'</strong></p><p>'+esc(pub.outcome[3])+'</p><p>Appeal decision: '+esc(pub.appeal[4]||'Not recorded')+'</p>':'')+(row&&/^yes$/i.test(t.appealed)?reviewFields(t,'appeal'):'');let html=textField('Division','tr-division',t.division)+'<label>Incident session<select id="tr-session">'+options(['Race','Qualifying','Sprint','Sprint qualifying'],t.session,true)+'</select></label>'+textField('Submitter','tr-submitter',t.submitter)+textField('Submitter team','tr-submitter-team',t.submitterTeam)+textField('Against','tr-offender',t.offender)+textField('Other team','tr-offender-team',t.offenderTeam)+areaField('Ticket description','tr-description',t.description);for(let i=0;i<4;i++)html+=textField('Evidence '+(i+1),'tr-evidence-'+i,t.evidence[i]||'',true);html+=areaField('Defence comments','tr-defence',t.defenceComments);for(let i=0;i<4;i++)html+=textField('Defence evidence '+(i+1),'tr-defence-evidence-'+i,t.defenceEvidence[i]||'',true);html+=textField('Appealed?','tr-appealed',t.appealed)+areaField('Appeal description','tr-appeal-description',t.appealDescription);for(let i=0;i<3;i++)html+=textField('Appeal evidence '+(i+1),'tr-appeal-evidence-'+i,t.appealEvidence[i]||'',true);el('ticket-race-form-fields').innerHTML=html;el('delete-ticket-race-record').hidden=!row;mark('ticket-race-form');revisions.forEach((v,k)=>mark(k));caseTab(row?(tab||'evidence'):'edit');if(!el('ticket-race-dialog').open)el('ticket-race-dialog').showModal();el('ticket-save-changes').hidden=!row;el('ticket-race-dialog').scrollTop=0;}
+  function raceRecordFromForm() { const evidence=[],defenceEvidence=[],appealEvidence=[]; for(let i=0;i<4;i++){evidence.push(byId('tr-evidence-'+i).value);defenceEvidence.push(byId('tr-defence-evidence-'+i).value);} for(let i=0;i<3;i++) appealEvidence.push(byId('tr-appeal-evidence-'+i).value); return {division:byId('tr-division').value,session:byId('tr-session').value,submitter:byId('tr-submitter').value,submitterTeam:byId('tr-submitter-team').value,offender:byId('tr-offender').value,offenderTeam:byId('tr-offender-team').value,description:byId('tr-description').value,evidence:evidence,defenceComments:byId('tr-defence').value,defenceEvidence:defenceEvidence,appealed:byId('tr-appealed').value,appealDescription:byId('tr-appeal-description').value,appealEvidence:appealEvidence}; }
+
+
+  function faultOptions(t,value,prefix){const chosen=String(value||'').split(';').map(v=>v.trim());return '<div class="ticket-fault-options">'+Array.from(new Set([t.submitter,t.offender].filter(Boolean))).map(name=>'<label><input type="checkbox" data-ticket-fault="'+prefix+'" value="'+esc(name)+'"'+(chosen.includes(name)?' checked':'')+'>'+esc(name)+'</label>').join('')+'</div>';}
+  function reviewRequest(type,i){const prefix='tr-'+type+'-'+i;return {sheetName:tp.race.sheetName,sheetRow:tp.edit.sheetRow,caseId:tp.edit.caseId,recordRevision:tp.edit.recordRevision,reviewType:type,reviewerIndex:i,reviewerName:(type==='appeal'?tp.race.appealReviewers:tp.race.stewardReviewers)[i].name,revision:revisions.get(prefix),review:{penalty:el(prefix+'-penalty').value,timePenalty:el(prefix+'-time').value,atFault:el(prefix+'-fault').value,comments:el(prefix+'-comments').value,state:el(prefix+'-state')?.value||'Draft'}};}
+  function refreshTicketBoards(){renderBoard();renderAppeals();}
+  function mergeTicketWorkspace(current,data,key){
+    if(!data.partial)return data;
+    if(!current||current[key]!==data[key])throw Error('The round changed while saving. Reopen it to check the saved changes.');
+    const tickets=current.tickets.filter(t=>!data.presentRows||data.presentRows.includes(t.sheetRow)).slice();
+    for(const saved of data.tickets){const index=tickets.findIndex(t=>saved.caseId?t.caseId===saved.caseId:t.sheetRow===saved.sheetRow);if(index<0)tickets.push(saved);else tickets[index]=saved;}
+    const merged={...current,...data,tickets:tickets.sort((a,b)=>Number(a.division)-Number(b.division)||Number(a.ticketNumber)-Number(b.ticketNumber))};
+    delete merged.partial;delete merged.presentRows;return merged;
+  }
+  function acceptReviews(data,requests){tp.race=mergeTicketWorkspace(tp.race,data,'sheetName');invalidateRoundViews();const saved=data.tickets.find(t=>t.caseId&&t.caseId===tp.edit.caseId||!t.caseId&&t.sheetRow===tp.edit.sheetRow);if(!saved)throw Error('The saved ticket moved. Reopen this round.');requests.forEach(request=>{const type=request.reviewType,i=request.reviewerIndex,prefix='tr-'+type+'-'+i,key=type==='appeal'?'appealVotes':'stewardVotes',vote=saved[key][i];revisions.set(prefix,vote.revision);tp.edit[key][i]=vote;mark(prefix);el(prefix+'-saved').textContent=' Saved';el('ticket-discard-changes').hidden=true;});tp.edit.fullRevision=saved.fullRevision;refreshTicketBoards();}
+  async function saveReview(button){const request=reviewRequest(button.dataset.saveTicketReview,Number(button.dataset.reviewIndex));acceptReviews(await rpc('saveTicketReview',request),[request]);status('Review saved.');}
+  async function saveChangedReviews(){const requests=[];['steward','appeal'].forEach(type=>{for(let i=0;i<5;i++){const prefix='tr-'+type+'-'+i;if(el(prefix)&&dirty(prefix))requests.push(reviewRequest(type,i));}});if(!requests.length)return;dialogFeedback(el('ticket-race-dialog'),'Saving…','busy');acceptReviews(await rpc('saveTicketReviews',{sheetName:tp.race.sheetName,reviews:requests}),requests);status('Reviews saved.');}
+  async function saveTicketChanges(){if(dirty('ticket-race-form'))await saveCase();if(tp.edit.sheetRow)await saveChangedReviews();}
+  async function moveCase(delta){const queue=tp.caseQueue||[],index=queue.indexOf(tp.edit.sheetRow),row=queue[index+delta];await saveTicketChanges();if(row)openRaceTicket(row,tp.caseTab);else status('Changes saved. No more tickets in this selection.');}
+  function renderConflicts(){const i=Number(el('ticket-conflicts-reviewer').value),team=el('ticket-conflicts-team').value;const rows=(tp.race?.tickets||[]).filter(t=>(tp.conflictType!=='appeal'||/^yes$/i.test(t.appealed))&&team&&[t.submitterTeam,t.offenderTeam].some(v=>normal(v)===normal(team)));el('ticket-conflicts-rows').innerHTML=rows.map(t=>{const vote=t[tp.conflictType==='appeal'?'appealVotes':'stewardVotes'][i],saved=[vote.penalty,vote.timePenalty,vote.atFault,vote.comments].some(Boolean);return '<tr><td><input type="checkbox" data-conflict-row="'+t.sheetRow+'"'+(vote.state==='Recused'?' disabled':saved?'':' checked')+'></td><td>#'+esc(t.ticketNumber)+'</td><td>'+esc(t.division)+'</td><td>'+esc(t.submitter)+' / '+esc(t.offender)+'</td><td>'+esc(vote.state==='Recused'?'Already recused':saved?'Existing judgement — will be replaced':'Not reviewed')+'</td></tr>';}).join('')||'<tr><td colspan="5">Choose a team with tickets in this round.</td></tr>';}
+  async function saveConflicts(){const i=Number(el('ticket-conflicts-reviewer').value),selected=Array.from(el('ticket-conflicts-rows').querySelectorAll('[data-conflict-row]:checked')).map(e=>tp.race.tickets.find(t=>t.sheetRow===Number(e.dataset.conflictRow)));const existing=selected.filter(t=>{const v=t[tp.conflictType==='appeal'?'appealVotes':'stewardVotes'][i];return [v.penalty,v.timePenalty,v.atFault,v.comments].some(Boolean);});if(existing.length&&!confirm('Replace '+existing.length+' existing judgement(s) with own-team recusals? Their previous contents will be retained in history.'))return;tp.race=await rpc('saveTicketConflicts',{reviewType:tp.conflictType||'steward',sheetName:tp.race.sheetName,reviewerIndex:i,reviewerName:tp.race[tp.conflictType==='appeal'?'appealReviewers':'stewardReviewers'][i].name,team:el('ticket-conflicts-team').value,replaceExisting:!!existing.length,tickets:selected.map(t=>({sheetRow:t.sheetRow,caseId:t.caseId,recordRevision:t.recordRevision,revision:t[tp.conflictType==='appeal'?'appealVotes':'stewardVotes'][i].revision}))});invalidateRoundViews();renderRace();renderConflicts();status(selected.length+' own-team recusals saved.');}
+  function reconcileReviews(saved){
+    ['steward','appeal'].forEach(type=>{const key=type==='appeal'?'appealVotes':'stewardVotes';saved[key].forEach((vote,i)=>{
+      const prefix='tr-'+type+'-'+i;if(!el(prefix))return;const old=tp.edit[key][i],fields=['penalty','timePenalty','atFault','comments'];
+      const changed=fields.some(k=>old[k]!==vote[k]);
+      if(!dirty(prefix)){
+        [['penalty','penalty'],['time','timePenalty'],['fault','atFault'],['comments','comments'],['state','state']].forEach(([suffix,k])=>{if(el(prefix+'-'+suffix))el(prefix+'-'+suffix).value=vote[k]|| (suffix==='state'?'Draft':'');});
+        el(prefix).querySelectorAll('[data-ticket-fault]').forEach(c=>c.checked=String(vote.atFault||'').split(';').map(v=>v.trim()).includes(c.value));mark(prefix);revisions.set(prefix,vote.revision);tp.edit[key][i]=vote;
+      }else if(!changed){
+        // A case edit resets completion, but must retain the user's other unsaved fields.
+        if(el(prefix+'-state')){el(prefix+'-state').value=vote.state||'Draft';const oldValues=JSON.parse(baseline.get(prefix));oldValues.forEach(pair=>{if(pair[0]===prefix+'-state')pair[1]=vote.state||'Draft';});baseline.set(prefix,JSON.stringify(oldValues));}
+        revisions.set(prefix,vote.revision);tp.edit[key][i]=vote;
+      }
+      el(prefix+'-saved').textContent=changed&&dirty(prefix)?' Changed elsewhere; reopen before saving.':'';
+    });});
+  }
+  async function saveCase(){const old=tp.edit,record=raceRecordFromForm(),d=await rpc(old.sheetRow?'saveTicketRaceRecord':'addTicketRaceRecord',{sheetName:tp.race.sheetName,sheetRow:old.sheetRow,revision:old.recordRevision,record});tp.race=d;invalidateRoundViews();const saved=old.sheetRow?d.tickets.find(t=>t.sheetRow===old.sheetRow):d.tickets.find(t=>!(tp.beforeAdd||[]).includes(t.sheetRow));if(saved){if(old.sheetRow)reconcileReviews(saved);tp.edit.recordRevision=saved.recordRevision;tp.edit.fullRevision=saved.fullRevision;el('ticket-case-evidence').innerHTML=evidence(saved);}mark('ticket-race-form');refreshTicketBoards();status('Ticket details saved. Changed evidence reopens reviews as Draft.');if(!old.sheetRow){el('ticket-race-dialog').close();if(saved)openRaceTicket(saved.sheetRow);}}
+  async function outcomes(force){if(!tp.race?.sheetName){tp.outcomes=null;renderOutcomes();return;}if(!force&&tp.outcomes?.sourceRace===tp.race.sheetName){renderOutcomes();return;}tp.outcomes=await rpc('getTicketRoundOutcomes',{sheetName:tp.race.sheetName});renderOutcomes();}
+  function renderOutcomes(){if(publishedRows().length){renderExport();outcomePublicationState();return;}el('ticket-published-outcomes').hidden=true;const d=tp.outcomes,ready=d&&!d.needsOpen;el('ticket-outcome-title').textContent='Final decisions · '+roundName();el('prepare-ticket-outcomes').hidden=!!ready||!tp.race?.sheetName;el('prepare-ticket-outcomes').textContent=d?.saved?'Continue final decisions':'Start final decisions';el('publish-ticket-outcomes').hidden=!ready;el('ticket-outcome-message').textContent=!tp.race?.sheetName?'Process this round’s tickets first.':!ready?(d?.saved?'Saved decisions are retained. Resume them when ready.':'Complete the steward reviews, then prepare this round’s outcomes.'):'Drafts save automatically. Finish decisions when ready to publish this round and update its licences.';renderOutcomeBoard();}
+  function timeControl(label,attributes,value,disabled){
+    const raw=String(value==null?'':value).trim(),number=parseFloat(raw),remove=number<0,amount=Number.isFinite(number)?Math.abs(number):'',off=disabled?' disabled':'';
+    return '<label data-ticket-time>'+esc(label)+'<span style="display:flex;gap:4px"><select aria-label="Time action for '+esc(label)+'" data-time-direction'+off+'><option value="add"'+(!remove?' selected':'')+'>Add seconds</option><option value="remove"'+(remove?' selected':'')+'>Remove seconds</option></select><input aria-label="Seconds for '+esc(label)+'" data-time-amount type="number" min="0" step="any" value="'+amount+'" placeholder="0"'+off+'></span><input type="hidden" data-time-value '+attributes+' value="'+esc(raw)+'"'+off+'></label>';
+  }
+  function timeControlSync(field){
+    const wrap=field.closest('[data-ticket-time]');if(!wrap)return;
+    const amount=wrap.querySelector('[data-time-amount]'),direction=wrap.querySelector('[data-time-direction]'),n=parseFloat(field.value);
+    amount.disabled=direction.disabled=field.disabled;
+    if(document.activeElement!==amount&&document.activeElement!==direction){amount.value=Number.isFinite(n)?Math.abs(n):'';direction.value=n<0?'remove':'add';}
+  }
+  document.addEventListener('input',event=>{
+    if(!event.target.matches('[data-time-amount],[data-time-direction]'))return;
+    const wrap=event.target.closest('[data-ticket-time]'),field=wrap.querySelector('[data-time-value]'),amount=wrap.querySelector('[data-time-amount]').value;
+    field.value=amount===''?'':(wrap.querySelector('[data-time-direction]').value==='remove'&&Number(amount)?'-':'')+amount;
+    field.dispatchEvent(new Event('input',{bubbles:true}));
+  },true);
+  function ticketTimeText(p){return (p.seconds||0)+' sec added'+(p.removedSeconds?' · Remove '+p.removedSeconds+' sec from result':p.previousRemovedSeconds?' · Cancel previous '+p.previousRemovedSeconds+' sec removal':'');}
+  function extraPenaltyFields(prefix,rows){return '<fieldset class="wide"><legend>Additional drivers receiving penalties</legend><div id="'+prefix+'-extra-rows">'+(rows||[]).map((p,i)=>extraPenaltyRow(prefix,p,i)).join('')+'</div><button class="button" type="button" data-add-extra-penalty="'+prefix+'">Add another driver</button></fieldset>';}
+  function extraPenaltyRow(prefix,p,i){const id=prefix+'-extra-'+i;const drivers=Array.from(new Set((tp.outcomes?.drivers||[]).concat(tp.race?.tickets.flatMap(t=>[t.submitter,t.offender])||[],p.driver||'').filter(Boolean)));const penalties=tp.outcomes?.penalties.map(p=>p.label)||tp.penaltyOptions||[];return '<div class="ticket-extra-penalty" data-extra-penalty="'+prefix+'"><label>Driver<input id="'+id+'-driver" data-extra-field="driver" list="'+id+'-names" value="'+esc(p.driver||'')+'"><datalist id="'+id+'-names">'+options(drivers,'')+'</datalist></label><label>Licence penalty<select id="'+id+'-penalty" data-extra-field="penalty">'+options(Array.from(new Set(penalties.concat(p.penalty||'').filter(Boolean))),p.penalty,true)+'</select></label>'+timeControl('Time adjustment','id="'+id+'-time" data-extra-field="timePenalty"',p.timePenalty)+'<button type="button" class="button" data-remove-extra-penalty>Remove</button></div>';}
+  function readExtraPenalties(prefix){return Array.from(el(prefix+'-extra-rows').querySelectorAll('[data-extra-penalty]')).map(row=>Object.fromEntries(Array.from(row.querySelectorAll('[data-extra-field]')).map(e=>[e.dataset.extraField,e.value])));}
+  let extraSequence=100;
+  ['ticket-outcome-dialog','ticket-export-dialog'].forEach(id=>el(id).addEventListener('click',e=>{const add=e.target.closest('[data-add-extra-penalty]'),remove=e.target.closest('[data-remove-extra-penalty]');if(add){const prefix=add.dataset.addExtraPenalty;el(prefix+'-extra-rows').insertAdjacentHTML('beforeend',extraPenaltyRow(prefix,{},++extraSequence));}if(remove)remove.closest('[data-extra-penalty]').remove();}));
+  function openOutcome(row){clearDialogFeedback('ticket-outcome-dialog');const t=tp.outcomes.tickets.find(t=>t.sheetRow===row);if(!t)return;tp.outcome=t;el('ticket-outcome-dialog-title').textContent='Outcome · ticket #'+t.ticketNumber;el('ticket-outcome-dialog-meta').textContent=roundName();el('ticket-outcome-context').innerHTML=evidence(t)+'<h3>Steward decisions</h3>'+comparison(caseFor(t),'steward');el('ticket-outcome-form-fields').innerHTML='<label>Driver punished<select id="to-driver">'+options(Array.from(new Set(tp.outcomes.drivers.concat([t.driverPunished,t.submitter,t.offender]).filter(Boolean))),t.driverPunished,true)+'</select></label><label>Licence penalty<select id="to-penalty">'+options(tp.outcomes.penalties.map(p=>p.label),t.penalty,true)+'</select></label>'+areaField('Evaluation','to-evaluation',t.evaluation)+timeControl('Submitter time adjustment','id="to-submitter-penalty"',t.submitterPenalty)+timeControl('Other driver time adjustment','id="to-offender-penalty"',t.offenderPenalty)+extraPenaltyFields('to',t.additionalPenalties)+'<p class="wide">Calculated points: '+esc(t.points)+' · Submitter total: '+esc(t.submitterPoints)+' · Other driver total: '+esc(t.offenderPoints)+'</p>';mark('ticket-outcome-form');el('ticket-outcome-dialog').showModal();}
+  async function saveOutcome(){invalidateCompletion();const row=tp.outcome.sheetRow;tp.outcomes=await rpc('saveTicketOutcome',{sourceRace:tp.race.sheetName,sheetRow:row,revision:tp.outcome.revision,outcome:{driverPunished:el('to-driver').value,penalty:el('to-penalty').value,evaluation:el('to-evaluation').value,submitterPenalty:el('to-submitter-penalty').value,offenderPenalty:el('to-offender-penalty').value,additionalPenalties:readExtraPenalties('to')}});tp.outcome=tp.outcomes.tickets.find(t=>t.sheetRow===row)||tp.outcome;mark('ticket-outcome-form');renderOutcomes();status('Outcome saved. Check it, then close this window when ready.');}
+  async function exports(force){if(!force&&tp.exportData&&!tp.exportStale){renderExport();return;}tp.exportData=await rpc('getWebsiteTicketExport',true);tp.exportStale=false;tp.penaltyOptions=tp.exportData.penalties||[];renderExport();}
+  function publishedRows(){return (tp.exportData?.tickets||[]).filter(t=>t.race===tp.race?.sheetName);}
+  function publishedCarryActions(t){
+    if(!window.F1XLAccess?.can('licences',2)||!t.caseId)return '';
+    const source=caseFor(t);if(source&&!/^(race|feature race|sprint|sprint race)$/i.test(source.session||''))return '';
+    return appealRows(t.outcome,t.additionalPenalties,t).filter(p=>p.seconds>0).map(p=>'<p><button class="button" type="button" data-published-carry="'+esc(t.caseId)+'" data-carry-race="'+esc(t.race)+'" data-carry-name="'+esc(p.driver)+'">Record carry-over · '+esc(p.driver)+' · '+p.seconds+'s</button></p>').join('');
+  }
+  document.addEventListener('click',event=>{const b=event.target.closest('[data-published-carry]');if(!b)return;work(async()=>{if((el('ticket-race-dialog').open&&caseDirty())||(el('ticket-export-dialog').open&&dirty('ticket-export-form')))throw Error('Save the ticket changes first, then record its carry-over.');await window.F1XLLicence.openFromTicket({raceName:b.dataset.carryRace,caseId:b.dataset.publishedCarry,driver:b.dataset.carryName});});});
+  function renderExport(){const rows=filtered(publishedRows(),false);el('ticket-published-outcomes').hidden=!publishedRows().length;el('ticket-export-rows').innerHTML=rows.map(t=>'<tr><td>'+esc(t.ticketNumber)+'</td><td>'+esc(t.submitter)+'</td><td>'+esc(t.offender)+'</td><td>'+esc(t.outcome[2])+'</td><td>'+esc(t.appeal[4]||'—')+'</td><td><button class="button" type="button" data-open-ticket-export="'+t.sheetRow+'">View / amend decision</button></td></tr>').join('');el('ticket-export-empty').textContent=rows.length?'':'No published decisions match these filters.';outcomePublicationState();}
+  let appealEditor=null;
+  function appealRows(outcome,extras,t){
+    const rows=[{driver:outcome[0]||t.offender,penalty:outcome[2],points:Number(outcome[1]||0),seconds:0}].concat((extras||[]).map(p=>({driver:p.driver,penalty:p.penalty,points:Number(p.points||0),seconds:Number(String(p.timePenalty||0).replace(/\s*(s|sec|seconds?)$/i,''))||0})));
+    [[t.submitter,outcome[6]],[t.offender,outcome[9]]].forEach(([name,v])=>{const seconds=Number(String(v||0).replace(/\s*(s|sec|seconds?)$/i,''))||0;let p=rows.find(p=>p.driver.toLowerCase()===name.toLowerCase());if(!p&&seconds){p={driver:name,penalty:'No Further Action',points:0,seconds:0};rows.push(p);}if(p&&seconds)p.seconds=seconds;});return rows;
+  }
+  function appealChoice(label){const choices=appealEditor.detail.penalties,key=String(label||'').toLowerCase();return choices.find(p=>p.label.toLowerCase()===key)||choices.slice().sort((a,b)=>b.label.length-a.label.length).find(p=>key.startsWith(p.label.toLowerCase()))||choices.find(p=>/qual.*ban/i.test(key)&&/qual.*ban/i.test(p.label));}
+  function appealReadRows(){return Array.from(el('te-recipients').querySelectorAll('[data-appeal-recipient]')).map(r=>({driver:r.querySelector('[data-ar="driver"]').value,penalty:r.querySelector('[data-ar="penalty"]').value,seconds:r.querySelector('[data-ar="seconds"]').value}));}
+  function appealPreview(){
+    const e=appealEditor;if(!e)return;let rows=e.mode==='changed'?appealReadRows():e.mode==='overturned'?[]:appealRows(e.detail.original.outcome,e.detail.original.additionalPenalties,e.detail.ticket);
+    const applied=e.detail.applied||[],names=Array.from(new Set(rows.map(p=>p.driver).concat(applied.map(p=>p.driver)))).filter(Boolean);let resultChange=false;
+    const html=names.map(name=>{const p=rows.find(p=>p.driver.toLowerCase()===name.toLowerCase()),old=applied.filter(p=>p.driver.toLowerCase()===name.toLowerCase()),points=p?(e.mode==='changed'?e.detail.penalties.find(g=>g.label===p.penalty)?.points:Number(p.points||0)):0,seconds=p?Number(p.seconds||0):0,beforePoints=old.reduce((a,p)=>a+p.points,0),beforeTime=old.reduce((a,p)=>a+(p.removedSeconds?-p.removedSeconds:p.seconds),0),ban=p&&/ban/i.test(p.penalty)?p.penalty:'None',beforeBan=old.map(p=>p.ban).filter(Boolean).join(', ')||'None';resultChange=resultChange||seconds!==beforeTime;return '<div><strong>'+esc(name)+'</strong><span>'+esc(beforePoints)+' → '+esc(points==null?'choose penalty':points)+' licence points · '+esc(beforeTime)+' → '+esc(seconds)+' seconds'+(beforeBan!==ban?' · Ban: '+esc(beforeBan)+' → '+esc(ban):'')+'</span></div>';}).join('');
+    el('te-impact').innerHTML=(html||'<p>No licence penalties from this ticket.</p>')+'<p class="secondary-line">These are this ticket’s contributions. Other tickets and manual licence entries stay in place.</p>'+(resultChange?'<p class="te-manual">Review race finishing times and positions manually after saving.</p>':'');
+    el('te-recipients').querySelectorAll('[data-appeal-recipient]').forEach(r=>{const p=e.detail.penalties.find(p=>p.label===r.querySelector('[data-ar="penalty"]').value);r.querySelector('[data-ar-points]').textContent=p?p.points+' licence points'+(/ban/i.test(p.label)?' · '+p.label:''): 'Choose a licence penalty';});
+  }
+  function appealRenderRows(rows){
+    const e=appealEditor,editable=e.mode==='changed';
+    el('te-recipients').innerHTML=rows.map((p,i)=>{const choice=appealChoice(p.penalty),names=Array.from(new Set(e.detail.drivers.concat(p.driver||'').filter(Boolean)));return '<div class="te-recipient" data-appeal-recipient><div class="te-fields"><label>Driver<select data-ar="driver"'+(editable?'':' disabled')+'>'+options(names,p.driver,true)+'</select></label><label>Licence penalty / ban<select data-ar="penalty"'+(editable?'':' disabled')+'>'+options(e.detail.penalties.map(p=>p.label),choice?.label,true)+'</select></label>'+timeControl('Time adjustment','data-ar="seconds"',p.seconds||0,!editable)+'</div><div class="te-recipient-foot"><span data-ar-points></span>'+(i&&editable?'<button class="button" type="button" data-remove-appeal-driver="'+i+'">Remove</button>':'')+'</div></div>';}).join('');
+    el('te-add-driver').hidden=!editable;el('te-recipients').querySelectorAll('input,select').forEach(n=>n.oninput=()=>appealPreview());
+    el('te-recipients').querySelectorAll('[data-remove-appeal-driver]').forEach(b=>b.onclick=()=>{const rows=appealReadRows();rows.splice(Number(b.dataset.removeAppealDriver),1);appealRenderRows(rows);});appealPreview();
+  }
+  function appealSetMode(mode){
+    const e=appealEditor;if(e.mode==='changed')e.draft=appealReadRows();e.mode=mode;el('te-mode').value=mode;
+    el('ticket-export-form-fields').querySelectorAll('[data-appeal-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.appealMode===mode)));
+    const rows=mode==='changed'?e.draft:mode==='overturned'?[{driver:e.detail.ticket.outcome[0]||e.detail.ticket.offender,penalty:'No Further Action',seconds:0}]:appealRows(e.detail.original.outcome,e.detail.original.additionalPenalties,e.detail.ticket);
+    appealRenderRows(rows);
+  }
+  async function openExport(row){
+    clearDialogFeedback('ticket-export-dialog');const t=tp.exportData.tickets.find(t=>t.sheetRow===row);if(!t||t.race!==tp.race.sheetName)return;
+    tp.published=t;appealEditor=null;el('ticket-export-dialog-title').textContent='Ticket #'+t.ticketNumber+' · Final decision';el('ticket-export-dialog-meta').textContent=roundName();el('ticket-export-context').innerHTML='';el('ticket-export-form-fields').innerHTML='<p>Loading decision…</p>';el('save-ticket-export').disabled=true;if(!el('ticket-export-dialog').open)el('ticket-export-dialog').showModal();
+    const detail=await rpc('getWebsiteTicketExport',true,row);if(!el('ticket-export-dialog').open||tp.published.sheetRow!==row)return;
+    tp.published=detail.ticket;const c=caseFor(detail.ticket),original=detail.original;el('ticket-export-dialog-meta').textContent=roundName()+' · Division '+detail.ticket.division+(c?.session?' · '+c.session:'');
+    appealEditor={detail:detail,mode:'',draft:appealRows(detail.ticket.outcome,detail.ticket.additionalPenalties,detail.ticket)};
+    el('ticket-export-context').innerHTML='<div class="te-context"><details><summary>Original ticket</summary>'+evidence(detail.ticket)+'</details><details><summary>Appeal &amp; evidence</summary>'+(c?appealEvidence(c):'<p>'+prose(detail.ticket.appeal[1])+'</p>'+links([detail.ticket.appeal[2]]))+'</details><details><summary>Team reviews</summary>'+(c?comparison(c,'appeal'):'<p>No individual appeal reviews recorded.</p>')+'</details></div><div class="te-original"><span>'+esc(original.label)+'</span><strong>'+esc(original.outcome[0])+' · '+esc(original.outcome[2])+'</strong><span>'+esc(original.outcome[1]||0)+' licence points · '+esc(appealRows(original.outcome,original.additionalPenalties,detail.ticket).map(p=>p.driver+': '+p.seconds+' seconds').join(' · '))+'</span></div>';
+    el('ticket-export-form-fields').innerHTML='<input id="te-mode" type="hidden"><div class="te-modes wide">'+[['upheld','Upheld','Keep the original penalty'],['changed','Changed','Set the final penalty below'],['overturned','Overturned','Remove this ticket’s penalties']].map(p=>'<button class="button" type="button" data-appeal-mode="'+p[0]+'" aria-pressed="false"><strong>'+p[1]+'</strong><span>'+p[2]+'</span></button>').join('')+'</div><section class="te-final wide"><h3>Final penalty</h3><div id="te-recipients"></div><button class="button" type="button" id="te-add-driver">Add another driver</button></section>'+areaField('Appeal reasoning · shown with the public outcome','te-appeal-3',detail.ticket.appeal[3]||'')+'<section class="te-impact wide"><h3>What will change</h3><div id="te-impact" aria-live="polite"></div></section><button class="button" type="button" id="ticket-export-licences">Open licence / result adjustments</button><div id="ticket-decision-carryovers">'+publishedCarryActions(detail.ticket)+'</div>';
+    el('ticket-export-form-fields').querySelectorAll('[data-appeal-mode]').forEach(b=>b.onclick=()=>appealSetMode(b.dataset.appealMode));
+    el('te-add-driver').onclick=()=>{const rows=appealReadRows();rows.push({driver:'',penalty:'No Further Action',seconds:0});appealRenderRows(rows);};
+    el('ticket-export-licences').onclick=()=>work(async()=>{if(dirty('ticket-export-form'))throw Error('Save this decision first, or close and discard your edits.');el('ticket-export-dialog').close();await view('penalties');});
+    appealSetMode(detail.ticket.appeal[4]?'changed':'upheld');mark('ticket-export-form');el('save-ticket-export').disabled=false;el('save-ticket-export').textContent=detail.canApply?'Save appeal & update licence':'Save appeal';
+    if(!detail.canApply)status('You can save the decision. An admin with licence access will need to apply the penalty changes.');
+  }
+  async function saveExport(){
+    if(!appealEditor)throw Error('Wait for the decision to load.');
+    const e=appealEditor,t=e.detail.ticket;
+    const data=await rpc('savePublishedTicketAppeal',{sheetRow:t.sheetRow,caseId:t.caseId,raceName:t.race,revision:t.revision,applyPenalties:e.detail.canApply,decision:{mode:e.mode,recipients:appealReadRows(),reason:el('te-appeal-3').value,appealed:/^yes$/i.test(t.appeal[0])||/^yes$/i.test(caseFor(t)?.appealed||'')}});
+    invalidateCompletion();tp.exportData=data;tp.published=data.tickets.find(p=>p.sheetRow===t.sheetRow)||tp.published;e.detail=data.decisionContext||e.detail;el('ticket-decision-carryovers').innerHTML=publishedCarryActions(e.detail.ticket);if(data.transfer){penalties=data.transfer;renderPenalties();}mark('ticket-export-form');renderExport();renderAppeals();appealPreview();const applied=data.transfer?.cases.find(p=>p.caseId===t.caseId);el('ticket-export-licences').textContent=data.transferError?'Retry licence update / check results':applied?.resultsNeeded&&!applied.resultsChecked?'Adjust race results':'Open licences & results';status(data.message,!!data.transferError);
+  }
+
+  async function loadReviewers(){
+    const scope=el('ticket-reviewers-scope').value;
+    if(scope==='round')await ensureRace();
+    tp.reviewerSettings=await rpc('getTicketReviewers',{sheetName:scope==='round'?tp.race.sheetName:''});
+    const d=tp.reviewerSettings;
+    el('ticket-reviewers-fields').innerHTML=['stewards','appeals'].map((group,g)=>'<div><h3>'+(g?'Appeals team':'Stewards')+'</h3>'+d[group].map((name,i)=>'<label>'+(g?'Appeals reviewer ':'Steward ')+(i+1)+'<input data-reviewer-group="'+group+'" data-reviewer-index="'+i+'" value="'+esc(name)+'"'+(d.used[g][i]?' disabled':'')+'></label>').join('')+'</div>').join('');
+    el('ticket-reviewers-message').textContent=scope==='round'?roundName():'Template for new round sheets';mark('ticket-reviewers-form');
+  }
+  async function saveReviewers(){const d=tp.reviewerSettings,input={sheetName:d.sheetName==='Template'?'':d.sheetName,revision:d.revision};['stewards','appeals'].forEach(group=>input[group]=Array.from(el('ticket-reviewers-fields').querySelectorAll('[data-reviewer-group="'+group+'"]')).map(e=>e.value));await rpc('saveTicketReviewers',input);mark('ticket-reviewers-form');el('ticket-reviewers-dialog').close();tp.overview=await rpc('getTicketProcessingOverview',true);if(tp.race?.sheetName)tp.race=await rpc('getTicketRaceWorkspace',tp.race.sheetName,true);invalidateRoundViews();renderRace();status('Reviewer names saved.');}
+  function closeDialog(id){if(tp.busy)return;if(id==='ticket-race-dialog'){work(async()=>{await saveTicketChanges();el(id).close();tp.caseQueue=null;});return;}const okay=id==='ticket-race-dialog'?leaveCase():!dirty(id==='ticket-admin-note-dialog'?'ticket-admin-note-form':id==='ticket-reviewers-dialog'?'ticket-reviewers-form':id==='ticket-outcome-dialog'?'ticket-outcome-form':id==='ticket-export-dialog'?'ticket-export-form':id)||confirm('Discard unsaved changes?');if(okay)el(id).close();if(id==='ticket-export-dialog'&&okay&&tp.view==='outcomes')work(loadCompletion);}
+  // Shared review workflow; each board owns its drafts, reviewer selection and vote columns.
+  function createTicketReviewBoard(type){
+  const isAppeal=type==='appeal',votesKey=isAppeal?'appealVotes':'stewardVotes',namesKey=isAppeal?'appealReviewers':'stewardReviewers';
+  const ids={'ticket-review-filter':'ticket-appeal-filter','ticket-race-rows':'ticket-appeal-rows','ticket-race-head':'ticket-appeal-head','ticket-race-panel':'ticket-appeal-panel','ticket-race-empty':'ticket-appeal-empty'};
+  const el=id=>document.getElementById(isAppeal?(ids[id]||id.replace(/^ticket-board-/,'ticket-appeal-board-')):id);
+  // Drafts belong to a case and reviewer, never to a rendered row or current filter.
+  const board={mode:'head',reviewer:0,selected:0,side:isAppeal?'appeal':'incident',entries:new Map(),timer:0,flight:null};
+  const boardValue=v=>({penalty:v.penalty||'',timePenalty:v.timePenalty||'',atFault:v.atFault||'',comments:v.comments||'',state:v.state||'Draft'});
+  const boardEqual=(a,b)=>JSON.stringify(boardValue(a))===JSON.stringify(boardValue(b));
+  function boardKey(t,i){return JSON.stringify([tp.race.sheetName,t.caseId||t.sheetRow,type,i]);}
+  function boardEntry(t,i){
+    const key=boardKey(t,i),vote=t[votesKey][i];let entry=board.entries.get(key);
+    if(!entry||!entry.dirty&&!entry.saving){
+      entry={key,sheetName:tp.race.sheetName,sheetRow:t.sheetRow,caseId:t.caseId,recordRevision:t.recordRevision,
+        reviewerIndex:i,reviewerName:tp.race[namesKey][i].name,revision:vote.revision,
+        base:boardValue(vote),value:boardValue(vote),dirty:false,saving:false,error:'',version:0};
+      board.entries.set(key,entry);
+    }
+    return entry;
+  }
+  function boardPending(){return !!board.flight||Array.from(board.entries.values()).some(e=>e.dirty);}
+  function boardValid(v){
+    if(v.state==='Submitted'&&(!v.penalty||!v.comments.trim()))return 'Choose a penalty and add reasoning, or keep this as Draft.';
+    if(v.state==='Recused'&&(!v.comments.trim()||v.penalty||v.timePenalty||v.atFault))return 'Recused needs a reason and no penalty, time penalty or at-fault driver. Use Manage recusals for own-team tickets.';
+    return '';
+  }
+  function boardNotice(){
+    const entries=Array.from(board.entries.values()),pending=entries.filter(e=>e.dirty),errors=pending.filter(e=>e.error);
+    el('ticket-board-save-state').hidden=board.mode==='head'&&!board.flight&&!pending.length;
+    el('ticket-board-save-state').textContent=board.flight?'Saving…':errors.length?errors.length+' review(s) need attention — changes kept here':pending.length?'Changes waiting to save…':'Changes saved automatically';
+    el('ticket-board-save-state').classList.toggle('error',!!errors.length);
+    el('ticket-board-find-unsaved').hidden=!errors.length;
+    for(const row of el('ticket-race-rows').querySelectorAll('[data-board-row]')){
+      const t=tp.race?.tickets.find(t=>t.sheetRow===Number(row.dataset.boardRow));if(!t)continue;
+      const entry=board.entries.get(boardKey(t,board.reviewer)),notice=row.querySelector('[data-board-status]');
+      if(notice&&entry){notice.textContent=entry.error|| (entry.saving?'Saving…':entry.dirty?'Waiting to save…':'Saved');notice.classList.toggle('error',!!entry.error);}
+      row.querySelectorAll('[data-board-retry],[data-board-reload]').forEach(b=>b.hidden=!entry?.error);
+    }
+  }
+  function boardSchedule(){clearTimeout(board.timer);board.timer=setTimeout(()=>{boardSave().catch(()=>{});},900);boardNotice();}
+  async function boardSave(){
+    if(board.flight){await board.flight;return boardSave();}
+    const candidates=Array.from(board.entries.values()).filter(e=>e.dirty&&!e.error);
+    candidates.forEach(e=>{e.error=boardValid(e.value);});
+    const valid=candidates.filter(e=>!e.error);if(!valid.length){boardNotice();return;}
+    const sheet=valid[0].sheetName,batch=valid.filter(e=>e.sheetName===sheet);
+    const snapshots=batch.map(e=>({entry:e,version:e.version,review:boardValue(e.value)}));
+    batch.forEach(e=>e.saving=true);
+    board.flight=(async()=>{
+      try{
+        const data=await rpc('saveTicketReviews',{sheetName:sheet,responseMode:'changed',reviews:snapshots.map(({entry:e,review})=>({
+          sheetName:sheet,sheetRow:e.sheetRow,caseId:e.caseId,recordRevision:e.recordRevision,reviewType:type,
+          reviewerIndex:e.reviewerIndex,reviewerName:e.reviewerName,revision:e.revision,review
+        }))});
+        for(const {entry:e,version} of snapshots){
+          const saved=data.tickets.find(t=>e.caseId?t.caseId===e.caseId:t.sheetRow===e.sheetRow);
+          if(!saved)throw Error('The saved case is missing. Check the round before retrying.');
+          const vote=saved[votesKey][e.reviewerIndex];e.base=boardValue(vote);e.revision=vote.revision;
+          e.recordRevision=saved.recordRevision;e.sheetRow=saved.sheetRow;
+          if(e.version===version)e.value=boardValue(vote);
+          e.dirty=!boardEqual(e.value,e.base);e.error='';
+        }
+        if(tp.race?.sheetName===sheet){tp.race=mergeTicketWorkspace(tp.race,data,'sheetName');invalidateRoundViews();boardEvidence();if(board.mode==='head')renderBoard();}
+      }catch(error){for(const e of batch)e.error='Save not confirmed: '+(error.message||String(error));}
+      finally{batch.forEach(e=>e.saving=false);}
+    })();
+    boardNotice();await board.flight;board.flight=null;boardNotice();
+    if(Array.from(board.entries.values()).some(e=>e.dirty&&!e.error))return boardSave();
+  }
+  async function boardFlush(){
+    clearTimeout(board.timer);await boardSave();
+    if(Array.from(board.entries.values()).some(e=>e.dirty))throw Error('A review has not saved. Return to '+(isAppeal?'Appeals':'Stewarding')+' and resolve the marked row before continuing.');
+  }
+  async function boardRecover(entry,discard){
+    if(board.flight)await board.flight;
+    const data=await rpc('getTicketRaceWorkspace',entry.sheetName,true);
+    const t=data.tickets.find(t=>entry.caseId?t.caseId===entry.caseId:t.sheetRow===entry.sheetRow),vote=t?.[votesKey][entry.reviewerIndex];
+    if(!vote)throw Error('This ticket no longer exists. Your unsaved review remains here.');
+    const sameCase=t.recordRevision===entry.recordRevision&&data[namesKey][entry.reviewerIndex].name===entry.reviewerName;
+    if(!discard&&!sameCase)throw Error('The ticket evidence or reviewer changed. Read the saved ticket before reviewing again. Use Load saved to discard this local edit.');
+    // A response can be lost after a successful write. Accept only our exact saved value,
+    // or an unchanged baseline; never silently overwrite another administrator’s edit.
+    if(!discard&&!boardEqual(vote,entry.value)&&!boardEqual(vote,entry.base))throw Error('Someone changed this judgement. Your edit is kept here; Load saved to use their version.');
+    if(discard||boardEqual(vote,entry.value)){entry.value=boardValue(vote);entry.dirty=false;}
+    entry.base=boardValue(vote);entry.revision=vote.revision;entry.recordRevision=t.recordRevision;entry.sheetRow=t.sheetRow;
+    entry.reviewerName=data[namesKey][entry.reviewerIndex].name;entry.error='';
+    if(tp.race?.sheetName===data.sheetName){tp.race=data;invalidateRoundViews();}
+    renderBoard();await boardSave();
+  }
+  function boardLabel(t){return '<button type="button" class="ticket-board-case" data-board-select="'+t.sheetRow+'">'+esc(t.submitter)+' <span>v '+esc(t.offender)+'</span></button><small>'+esc(t.session||'Race')+' · '+(t.defenceComments||t.defenceEvidence.some(Boolean)?'Defence attached':'No defence')+'</small>';}
+  function renderBoard(){
+    const race=tp.race||blankRace(),names=race[namesKey]||[];
+    if(board.reviewer>=names.length)board.reviewer=0;
+    el('ticket-board-reviewer').innerHTML=names.map((r,i)=>'<option value="'+i+'"'+(i===board.reviewer?' selected':'')+'>'+esc(r.name||'Steward '+(i+1))+'</option>').join('');
+    el('ticket-board-reviewer-field').hidden=board.mode==='head';
+    el('ticket-board-modes').querySelectorAll('[data-board-mode]').forEach(b=>{b.classList.toggle('active',b.dataset.boardMode===board.mode);b.setAttribute('aria-pressed',String(b.dataset.boardMode===board.mode));});
+    el('ticket-review-filter').options[1].textContent=board.mode==='head'?'Any reviews outstanding':'This reviewer: outstanding';
+    el('ticket-review-filter').options[2].textContent=board.mode==='head'?'All reviews complete':'This reviewer: complete';
+    const rows=boardList();if(isAppeal){el('ticket-appeal-title').textContent='Appeals · '+roundName();el('ticket-appeal-count').textContent=race.tickets.filter(t=>/^yes$/i.test(t.appealed)).length+' appeals';}
+    el('ticket-race-head').innerHTML='<tr><th scope="col">#</th><th scope="col">Ticket</th>'+(board.mode==='head'?names.map(r=>'<th scope="col">'+esc(r.name)+'</th>').join(''):'<th scope="col">Penalty / time</th><th scope="col">At fault</th><th scope="col">Reasoning</th><th scope="col">Review</th>')+'</tr>';
+    let division='';
+    el('ticket-race-rows').innerHTML=rows.map(t=>{
+      let group='';if(String(t.division)!==division){division=String(t.division);group='<tr class="ticket-board-division"><th scope="rowgroup" colspan="'+(board.mode==='head'?2+names.length:6)+'">Division '+esc(division)+'</th></tr>';}
+      let fields='',decision='';
+      if(board.mode==='head')fields=names.map((r,i)=>{const e=boardEntry(t,i),v=e.value;return '<td><button class="ticket-board-vote" type="button" data-board-review="'+i+'" data-board-case="'+t.sheetRow+'"><strong>'+esc(e.error?'Needs attention':e.dirty?'Unsaved':v.state)+'</strong><span>'+esc(v.penalty|| (v.state==='Recused'?'Conflict recorded':'—'))+'</span></button></td>';}).join('');
+      if(board.mode==='head'&&isAppeal){const pub=publishedCase(t),done=t.appealVotes.every(v=>['Submitted','Recused'].includes(v.state));decision='<div class="ticket-decision-action">'+(pub?'<small>'+(pub.appeal[4]?'Decision recorded':done?'Ready for decision':'Reviews outstanding')+'</small><button class="button primary" type="button" data-open-ticket-export="'+pub.sheetRow+'">'+(pub.appeal[4]?'View / amend decision':'Decide appeal')+'</button>':'<small>Original outcome not published</small><button class="button" type="button" data-ticket-next="outcomes">Open final decisions</button>')+'</div>'; }
+      if(board.mode!=='head'){
+        const e=boardEntry(t,board.reviewer),v=e.value;
+        const allNames=Array.from(new Set([t.submitter,t.offender,...v.atFault.split(';').map(n=>n.trim())].filter(Boolean)));
+        fields='<td><select aria-label="Licence penalty" data-board-field="penalty">'+options(race.options.penalties,v.penalty)+'</select><select aria-label="Time penalty" data-board-field="timePenalty">'+options(race.options.timePenalties,v.timePenalty)+'</select></td>'+
+          '<td><div class="ticket-board-fault">'+allNames.map(n=>'<label><input type="checkbox" data-board-fault value="'+esc(n)+'"'+(v.atFault.split(';').map(n=>n.trim()).includes(n)?' checked':'')+'><span>'+esc(n)+'</span></label>').join('')+'</div></td>'+
+          '<td><textarea rows="3" aria-label="Reasoning" data-board-field="comments">'+esc(v.comments)+'</textarea></td>'+
+          '<td><select aria-label="Review state" data-board-field="state">'+options(['Draft','Submitted','Recused'],v.state)+'</select><small data-board-status></small><button class="button" type="button" data-board-retry hidden>Retry save</button><button class="button" type="button" data-board-reload hidden>Load saved</button></td>';
+      }
+      return group+'<tr data-board-row="'+t.sheetRow+'"'+(t.sheetRow===board.selected?' class="selected"':'')+'><td>'+esc(t.ticketNumber)+'</td><td>'+boardLabel(t)+decision+'</td>'+fields+'</tr>';
+    }).join('');
+    el('ticket-race-panel').classList.toggle('ticket-board-head',board.mode==='head');
+    el('ticket-race-empty').hidden=!!rows.length;
+    el('ticket-race-empty').textContent=race.tickets.length?'No tickets match these filters.':(isAppeal?'No appeals attached to this round. Process incoming appeals from Submissions.':'No processed tickets for this round.');
+    if(!rows.some(t=>t.sheetRow===board.selected))board.selected=rows[0]?.sheetRow||0;
+    boardSelect(board.selected);boardNotice();
+  }
+  function boardList(){return filtered(tp.race?.tickets||[],false).filter(t=>{
+    if(isAppeal&&!/^yes$/i.test(t.appealed))return false;const filter=el('ticket-review-filter').value;
+    if(isAppeal&&filter==='decision')return !publishedCase(t)?.appeal[4];
+    const votes=board.mode==='head'?t[votesKey].map((v,i)=>boardEntry(t,i).value):[boardEntry(t,board.reviewer).value];
+    const done=votes.every(v=>tp.race.round?['Submitted','Recused'].includes(v.state):v.penalty||v.comments);
+    return !filter||filter==='pending'&&!done||filter==='complete'&&done||filter==='no-defence'&&!t.defenceComments&&!t.defenceEvidence.some(Boolean);
+  });}
+  function boardSelect(row){board.selected=row;el('ticket-race-rows').querySelectorAll('[data-board-row]').forEach(e=>e.classList.toggle('selected',Number(e.dataset.boardRow)===row));boardEvidence();}
+  function boardEvidence(){
+    const t=tp.race?.tickets.find(t=>t.sheetRow===board.selected),panel=el('ticket-board-evidence');
+    if(!t){panel.innerHTML='<p class="secondary-line">Select a ticket to see its evidence.</p>';return;}
+    if(isAppeal){renderAppealEvidence(t,board,panel);return;}const tab=board.side;
+    panel.innerHTML='<div class="toolbar"><strong>Ticket #'+esc(t.ticketNumber)+' · Division '+esc(t.division)+'</strong><button class="button" type="button" data-open-race-ticket="'+t.sheetRow+'">Full ticket</button></div><p>'+esc(t.submitter)+' · '+esc(t.submitterTeam)+'<br>'+esc(t.offender)+' · '+esc(t.offenderTeam)+'</p><div class="toolbar">'+['incident','defence','decisions'].map(k=>'<button type="button" class="button'+(k===tab?' active':'')+'" data-board-side="'+k+'" aria-pressed="'+(k===tab)+'">'+k[0].toUpperCase()+k.slice(1)+'</button>').join('')+'</div>'+
+      (tab==='decisions'?t[votesKey].map((v,i)=>'<section class="ticket-board-decision"><strong>'+esc(tp.race[namesKey][i].name)+'</strong><small>'+esc(v.state||'Draft')+' · '+esc(v.penalty||'—')+' · '+esc(v.timePenalty||'—')+'</small><p>'+esc(v.atFault)+'</p><p>'+prose(v.comments||'No saved reasoning yet.')+'</p></section>').join(''):'<div class="ticket-board-prose">'+prose(tab==='defence'?(t.defenceComments||'No defence comments attached.'):t.description)+'</div><div class="toolbar">'+links(tab==='defence'?t.defenceEvidence:t.evidence)+'</div>');
+  }
+  function boardChange(event){
+    const field=event.target,row=field.closest('[data-board-row]');if(!row||!(field.hasAttribute('data-board-field')||field.hasAttribute('data-board-fault')))return;
+    const t=tp.race.tickets.find(t=>t.sheetRow===Number(row.dataset.boardRow)),entry=boardEntry(t,board.reviewer);
+    if(field.hasAttribute('data-board-fault'))entry.value.atFault=Array.from(row.querySelectorAll('[data-board-fault]:checked')).map(e=>e.value).join('; ');
+    else entry.value[field.dataset.boardField]=field.value;
+    entry.version++;entry.dirty=entry.saving||!boardEqual(entry.value,entry.base);
+    // Validation can be fixed by typing. Server/conflict errors require explicit recovery.
+    if(entry.error&&!entry.error.startsWith('Save not confirmed:'))entry.error='';
+    boardSchedule();
+  }
+  el('ticket-board-modes').onclick=e=>{const b=e.target.closest('[data-board-mode]');if(b){board.mode=b.dataset.boardMode;renderBoard();}};
+  el('ticket-board-reviewer').onchange=()=>{board.reviewer=Number(el('ticket-board-reviewer').value);renderBoard();};
+  el('ticket-board-find-unsaved').onclick=()=>{
+    const entry=Array.from(board.entries.values()).find(e=>e.dirty&&e.error&&e.sheetName===tp.race?.sheetName);if(!entry)return;
+    board.mode='reviews';board.reviewer=entry.reviewerIndex;board.selected=entry.sheetRow;
+    el('ticket-division-filter').value='';el('ticket-list-search').value='';el('ticket-review-filter').value='';renderBoard();
+    el('ticket-race-rows').querySelector('[data-board-row="'+entry.sheetRow+'"]')?.scrollIntoView({block:'nearest'});
+  };
+  el('ticket-race-rows').addEventListener('input',boardChange);
+  el('ticket-race-rows').addEventListener('focusin',e=>{const row=e.target.closest('[data-board-row]');if(row&&board.selected!==Number(row.dataset.boardRow))boardSelect(Number(row.dataset.boardRow));});
+  el('ticket-race-rows').addEventListener('keydown',async e=>{
+    if(!(e.ctrlKey||e.metaKey)||e.key!=='Enter'||board.mode!=='reviews')return;
+    const row=e.target.closest('[data-board-row]');if(!row)return;e.preventDefault();
+    const rows=Array.from(el('ticket-race-rows').querySelectorAll('[data-board-row]')),next=rows[rows.indexOf(row)+1],state=row.querySelector('[data-board-field="state"]');
+    state.value='Submitted';boardChange({target:state});
+    const t=tp.race.tickets.find(t=>t.sheetRow===Number(row.dataset.boardRow)),entry=boardEntry(t,board.reviewer);
+    clearTimeout(board.timer);await boardSave();if(!entry.dirty)next?.querySelector('[data-board-field="penalty"]')?.focus();
+  });
+  el('ticket-race-rows').onclick=async e=>{
+    const decision=e.target.closest('[data-open-ticket-export]');if(decision){work(()=>openExport(Number(decision.dataset.openTicketExport)));return;}
+    const pick=e.target.closest('[data-board-select]'),review=e.target.closest('[data-board-review]'),retry=e.target.closest('[data-board-retry],[data-board-reload]');
+    if(pick)boardSelect(Number(pick.dataset.boardSelect));
+    if(review){board.reviewer=Number(review.dataset.boardReview);board.selected=Number(review.dataset.boardCase);board.mode='reviews';renderBoard();el('ticket-race-rows').querySelector('[data-board-row="'+board.selected+'"] [data-board-field="penalty"]')?.focus();}
+    if(retry){const t=tp.race.tickets.find(t=>t.sheetRow===Number(retry.closest('[data-board-row]').dataset.boardRow)),entry=boardEntry(t,board.reviewer),discard=retry.hasAttribute('data-board-reload');if(discard&&!confirm('Discard your unsaved edit and load the saved judgement and latest evidence?'))return;retry.disabled=true;try{await boardRecover(entry,discard);}catch(error){entry.error='Save not confirmed: '+error.message;boardNotice();}finally{retry.disabled=false;}}
+  };
+  el('ticket-board-evidence').onclick=e=>{
+    const tab=e.target.closest('[data-board-side]'),open=e.target.closest('[data-open-race-ticket],[data-open-appeal]'),published=e.target.closest('[data-open-ticket-export]');
+    if(tab){board.side=tab.dataset.boardSide;boardEvidence();}
+    if(open)work(async()=>{tp.caseQueue=null;openRaceTicket(Number(open.dataset.openRaceTicket||open.dataset.openAppeal),isAppeal?'appeal':undefined);});
+    if(published)work(()=>openExport(Number(published.dataset.openTicketExport)));
+  };
+
+  return {render:renderBoard,flush:boardFlush,pending:boardPending};
+  }
+  const stewardBoard=createTicketReviewBoard('steward'),appealBoard=createTicketReviewBoard('appeal');
+  function renderBoard(){stewardBoard.render();}
+  function boardPending(){return stewardBoard.pending()||appealBoard.pending();}
+  async function boardFlush(){await stewardBoard.flush();await appealBoard.flush();}
+  const outcomeBoard={entries:new Map(),selected:0,side:'decisions',timer:0,flight:null,recovering:false};
+  const outcomeValue=t=>({driverPunished:t.driverPunished||'',penalty:t.penalty||'',evaluation:t.evaluation||'',submitterPenalty:t.submitterPenalty||'',offenderPenalty:t.offenderPenalty||'',additionalPenalties:(t.additionalPenalties||[]).map(p=>({driver:p.driver||'',penalty:p.penalty||'',timePenalty:p.timePenalty||''}))});
+  const outcomeEqual=(a,b)=>JSON.stringify(outcomeValue(a))===JSON.stringify(outcomeValue(b));
+  const outcomeContext=t=>JSON.stringify([t.caseId,t.ticketNumber,t.division,t.submitter,t.submitterTeam,t.offender,t.offenderTeam,t.description,t.evidence,t.defenceComments,t.defenceEvidence]);
+  const outcomeKey=t=>JSON.stringify([tp.outcomes.sourceRace,t.caseId||t.sheetRow]);
+  function outcomeEntry(t){
+    const key=outcomeKey(t);let e=outcomeBoard.entries.get(key);
+    if(!e||!e.dirty&&!e.saving){e={key,sourceRace:tp.outcomes.sourceRace,sheetRow:t.sheetRow,caseId:t.caseId,revision:t.revision,context:outcomeContext(t),base:outcomeValue(t),value:outcomeValue(t),version:0,dirty:false,saving:false,error:''};outcomeBoard.entries.set(key,e);}
+    return e;
+  }
+  function outcomePending(){return !!outcomeBoard.flight||outcomeBoard.recovering||Array.from(outcomeBoard.entries.values()).some(e=>e.dirty);}
+  function outcomeRecord(row){return tp.outcomes?.tickets.find(t=>t.sheetRow===Number(row));}
+  function outcomeIssue(v){
+    const seen=new Set([normal(v.driverPunished)].filter(Boolean));
+    for(const p of v.additionalPenalties){
+      if(!p.driver.trim()||!p.penalty)return 'Finish the additional driver and penalty, or remove that row.';
+      if(seen.has(normal(p.driver)))return p.driver+' already has a penalty row on this ticket.';
+      seen.add(normal(p.driver));
+    }
+    return '';
+  }
+  function outcomeMissing(t,v){
+    if(!v.penalty||!v.evaluation.trim())return 'Draft — add a final penalty and evaluation.';
+    const penalty=tp.outcomes?.penalties.find(p=>p.label===v.penalty);
+    if(!penalty||penalty.points===''||!Number.isFinite(Number(penalty.points)))return 'Check the licence penalty and points.';
+    if(Number(penalty.points)!==0&&!v.driverPunished)return 'Choose the driver receiving the licence penalty.';
+    if(t.points==='')return 'Decision entered · points awaiting calculation.';
+    if(!Number.isFinite(Number(t.points)))return 'Decision entered · check licence points in the workbook.';
+    return 'Decision complete';
+  }
+  function outcomeNotice(){
+    const pending=Array.from(outcomeBoard.entries.values()).filter(e=>e.dirty),errors=pending.filter(e=>e.error);
+    el('ticket-outcome-save-state').textContent=outcomeBoard.recovering?'Checking saved outcome…':outcomeBoard.flight?'Saving…':errors.length?errors.length+' outcome(s) need attention — edits kept here':pending.length?'Changes waiting to save…':'Changes saved automatically';
+    el('ticket-outcome-save-state').classList.toggle('error',!!errors.length);el('ticket-outcome-find-unsaved').hidden=!errors.length;
+    if(!pending.length&&!outcomeBoard.flight&&el('ticket-processing-status').textContent==='An outcome has not saved. Resolve the marked outcome row before continuing.')status('Outcomes saved.');
+    for(const row of el('ticket-outcome-rows').querySelectorAll('[data-outcome-row]')){
+      const t=outcomeRecord(row.dataset.outcomeRow);if(!t)continue;const e=outcomeBoard.entries.get(outcomeKey(t));if(!e)continue;
+      const status=row.querySelector('[data-outcome-status]');status.textContent=e.error||(e.saving?'Saving…':e.dirty?'Waiting to save…':'Saved');status.classList.toggle('error',!!e.error);
+      row.querySelector('[data-outcome-completion]').textContent=outcomeMissing(t,e.value);
+      const points=v=>v===''||v==null?'—':Number.isFinite(Number(v))?String(v):'Check sheet';
+      row.querySelector('[data-outcome-points]').textContent='Licence points: '+points(t.points)+' · Totals: '+t.submitter+' '+points(t.submitterPoints)+' / '+t.offender+' '+points(t.offenderPoints);
+      row.querySelectorAll('[data-outcome-retry],[data-outcome-reload]').forEach(b=>b.hidden=!e.error);
+      ['submitter','offender'].forEach(who=>{const field=row.querySelector('[data-outcome-field="'+who+'Penalty"]'),extra=e.value.additionalPenalties.find(p=>normal(p.driver)!==normal(e.value.driverPunished)&&normal(p.driver)===normal(t[who]));field.disabled=!!extra;field.title=extra?'Edit this time in the additional driver row below.':'';if(extra)field.value=extra.timePenalty;else if(document.activeElement!==field)field.value=e.value[who+'Penalty'];timeControlSync(field);});
+    }
+  }
+  function outcomeSchedule(){clearTimeout(outcomeBoard.timer);outcomeBoard.timer=setTimeout(()=>{outcomeSave().catch(()=>{});},900);outcomeNotice();}
+  async function outcomeSave(){
+    if(outcomeBoard.flight){await outcomeBoard.flight;return outcomeSave();}
+    if(outcomeBoard.recovering)return;
+    const candidates=Array.from(outcomeBoard.entries.values()).filter(e=>e.dirty&&!e.error);
+    candidates.forEach(e=>e.error=outcomeIssue(e.value));const entry=candidates.find(e=>!e.error);
+    if(!entry){outcomeNotice();return;}
+    const batch=candidates.filter(e=>!e.error&&e.sourceRace===entry.sourceRace).map(e=>({entry:e,version:e.version,value:outcomeValue(e.value)}));
+    batch.forEach(p=>p.entry.saving=true);
+    outcomeBoard.flight=(async()=>{
+      try{
+        const data=await rpc('saveTicketOutcome',{sourceRace:entry.sourceRace,responseMode:'changed',knownRevisions:Object.fromEntries((tp.outcomes?.tickets||[]).map(t=>[t.sheetRow,t.revision])),outcomes:batch.map(p=>({sheetRow:p.entry.sheetRow,caseId:p.entry.caseId,revision:p.entry.revision,outcome:p.value}))});
+        const savedFor=e=>data.tickets.find(t=>e.caseId?t.caseId===e.caseId:t.sheetRow===e.sheetRow);
+        if(data.sourceRace!==entry.sourceRace||batch.some(p=>!savedFor(p.entry)))throw Error('The saved case changed. Check the round before retrying.');
+        batch.forEach(p=>{const e=p.entry,saved=savedFor(e);e.base=outcomeValue(saved);e.revision=saved.revision;e.context=outcomeContext(saved);e.sheetRow=saved.sheetRow;if(e.version===p.version)e.value=outcomeValue(saved);e.dirty=!outcomeEqual(e.value,e.base);e.error='';});
+        // A preceding decision recalculates later totals. Rebase only when the
+        // editable fields and evidence still match; never hide another admin's edit.
+        outcomeBoard.entries.forEach(e=>{if(e.sourceRace!==data.sourceRace||batch.some(p=>p.entry===e))return;const saved=savedFor(e);if(saved&&outcomeEqual(e.base,outcomeValue(saved))&&e.context===outcomeContext(saved)){e.revision=saved.revision;e.sheetRow=saved.sheetRow;}});
+        if(tp.outcomes?.sourceRace===data.sourceRace){tp.outcomes=mergeTicketWorkspace(tp.outcomes,data,'sourceRace');outcomeEvidence();}
+      }catch(error){batch.forEach(p=>p.entry.error='Save not confirmed: '+(error.message||String(error)));}
+      finally{batch.forEach(p=>p.entry.saving=false);}
+    })();
+    outcomeNotice();await outcomeBoard.flight;outcomeBoard.flight=null;outcomeNotice();
+    if(Array.from(outcomeBoard.entries.values()).some(e=>e.dirty&&!e.error))return outcomeSave();
+  }
+  async function outcomeFlush(){
+    clearTimeout(outcomeBoard.timer);await outcomeSave();
+    if(outcomePending())throw Error('An outcome has not saved. Resolve the marked outcome row before continuing.');
+  }
+  async function outcomeRecover(entry,discard){
+    if(outcomeBoard.recovering)return;
+    if(outcomeBoard.flight)await outcomeBoard.flight;
+    outcomeBoard.recovering=true;const version=entry.version;outcomeNotice();
+    try{
+      const data=await rpc('getTicketRoundOutcomes',{sheetName:entry.sourceRace});
+      if(data.needsOpen)throw Error('Another round is open for outcomes. Reopen this round in the other window, then retry here. Your edits are retained.');
+      const saved=data.tickets.find(t=>entry.caseId?t.caseId===entry.caseId:t.sheetRow===entry.sheetRow);
+      if(entry.version!==version)throw Error('This row was edited while checking the sheet. Your latest edits are retained; retry when ready.');
+      if(!saved)throw Error('This case is no longer in the outcome sheet. Your edits are retained; check the workbook.');
+      if(!discard&&outcomeContext(saved)!==entry.context)throw Error('The ticket or evidence changed. Load saved to discard this local edit and review the latest case.');
+      if(!discard&&!outcomeEqual(saved,entry.value)&&!outcomeEqual(saved,entry.base))throw Error('Someone changed this outcome. Your edit is kept here; Load saved to use their version.');
+      if(discard||outcomeEqual(saved,entry.value)){entry.value=outcomeValue(saved);entry.dirty=false;}
+      entry.base=outcomeValue(saved);entry.revision=saved.revision;entry.context=outcomeContext(saved);entry.sheetRow=saved.sheetRow;entry.error='';
+      if(tp.outcomes?.sourceRace===data.sourceRace)tp.outcomes=data;
+      renderOutcomeBoard();
+    }catch(error){entry.error='Save not confirmed: '+error.message;}
+    finally{outcomeBoard.recovering=false;outcomeNotice();}
+    await outcomeSave();
+  }
+  function outcomeDrivers(t,v){return Array.from(new Set((tp.outcomes.drivers||[]).concat([t.submitter,t.offender,t.driverPunished,v.driverPunished],v.additionalPenalties.map(p=>p.driver)).filter(Boolean)));}
+  function outcomeExtraRow(t,p,i,v){
+    return '<div class="ticket-outcome-extra" data-outcome-extra="'+i+'"><label>Driver<select data-outcome-extra-field="driver">'+options(outcomeDrivers(t,v),p.driver,true)+'</select></label><label>Licence penalty<select data-outcome-extra-field="penalty">'+options(tp.outcomes.penalties.map(p=>p.label),p.penalty,true)+'</select></label>'+timeControl('Time adjustment','data-outcome-extra-field="timePenalty"',p.timePenalty)+'<button class="button" type="button" data-outcome-remove="'+i+'">Remove driver</button></div>';
+  }
+  function renderOutcomeBoard(){
+    const ready=tp.outcomes&&!tp.outcomes.needsOpen&&!publishedRows().length;el('ticket-outcome-board').hidden=!ready;el('ticket-outcome-board-tools').hidden=!ready;
+    if(!ready){el('ticket-outcome-rows').innerHTML='';el('ticket-outcome-evidence').innerHTML='';return;}
+    const rows=filtered(tp.outcomes.tickets,false);let division='';
+    el('ticket-outcome-rows').innerHTML=rows.map(t=>{
+      const e=outcomeEntry(t),v=e.value,group=String(t.division)!==division?'<tr class="ticket-board-division"><th scope="rowgroup" colspan="5">Division '+esc(t.division)+'</th></tr>':'';division=String(t.division);
+      return group+'<tr data-outcome-row="'+t.sheetRow+'"><td>'+esc(t.ticketNumber)+'</td><td><button class="ticket-board-case" type="button" data-outcome-select="'+t.sheetRow+'">'+esc(t.submitter)+'<span>v '+esc(t.offender)+'</span></button><small data-outcome-points></small></td>'+
+        '<td><select aria-label="Driver punished" data-outcome-field="driverPunished">'+options(outcomeDrivers(t,v),v.driverPunished,true)+'</select><select aria-label="Licence penalty" data-outcome-field="penalty">'+options(tp.outcomes.penalties.map(p=>p.label),v.penalty,true)+'</select><button class="button" type="button" data-outcome-add>Add driver</button></td>'+
+        '<td><textarea aria-label="Final evaluation" rows="4" data-outcome-field="evaluation">'+esc(v.evaluation)+'</textarea><small data-outcome-completion></small><small data-outcome-status></small><button class="button" type="button" data-outcome-retry hidden>Retry save</button><button class="button" type="button" data-outcome-reload hidden>Load saved</button></td>'+
+        '<td>'+timeControl(t.submitter,'data-outcome-field="submitterPenalty"',v.submitterPenalty)+timeControl(t.offender,'data-outcome-field="offenderPenalty"',v.offenderPenalty)+'</td></tr>'+
+        (v.additionalPenalties.length?'<tr data-outcome-for="'+t.sheetRow+'" class="ticket-outcome-extra-row"><td colspan="5"><strong>Ticket #'+esc(t.ticketNumber)+' · Additional drivers</strong>'+v.additionalPenalties.map((p,i)=>outcomeExtraRow(t,p,i,v)).join('')+'</td></tr>':'');
+    }).join('');
+    el('ticket-outcome-empty').hidden=!!rows.length;el('ticket-outcome-empty').textContent=tp.outcomes.tickets.length?'No outcomes match these filters.':'No outcomes for this round.';
+    if(!rows.some(t=>t.sheetRow===outcomeBoard.selected))outcomeBoard.selected=rows[0]?.sheetRow||0;
+    outcomeSelect(outcomeBoard.selected);outcomeNotice();outcomePublicationState();
+  }
+  function outcomeSelect(row){outcomeBoard.selected=row;el('ticket-outcome-rows').querySelectorAll('[data-outcome-row]').forEach(e=>e.classList.toggle('selected',Number(e.dataset.outcomeRow)===row));outcomeEvidence();}
+  function outcomeEvidence(){
+    const t=outcomeRecord(outcomeBoard.selected),panel=el('ticket-outcome-evidence');if(!t){panel.innerHTML='<p class="secondary-line">Select an outcome to see its evidence and reviews.</p>';return;}
+    const tab=outcomeBoard.side,c=caseFor(t);
+    panel.innerHTML='<div class="toolbar"><strong>Ticket #'+esc(t.ticketNumber)+' · Division '+esc(t.division)+'</strong><button class="button" type="button" data-open-ticket-outcome="'+t.sheetRow+'">Full outcome</button></div><p>'+esc(t.submitter)+' · '+esc(t.submitterTeam)+'<br>'+esc(t.offender)+' · '+esc(t.offenderTeam)+'</p><div class="toolbar">'+['decisions','incident','defence'].map(k=>'<button class="button'+(k===tab?' active':'')+'" type="button" data-outcome-side="'+k+'" aria-pressed="'+(k===tab)+'">'+k[0].toUpperCase()+k.slice(1)+'</button>').join('')+'</div>'+
+      (tab==='decisions'?(c?c.stewardVotes.map((v,i)=>'<section class="ticket-board-decision"><strong>'+esc(tp.race.stewardReviewers[i].name)+'</strong><small>'+esc(v.state||'Draft')+' · '+esc(v.penalty||'—')+' · '+esc(v.timePenalty||'—')+'</small><p>'+esc(v.atFault||'No driver named')+'</p><p>'+prose(v.comments||'No reasoning recorded.')+'</p></section>').join(''):'<p>No matching steward reviews found. Refresh to check the round.</p>'):'<div class="ticket-board-prose">'+prose(tab==='defence'?(t.defenceComments||'No defence comments attached.'):t.description)+'</div><div class="toolbar">'+links(tab==='defence'?t.defenceEvidence:t.evidence)+'</div>');
+  }
+  function outcomePublicationState(){
+    const published=publishedRows().length>0,canApply=!!window.F1XLAccess?.can('licences',2);
+    el('ticket-finish-licences-option').hidden=true;
+    el('publish-ticket-outcomes').textContent=canApply?'Check & complete round':'Publish decisions';
+    el('ticket-outcome-next').hidden=true;
+    if(published){el('ticket-outcome-board').hidden=true;el('ticket-outcome-board-tools').hidden=true;el('prepare-ticket-outcomes').hidden=true;el('ticket-outcome-title').textContent='Final decisions · '+roundName();}
+    el('publish-ticket-outcomes').hidden=published||!tp.outcomes||tp.outcomes.needsOpen;
+    el('ticket-outcome-message').textContent=published?'Saved decisions are shown below. Open a decision to record its appeal.':'Drafts save automatically. Check & complete round reviews the licences and any accumulated bans before saving them together.';
+    if(completion&&completion.raceName===tp.race?.sheetName)renderCompletion();
+  }
+  function outcomeTouch(e){invalidateCompletion();e.version++;e.dirty=e.saving||!outcomeEqual(e.value,e.base);if(!e.error.startsWith('Save not confirmed:'))e.error='';outcomeSchedule();}
+  function outcomeSyncTimes(t,e,previous){
+    for(const who of ['submitter','offender']){const matches=p=>normal(p.driver)!==normal(e.value.driverPunished)&&normal(p.driver)===normal(t[who]),old=(previous||[]).find(matches),extra=e.value.additionalPenalties.find(matches);if(extra)e.value[who+'Penalty']=extra.timePenalty;else if(old&&e.value[who+'Penalty']===old.timePenalty)e.value[who+'Penalty']='';}
+  }
+  el('ticket-outcome-rows').addEventListener('input',event=>{
+    const f=event.target,row=f.closest('[data-outcome-row],[data-outcome-for]');if(!row)return;const t=outcomeRecord(row.dataset.outcomeRow||row.dataset.outcomeFor),e=outcomeEntry(t);
+    if(f.hasAttribute('data-outcome-field'))e.value[f.dataset.outcomeField]=f.value;
+    else if(f.hasAttribute('data-outcome-extra-field')){const previous=outcomeValue(e.value).additionalPenalties;e.value.additionalPenalties[Number(f.closest('[data-outcome-extra]').dataset.outcomeExtra)][f.dataset.outcomeExtraField]=f.value;outcomeSyncTimes(t,e,previous);}
+    else return;outcomeTouch(e);
+  });
+  el('ticket-outcome-rows').addEventListener('focusin',event=>{const row=event.target.closest('[data-outcome-row],[data-outcome-for]');if(row){const n=Number(row.dataset.outcomeRow||row.dataset.outcomeFor);if(n!==outcomeBoard.selected)outcomeSelect(n);}});
+  el('ticket-outcome-rows').onclick=async event=>{
+    const f=event.target,b=f.closest('button'),row=f.closest('[data-outcome-row],[data-outcome-for]');if(!b||!row||tp.busy)return;
+    const t=outcomeRecord(row.dataset.outcomeRow||row.dataset.outcomeFor),e=outcomeEntry(t);
+    if(b.hasAttribute('data-outcome-select'))outcomeSelect(t.sheetRow);
+    if(b.hasAttribute('data-outcome-add')){if(e.value.additionalPenalties.length>=30)return;e.value.additionalPenalties.push({driver:'',penalty:'',timePenalty:''});outcomeTouch(e);renderOutcomeBoard();el('ticket-outcome-rows').querySelector('[data-outcome-for="'+t.sheetRow+'"] .ticket-outcome-extra:last-child select')?.focus();}
+    if(b.hasAttribute('data-outcome-remove')){const previous=outcomeValue(e.value).additionalPenalties;e.value.additionalPenalties.splice(Number(b.dataset.outcomeRemove),1);outcomeSyncTimes(t,e,previous);outcomeTouch(e);renderOutcomeBoard();}
+    if(b.hasAttribute('data-outcome-retry')||b.hasAttribute('data-outcome-reload')){const discard=b.hasAttribute('data-outcome-reload');if(discard&&!confirm('Discard your unsaved outcome edit and load the saved decision and latest evidence?'))return;await outcomeRecover(e,discard);}
+  };
+  el('ticket-outcome-rows').addEventListener('keydown',async event=>{
+    if(!(event.ctrlKey||event.metaKey)||event.key!=='Enter')return;const row=event.target.closest('[data-outcome-row],[data-outcome-for]');if(!row)return;event.preventDefault();
+    const n=Number(row.dataset.outcomeRow||row.dataset.outcomeFor),rows=Array.from(el('ticket-outcome-rows').querySelectorAll('[data-outcome-row]')),next=rows[rows.findIndex(r=>Number(r.dataset.outcomeRow)===n)+1],e=outcomeEntry(outcomeRecord(n));
+    clearTimeout(outcomeBoard.timer);await outcomeSave();if(!e.dirty)next?.querySelector('[data-outcome-field="driverPunished"]')?.focus();
+  });
+  el('ticket-outcome-evidence').onclick=event=>{const side=event.target.closest('[data-outcome-side]'),open=event.target.closest('[data-open-ticket-outcome]');if(side){outcomeBoard.side=side.dataset.outcomeSide;outcomeEvidence();}if(open)work(()=>openOutcome(Number(open.dataset.openTicketOutcome)));};
+  el('ticket-outcome-find-unsaved').onclick=()=>{
+    const e=Array.from(outcomeBoard.entries.values()).find(e=>e.dirty&&e.error&&e.sourceRace===tp.outcomes?.sourceRace);if(!e)return;
+    outcomeBoard.selected=e.sheetRow;el('ticket-division-filter').value='';el('ticket-list-search').value='';renderOutcomeBoard();el('ticket-outcome-rows').querySelector('[data-outcome-row="'+e.sheetRow+'"]')?.scrollIntoView({block:'nearest'});
+  };
+
+  let noteRound=null;
+  el('ticket-edit-note').onclick=()=>work(async()=>{
+    const setup=await rpc('getTicketSeasonSetup',{season:tp.season});noteRound=setup.rounds.find(r=>'r:'+r.round===tp.key);
+    if(!noteRound)throw Error('Choose a registered round first.');tp.setup=setup;destination();
+    el('ticket-admin-note-title').textContent='Head Steward Note · R'+noteRound.round+' · '+noteRound.track;
+    el('ticket-admin-note-text').value=noteRound.notes||'';clearDialogFeedback('ticket-admin-note-dialog');mark('ticket-admin-note-form');el('ticket-admin-note-dialog').showModal();
+  });
+  el('ticket-admin-note-form').onsubmit=e=>{e.preventDefault();work(async()=>{if(!noteRound)throw Error('Reopen the note.');tp.setup=await rpc('saveTicketRound',Object.assign({},noteRound,{notes:el('ticket-admin-note-text').value}));noteRound=tp.setup.rounds.find(r=>r.row===noteRound.row);mark('ticket-admin-note-form');destination();status('Head Steward Note saved. Not included in public ticket outcomes.');});};
+  el('ticket-admin-note-close').onclick=()=>closeDialog('ticket-admin-note-dialog');
+  el('ticket-admin-note-dialog').addEventListener('cancel',e=>{e.preventDefault();closeDialog('ticket-admin-note-dialog');});
+  el('ticket-penalty-filter').onchange=renderPenalties;
+  el('ticket-penalty-select-ready').onclick=()=>el('ticket-penalty-rows').querySelectorAll('[data-penalty-case]:not(:disabled)').forEach(c=>c.checked=true);
+  document.addEventListener('click',e=>{const b=e.target.closest('[data-ticket-next]');if(b)work(()=>view(b.dataset.ticketNext));});
+  el('ticket-edit-reviewers').onclick=()=>work(async()=>{clearDialogFeedback('ticket-reviewers-dialog');el('ticket-reviewers-scope').value=tp.race?.sheetName?'round':'template';await loadReviewers();el('ticket-reviewers-dialog').showModal();});
+  el('ticket-reviewers-scope').onchange=()=>work(async()=>{if(dirty('ticket-reviewers-form')&&!confirm('Discard unsaved reviewer names?')){el('ticket-reviewers-scope').value=tp.reviewerSettings.sheetName==='Template'?'template':'round';return;}await loadReviewers();});
+  el('ticket-reviewers-form').onsubmit=e=>{e.preventDefault();work(async()=>{try{await saveReviewers();}catch(error){el('ticket-reviewers-message').textContent=error.message;throw error;}});};
+  el('ticket-reviewers-close').onclick=()=>closeDialog('ticket-reviewers-dialog');
+  el('ticket-reviewers-dialog').addEventListener('cancel',e=>{e.preventDefault();closeDialog('ticket-reviewers-dialog');});
+  el('ticket-reviewers-dialog').addEventListener('click',e=>{if(e.target===e.currentTarget)closeDialog('ticket-reviewers-dialog');});
+  el('ticket-round-select').onchange=()=>work(async()=>{await selectRound(el('ticket-round-select').value);status('Ready · '+roundName());});
+  el('refresh-ticket-processing').onclick=()=>load(true);
+  el('ticket-connect-test-website').onclick=()=>work(async()=>{const result=await rpc('connectTicketTestWebsite',{season:tp.season});tp.publicFeed=result.feed||{};renderTicketPublicConnection();status(result.message);});
+  let completion=null;
+  function invalidateCompletion(){completion=null;el('ticket-completion').hidden=true;}
+  async function loadCompletion(){
+    if(!tp.race?.sheetName)return;
+    el('ticket-completion').hidden=false;el('ticket-completion-status').textContent='Checking decisions and licence totals…';
+    try{completion=await rpc('getTicketCompletionPreview',{raceName:tp.race.sheetName});penalties=completion;renderCompletion();}
+    catch(e){completion=null;el('ticket-completion-rows').innerHTML='';el('ticket-completion-bans').innerHTML='';el('ticket-completion-followup').innerHTML='';el('ticket-completion-status').textContent=e.message||String(e);throw e;}
+  }
+  function renderCompletion(){
+    const d=completion;if(!d||d.raceName!==tp.race?.sheetName)return;
+    el('ticket-completion').hidden=false;
+    if(d.published)el('ticket-published-outcomes').hidden=true;
+    const issues=d.cases.filter(t=>t.issue||!t.applied),manual=d.cases.filter(t=>t.applied&&t.resultsNeeded&&!t.resultsChecked),canWrite=!!window.F1XLAccess?.can('licences',2)&&!!window.F1XLAccess?.can('tickets',2);
+    const done=d.published&&!issues.length&&!d.banActions.length&&!d.thresholdWarning;
+    el('ticket-completion-save').hidden=!canWrite||done;el('ticket-completion-save').textContent=d.cases.some(t=>t.pending)?'Resume interrupted save':'Complete round';
+    el('ticket-completion-status').textContent=d.thresholdWarning?'Accumulated points need checking: '+d.thresholdWarning:d.cases.some(t=>t.issue)?'Resolve the marked tickets below before completing.':done?(manual.length?'Decisions, licences and bans are saved. Only the result adjustments below remain.':'Round complete. Decisions, licences and bans are up to date.'):'Review the changes and confirm any accumulated bans below. Complete round saves the licences, bans and website export together.';
+    const delta=n=>(n>0?'+':'')+n;
+    el('ticket-completion-rows').innerHTML=filtered(d.cases,false).map(t=>{
+      const record=publishedRows().find(p=>p.caseId===t.caseId),p=t.preview||[];
+      const match=t.unmatchedDriver?'<label>Match '+esc(t.unmatchedDriver)+' to<select data-completion-match="'+esc(t.caseId)+'"><option value="">Choose season driver…</option>'+d.drivers.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join('')+'</select></label><button class="button" type="button" data-completion-match-save="'+esc(t.caseId)+'">Use this driver</button>':'';
+      return '<tr><td>#'+esc(t.ticketNumber)+'<small style="display:block">Division '+esc(t.division)+'</small></td><td>'+esc(t.label)+'<small style="display:block">'+esc(t.submitter)+' / '+esc(t.offender)+'</small>'+(p.length?p.map(x=>'<div><strong>'+esc(x.driver)+'</strong> · '+esc(x.session)+'<br>'+x.points+' points · '+ticketTimeText(x)+(x.ban?' · '+esc(x.ban):'')+'</div>').join(''):'')+(t.accumulated||[]).map(a=>'<div class="ticket-accumulated">'+esc(a.action)+' · '+a.threshold+' points'+(a.recorded?' · '+esc(a.recorded.label):' · confirm below')+'</div>').join('')+(record?'<button class="button" type="button" data-completion-open="'+record.sheetRow+'">Decision / appeal</button>':'')+'</td><td>'+p.map(x=>delta(x.pointsDelta)+' points · '+delta(x.secondsDelta)+' sec').join('<br>')+'</td><td>'+p.map(x=>esc(x.currentSeasonPoints)+' → '+esc(x.seasonPoints)+' points').join('<br>')+'</td><td>'+(t.issue?'<p class="error">'+esc(t.issue)+'</p>'+match:t.applied?(t.resultsNeeded&&!t.resultsChecked?'Licence saved · adjust results':'Saved'):'Ready to save')+(t.applied?p.map(x=>ticketCarryButton(t,x.driver)).join(''):'')+'</td></tr>';
+    }).join('');
+    el('ticket-completion-bans').innerHTML=d.banActions.length?'<h3>Accumulated bans</h3>'+d.banActions.map(a=>'<div class="ticket-accumulated"><label><input type="checkbox" data-completion-ban="'+esc(a.key)+'" style="width:auto"> '+(a.kind==='remove'?'Remove unserved ':'Confirm ')+esc(a.action)+' · '+esc(a.driver)+' · '+a.threshold+' points'+(a.discretion?' (admin decision required)':'')+'</label>'+(a.kind==='remove'?'<small>The revised decisions no longer reach this threshold. The previous ban is retained in ticket history.</small>':'<label>Race to serve (optional)<input data-completion-ban-race="'+esc(a.key)+'" placeholder="e.g. R8"></label>')+'</div>').join(''):'';
+    el('ticket-completion-followup').innerHTML=Array.from(new Set(manual.map(t=>t.division))).sort((a,b)=>a-b).map(n=>'<button class="button" type="button" data-completion-results="'+n+'">Adjust Division '+n+' results · '+manual.filter(t=>t.division===n).length+' tickets</button>').join('')+(d.thresholdWarning?'<button class="button" type="button" data-threshold-manage>Review licences / bans</button>':'');
+  }
+  el('ticket-completion-refresh').onclick=()=>work(loadCompletion);
+  el('ticket-completion-save').onclick=()=>work(async()=>{
+    if(!completion){await loadCompletion();return;}
+    const confirms=Array.from(el('ticket-completion-bans').querySelectorAll('[data-completion-ban]:checked')).map(e=>e.dataset.completionBan),races=Object.fromEntries(Array.from(el('ticket-completion-bans').querySelectorAll('[data-completion-ban-race]')).map(e=>[e.dataset.completionBanRace,e.value]));
+    if(completion.banActions.some(a=>!confirms.includes(a.key)))throw Error('Confirm the accumulated ban actions below first.');
+    try{
+      const data=await rpc('completeTicketRound',{raceName:completion.raceName,revision:completion.completionRevision,confirmBans:confirms,banRaces:races});
+      tp.exportData=data;completion=data.completion;penalties=data.transfer;renderOutcomes();renderCompletion();status(data.message,!!data.transferError);
+    }catch(e){await loadCompletion();throw e;}
+  });
+  el('ticket-completion').addEventListener('click',e=>{
+    const b=e.target.closest('button');if(!b||tp.busy)return;
+    if(b.hasAttribute('data-completion-open'))work(()=>openExport(Number(b.dataset.completionOpen)));
+    if(b.hasAttribute('data-completion-match-save'))work(async()=>{
+      const caseId=b.dataset.completionMatchSave,select=Array.from(el('ticket-completion-rows').querySelectorAll('[data-completion-match]')).find(e=>e.dataset.completionMatch===caseId);
+      if(!select?.value)throw Error('Choose the season driver first.');
+      completion=await rpc('matchTicketPenaltyDriver',{raceName:completion.raceName,revision:completion.completionRevision,caseId,driverId:select.value});penalties=completion;
+      tp.exportData=null;tp.outcomes=null;await loadRace(true);await exports(true);if(!completion.published)await outcomes(true);renderCompletion();status('Driver matched for this ticket. No profile or alias was created.');
+    });
+    if(b.hasAttribute('data-completion-results'))work(()=>window.F1XLResultsEntry.openTicketRound(completion.season,Number(b.dataset.completionResults),completion.round,'',{raceName:completion.raceName,onComplete:()=>work(loadCompletion)}));
+    if(b.hasAttribute('data-ticket-carry'))work(()=>window.F1XLLicence.openFromTicket({raceName:completion.raceName,caseId:b.dataset.ticketCarry,driverId:b.dataset.carryDriver}));
+    if(b.hasAttribute('data-threshold-manage'))window.F1XLLicence.open(completion.season,'bans');
+  });
+  let penalties=null;
+  async function loadPenalties(){
+    penalties=null;el('ticket-penalty-rows').innerHTML='';
+    if(!tp.race?.sheetName){el('ticket-penalty-status').textContent='Process and publish this round’s tickets first.';return;}
+    penalties=await rpc('getTicketPenaltyTransfers',{raceName:tp.race.sheetName});renderPenalties();
+    if(penalties.feed?.pending)queueWebsiteUpdate(penalties.season);
+  }
+  let thresholdBan=null;
+  function renderThresholdBans(t,driver){
+    return (t.accumulated||[]).filter(f=>f.driver===driver).map(f=>'<div class="ticket-accumulated"><strong>'+esc(f.action)+(f.discretion?' review':'')+' · '+f.threshold+' points</strong><small>'+f.before+' → '+f.after+' points'+(f.discretion?' · admin discretion':'')+'</small>'+(f.recorded?'<small>'+esc(f.recorded.label)+(f.recorded.race?' · '+esc(f.recorded.race):'')+'</small><button class="button" type="button" data-threshold-manage>Manage ban</button>':'<button class="button" type="button" data-threshold-ban="'+esc(t.caseId)+'" data-threshold-driver="'+esc(f.driver)+'" data-threshold-points="'+f.threshold+'"'+(!t.applied||t.issue?' disabled':'')+'>'+(f.discretion?'Review season ban':'Record ban')+'</button>'+(!t.applied?'<small>Apply ticket penalties first.</small>':''))+'</div>').join('');
+  }
+  el('ticket-threshold-ban-form').onsubmit=e=>{e.preventDefault();work(async()=>{
+    if(!thresholdBan)return;
+    const result=await rpc('recordTicketThresholdBan',Object.assign({},thresholdBan,{raceToServe:el('ticket-threshold-ban-race').value,adminConfirmed:el('ticket-threshold-ban-admin').checked}));
+    penalties=result;thresholdBan=null;el('ticket-threshold-ban-dialog').close();renderPenalties();status(result.message);
+  });};
+  el('ticket-threshold-ban-close').onclick=()=>{if(!tp.busy)el('ticket-threshold-ban-dialog').close();};
+  el('ticket-threshold-ban-dialog').addEventListener('cancel',e=>{if(tp.busy)e.preventDefault();});
+  el('ticket-carryovers').onclick=()=>{if(!tp.busy)window.F1XLLicence.open(tp.season,'carryovers');};
+  el('ticket-open-licences').onclick=()=>{if(!tp.busy&&tp.season)window.F1XLLicence.open(tp.season,'summary');};
+  function ticketCarryButton(t,driver){const p=(t.desired||[]).find(p=>p.driver===driver&&p.seconds>0&&['race','sprintRace'].includes(p.session));return p&&window.F1XLAccess?.can('licences',2)?'<p><button class="button" type="button" data-ticket-carry="'+esc(t.caseId)+'" data-carry-driver="'+esc(p.driverId)+'">Record carry-over</button></p>':'';}
+  window.addEventListener('f1xl:ticket-carryover-saved',event=>{const row=event.detail.rows.find(r=>r.driverId===event.detail.source.driverId&&r.sourceTicket===JSON.stringify([event.detail.source.raceName,event.detail.source.caseId]));if(row)status(row.reference+' · '+row.driver+' · '+row.seconds+'s carry-over recorded.');});
+  function renderPenalties(){
+    const data=penalties;if(!data)return;
+    el('ticket-public-link').href=data.website;el('ticket-public-retry').hidden=!data.feed?.pending;
+    const amendments=data.cases.filter(t=>t.amendmentPending&&!t.issue).length;
+    const needsBan=t=>(t.accumulated||[]).some(f=>!f.recorded);
+    const needsAttention=t=>!t.applied||t.issue||t.resultsNeeded&&!t.resultsChecked||needsBan(t);
+    const outstanding=data.cases.filter(needsAttention).length;
+    el('ticket-penalty-status').textContent=data.cases.length?(outstanding?outstanding+' ticket(s) still need attention.'+(amendments?' Includes '+amendments+' revised decision(s) awaiting licence updates.':''):data.thresholdWarning?'Licence transfers and result checks are complete. The accumulated penalty check below needs attention.':'All ticket penalties and required result checks are complete for this round.'):'No published decisions for this round.';
+
+    el('ticket-threshold-status').textContent=data.thresholdWarning?'Accumulated penalty check: '+data.thresholdWarning:'';
+    const divisions=Array.from(new Set(data.cases.filter(t=>t.applied&&t.resultsNeeded&&!t.resultsChecked&&!t.issue).map(t=>t.division))).sort((a,b)=>a-b);
+    el('ticket-division-results').innerHTML=divisions.map(d=>'<button class="button" type="button" data-division-results="'+d+'">Division '+d+' adjustments · '+data.cases.filter(t=>t.division===d&&t.applied&&t.resultsNeeded&&!t.resultsChecked&&!t.issue).length+' tickets</button>').join('');
+    const delta=n=>(n>0?'+':'')+n;
+    el('ticket-penalty-rows').innerHTML=filtered(data.cases,false).filter(t=>el('ticket-penalty-filter').value!=='attention'||needsAttention(t)).map(t=>{
+      const followUp=[t.resultsNeeded&&!t.resultsChecked?'adjust results':'',needsBan(t)?'review accumulated ban':''].filter(Boolean).join(' · ');
+      const progress=t.applied?(followUp?'Licence updated · '+followUp:'Complete'):t.pending?'Licence update interrupted · retry':t.amendmentPending?'Changed decision · update licence':'On website · update licence';
+      const entries=t.preview.length?t.preview:[null],span=entries.length;
+      return entries.map((p,i)=>'<tr>'+(i===0?'<td rowspan="'+span+'"><input type="checkbox" aria-label="Apply ticket '+esc(t.ticketNumber)+'" data-penalty-case="'+esc(t.caseId)+'" '+(t.applied||t.issue&&!t.pending?'disabled':'')+'></td><td rowspan="'+span+'">#'+esc(t.ticketNumber)+'<small>Division '+esc(t.division)+'</small></td>':'')+(p?'<td>'+esc(p.driver)+'<small>'+esc(p.session)+'</small></td><td>'+p.points+' points · '+ticketTimeText(p)+renderThresholdBans(t,p.driver)+ticketCarryButton(t,p.driver)+(p.ban?'<strong> · '+esc(p.ban)+'</strong>':'')+'</td><td>'+delta(p.pointsDelta)+' points · '+delta(p.secondsDelta)+' sec</td><td>'+esc(p.newPoints||0)+' points · '+esc(p.newSeconds||0)+' sec<small>Currently '+esc(p.currentPoints||0)+' points · '+esc(p.currentSeconds||0)+' sec</small></td>':'<td colspan="4">'+esc(t.label||'No licence penalty')+'</td>')+(i===0?'<td rowspan="'+span+'">'+esc(progress)+(t.issue?'<p class="error">'+esc(t.issue)+'</p>':'')+(t.applied&&t.resultsNeeded?'<p><button class="button" type="button" data-penalty-results="'+esc(t.caseId)+'">Open results</button></p>'+(!t.resultsChecked?'<button class="button" type="button" data-penalty-checked="'+esc(t.caseId)+'">Mark results checked</button>':''):'')+'</td>':'')+'</tr>').join('');
+    }).join('')||'<tr><td colspan="7">No tickets match this view.</td></tr>';
+  }
+  el('ticket-division-results').onclick=e=>{const b=e.target.closest('[data-division-results]');if(!b||!penalties)return;work(()=>window.F1XLResultsEntry.openTicketRound(penalties.season,Number(b.dataset.divisionResults),penalties.round,'',{raceName:penalties.raceName,onComplete:data=>{penalties=data;renderPenalties();}}));};
+  el('ticket-penalty-refresh').onclick=()=>work(loadPenalties);
+  el('ticket-public-retry').onclick=()=>work(async()=>{if(!tp.race?.sheetName)throw Error('Choose a published round first.');penalties=await rpc('updateTicketTestWebsite',{raceName:tp.race.sheetName});renderPenalties();});
+  el('ticket-penalty-apply').onclick=()=>work(async()=>{
+    if(!penalties)throw Error('Refresh the penalty list first.');
+    const ids=Array.from(el('ticket-penalty-rows').querySelectorAll('[data-penalty-case]:checked')).map(e=>e.dataset.penaltyCase);
+    if(!ids.length)throw Error('Select at least one ticket to apply.');
+    try{penalties=await rpc('applyTicketPenalties',{raceName:penalties.raceName,tickets:ids.map(id=>{const t=penalties.cases.find(t=>t.caseId===id);return {caseId:id,revision:t.revision};})});renderPenalties();}
+    catch(e){await loadPenalties();throw e;}
+  });
+  el('ticket-penalty-rows').onclick=e=>{
+    const carry=e.target.closest('[data-ticket-carry]');if(carry&&penalties){work(()=>window.F1XLLicence.openFromTicket({raceName:penalties.raceName,caseId:carry.dataset.ticketCarry,driverId:carry.dataset.carryDriver}));return;}
+    if(e.target.closest('[data-threshold-manage]')){if(!tp.busy&&penalties)window.F1XLLicence.open(penalties.season,'bans');return;}
+    const ban=e.target.closest('[data-threshold-ban]');
+    if(ban&&penalties){work(async()=>{
+      thresholdBan=await rpc('getTicketThresholdBan',{raceName:penalties.raceName,caseId:ban.dataset.thresholdBan,driver:ban.dataset.thresholdDriver,threshold:Number(ban.dataset.thresholdPoints)});
+      if(thresholdBan.recorded){await loadPenalties();status(thresholdBan.recorded.label+' — use Manage ban.');return;}
+      el('ticket-threshold-ban-summary').textContent=thresholdBan.driver+' · Division '+thresholdBan.division+' · '+thresholdBan.action+' · '+thresholdBan.threshold+' points · incurred '+thresholdBan.incurred;
+      el('ticket-threshold-ban-race').value='';el('ticket-threshold-ban-admin').checked=false;el('ticket-threshold-ban-admin').required=!!thresholdBan.discretion;
+      el('ticket-threshold-ban-admin-label').hidden=!thresholdBan.discretion;clearDialogFeedback('ticket-threshold-ban-dialog');el('ticket-threshold-ban-dialog').showModal();
+    });return;}
+    const b=e.target.closest('[data-penalty-results],[data-penalty-checked]');if(!b||!penalties)return;work(async()=>{
+    const id=b.dataset.penaltyResults||b.dataset.penaltyChecked,t=penalties.cases.find(t=>t.caseId===id);
+    if(b.dataset.penaltyResults){await window.F1XLResultsEntry.openTicketRound(penalties.season,t.division,penalties.round,'Ticket #'+t.ticketNumber+' · '+(t.lastTransfer||t.preview).map(p=>p.driver+': '+ticketTimeText(p)+' (licence seconds change '+(p.secondsDelta>0?'+':'')+p.secondsDelta+')').join(' · '));}
+    else {if(!confirm('Confirm that the required time/position changes for ticket #'+t.ticketNumber+' have been checked and saved?'))return;penalties=await rpc('confirmTicketResultsAdjusted',{raceName:penalties.raceName,caseId:id,revision:t.revision});renderPenalties();}
+  });};
+  el('ticket-open-setup').onclick=()=>window.F1XLTicketSeason.open(tp.season,'connections');
+  el('ticket-back').onclick=()=>{
+    if(tp.busy)return;
+    if(boardPending()||outcomePending()){status('Wait for the review or outcome to save, or resolve its marked row before returning to Active season.',true);return;}
+    if((el('ticket-race-dialog').open&&caseDirty()||el('ticket-outcome-dialog').open&&dirty('ticket-outcome-form')||el('ticket-export-dialog').open&&dirty('ticket-export-form'))&&!confirm('Discard the unsaved ticket changes and return to Active season?'))return;
+    if(tp.season)window.F1XLSeasonLaunch.open(tp.season);else window.F1XLNavigate('overview');
+  };
+  el('ticket-edit-reminders').onclick=()=>{const r=tp.race?.round||currentRound();if(r)window.F1XLTicketSeason.open(r.season,'weekly',r.round,true);};
+  el('ticket-processing-subnav').onclick=e=>{const b=e.target.closest('[data-ticket-processing-view]');if(b)work(()=>view(b.dataset.ticketProcessingView));};
+  el('ticket-division-filter').onchange=refreshLists;el('ticket-list-search').oninput=refreshLists;el('ticket-list-order').onchange=refreshLists;el('ticket-inbox-type').onchange=renderInbox;el('ticket-review-filter').onchange=renderRace;el('ticket-appeal-filter').onchange=renderAppeals;el('ticket-select-visible').onclick=()=>el('ticket-incoming-rows').querySelectorAll('[data-ticket-select]').forEach(c=>c.checked=true);el('ticket-import-target').onchange=previewTarget;
+  el('ticket-incoming-rows').onclick=e=>{const b=e.target.closest('[data-ticket-incoming]');if(b)work(async()=>{if(!tp.race?.sheetName&&currentRound()?.sheetName)await loadRace(false);incoming(b.dataset.ticketIncoming);});};
+  el('ticket-import-mode').onchange=updateImportControls;
+  el('ticket-import-round').onchange=previewTarget;el('ticket-batch-round').onchange=destination;
+  el('import-ticket-submission').onclick=()=>work(importIncoming);
+  el('ticket-process-selected').onclick=()=>work(batch);
+  el('add-ticket-record').onclick=()=>work(async()=>{await ensureRace();tp.beforeAdd=tp.race.tickets.map(t=>t.sheetRow);openRaceTicket(0);});
+  el('ticket-case-tabs').onclick=e=>{const b=e.target.closest('[data-ticket-case-tab]');if(b)caseTab(b.dataset.ticketCaseTab);};
+  el('ticket-race-dialog').addEventListener('click',e=>{const b=e.target.closest('[data-save-ticket-review]');if(b)work(()=>saveReview(b));});
+  el('ticket-race-dialog').addEventListener('change',e=>{const field=e.target;if(field.dataset.ticketFault){const target=el(field.dataset.ticketFault+'-fault'),names=target.value.split(';').map(v=>v.trim()).filter(Boolean);target.value=Array.from(new Set(field.checked?names.concat(field.value):names.filter(n=>n!==field.value))).join('; ');}else if(field.id.endsWith('-fault')){field.parentElement.querySelectorAll('[data-ticket-fault]').forEach(c=>c.checked=field.value.split(';').map(v=>v.trim()).includes(c.value));}});
+  function openConflicts(type){return work(async()=>{tp.conflictType=type;if(!tp.race?.sheetName)throw Error('Process this round’s tickets first.');tp.race=await rpc('getTicketRaceWorkspace',tp.race.sheetName,true);invalidateRoundViews();el('ticket-conflicts-reviewer').innerHTML=tp.race[type==='appeal'?'appealReviewers':'stewardReviewers'].map((r,i)=>'<option value="'+i+'">'+esc(r.name)+'</option>').join('');el('ticket-conflicts-team').innerHTML='<option value="">Choose a team…</option>'+options(Array.from(new Set(tp.race.tickets.flatMap(t=>[t.submitterTeam,t.offenderTeam]).filter(Boolean))).sort(),'');el('ticket-conflicts-dialog').querySelector('h2').textContent=type==='appeal'?'Appeal team conflicts':'Steward team conflicts';clearDialogFeedback('ticket-conflicts-dialog');renderConflicts();el('ticket-conflicts-dialog').showModal();});}
+  el('ticket-team-conflicts').onclick=()=>openConflicts('steward');
+  el('ticket-appeal-conflicts').onclick=()=>openConflicts('appeal');
+  el('ticket-conflicts-reviewer').onchange=renderConflicts;el('ticket-conflicts-team').onchange=renderConflicts;el('ticket-conflicts-save').onclick=()=>work(saveConflicts);el('ticket-conflicts-close').onclick=()=>{if(!tp.busy)el('ticket-conflicts-dialog').close();};el('ticket-conflicts-dialog').addEventListener('cancel',e=>{if(tp.busy)e.preventDefault();});
+  el('ticket-race-form').onsubmit=e=>{e.preventDefault();work(saveCase);};
+  el('delete-ticket-race-record').onclick=()=>work(async()=>{if(!confirm('Delete this case and its reviews? A history copy is retained.'))return;tp.race=await rpc('deleteTicketRaceRecord',{sheetName:tp.race.sheetName,sheetRow:tp.edit.sheetRow,revision:tp.edit.fullRevision});invalidateRoundViews();el('ticket-race-dialog').close();renderRace();status('Ticket deleted.');});
+  [-1,1].forEach((delta,i)=>el(i?'ticket-case-next':'ticket-case-prev').onclick=()=>work(()=>moveCase(delta)));
+  el('ticket-save-changes').onclick=()=>work(saveTicketChanges);
+  el('ticket-discard-changes').onclick=()=>{if(!tp.busy&&confirm('Discard unsaved changes and close this ticket?')){el('ticket-race-dialog').close();tp.caseQueue=null;}};
+  el('ticket-race-dialog').addEventListener('input',e=>{const row=e.target.closest('tr[id]');if(row&&el(row.id+'-saved'))el(row.id+'-saved').textContent='';});
+  el('prepare-ticket-outcomes').onclick=()=>work(async()=>{tp.outcomes=await rpc('prepareTicketOutcomes',tp.race.sheetName);renderOutcomes();status(tp.outcomes.message||'Outcomes ready.');});
+  el('ticket-outcome-form').onsubmit=e=>{e.preventDefault();work(saveOutcome);};
+  el('ticket-finish-licences').onchange=outcomePublicationState;
+  el('publish-ticket-outcomes').onclick=()=>work(async()=>{
+    if(window.F1XLAccess?.can('licences',2)){await loadCompletion();el('ticket-completion').scrollIntoView({block:'nearest'});return;}
+    tp.exportData=await rpc('publishTicketOutcomes',{raceName:tp.race.sheetName,hideRows:true,applyPenalties:false});renderExport();renderOutcomes();status(tp.exportData.message);
+  });
+  ['ticket-export-rows'].forEach(id=>el(id).onclick=e=>{const p=e.target.closest('[data-open-ticket-export]'),a=e.target.closest('[data-open-appeal]');if(p)work(()=>openExport(Number(p.dataset.openTicketExport)));if(a)openRaceTicket(Number(a.dataset.openAppeal),'appeal');});
+  el('ticket-export-form').onsubmit=e=>{e.preventDefault();work(saveExport);};
+  [['ticket-incoming-close','ticket-incoming-dialog'],['close-ticket-race-dialog','ticket-race-dialog'],['close-ticket-outcome-dialog','ticket-outcome-dialog'],['close-ticket-export-dialog','ticket-export-dialog']].forEach(([button,id])=>{el(button).onclick=()=>closeDialog(id);el(id).addEventListener('cancel',e=>{e.preventDefault();closeDialog(id);});el(id).addEventListener('click',e=>{if(e.target===e.currentTarget)closeDialog(id);});});
+  window.addEventListener('beforeunload',e=>{if(tp.busy||boardPending()||outcomePending()||noteDirty()||el('ticket-reviewers-dialog').open&&dirty('ticket-reviewers-form')||el('ticket-race-dialog').open&&caseDirty()||el('ticket-outcome-dialog').open&&dirty('ticket-outcome-form')||el('ticket-export-dialog').open&&dirty('ticket-export-form')){e.preventDefault();e.returnValue='';}});
+  window.F1XLTicketProcessing={load,openSeason:function(season){if(tp.busy)return;if(boardPending()||outcomePending()){status('Wait for the review or outcome to save, or resolve its marked row before changing seasons.',true);return;}tp.season=String(season);tp.loaded=false;tp.key='';tp.view='inbox';window.F1XLNavigate('ticket-processing');load(true);},openRace:async function(name){if(tp.busy)return;if(boardPending()||outcomePending()){status('Wait for the review or outcome to save, or resolve its marked row before changing rounds.',true);return;}const match=name.match(/^S(\d+) /);if(match)tp.season=match[1];tp.loaded=false;tp.key='s:'+name;tp.view='race';window.F1XLNavigate('ticket-processing');await load(true);},refreshReminders:function(name){if(tp.race?.sheetName===name)load(true);}};
+  window.F1XLTicketProcessing.resumeSeason=function(season){if(String(tp.season)===String(season))window.F1XLNavigate('ticket-processing');else window.F1XLTicketProcessing.openSeason(season);};
+})();
+</script>

@@ -1,0 +1,83 @@
+<script>
+window.F1XLPreseasonAllocations=(function(){
+  if(window.F1XLNavigation)window.F1XLNavigation.register('preseason-allocations',()=>state.dirty||state.editDirty,()=> ({season:state.season}));
+
+  const state={season:'',division:0,data:null,drivers:[],busy:false,dirty:false,page:0,editing:'',editDirty:false};
+  function el(id){return document.getElementById(id);}
+  function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function status(text){el('pal-status').textContent=text;}
+  function canDiscard(){return !(state.dirty||state.editDirty)||window.confirm('Discard the unsaved allocation changes for this division?');}
+  function controls(){
+    ['pal-refresh','pal-division','pal-back','pal-live'].forEach(function(id){el(id).disabled=state.busy;});
+    ['pal-save','pal-confirm'].forEach(function(id){el(id).disabled=state.busy||state.editDirty||!state.data||!state.data.division;});
+    el('pal-fields').disabled=state.busy;el('pal-editor-fields').disabled=state.busy;
+  }
+  function rpc(name,input){
+    if(state.busy)return;state.busy=true;controls();status(name==='getPreseasonAllocations'?'Loading division allocations…':'Saving division allocations…');
+    google.script.run.withSuccessHandler(function(data){state.busy=false;state.data=data;state.division=data.division;state.drivers=data.drivers.map(function(d){return Object.assign({},d);});state.dirty=false;state.editDirty=false;state.editing='';el('pal-editor').hidden=true;render();controls();status(data.message||'Allocate this division when its picks are ready. Other divisions can continue drafting.');})
+      .withFailureHandler(function(error){state.busy=false;controls();status(error.message||'Unable to load or save allocations. Your edits are kept.');})[name](input);
+  }
+  function open(season,division){
+    if(state.busy)return;
+    if(state.season!==season||division&&Number(division)!==state.division){if(!canDiscard())return;state.season=season;state.division=Number(division)||0;state.data=null;state.drivers=[];state.dirty=false;state.editDirty=false;state.editing='';el('pal-content').hidden=true;el('pal-editor').hidden=true;}
+    window.F1XLNavigate('preseason-allocations');el('pal-title').textContent='S'+season+' Division allocations';el('pal-back').textContent='← S'+season+' Pre-season';
+    if(!state.data||!state.dirty&&!state.editDirty)rpc('getPreseasonAllocations',{season:season,division:state.division});
+  }
+  function badge(d){return d.commitment==='No'?'<span class="ppl-badge ppl-pt">PT</span>':d.commitment==='Maybe'?'<span class="ppl-badge ppl-maybe">Maybe</span>':'';}
+  function describe(d){return d.role==='Full team'||d.role==='Free agent'?d.team+' · Tier '+d.tier:d.role==='Reserve'?'Reserve · '+(d.tier?'Tier '+d.tier:'choose tier'):d.role;}
+  function needs(d){return d.role==='Unassigned'||d.role==='Reserve'&&!d.tier||!d.sourcePresent&&d.role!=='Available reserve'||d.pickedPartTime;}
+  function render(){
+    const d=state.data;el('pal-content').hidden=false;el('pal-state').textContent=state.dirty?'Unsaved changes':d.state;
+    el('pal-division').innerHTML=d.divisions.map(function(n){return '<option value="'+n+'">Division '+n+'</option>';}).join('');el('pal-division').value=String(state.division);
+    const full=state.drivers.filter(function(p){return p.role==='Full team';}).length,free=state.drivers.filter(function(p){return p.role==='Free agent';}).length,reserves=state.drivers.filter(function(p){return p.role==='Reserve';}).length;
+    el('pal-counts').textContent='Full-team seats: '+full+' / '+(d.fullTeams.length*2)+' · Free-agent seats: '+free+' / '+(d.freeTeams.length*2)+' · Reserves: '+reserves+' · Need allocation: '+state.drivers.filter(needs).length;
+    el('pal-checks').innerHTML=state.dirty?'<li>Save or confirm to check the current edits.</li>':d.issues.map(function(issue){return '<li>'+esc(issue)+'</li>';}).join('');el('pal-checks').hidden=!state.dirty&&!d.issues.length;
+    el('pal-confirmed').textContent=d.state==='Confirmed'&&!state.dirty?'Division '+state.division+' is confirmed for division preparation.':'Full-team seats must be filled. Spare free-agent seats are allowed.';
+    renderRows();renderSeats();
+  }
+  function renderRows(){
+    const query=el('pal-search').value.toLowerCase().trim(),filter=el('pal-filter').value;
+    const rows=state.drivers.filter(function(d){return (!query||d.gamertag.toLowerCase().includes(query)||d.driverId.toLowerCase().includes(query))&&(filter==='all'||filter==='needs'&&needs(d)||filter===d.role);});
+    const pages=Math.max(1,Math.ceil(rows.length/50));state.page=Math.min(state.page,pages-1);
+    el('pal-rows').innerHTML=rows.slice(state.page*50,state.page*50+50).map(function(d){return '<tr'+(d.commitment==='No'?' class="pal-pt"':'')+'><th scope="row">'+esc(d.gamertag)+' '+badge(d)+'</th><td>'+esc(d.fromReservePool?'Reserve pool':d.sourceTier?'D'+state.division+' · Tier '+d.sourceTier:'Source needs review')+'</td><td>'+esc(describe(d))+'</td><td>'+(d.locked?'<span class="secondary-line">Saved draft pick</span>':'<button class="button" type="button" data-pal-driver="'+esc(d.driverId)+'">Allocate</button>')+'</td></tr>';}).join('')||'<tr><td colspan="4">No drivers match this filter.</td></tr>';
+    el('pal-page').innerHTML=Array.from({length:pages},function(_,i){return '<option value="'+i+'">Page '+(i+1)+' of '+pages+'</option>';}).join('');el('pal-page').value=String(state.page);
+    el('pal-roster-count').textContent=rows.length+' matching drivers · 50 per page';
+  }
+  function renderSeats(){
+    const d=state.data;
+    el('pal-seats').innerHTML=d.fullTeams.concat(d.freeTeams).map(function(team){const full=d.fullTeams.includes(team);return '<tr><th scope="row">'+esc(team)+'<span class="secondary-line">'+(full?'Full team':'Free agent team')+'</span></th>'+[1,2].map(function(tier){const driver=state.drivers.find(function(p){return p.team===team&&p.tier===tier&&(p.role==='Full team'||p.role==='Free agent');});return '<td'+(!driver&&full?' class="pal-missing"':'')+'>'+(driver?esc(driver.gamertag)+' '+badge(driver):full?'Full-team seat needs filling':'Open seat')+'</td>';}).join('')+'</tr>';}).join('');
+    el('pal-reserves').innerHTML=state.drivers.filter(function(p){return p.role==='Reserve';}).map(function(p){return '<span class="pal-reserve">'+esc(p.gamertag)+' '+badge(p)+' · '+(p.tier?'Tier '+p.tier:'Tier needed')+'</span>';}).join('')||'<span class="secondary-line">No reserves assigned to this division yet.</span>';
+  }
+  function edit(id){
+    if(state.editDirty&&!window.confirm('Discard the un-applied driver edit?'))return;
+    const d=state.drivers.find(function(p){return p.driverId===id;});if(!d||d.locked)return;
+    state.editing=id;state.editDirty=false;el('pal-editor').hidden=false;el('pal-driver-name').textContent=d.gamertag;
+    el('pal-driver-rule').textContent=!d.sourcePresent?'This driver is no longer eligible here. Remove the saved allocation or restore their source.':d.commitment==='No'?'Part-time drivers belong in reserves.':d.sourceTier?'Free-agent seats retain the confirmed Tier '+d.sourceTier+' placement.':'Choose a reserve tier or allocate an available free-agent seat.';
+    const roles=!d.sourcePresent?['Available reserve']:d.commitment==='No'?['Reserve'].concat(d.fromReservePool?['Available reserve']:[]):['Free agent','Reserve'].concat(d.fromReservePool?['Available reserve']:['Unassigned']);
+    el('pal-role').innerHTML=roles.map(function(role){return '<option value="'+role+'">'+(role==='Available reserve'?'Not assigned to this division':role)+'</option>';}).join('');el('pal-role').value=roles.includes(d.role)?d.role:roles[0];
+    el('pal-team').innerHTML='<option value="">Choose free agent team</option>'+state.data.freeTeams.map(function(t){return '<option value="'+esc(t)+'">'+esc(t)+'</option>';}).join('');el('pal-team').value=d.team;
+    el('pal-tier').value=String(d.tier||0);editorControls();controls();
+  }
+  function editorControls(){
+    const d=state.drivers.find(function(p){return p.driverId===state.editing;});if(!d)return;
+    const role=el('pal-role').value;el('pal-team-wrap').hidden=role!=='Free agent';el('pal-tier-wrap').hidden=role!=='Free agent'&&role!=='Reserve';
+    el('pal-tier').disabled=role==='Free agent'&&!!d.sourceTier;if(role==='Free agent'&&d.sourceTier)el('pal-tier').value=String(d.sourceTier);
+  }
+  el('pal-rows').addEventListener('click',function(e){const b=e.target.closest('[data-pal-driver]');if(b&&!state.busy)edit(b.dataset.palDriver);});
+  ['pal-role','pal-team','pal-tier'].forEach(function(id){el(id).addEventListener('change',function(){state.editDirty=true;editorControls();controls();});});
+  el('pal-apply').addEventListener('click',function(){
+    const d=state.drivers.find(function(p){return p.driverId===state.editing;}),role=el('pal-role').value,tier=Number(el('pal-tier').value)||0,team=el('pal-team').value;
+    if(role==='Free agent'&&(!team||!tier)){el('pal-driver-rule').textContent='Choose the free-agent team and tier first.';return;}
+    d.role=role;d.team=role==='Free agent'?team:'';d.tier=role==='Reserve'||role==='Free agent'?tier:0;
+    state.dirty=true;state.editDirty=false;state.editing='';el('pal-editor').hidden=true;render();controls();status('Allocation updated locally. Save or confirm this division to keep it.');
+  });
+  el('pal-close').addEventListener('click',function(){if(state.editDirty&&!window.confirm('Discard the un-applied driver edit?'))return;state.editing='';state.editDirty=false;el('pal-editor').hidden=true;controls();});
+  function save(confirm){rpc('savePreseasonAllocations',{season:state.season,division:state.division,revision:state.data.revision,drivers:state.drivers,confirm:confirm});}
+  el('pal-save').addEventListener('click',function(){save(false);});el('pal-confirm').addEventListener('click',function(){save(true);});
+  el('pal-refresh').addEventListener('click',function(){if(canDiscard())rpc('getPreseasonAllocations',{season:state.season,division:state.division});});
+  el('pal-division').addEventListener('change',function(){const n=Number(this.value);if(!canDiscard()){this.value=String(state.division);return;}rpc('getPreseasonAllocations',{season:state.season,division:n});});
+  el('pal-search').addEventListener('input',function(){state.page=0;renderRows();});el('pal-filter').addEventListener('change',function(){state.page=0;renderRows();});el('pal-page').addEventListener('change',function(){state.page=Number(this.value);renderRows();});
+  el('pal-back').addEventListener('click',function(){window.F1XLPreseasonHub.open(state.season);});el('pal-live').addEventListener('click',function(){window.F1XLPreseasonLiveDraft.open(state.season);});
+  return {open:open};
+})();
+</script>

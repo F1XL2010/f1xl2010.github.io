@@ -1,0 +1,190 @@
+{
+  "completedAt": "2026-11-06T11:36:51.651Z",
+  "state": "LIVE_SWITCH_COMPLETED",
+  "website": "https://f1xl.co.uk/",
+  "portal": "https://f1xl.co.uk/admincentre/",
+  "legacy": "https://f1xl.co.uk/legacy/",
+  "releaseCommit": "fb20b9ae6469daf2af48969d96672942c45db0e8",
+  "publishedCommit": "916a0c44e75e07e7cab21ec63560ecc86147d90c",
+  "portalVersion": 409,
+  "portalFiles": 121,
+  "renamedWorkbooks": 153,
+  "sharingChanges": 0,
+  "recoveryCopies": [
+    {
+      "area": "Season Master",
+      "sourceId": "1ArcaVzI-2qTsaPmPI8IK8_pRCCVgs92wPwnq_ZncO-c",
+      "copyId": "1zY8stFRFcMzUjoihgXv5R6hCEhidwRzrcLt23ayhAi0",
+      "url": "https://docs.google.com/spreadsheets/d/1zY8stFRFcMzUjoihgXv5R6hCEhidwRzrcLt23ayhAi0/edit?usp=drivesdk",
+      "privacy": "Verified owner-only"
+    },
+    {
+      "area": "Division 1",
+      "sourceId": "1WyjXsSmmvX_5f_reIo71jlDKURiqKuhoV0h4b4gfTJg",
+      "copyId": "1fYlypDYoXmGw7Q8OwMaXNxIxQITNFcAxpgkpiQ1_yeU",
+      "url": "https://docs.google.com/spreadsheets/d/1fYlypDYoXmGw7Q8OwMaXNxIxQITNFcAxpgkpiQ1_yeU/edit?usp=drivesdk",
+      "privacy": "Verified owner-only"
+    },
+    {
+      "area": "Division 2",
+      "sourceId": "1IyyIjJrKUdmGtUy7oTWHUVss9TG9-GtjRTSXA_zyoBw",
+      "copyId": "1qzlhAhzAmwtYJ66dKty9NkavLoUn0QdBYalKCp9GgpI",
+      "url": "https://docs.google.com/spreadsheets/d/1qzlhAhzAmwtYJ66dKty9NkavLoUn0QdBYalKCp9GgpI/edit?usp=drivesdk",
+      "privacy": "Verified owner-only"
+    },
+    {
+      "area": "Division 3",
+      "sourceId": "1p0wdsZ3z41czUtGVLcT_afv8y9p7FzQ8Nma0d93YcD0",
+      "copyId": "1tybsI-R53UQBDuocglip7b7xi-29bnS1_hJT7Z99yyE",
+      "url": "https://docs.google.com/spreadsheets/d/1tybsI-R53UQBDuocglip7b7xi-29bnS1_hJT7Z99yyE/edit?usp=drivesdk",
+      "privacy": "Verified owner-only"
+    },
+    {
+      "area": "Division 4",
+      "sourceId": "1aGiR3WLHatf9eiI_uM2jFEOwkPwMZ8u5FChb7obWxLE",
+      "copyId": "1A2Lz_BzHfAc4S19GLkEB0J3p293Rc-N6VhzlhNqX9Ik",
+      "url": "https://docs.google.com/spreadsheets/d/1A2Lz_BzHfAc4S19GLkEB0J3p293Rc-N6VhzlhNqX9Ik/edit?usp=drivesdk",
+      "privacy": "Verified owner-only"
+    },
+    {
+      "area": "Ticket decisions and appeals",
+      "sourceId": "1xW2UqxG2joO1gpsUZobMM2qkTFDPLsZZQ78TvsmnlbI",
+      "copyId": "1niSU2WhsjKhshQuC8p3Bnh4ZhgGDdo2VAXosMBkMzjo",
+      "url": "https://docs.google.com/spreadsheets/d/1niSU2WhsjKhshQuC8p3Bnh4ZhgGDdo2VAXosMBkMzjo/edit?usp=drivesdk",
+      "privacy": "Verified owner-only"
+    },
+    {
+      "area": "Website Config",
+      "sourceId": "1tmTdmjPRXF23Ixj3p_-nxsfIqv76MUIUET7Qht2qfdg",
+      "copyId": "1UbdtEigpOn3WE0Ovmz2pW6vfoBWUzFpmCKapwK_lRDM",
+      "url": "https://docs.google.com/spreadsheets/d/1UbdtEigpOn3WE0Ovmz2pW6vfoBWUzFpmCKapwK_lRDM/edit?usp=drivesdk",
+      "privacy": "Verified owner-only"
+    },
+    {
+      "area": "Permanent registry and records",
+      "sourceId": "1Cn6FdLGjzrFpjXPyrd0ZimC46ieXDrdkPgez1TlS3-M",
+      "copyId": "1khVadjmlZwgOIsQQ_q8ivC5oyRM_-T-Lz4P3lfBqalo",
+      "url": "https://docs.google.com/spreadsheets/d/1khVadjmlZwgOIsQQ_q8ivC5oyRM_-T-Lz4P3lfBqalo/edit?usp=drivesdk",
+      "privacy": "Verified owner-only"
+    },
+    {
+      "area": "People and permissions",
+      "sourceId": "1bcARUCd0sX3SwO9aXLtFdSRwl0sz2ySW6aCHuH5E588",
+      "copyId": "1dMa1AHXJ0C5il4WuFrek-arEzg6AB9bWBWWWiU-u3M0",
+      "url": "https://docs.google.com/spreadsheets/d/1dMa1AHXJ0C5il4WuFrek-arEzg6AB9bWBWWWiU-u3M0/edit?usp=drivesdk",
+      "privacy": "Verified owner-only"
+    },
+    {
+      "area": "Real combined intake",
+      "sourceId": "1ObIfEWfQodfCPVCBZCydzKKzK2aDR031mrngoyVemjQ",
+      "copyId": "1NgwfvE_vV1fOr45J498mTt6Y7kQYL9lzeMZIcA3CFGQ",
+      "url": "https://docs.google.com/spreadsheets/d/1NgwfvE_vV1fOr45J498mTt6Y7kQYL9lzeMZIcA3CFGQ/edit?usp=drivesdk",
+      "privacy": "Verified owner-only"
+    },
+    {
+      "area": "Reference data",
+      "sourceId": "1_oomGdM8cKiah7jPjHc7PokEp3svQ_mhgfkvURIBjlI",
+      "copyId": "1wQ-3Qyo7EwSCxjZ0D0bCDnoTxyS3L58dNEsjmhWXu78",
+      "url": "https://docs.google.com/spreadsheets/d/1wQ-3Qyo7EwSCxjZ0D0bCDnoTxyS3L58dNEsjmhWXu78/edit?usp=drivesdk",
+      "privacy": "Verified owner-only"
+    }
+  ],
+  "capturedInputCells": 169852,
+  "raceDataCheckpoint": "Verified S28 through R15, unchanged since 5 November audit",
+  "publishedFilesVerified": 61,
+  "establishedRoutesVerified": 18,
+  "publicFeeds": [
+    {
+      "name": "direct",
+      "pass": true,
+      "season": "28",
+      "divisions": "4",
+      "mode": "direct_division_v1",
+      "publicFetches": 14
+    },
+    {
+      "name": "public-history",
+      "pass": true,
+      "ok": true,
+      "keys": [
+        "ok",
+        "source",
+        "refreshedAt",
+        "cacheSeconds",
+        "careerRows",
+        "honourRows",
+        "notes"
+      ],
+      "rows": {
+        "careerRows": 841,
+        "honourRows": 1502,
+        "notes": 0
+      }
+    },
+    {
+      "name": "track-records",
+      "pass": true,
+      "ok": true,
+      "keys": [
+        "ok",
+        "records",
+        "refreshedAt"
+      ],
+      "rows": {
+        "records": 216
+      }
+    },
+    {
+      "name": "tickets",
+      "pass": true,
+      "ok": true,
+      "bytes": 169400
+    },
+    {
+      "name": "bans",
+      "pass": true,
+      "ok": true,
+      "bytes": 3515
+    },
+    {
+      "name": "licences",
+      "pass": true,
+      "ok": true,
+      "bytes": 2419
+    }
+  ],
+  "latestSuccessfulPagesRun": {
+    "name": "pages build and deployment",
+    "id": 42208985839,
+    "status": "completed",
+    "conclusion": "success",
+    "sha": "916a0c44e75e07e7cab21ec63560ecc86147d90c",
+    "url": "https://github.com/F1XL2010/f1xl2010.github.io/actions/runs/42208985839"
+  },
+  "originalWorkbooksPreserved": true,
+  "formsReconnected": 0,
+  "propertiesWritten": 0,
+  "discordMessagesSent": 0,
+  "newNotificationRoutesEnabled": false,
+  "operatorWorkResumed": true,
+  "finalIntakeCheck": {
+    "newTicketRows": 0,
+    "legacyTicketRows": 0,
+    "newDriverApplications": 0
+  },
+  "browser": {
+    "ownerPortal": true,
+    "activeSeason": true,
+    "resultsR15": true,
+    "standings": true,
+    "finalDecisionsR15Complete": true,
+    "legacy": true,
+    "homeSignup": true,
+    "phone": "Prior owner sign-off retained; new viewport override did not apply, no new phone pass claimed"
+  },
+  "followUp": [
+    "Follow the next real application/result/ticket through the ordinary workflow; no fake submissions created.",
+    "Deferred manual Master principal labels/help wording and unavailable-file trigger housekeeping remain separate."
+  ],
+  "recovery": "See ../cutover-package-2026-11-06/SWITCH-CHECKLIST.md steps 18–21; preserve post-switch inputs/inboxes/accounts and use name-compatible Portal recovery."
+}

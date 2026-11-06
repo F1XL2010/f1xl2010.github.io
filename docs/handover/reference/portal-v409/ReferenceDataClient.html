@@ -1,0 +1,91 @@
+<script>
+  window.F1XLReferenceData = (function() {
+  if(window.F1XLNavigation)window.F1XLNavigation.register('reference-data',()=>Object.keys(state.drafts).length>0,()=> ({}));
+
+    const state = { data: null, category: 'teams', drafts: {}, search: '' };
+    function el(id) { return document.getElementById(id); }
+    function esc(value) { return String(value == null ? '' : value).replace(/[&<>"']/g, function(character) { return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[character]; }); }
+    function status(message, error) { const target = el('reference-data-status'); target.innerHTML = '<strong>' + esc(message) + '</strong>'; target.classList.toggle('error', !!error); }
+    function load(force) {
+      if (!window.google || !google.script || !google.script.run) return status('Open the deployed Admin Platform to load Permanent Reference Data.', true);
+      status(force ? 'Refreshing Permanent Reference Data…' : 'Loading Permanent Reference Data…');
+      google.script.run.withSuccessHandler(function(response) { state.data = response; state.drafts = {}; render(); }).withFailureHandler(function(error) { status(error && error.message ? error.message : 'Permanent Reference Data could not be loaded.', true); }).getPermanentReferenceData(force === true);
+    }
+    function render() {
+      const data = state.data || {};
+      el('reference-data-unconfigured').hidden = !!data.configured;
+      el('reference-data-configured').hidden = !data.configured;
+      if (!data.configured) return status(data.message || 'No Permanent Reference Data workbook has been connected yet.');
+      el('reference-data-sheet-link').href = data.workbookUrl;
+      const keys = Object.keys(data.categories || {});
+      if (keys.indexOf(state.category) === -1) state.category = keys[0] || '';
+      el('reference-data-subnav').innerHTML = keys.map(function(key) { const item = data.categories[key]; return '<button class="button' + (key === state.category ? ' active' : '') + '" type="button" data-reference-category="' + esc(key) + '">' + esc(item.name) + ' <span class="secondary-line">(' + item.rows.length + ')</span></button>'; }).join('');
+      renderCategory(); status(data.message || 'Permanent Reference Data loaded.');
+    }
+    function rowsForDisplay() {
+      const source = state.data.categories[state.category];
+      return Array.isArray(state.drafts[state.category]) ? state.drafts[state.category] : source.rows;
+    }
+    function ensureDraft() {
+      const source = state.data.categories[state.category];
+      if (!Array.isArray(state.drafts[state.category])) state.drafts[state.category] = source.rows.map(function(row) { return row.slice(); });
+      return state.drafts[state.category];
+    }
+    function renderCategory() {
+      const category = state.data.categories[state.category]; if (!category) return;
+      el('reference-data-category-title').textContent = category.name;
+      el('reference-data-category-note').textContent = category.availableColumn >= 0 ? 'Keep old records and set Available for New Seasons to No. They will stop appearing in new-season dropdowns without losing history.' : 'Existing records cannot be deleted through the platform. Add or edit them, then save this section once.';
+      el('reference-data-head').innerHTML = '<tr>' + category.headers.map(function(header) { return '<th>' + esc(header) + '</th>'; }).join('') + '<th></th></tr>';
+      const query = state.search.trim().toLowerCase();
+      const rows = rowsForDisplay();
+      el('reference-data-rows').innerHTML = rows.map(function(row, rowIndex) {
+        if (query && row.join(' ').toLowerCase().indexOf(query) === -1) return '';
+        const cells = category.headers.map(function(header, column) {
+          const value = row[column] || '';
+          if (column === 0 && value) return '<td><span class="status">' + esc(value) + '</span></td>';
+          if (column === category.availableColumn) return '<td><select data-reference-row="' + rowIndex + '" data-reference-column="' + column + '"><option value="Yes"' + (value === 'Yes' ? ' selected' : '') + '>Yes</option><option value="No"' + (value === 'No' ? ' selected' : '') + '>No</option></select></td>';
+          return '<td><input type="text" value="' + esc(value) + '" data-reference-row="' + rowIndex + '" data-reference-column="' + column + '"' + (column === 0 ? ' placeholder="Created when saved"' : '') + '></td>';
+        }).join('');
+        return '<tr>' + cells + '<td>' + (!row[0] ? '<button class="button danger" type="button" data-remove-new-reference="' + rowIndex + '">Remove</button>' : '') + '</td></tr>';
+      }).join('');
+      el('reference-data-save-state').textContent = Array.isArray(state.drafts[state.category]) ? 'Unsaved changes' : 'No unsaved changes';
+      el('reference-data-save-state').classList.toggle('dirty', Array.isArray(state.drafts[state.category]));
+    }
+    function selectCategory(key) { if (!state.data.categories[key]) return; state.category = key; state.search = ''; el('reference-data-search').value = ''; render(); }
+    function update(target) {
+      const rows = ensureDraft(); rows[Number(target.dataset.referenceRow)][Number(target.dataset.referenceColumn)] = target.value;
+      el('reference-data-save-state').textContent = 'Unsaved changes'; el('reference-data-save-state').classList.add('dirty');
+    }
+    function addRow() { const category = state.data.categories[state.category]; const row = category.headers.map(function() { return ''; }); if (category.availableColumn >= 0) row[category.availableColumn] = 'Yes'; ensureDraft().push(row); renderCategory(); }
+    function removeNew(index) { const rows = ensureDraft(); if (rows[index] && !rows[index][0]) rows.splice(index, 1); renderCategory(); }
+    function save(button) {
+      const category = state.data.categories[state.category];
+      if (!Array.isArray(state.drafts[state.category])) return status('There are no unsaved changes in ' + category.name + '.');
+      button.disabled = true; button.textContent = 'Saving…'; status('Saving ' + category.name + ' to the permanent workbook…');
+      google.script.run.withSuccessHandler(function(response) { state.data = response; state.drafts[state.category] = null; button.disabled = false; button.textContent = 'Save this section'; render(); status(response.message || (category.name + ' saved.')); }).withFailureHandler(function(error) { button.disabled = false; button.textContent = 'Save this section'; status(error && error.message ? error.message : 'This section could not be saved.', true); }).savePermanentReferenceCategory({ category: state.category, revision: category.revision, rows: state.drafts[state.category] });
+    }
+    function create(button) {
+      if (!window.confirm('Create the permanent F1XL Reference Data Google Sheet now?')) return;
+      button.disabled = true; button.textContent = 'Creating…'; status('Creating and seeding the permanent reference workbook…');
+      google.script.run.withSuccessHandler(function(response) { state.data = response; state.drafts = {}; button.disabled = false; button.textContent = 'Create Permanent Reference Data'; render(); status(response.message || 'Permanent Reference Data created.'); }).withFailureHandler(function(error) { button.disabled = false; button.textContent = 'Create Permanent Reference Data'; status(error && error.message ? error.message : 'The workbook could not be created.', true); }).createPermanentReferenceDataWorkbook();
+    }
+    function connect(button) {
+      button.disabled = true; button.textContent = 'Connecting…';
+      google.script.run.withSuccessHandler(function(response) { state.data = response; state.drafts = {}; button.disabled = false; button.textContent = 'Connect existing'; render(); }).withFailureHandler(function(error) { button.disabled = false; button.textContent = 'Connect existing'; status(error && error.message ? error.message : 'The workbook could not be connected.', true); }).connectPermanentReferenceDataWorkbook(el('reference-data-connect-id').value);
+    }
+    function bind() {
+      el('create-reference-data').addEventListener('click', function(event) { create(event.currentTarget); });
+      el('connect-reference-data').addEventListener('click', function(event) { connect(event.currentTarget); });
+      el('refresh-reference-data').addEventListener('click', function() { if (Object.keys(state.drafts).some(function(key) { return Array.isArray(state.drafts[key]); }) && !window.confirm('Discard all unsaved reference changes and reload the Sheet?')) return; load(true); });
+      el('reference-data-subnav').addEventListener('click', function(event) { const button = event.target.closest('[data-reference-category]'); if (button) selectCategory(button.dataset.referenceCategory); });
+      el('reference-data-search').addEventListener('input', function(event) { state.search = event.target.value; renderCategory(); });
+      el('reference-data-rows').addEventListener('input', function(event) { if (event.target.matches('[data-reference-column]')) update(event.target); });
+      el('reference-data-rows').addEventListener('change', function(event) { if (event.target.matches('[data-reference-column]')) update(event.target); });
+      el('reference-data-rows').addEventListener('click', function(event) { const button = event.target.closest('[data-remove-new-reference]'); if (button) removeNew(Number(button.dataset.removeNewReference)); });
+      el('add-reference-row').addEventListener('click', addRow);
+      el('save-reference-category').addEventListener('click', function(event) { save(event.currentTarget); });
+    }
+    return { load: load, bind: bind };
+  })();
+  document.addEventListener('DOMContentLoaded', function() { window.F1XLReferenceData.bind(); });
+</script>

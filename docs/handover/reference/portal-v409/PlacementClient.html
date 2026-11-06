@@ -1,0 +1,71 @@
+<script>
+(function(){
+  'use strict';
+  const placement={data:null,loaded:false,view:'ranking',boardDirty:false,commitmentDirty:false};
+  const byId=function(id){return document.getElementById(id);};
+  const esc=function(value){return String(value==null?'':value).replace(/[&<>"']/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];});};
+  function status(message,error){const element=byId('placement-status');element.hidden=false;element.className='notice workflow-note'+(error?' error':'');element.innerHTML='<strong>'+esc(message)+'</strong>';}
+  function fail(error,fallback){status(error&&error.message?error.message:fallback,true);}
+
+  function load(force){
+    if(placement.loaded&&!force){switchView(placement.view);return;}
+    if(force&&(placement.boardDirty||placement.commitmentDirty)&&!window.confirm('Discard unsaved placement changes and reload the workbook?'))return;
+    status(force?'Refreshing the placement workbook…':'Loading the placement workbook…',false);
+    google.script.run.withSuccessHandler(function(response){placement.data=response;placement.loaded=true;placement.boardDirty=false;placement.commitmentDirty=false;renderAll();switchView(placement.view);status('Time-trial ranking and manual placement board loaded from '+response.sourceName+'.',false);}).withFailureHandler(function(error){fail(error,'The placement workbook could not be loaded.');}).getPlacementWorkspace(force===true);
+  }
+
+  function renderAll(){
+    const data=placement.data;
+    byId('placement-source').textContent=data.sourceName+' · '+data.divisions.length+' division'+(data.divisions.length===1?'':'s');
+    byId('placement-stat-ranked').textContent=data.ranking.length;
+    byId('placement-stat-divisions').textContent=data.divisions.length;
+    byId('placement-stat-placed').textContent=data.divisions.reduce(function(total,division){return total+division.tierOne.concat(division.tierTwo).filter(Boolean).length;},0);
+    byId('placement-stat-commitments').textContent=data.commitments.reduce(function(total,column){return total+column.drivers.filter(Boolean).length;},0);
+    renderRanking();renderBoard();renderCommitments();ensureDriverOptions();updateSaveStates();
+  }
+
+  function switchView(view){placement.view=view;document.querySelectorAll('[data-placement-view]').forEach(function(button){button.classList.toggle('active',button.dataset.placementView===view);});['ranking','board','commitments'].forEach(function(name){byId('placement-'+name).hidden=name!==view;});}
+
+  function renderRanking(){
+    const data=placement.data;
+    byId('placement-ranking-head').innerHTML='<tr><th>Pos</th><th>Driver</th><th>'+esc(data.tracks.one)+' avg</th><th>'+esc(data.tracks.two)+' avg</th><th>Overall avg</th><th>Gap</th></tr>';
+    byId('placement-ranking-rows').innerHTML=data.ranking.map(function(row,index){return '<tr><td>'+esc(row.rank||index+1)+'</td><td><strong>'+esc(row.driver)+'</strong></td><td>'+esc(row.trackOneAverage||'—')+'</td><td>'+esc(row.trackTwoAverage||'—')+'</td><td><strong>'+esc(row.overallAverage||'—')+'</strong></td><td>'+esc(row.gap||'—')+'</td></tr>';}).join('');
+    byId('placement-ranking-empty').hidden=data.ranking.length>0;
+  }
+
+  function input(value,division,tier,row){return '<input type="text" list="placement-driver-options" value="'+esc(value)+'" data-placement-division="'+division+'" data-placement-tier="'+tier+'" data-placement-row="'+row+'">';}
+  function renderBoard(){
+    const divisions=placement.data.divisions;
+    byId('placement-board-head').innerHTML='<tr><th>Slot</th>'+divisions.map(function(division){return '<th>'+esc(division.title)+' · Tier 1</th><th>'+esc(division.title)+' · Tier 2</th>';}).join('')+'</tr>';
+    byId('placement-board-rows').innerHTML=Array.from({length:10},function(_,row){return '<tr><td>'+(row+1)+'</td>'+divisions.map(function(division){return '<td>'+input(division.tierOne[row],division.number,'tierOne',row)+'</td><td>'+input(division.tierTwo[row],division.number,'tierTwo',row)+'</td>';}).join('')+'</tr>';}).join('');
+    byId('placement-role-head').innerHTML='<tr><th>Role</th>'+divisions.map(function(division){return '<th>'+esc(division.title)+'</th>';}).join('')+'</tr>';
+    byId('placement-role-rows').innerHTML=['host','rc'].map(function(role){return '<tr><td>'+(role==='host'?'Host':'RC')+'</td>'+divisions.map(function(division){return '<td><input type="text" list="placement-driver-options" value="'+esc(division[role])+'" data-placement-role="'+role+'" data-placement-division="'+division.number+'"></td>';}).join('')+'</tr>';}).join('');
+  }
+
+  function renderCommitments(){
+    const columns=placement.data.commitments;
+    byId('placement-commitment-head').innerHTML='<tr><th>#</th>'+columns.map(function(column){return '<th>'+esc(column.header)+'</th>';}).join('')+'</tr>';
+    byId('placement-commitment-rows').innerHTML=Array.from({length:72},function(_,row){return '<tr><td>'+(row+1)+'</td>'+columns.map(function(column,index){return '<td><input type="text" list="placement-driver-options" value="'+esc(column.drivers[row])+'" data-placement-commitment-column="'+index+'" data-placement-commitment-row="'+row+'"></td>';}).join('')+'</tr>';}).join('');
+  }
+
+  function ensureDriverOptions(){byId('placement-driver-options').innerHTML=placement.data.ranking.map(function(row){return '<option value="'+esc(row.driver)+'"></option>';}).join('');}
+  function division(number){return placement.data.divisions.find(function(item){return item.number===Number(number);});}
+  function update(target){
+    if(target.dataset.placementTier){const item=division(target.dataset.placementDivision);if(item)item[target.dataset.placementTier][Number(target.dataset.placementRow)]=target.value;placement.boardDirty=true;}
+    if(target.dataset.placementRole){const item=division(target.dataset.placementDivision);if(item)item[target.dataset.placementRole]=target.value;placement.boardDirty=true;}
+    if(target.dataset.placementCommitmentColumn!=null){placement.data.commitments[Number(target.dataset.placementCommitmentColumn)].drivers[Number(target.dataset.placementCommitmentRow)]=target.value;placement.commitmentDirty=true;}
+    updateSaveStates();
+  }
+  function updateSaveStates(){const board=byId('placement-board-save-state');board.textContent=placement.boardDirty?'Unsaved changes':'No unsaved changes';board.classList.toggle('dirty',placement.boardDirty);const commitments=byId('placement-commitment-save-state');commitments.textContent=placement.commitmentDirty?'Unsaved changes':'No unsaved changes';commitments.classList.toggle('dirty',placement.commitmentDirty);}
+
+  function saveBoard(button){if(!placement.boardDirty)return;if(placement.commitmentDirty){status('Save or discard the commitment-list changes before saving the placement board.',true);return;}button.disabled=true;button.textContent='Saving…';status('Saving the manual placement board…',false);google.script.run.withSuccessHandler(function(response){placement.data=response;placement.boardDirty=false;renderAll();button.disabled=false;button.textContent='Save placement board';status(response.message||'Placement board saved.',false);}).withFailureHandler(function(error){fail(error,'The placement board could not be saved.');button.disabled=false;button.textContent='Save placement board';}).savePlacementBoard({revision:placement.data.revision,divisions:placement.data.divisions});}
+  function saveCommitments(button){if(!placement.commitmentDirty)return;if(placement.boardDirty){status('Save or discard the placement-board changes before saving commitment lists.',true);return;}button.disabled=true;button.textContent='Saving…';status('Saving the commitment lists…',false);google.script.run.withSuccessHandler(function(response){placement.data=response;placement.commitmentDirty=false;renderAll();button.disabled=false;button.textContent='Save commitment lists';status(response.message||'Commitment lists saved.',false);}).withFailureHandler(function(error){fail(error,'The commitment lists could not be saved.');button.disabled=false;button.textContent='Save commitment lists';}).savePlacementCommitments({revision:placement.data.revision,commitments:placement.data.commitments});}
+
+  byId('placement-subnav').addEventListener('click',function(event){const button=event.target.closest('[data-placement-view]');if(button)switchView(button.dataset.placementView);});
+  byId('view-placements').addEventListener('input',function(event){if(event.target.matches('[data-placement-tier],[data-placement-role],[data-placement-commitment-column]'))update(event.target);});
+  byId('save-placement-board').addEventListener('click',function(event){saveBoard(event.currentTarget);});
+  byId('save-placement-commitments').addEventListener('click',function(event){saveCommitments(event.currentTarget);});
+  byId('refresh-placements').addEventListener('click',function(){load(true);});
+  window.F1XLPlacement={load:load};
+})();
+</script>

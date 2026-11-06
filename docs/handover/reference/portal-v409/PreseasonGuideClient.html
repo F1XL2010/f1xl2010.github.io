@@ -1,0 +1,89 @@
+<script>
+/** Explanatory navigation only. No saves, automatic transitions or server calls. */
+(function(){
+  const guides=[
+    {view:'season-planning',busy:'season-planning-save',intro:'Start here: save the dates to create this season’s Master and open its preseason hub.',
+      steps:['Choose the season number, applications opening date, first race and number of rounds. Review the suggested deadlines, race dates and social Sundays; all displayed times are UK local time.',
+        'Save to Season Master creates the Master on the first save. Later saves update that same season’s dates. It does not create division workbooks.',
+        'Return here through Season dates to make changes. The number of divisions is decided later in Placement.'],
+      next:'After saving, open Applications & tracker to prepare the returning-driver list.',links:[['intake','Applications & tracker']]},
+    {view:'preseason-intake',busy:'intake-back',intro:'The tracker follows responses; Application processing sends applicants into time trials.',
+      steps:['Start with Preview roster → Add roster to tracker using the actual previous season, including when this is a test season. Processing an application updates the returning driver or adds a new driver to the tracker.',
+        'Record responses and chasing on Tracker, then Save tracker changes. Adding a driver or marking Yes here does not create a time-trial entry.',
+        'Open Application processing, select a name, check/link their permanent profile (search previous names if needed), then Process & archive. This saves the applicant in this Master’s tracker and time-trial queue before archiving the form response.',
+        'Open form responses shows the connected application source. Automatic updates check this inbox while the screen is open. Check the displayed date window if an application is missing.'],
+      next:'Book processed applicants in Time trials. Keep using these two sections together as applications arrive.',links:[['tt','Time trials']]},
+    {view:'preseason-time-trials',busy:'ptt-back',intro:'Select an outstanding driver to arrange their booking and record their trial in this Season Master.',
+      steps:['Drivers arrive when their application is processed. If a driver is missing, check Application processing; a tracker response alone does not add them here.',
+        'Choose and save the two trial tracks. Click a driver’s name, enter booking details and any available laps, then Save booking & results. Partial trials can be saved.',
+        'Enter the SS.SSS values used by the original sheet. Lap 1 is recorded but excluded from the average; laps 2–5 at both tracks are needed for completion. Tick Time trial completed and save.',
+        'Completed drivers leave Bookings and appear by name/date in Completed trials. The full times and sorted averages are available in Placement → Time trials.'],
+      next:'Once trials and the placement meeting are ready, open Placement. Tracks and principals can be prepared alongside applications and trials.',links:[['intake','Applications & tracker'],['placement','Placement']]},
+    {view:'preseason-track-draw',busy:'ptd-back',intro:'Prepare and save the track order privately, then create the optional reveal presentation.',
+      steps:['Load the previous calendar or mark omitted tracks manually. Check Eligible and Guaranteed, then tick the pool review box.',
+        'Draw track order. In Prepared order & sprints, review every round and adjust tracks or weekend types. Omitted tracks are guaranteed inclusion, not an early position.',
+        'Save preparation keeps the draw in this Master’s Track Draw tab. Sprint defaults are rounds 3, 9, 14 and 19 where present. The Master Calendar is filled later by Division preparation.',
+        'Statistics & presentation uses the saved order: choose the history range, prepare/review statistics, then create an editable slide deck if wanted. Review and change images in the deck before presenting it. Neither action publishes the website.'],
+      next:'Prepare Team principals in parallel. The saved track draw is also required when creating division workbooks.',links:[['principals','Team principals'],['preparation','Division preparation']]},
+    {view:'preseason-principals',busy:'ppt-back',intro:'Work through Applications → Voting → Confirmed teams. Accepting a candidate is not appointing them.',
+      steps:['Review each staff application and accept suitable applicants for consideration. Check the received date because the source also contains earlier applications.',
+        'In Voting, set the named voter columns, enter votes and Save votes. Saved scores rank candidates; ties need an admin decision.',
+        'In Confirmed teams, set the team count, assign the chosen principals and mark full teams/free-agent teams. Save team principals; partial saves are allowed, so check the readiness message.',
+        'These team assignments apply across divisions. Racing principals take their own team’s seat in their placed division/tier; check Principal seats / reset draft in Live draft before picking. Reset is only for intentionally restarting the draft.'],
+      next:'Placement decides the divisions and tiers. Draft order becomes available when placements and the team assignments are ready.',links:[['placement','Placement'],['draft','Draft order']]},
+    {view:'preseason-placement',busy:'ppl-back',intro:'Use the meeting to decide divisions, tiers and reserves. Time-trial rank is a starting point for your decisions.',
+      steps:['Review the driver pool alongside social-race performance and prior knowledge. The Time trials tab contains the full results, sorted by overall average, with each driver’s fastest laps highlighted.',
+        'Add divisions and adjust each tier’s main-grid slots. Click/right-click a driver for actions or drag them into a slot. Put reserves under their division and assign a tier; they do not use main-grid seats.',
+        'Save draft keeps work in progress. Confirm placements records the agreed board and allows Draft order to use it. Division workbook creation happens later.',
+        'If the sources change, saved positions are retained but you may need to review and confirm again.'],
+      next:'Once placements are confirmed and team principals are ready, draw and save the Draft order.',links:[['principals','Team principals'],['draft','Draft order']]},
+    {view:'preseason-draft',busy:'pdo-back',intro:'Draw and save the order in which team principals pick. Driver selections happen in Live draft.',
+      steps:['Read the readiness panel. Use Open placements or Open team principals to resolve the named requirements.',
+        'Draw draft order creates a preview. Review it and Save draft order to keep it. Copy saved order only copies text; it does not save a preview.',
+        'The first division order is random; later division orders balance average picking positions. Free-agent teams do not take principal turns.',
+        'Once live picks have started, continue in Live draft. A racing principal is already in their own team’s seat, so that team selects only the remaining teammate in that division.'],
+      next:'After saving the order, open Live draft and check the principal seats before selecting drivers.',links:[['live','Live draft']]},
+    {view:'preseason-live-draft',busy:'pld-refresh',intro:'Make and confirm picks here. Presentation view displays them for the stream.',
+      steps:['The highest division opens first; choose another division when needed. Check Principal seats / reset draft to verify racing principals are linked to their own teams. Reset only when deliberately restarting.',
+        'For the current principal, select the required Tier 1/Tier 2 drivers and confirm. Each confirmed pick is saved immediately to the Master. Tentative highlights are not saved picks.',
+        'After the principal turns, select each remaining driver for a free-agent team or reserves, then Finish division. This confirms its roster; Division allocations is an alternative full-roster review screen.',
+        'For Twitch, use Presentation view in the captured window and control picks from another window or a phone. Each instance has its own division selection. Edit predictions adds named presenters’ choices to the existing division/all-team summaries.'],
+      next:'After Finish division, prepare that division’s workbook. You can continue drafting the other divisions.',links:[['preparation','Division preparation']]},
+    {view:'preseason-allocations',busy:'pal-back',intro:'Use this for roster review or corrections. Finish division in Live draft confirms the same allocations.',
+      steps:['Choose the division. Full-team seats, including racing principals, come from saved Live draft picks. Correct those selections in Live draft.',
+        'Assign unpicked drivers to free-agent teams or division reserves. Part-time drivers belong in reserves with a tier. Spare free-agent seats are allowed; full-team seats must be filled.',
+        'Apply allocation changes the local edit. Save allocations saves work in progress; Confirm this division validates and confirms the complete roster.',
+        'If you already used Finish division in Live draft and the status here is Confirmed, there is no second confirmation to do.'],
+      next:'Once this division is Confirmed, copy it into the operational Master line-up in Division preparation.',links:[['preparation','Division preparation']]},
+    {view:'preseason-preparation',busy:'pprep-refresh',intro:'For each confirmed division: copy its roster → create its workbook → approve both Google Sheets connections.',
+      steps:['Copy roster to Master fills the existing Season Entrants and division line-up, copies the saved track draw to Calendar and records the placement division count. It does not create another Master.',
+        'Create division workbook makes the operational workbook from the clean template. It can take several minutes. If setup was interrupted after building, Finish existing workbook resumes that copy.',
+        'Google needs permission in both directions: the division reads its roster/calendar from the Master, and the Master reads division results. Follow the two numbered connection cards, then check both connections.',
+        'If a cell shows #REF!, select it and look for Allow access. Return here afterwards. Loading can take a short time; a missing Allow access button may require checking that the correct Google account can open both sheets.'],
+      next:'Repeat for the other divisions. When every roster and connection is ready, use the Pre-season back button; season launch/publication is still a later step.',links:[]}
+  ];
+  const destinations={intake:'F1XLPreseasonIntake',tt:'F1XLPreseasonTimeTrials',placement:'F1XLPreseasonPlacement',principals:'F1XLPreseasonPrincipals',draft:'F1XLPreseasonDraft',live:'F1XLPreseasonLiveDraft',allocations:'F1XLPreseasonAllocations',preparation:'F1XLPreseasonPreparation',hub:'F1XLPreseasonHub'};
+  guides.forEach(function(g){
+    const section=document.getElementById('view-'+g.view);if(!section)return;
+    const guide=document.createElement('aside');guide.className='preseason-guide'+(g.view==='preseason-live-draft'?' pld-admin':'');guide.setAttribute('aria-label','Guidance for this stage');
+    const details=document.createElement('details'),summary=document.createElement('summary');summary.textContent='Step-by-step help';details.appendChild(summary);guide.appendChild(details);
+    const content=document.createElement('div');content.className='preseason-guide-content';details.appendChild(content);
+    const intro=document.createElement('p');intro.textContent=g.intro;content.appendChild(intro);
+    const list=document.createElement('ol');g.steps.forEach(function(text){const li=document.createElement('li');li.textContent=text;list.appendChild(li);});content.appendChild(list);
+    const next=document.createElement('p');next.className='secondary-line';next.textContent='Next: '+g.next;content.appendChild(next);
+    const actions=document.createElement('div');actions.className='preseason-guide-actions';
+    const note=document.createElement('p');note.setAttribute('role','status');note.hidden=true;
+    g.links.forEach(function(link){const button=document.createElement('button');button.type='button';button.className='button';button.textContent='Open '+link[1];button.dataset.preseasonGuideTarget=link[0];actions.appendChild(button);
+      button.addEventListener('click',function(){
+        const busy=document.getElementById(g.busy);if(busy&&busy.disabled){note.textContent='Wait for this screen to finish loading or saving, then try again.';note.hidden=false;return;}
+        const heading=section.querySelector('h1'),match=heading&&heading.textContent.match(/^S(\d+(?:\.5)?)\s/);
+        if(!match){note.textContent='Save the season dates first, then use its preseason hub.';note.hidden=false;return;}
+        // Same-season navigation uses the existing controllers; their unsaved
+        // local edits and server-side readiness checks remain in place.
+        window[destinations[link[0]]].open(match[1]);
+      });
+    });content.appendChild(actions);content.appendChild(note);
+    const anchor=section.querySelector('.topbar')||section.querySelector('h1');anchor.insertAdjacentElement('afterend',guide);
+  });
+})();
+</script>

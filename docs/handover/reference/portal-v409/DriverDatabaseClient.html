@@ -1,0 +1,146 @@
+<script>
+  window.F1XLDriverDatabase = (function() {
+    const PAGE_SIZE = 50;
+    const state = { data: null, selectedId: '', page: 1, pageCount: 1 };
+    function el(id) { return document.getElementById(id); }
+    function esc(value) {
+      return String(value == null ? '' : value).replace(/[&<>"']/g, function(character) {
+        return ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[character];
+      });
+    }
+    function status(message, error) { const target = el('driver-database-status'); target.innerHTML = '<strong>' + esc(message) + '</strong>'; target.classList.toggle('error', !!error); }
+    function load(force) {
+      if (!window.google || !google.script || !google.script.run) return status('Open this through the deployed Admin Platform to load the Driver Database.', true);
+      status('Loading Driver Database…');
+      google.script.run.withSuccessHandler(function(response) { state.data = response; render(); }).withFailureHandler(function(error) { status(error && error.message ? error.message : 'The Driver Database could not be loaded.', true); }).getDriverDatabase(force === true);
+    }
+    function render() {
+      const data = state.data || {};
+      el('driver-database-stats').hidden = !data.configured;
+      el('driver-database-unconfigured').hidden = !!data.configured;
+      el('driver-database-panel').hidden = !data.configured;
+      el('driver-career-template-panel').hidden = !data.configured;
+      if (!data.configured) return status(data.message || 'No Driver Database has been connected yet.');
+      el('driver-db-total').textContent = data.counts.drivers; el('driver-db-honours').textContent = data.counts.mergeRows; el('driver-database-sheet-link').href = data.workbookUrl;
+      const query = (el('driver-database-search').value || '').trim().toLowerCase();
+      const rows = data.drivers.filter(function(driver) { return !query || [driver.driverId, driver.gamertag, driver.discordId].concat(driver.aliases.map(function(item) { return item.alias; })).join(' ').toLowerCase().includes(query); });
+      state.pageCount = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+      state.page = Math.min(Math.max(1, state.page), state.pageCount);
+      const start = (state.page - 1) * PAGE_SIZE;
+      const visibleRows = rows.slice(start, start + PAGE_SIZE);
+      el('driver-database-rows').innerHTML = visibleRows.map(function(driver) {
+        const aliases = driver.aliases.map(function(item) { return item.alias; }).join(' · ') || '—';
+        return '<tr><td>' + esc(driver.driverId) + '</td><td><button class="name-button" type="button" data-driver-id="' + esc(driver.driverId) + '">' + esc(driver.gamertag) + '</button></td><td>' + esc(driver.discordId || '—') + '</td><td>' + esc(aliases) + '</td></tr>';
+      }).join('');
+      el('driver-database-visible-count').textContent = rows.length ? 'Showing ' + (start + 1) + '–' + (start + visibleRows.length) + ' of ' + rows.length + ' matching profile' + (rows.length === 1 ? '.' : 's.') : 'Showing 0 matching profiles.';
+      el('driver-database-pagination').hidden = rows.length === 0;
+      el('driver-database-previous').disabled = state.page === 1;
+      el('driver-database-next').disabled = state.page === state.pageCount;
+      const pageSelect = el('driver-database-page');
+      pageSelect.innerHTML = Array.from({ length:state.pageCount }, function(_, index) { return '<option value="' + (index + 1) + '">' + (index + 1) + ' of ' + state.pageCount + '</option>'; }).join('');
+      pageSelect.value = String(state.page);
+      pageSelect.disabled = state.pageCount === 1;
+      el('driver-database-empty').hidden = rows.length > 0; status(data.message || 'Driver Database loaded.');
+      if (window.F1XLDriverCareerTemplates) window.F1XLDriverCareerTemplates.load(false);
+    }
+    function changePage(page) {
+      state.page = Math.min(Math.max(1, Number(page) || 1), state.pageCount);
+      render();
+      el('driver-database-panel').scrollIntoView({ block:'start' });
+    }
+    function selected() { return (state.data && state.data.drivers || []).filter(function(driver) { return driver.driverId === state.selectedId; })[0] || null; }
+    function openProfile(driverId) {
+      state.selectedId = driverId || ''; const driver = selected();
+      el('driver-database-dialog-title').textContent = driver ? driver.gamertag : 'Add driver profile'; el('driver-database-dialog-subtitle').textContent = driver ? driver.driverId : 'Create a permanent F1XL identity record';
+      el('driver-db-id').value = driver ? driver.driverId : ''; el('driver-db-id-display').textContent = driver ? driver.driverId : 'Created automatically when saved'; el('driver-db-gamertag').value = driver ? driver.gamertag : ''; el('driver-db-discord').value = driver ? driver.discordId : ''; el('driver-db-stream').value = driver ? driver.streamLink : '';
+      el('driver-db-aliases').innerHTML = driver ? (driver.aliases.length ? driver.aliases.map(function(item) { return '<div class="inline-actions"><span class="status">' + esc(item.alias) + '</span><button class="button danger" type="button" data-remove-alias="' + item.sourceRow + '">Remove</button></div>'; }).join('') : '<span class="secondary-line">No previous gamertags recorded.</span>') : '<span class="secondary-line">Save the profile first, then add any known previous gamertags.</span>';
+      el('driver-db-alias-input').value = ''; el('driver-db-alias-tools').hidden = !driver; el('driver-database-dialog').showModal();
+      loadRename(driver);
+    }
+    function save(button) {
+      const input = { driverId: el('driver-db-id').value, gamertag: el('driver-db-gamertag').value, discordId: el('driver-db-discord').value, streamLink: el('driver-db-stream').value };
+      if(renameBusy)return;
+      if(selected()&&input.gamertag.trim()!==selected().gamertag&&renameLoading){renameStatus('Still checking the active season. Please wait before saving the name change.');return;}
+      if(selected()&&input.gamertag.trim()!==selected().gamertag&&renameSeasons.length){el('driver-rename-panel').scrollIntoView({block:'nearest'});if(renameJob)renameStatus('Resume the unfinished name change below.');else el('driver-rename-check').click();return;}
+      button.disabled = true; button.textContent = 'Saving…';
+      google.script.run.withSuccessHandler(function(response) { state.data = response; button.disabled = false; button.textContent = 'Save profile'; render(); el('driver-database-dialog').close(); status('Saved — the driver profile is now in the permanent database.'); }).withFailureHandler(function(error) { button.disabled = false; button.textContent = 'Save profile'; status(error && error.message ? error.message : 'The profile could not be saved.', true); }).saveDriverProfile(input);
+    }
+    function addAlias(button) {
+      const driver = selected(); if (!driver) return; button.disabled = true;
+      google.script.run.withSuccessHandler(function(response) { state.data = response; button.disabled = false; render(); openProfile(driver.driverId); status('Previous gamertag saved.'); }).withFailureHandler(function(error) { button.disabled = false; status(error && error.message ? error.message : 'The previous gamertag could not be saved.', true); }).addDriverAlias({ driverId: driver.driverId, alias: el('driver-db-alias-input').value });
+    }
+    function removeAlias(button) {
+      const driver = selected(); if (!driver || !window.confirm('Remove this previous gamertag from the driver profile?')) return; button.disabled = true;
+      google.script.run.withSuccessHandler(function(response) { state.data = response; button.disabled = false; render(); openProfile(driver.driverId); status('Previous gamertag removed.'); }).withFailureHandler(function(error) { button.disabled = false; status(error && error.message ? error.message : 'The previous gamertag could not be removed.', true); }).removeDriverAlias({ sourceRow: Number(button.dataset.removeAlias) });
+    }
+    function create(button) {
+      if (!window.confirm('Find and reconnect the existing TEST Permanent Driver Registry?\n\nA new registry will be created only if no recognised existing workbook can be found.')) return; button.disabled = true; button.textContent = 'Searching…';
+      google.script.run.withSuccessHandler(function(response) { state.data = response; button.disabled = false; button.textContent = 'Find existing registry'; render(); status(response.message || 'Permanent Driver Registry connected.'); }).withFailureHandler(function(error) { button.disabled = false; button.textContent = 'Find existing registry'; status(error && error.message ? error.message : 'The Permanent Driver Registry could not be connected.', true); }).createDriverDatabaseWorkbook();
+    }
+    function connect(button) {
+      button.disabled = true; google.script.run.withSuccessHandler(function(response) { state.data = response; button.disabled = false; render(); status('Existing Driver Database connected.'); }).withFailureHandler(function(error) { button.disabled = false; status(error && error.message ? error.message : 'That workbook could not be connected.', true); }).connectDriverDatabaseWorkbook(el('driver-db-connect-id').value);
+    }
+    let renameBusy=false,renameLoading=false,renameGeneration=0,renameSeasons=[],renamePreview=null,renameJob=null;
+    const renameRpc=(name,input)=>new Promise((resolve,reject)=>google.script.run.withSuccessHandler(resolve).withFailureHandler(reject)[name](input));
+    function renameStatus(message){el('driver-rename-status').textContent=message;}
+    function renameLock(b){renameBusy=b;el('driver-database-dialog').querySelectorAll('button,input,select').forEach(e=>e.disabled=b);}
+    function ensureRename(){
+      if(el('driver-rename-panel'))return;
+      const panel=document.createElement('div');panel.id='driver-rename-panel';panel.className='detail wide';
+      panel.innerHTML='<strong>Change gamertag throughout this season</strong><p>Enter the new name above. This keeps the same Driver ID, points and seats, and remembers previous names. Written ticket evidence and historical seasons stay unchanged.</p><label>Season <select id="driver-rename-season"></select></label><p id="driver-rename-status" role="status" aria-live="polite"></p><div id="driver-rename-preview"></div><div class="inline-actions"><button class="button" type="button" id="driver-rename-check">Preview season name change</button><button class="button" type="button" id="driver-rename-confirm" hidden>Confirm name change</button><button class="button" type="button" id="driver-rename-resume" hidden>Resume name change</button></div>';
+      el('driver-db-gamertag').closest('.detail').after(panel);
+      panel.style.minWidth='0';panel.querySelector('.inline-actions').style.flexWrap='wrap';panel.querySelectorAll('button').forEach(b=>{b.style.whiteSpace='normal';b.style.maxWidth='100%';});
+      const reset=()=>{renamePreview=null;el('driver-rename-confirm').hidden=true;el('driver-rename-preview').innerHTML='';};
+      el('driver-db-gamertag').addEventListener('input',reset);
+      el('driver-rename-season').addEventListener('change',()=>{reset();showPendingRename();});
+      el('driver-rename-check').onclick=async()=>{
+        if(renameBusy||!el('driver-rename-season').value)return;reset();renameLock(true);renameStatus('Checking the season records…');
+        try{renamePreview=await renameRpc('previewSeasonDriverRename',{season:el('driver-rename-season').value,driverId:state.selectedId,gamertag:el('driver-db-gamertag').value});
+          renameStatus(renamePreview.old+' → '+renamePreview.gamertag+' · '+renamePreview.count+' fields to update. Not saved yet — press Confirm name change below.');
+          el('driver-rename-preview').innerHTML='<details><summary>Where the name will change</summary><ul>'+renamePreview.tables.map(t=>'<li>'+esc(t.name)+' ('+t.count+')</li>').join('')+'</ul></details>';
+          el('driver-rename-confirm').hidden=!renamePreview.count;
+        }catch(e){renameStatus(e.message);}finally{renameLock(false);}
+      };
+      el('driver-rename-confirm').onclick=async()=>{
+        if(renameBusy||!renamePreview)return;renameLock(true);renameStatus('Preparing the name change…');
+        try{const result=await renameRpc('beginSeasonDriverRename',renamePreview);renameJob=result.job;await finishRename();}
+        catch(e){renameStatus(e.message+' Reopen this profile to check for an unfinished change.');}
+        finally{renameLock(false);el('driver-rename-confirm').hidden=true;el('driver-rename-resume').hidden=!renameJob;}
+      };
+      el('driver-rename-resume').onclick=async()=>{if(renameBusy||!renameJob)return;renameLock(true);try{await finishRename();}catch(e){renameStatus(e.message+' The completed parts are retained. Use Resume after correcting the issue.');}finally{renameLock(false);el('driver-rename-resume').hidden=!renameJob;}};
+      el('driver-database-dialog').addEventListener('cancel',e=>{if(renameBusy)e.preventDefault();});
+      el('driver-database-dialog').addEventListener('click',e=>{if(renameBusy){e.stopImmediatePropagation();}},true);
+      window.addEventListener('beforeunload',e=>{if(renameBusy){e.preventDefault();e.returnValue='';}});
+    }
+    function showPendingRename(){
+      renameJob=(renameSeasons.find(s=>s.season===el('driver-rename-season').value)||{}).pending||null;
+      el('driver-rename-check').hidden=!!renameJob;el('driver-rename-resume').hidden=!renameJob;
+      renameStatus(renameJob?'Unfinished change: '+renameJob.old+' → '+renameJob.name+'. Resume to complete it.':'Preview the records before applying the new name.');
+    }
+    async function loadRename(driver){
+      ensureRename();const generation=++renameGeneration;renameSeasons=[];renamePreview=null;renameJob=null;renameLoading=false;
+      const allowed=driver&&['drivers','results','licences','tickets'].every(a=>window.F1XLAccess?.can(a,2));
+      el('driver-rename-panel').hidden=!allowed;if(!allowed)return;
+      el('driver-rename-season').innerHTML='';el('driver-rename-confirm').hidden=true;el('driver-rename-resume').hidden=true;el('driver-rename-preview').innerHTML='';renameStatus('Finding this driver’s current seasons…');
+      renameLoading=true;
+      try{const response=await renameRpc('getDriverRenameOptions',{driverId:driver.driverId});if(generation!==renameGeneration)return;
+        renameSeasons=response.seasons;el('driver-rename-season').innerHTML=renameSeasons.map(s=>'<option value="'+esc(s.season)+'">'+esc(s.name)+'</option>').join('');
+        showPendingRename();if(!renameSeasons.length)renameStatus('This profile has no entrant record in an active TEST season. Use Save profile for registry changes.');
+      }catch(e){if(generation===renameGeneration)renameStatus(e.message);}finally{if(generation===renameGeneration)renameLoading=false;}
+    }
+    async function finishRename(){
+      el('driver-rename-confirm').hidden=true;
+      for(;;){const result=await renameRpc('continueSeasonDriverRename',{season:renameJob.season,id:renameJob.id});
+        renameStatus(result.done?result.message:'Updating '+result.message+' · '+result.completed+' / '+result.total+' fields');
+        if(result.done){renameJob=null;renameSeasons.forEach(s=>s.pending=null);state.data=await renameRpc('getDriverDatabase',true);render();if(selected())el('driver-database-dialog-title').textContent=selected().gamertag;return;}
+      }
+    }
+    function bind() {
+      el('driver-database-page').addEventListener('change', function(event) { changePage(event.currentTarget.value); });
+      el('driver-database-previous').addEventListener('click', function() { changePage(state.page - 1); });
+      el('driver-database-next').addEventListener('click', function() { changePage(state.page + 1); });
+      el('refresh-driver-database').addEventListener('click', function() { load(true); }); el('driver-database-search').addEventListener('input', function() { state.page = 1; render(); }); el('new-driver-profile').addEventListener('click', function() { openProfile(''); }); el('driver-database-rows').addEventListener('click', function(event) { const button = event.target.closest('[data-driver-id]'); if (button) openProfile(button.dataset.driverId); }); el('create-driver-database').addEventListener('click', function(event) { create(event.currentTarget); }); el('connect-driver-database').addEventListener('click', function(event) { connect(event.currentTarget); }); el('save-driver-profile').addEventListener('click', function(event) { save(event.currentTarget); }); el('add-driver-alias').addEventListener('click', function(event) { addAlias(event.currentTarget); }); el('driver-db-aliases').addEventListener('click', function(event) { const button = event.target.closest('[data-remove-alias]'); if (button) removeAlias(button); }); el('close-driver-database-dialog').addEventListener('click', function() { el('driver-database-dialog').close(); }); el('driver-database-dialog').addEventListener('click', function(event) { if (event.target === event.currentTarget) event.currentTarget.close(); });
+    }
+    bind(); return { load: load };
+  })();
+</script>

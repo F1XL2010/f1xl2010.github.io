@@ -1,0 +1,46 @@
+<script>
+window.F1XLNavigation=(function(){
+  const guards={},nav=document.getElementById('main-navigation');
+  let used=false;
+  function register(view,pending,context){guards[view]={pending:pending,context:context||(()=>({}))};}
+  function visibleView(){return Array.from(document.querySelectorAll('main > section[id^="view-"]')).find(e=>!e.hidden);}
+  function paint(){
+    const root=visibleView();if(!root)return;
+    const view=root.id.slice(5),context=guards[view]?.context()||{},season=String(context.season||'');
+    nav.querySelectorAll('.nav-button').forEach(b=>{
+      const direct=b.dataset.view===view&&!(view==='season-planning'&&season);
+      const seasonal=b.dataset.sidebarView===view&&b.dataset.sidebarSeason===season&&(!b.dataset.sidebarArea||b.dataset.sidebarArea===context.area);
+      b.classList.toggle('active',direct||seasonal);if(direct||seasonal){b.setAttribute('aria-current','page');const group=b.closest('details');if(group)group.open=true;}else b.removeAttribute('aria-current');
+    });
+  }
+  // Check the source screen before a sidebar handler changes its season/state.
+  // A guard means unsaved edits or an in-flight save only. Initial data loads
+  // must never trap somebody on a screen.
+  nav.addEventListener('click',function(e){
+    const button=e.target.closest('button');if(!button||button.hasAttribute('data-preseason-toggle'))return;
+    used=true;
+    const root=visibleView(),guard=root&&guards[root.id.slice(5)];
+    if(guard&&guard.pending()){
+      e.preventDefault();e.stopImmediatePropagation();document.getElementById('sidebar-status').textContent='Save or discard this screen’s edits, and let any save finish, before changing sections.';return;
+    }
+    document.getElementById('sidebar-status').textContent='';
+  },true);
+  // Other explicit navigation must also prevent a delayed startup reply redirecting the user.
+  document.addEventListener('click',e=>{if(e.isTrusted&&e.target.closest('button,a,summary'))used=true;},true);
+  window.addEventListener('f1xl-view-change',paint);
+  function startup(hubs,unavailable,error,postseasonHubs){
+    const status=document.getElementById('sidebar-status'),retry=document.getElementById('sidebar-retry');
+    const warning=error?'Could not load the season menu. Retry, or open Season archive.':unavailable.length?'Could not check Season '+unavailable.join(', ')+'. Retry, or check Season archive.':'';
+    status.textContent=warning;retry.hidden=!warning;
+    const initial=document.getElementById('season-startup-message');initial.textContent=warning||'Choose a season or start a new one.';
+    if(used||visibleView()?.id!=='view-overview')return;
+    if(warning)return;
+    if(window.F1XLAccess&&window.F1XLAccess.home(hubs))return;
+    used=true;
+    const sorted=hubs.slice().sort((a,b)=>Number(b.season)-Number(a.season)),hub=sorted.find(h=>h.active)||sorted[0],post=(postseasonHubs||[]).slice().sort((a,b)=>Number(b.season)-Number(a.season))[0];
+    // Wait until all included clients are initialised, even with a synchronous test RPC.
+    setTimeout(()=>{if(visibleView()?.id!=='view-overview')return;if(hub)window.F1XLPreseasonHub.open(hub.season);else if(post)window.F1XLPostseason.open(post.season);else document.getElementById('start-new-season').click();},0);
+  }
+  return {register:register,paint:paint,startup:startup};
+})();
+</script>

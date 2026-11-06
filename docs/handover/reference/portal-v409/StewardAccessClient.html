@@ -1,0 +1,123 @@
+<style>
+#view-steward-desk .desk-heading{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:12px}#view-steward-desk h1{font-size:30px;margin:0}#fap-desk-identity,#fap-desk-count{font-size:13px;color:var(--muted)}
+.desk-toolbar{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px}.desk-toolbar select{width:auto;max-width:100%}#fap-desk-status{font-size:13px;flex:1;min-width:180px}#fap-desk-status[data-error="true"]{color:var(--red)}
+.desk-ticket-nav{display:flex;align-items:center;gap:8px;margin-bottom:12px}.desk-ticket-nav select{flex:1;min-width:0}.desk-ticket-nav button{min-width:42px;min-height:40px}#fap-desk-count{white-space:nowrap}
+.desk-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:14px;height:calc(100dvh - 265px);min-height:440px;max-height:850px}.desk-layout>section{min-width:0;min-height:0;display:flex;flex-direction:column;overflow:hidden}.desk-tabs{display:flex;flex-wrap:wrap;gap:6px;padding:12px;border-bottom:1px solid var(--line)}.desk-tabs button[aria-pressed="true"]{border-color:var(--green);color:var(--green);background:var(--green2)}
+#fap-desk-evidence{padding:16px;overflow:auto;flex:1;min-height:0;overflow-wrap:anywhere}#fap-desk-evidence p{white-space:pre-wrap;line-height:1.55}#fap-desk-evidence h3{font-size:17px;margin:0 0 8px}.desk-evidence-links{display:flex;flex-wrap:wrap;gap:8px}.desk-colleague{padding:12px 0;border-bottom:1px solid var(--line)}.desk-colleague:first-child{padding-top:0}.desk-colleague small{display:block;color:var(--muted);margin-top:5px}.desk-colleague p{margin:8px 0}.desk-editor-heading{padding:12px 16px;border-bottom:1px solid var(--line)}.desk-editor-heading h2{font-size:18px;margin:0 0 4px}.desk-editor-heading span{font-size:13px;color:var(--muted)}
+#fap-desk-rows{padding:14px 16px;flex:1;min-height:0;overflow:auto}#fap-desk-rows [data-review-row]{display:flex;flex-direction:column;height:100%;gap:12px}.desk-review-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}.desk-review-fields label{display:flex;flex-direction:column;gap:5px;font-size:13px}.desk-review-fields .wide{grid-column:1/-1}.desk-reasoning{display:flex;flex:1;min-height:120px;flex-direction:column;gap:6px;font-size:13px}#fap-desk-rows textarea{flex:1;min-height:96px;resize:vertical;width:100%;box-sizing:border-box;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:12px;font:inherit;font-size:16px;line-height:1.55}#fap-desk-rows textarea:focus{outline:2px solid var(--green);outline-offset:1px}.desk-completion{display:flex;align-items:center;gap:10px;font-size:13px}.desk-completion select{flex:1}.desk-completion small{color:var(--muted)}#fap-desk-mobile-tabs{display:none}
+@media(max-width:760px){#view-steward-desk h1{font-size:24px}#view-steward-desk .desk-heading{display:block}#fap-desk-identity{display:block;margin-top:5px}.desk-toolbar{display:grid;grid-template-columns:minmax(100px,.8fr) minmax(0,1.4fr);gap:8px}.desk-toolbar select{width:100%;min-width:0}.desk-toolbar #fap-desk-status{grid-column:1/-1;min-width:0}.desk-ticket-nav{flex-wrap:wrap}#fap-desk-count{width:100%;text-align:right}#fap-desk-mobile-tabs{display:flex;gap:8px;margin-bottom:10px}#fap-desk-mobile-tabs button[aria-pressed="true"]{border-color:var(--green);color:var(--green)}.desk-layout{display:block;height:calc(100dvh - 330px);min-height:410px;max-height:none}.desk-layout>section{height:100%}.desk-layout[data-mobile="editor"] .desk-evidence-pane,.desk-layout[data-mobile="evidence"] .desk-editor-pane{display:none}.desk-completion{flex-wrap:wrap}.desk-completion small{width:100%}.desk-review-fields{gap:8px}}
+
+.desk-reasoning-heading{display:flex;justify-content:space-between;align-items:center;gap:12px}.desk-save-feedback{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--muted)}.desk-save-feedback[data-state="saving"]{color:var(--amber)}.desk-save-feedback[data-state="saved"]{color:var(--green)}.desk-save-feedback[data-state="error"]{color:var(--red)}.desk-save-feedback[data-state="saving"]::before{content:"";width:10px;height:10px;flex-shrink:0;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:desk-save-spin .9s linear infinite}.desk-peer-note{color:var(--muted);font-size:13px}.desk-editor-heading span{overflow-wrap:anywhere}
+@keyframes desk-save-spin{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){.desk-save-feedback[data-state="saving"]::before{animation:none}}
+@media(max-width:760px){
+ #view-steward-desk .desk-toolbar :is(select,.button),#view-steward-desk .desk-ticket-nav :is(select,.button),#view-steward-desk .desk-tabs .button,#fap-desk-mobile-tabs .button{min-height:44px}
+ #view-steward-desk :is(input,select,textarea){font-size:16px}
+ .desk-layout{height:auto;min-height:0;max-height:none}.desk-layout>section{height:auto;overflow:visible}
+ #fap-desk-evidence,#fap-desk-rows{overflow:visible;flex:none;min-height:0}
+ #fap-desk-rows [data-review-row]{height:auto;gap:16px}.desk-reasoning{flex:none;min-height:0}
+ #fap-desk-rows textarea{flex:none;min-height:240px;line-height:1.6}
+ #fap-desk-rows :is(input,select){min-height:44px;width:100%;box-sizing:border-box}
+ .desk-completion{display:block}.desk-completion select{display:block;margin:6px 0}.desk-completion small{display:block;line-height:1.5}
+ #fap-desk-mobile-tabs{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}#fap-desk-mobile-tabs .button{white-space:normal}
+ .desk-review-fields{gap:12px}.desk-review-fields label,.desk-reasoning,.desk-completion{font-size:15px}
+ .desk-tabs{gap:8px}.desk-tabs .button{flex:1 1 110px;white-space:normal}.desk-evidence-links .button{min-height:44px}
+ .desk-toolbar #fap-desk-status{overflow-wrap:anywhere;line-height:1.5}.desk-save-feedback{max-width:60%;text-align:right}
+ .desk-reasoning-heading{align-items:flex-start}
+}
+</style>
+<script>
+window.F1XLStewardDesk=(function(){
+  const el=id=>document.getElementById(id),esc=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  let board=null,dirty=new Map(),serial=0,loading=false,transition=false,inFlight=null,side='steward',round='',active='',tab='incident',saveTimer=null,saveError='';
+  const rpc=(n,input)=>F1XLAccess.rpc(n,input),current=()=>board?.tickets.find(t=>t.caseId===active),canEdit=()=>F1XLAccess.can(side,2);
+  const pending=()=>dirty.size||inFlight,options=(values,v)=>Array.from(new Set([''].concat(values||[],v||''))).map(s=>'<option value="'+esc(s)+'"'+(s===v?' selected':'')+'>'+esc(s||'—')+'</option>').join('');
+  function status(s,error){el('fap-desk-status').textContent=s;el('fap-desk-status').dataset.error=String(!!error);}
+  function saveFeedback(){
+    const target=el('fap-desk-review-save');if(!target)return;
+    const mode=!canEdit()?'readonly':saveError?'error':inFlight||dirty.size?'saving':'saved';
+    const text=mode==='readonly'?'View only':mode==='error'?'Not saved · Retry save':inFlight?'Saving…':dirty.size?'Waiting to save…':'Saved';
+    if(target.textContent!==text)target.textContent=text;target.dataset.state=mode;
+  }
+  function controls(){
+    const blocked=loading||transition;
+    ['side','round','refresh'].forEach(id=>el('fap-desk-'+id).disabled=blocked||!!inFlight);
+    el('fap-desk-save').disabled=blocked||!!inFlight||!dirty.size||!canEdit();el('fap-desk-save').textContent=saveError?'Retry save':inFlight?'Saving…':'Save now';
+    el('fap-desk-discard').hidden=!saveError;el('fap-desk-discard').disabled=blocked||!!inFlight;
+    el('fap-desk-ticket').disabled=blocked||!board?.tickets.length;
+    const index=board?.tickets.findIndex(t=>t.caseId===active)??-1;
+    el('fap-desk-prev').disabled=blocked||index<=0;el('fap-desk-next').disabled=blocked||index<0||index>=board.tickets.length-1;
+    el('fap-desk-rows').querySelectorAll('input,textarea,select').forEach(e=>e.disabled=blocked||!canEdit());saveFeedback();
+  }
+  function ticketLabel(t){return '#'+t.ticketNumber+' · D'+t.division+' · '+t.submitter+' v '+t.offender+' · '+(t.review.state||'Draft')+(dirty.has(t.caseId)?' · Unsaved':'');}
+  function ticketOptions(){el('fap-desk-ticket').innerHTML=board?.tickets.map(t=>'<option value="'+esc(t.caseId)+'">'+esc(ticketLabel(t))+'</option>').join('')||'<option value="">No '+(side==='appeal'?'appealed ':'')+'tickets for this round</option>';el('fap-desk-ticket').value=active;const count=board?.tickets.filter(t=>['Submitted','Recused'].includes(t.review.state)).length||0;el('fap-desk-count').textContent=count+' / '+(board?.tickets.length||0)+' reviewed';}
+  function links(values){return '<div class="desk-evidence-links">'+(values||[]).filter(Boolean).map((v,i)=>/^https?:\/\//i.test(v)?'<a class="button" href="'+esc(v)+'" target="_blank" rel="noopener noreferrer">Evidence '+(i+1)+' ↗</a>':'<p>'+esc(v)+'</p>').join('')+'</div>';}
+  function prose(value){let text=String(value||''),result='',last=0;for(const m of text.matchAll(/https?:\/\/[^\s<>"']+/g)){result+=esc(text.slice(last,m.index))+'<a href="'+esc(m[0])+'" target="_blank" rel="noopener noreferrer">'+esc(m[0])+'</a>';last=m.index+m[0].length;}return result+esc(text.slice(last));}
+  function votes(values){return (values||[]).map(v=>'<article class="desk-colleague"><strong>'+esc(v.name)+'</strong><small>'+esc(v.state||'Draft')+' · '+esc(v.penalty||'No decision yet')+(v.timePenalty?' · '+esc(v.timePenalty):'')+(v.atFault?' · '+esc(v.atFault):'')+'</small><p>'+prose(v.comments||'No reasoning entered yet.')+'</p></article>').join('');}
+  function evidence(){
+    const t=current(),tabs=side==='appeal'?[['appeal','Appeal'],['incident','Original ticket'],['defence','Defence'],['original','Original decision'],['colleagues','Appeal decisions']]:[['incident','Ticket'],['defence','Defence'],['colleagues','Steward decisions']];
+    if(!tabs.some(x=>x[0]===tab))tab=tabs[0][0];
+    el('fap-desk-evidence-tabs').innerHTML=tabs.map(([key,label])=>'<button class="button" type="button" data-desk-tab="'+key+'" aria-pressed="'+(tab===key)+'">'+label+'</button>').join('');
+    if(!t){el('fap-desk-evidence').innerHTML='<p>No '+(side==='appeal'?'appealed ':'')+'tickets for this round.</p>';return;}
+    let html='<h3>#'+esc(t.ticketNumber)+' · Division '+esc(t.division)+' · '+esc(t.session||'Session not set')+'</h3><p>'+esc(t.submitter)+' v '+esc(t.offender)+'</p>';
+    if(tab==='incident')html+='<p>'+prose(t.description||'No description supplied.')+'</p>'+links(t.evidence);
+    if(tab==='defence')html+='<p>'+prose(t.defenceComments||'No defence supplied.')+'</p>'+links(t.defenceEvidence);
+    if(tab==='appeal')html+='<p>'+prose(t.appealDescription||'No appeal description supplied.')+'</p>'+links(t.appealEvidence);
+    if(tab==='original'){const original=board.originalDecisions?.[t.caseId],o=original?.outcome;html+=o?'<h3>'+esc(original.label)+'</h3><p>'+esc(o[0]||'No driver named')+' · '+esc(o[2]||'No penalty')+'</p><p>'+prose(o[3])+'</p><p>'+esc(t.submitter)+': '+esc(o[6]||'No time penalty')+' · '+esc(t.offender)+': '+esc(o[9]||'No time penalty')+'</p>':'<p>No published decision available.</p>';html+='<h3>Original steward reviews</h3>'+votes(t.originalReviews);}
+    if(tab==='colleagues')html+='<p class="desk-peer-note">Read-only reviews · edit your own fields under Your judgement.</p>'+votes((t.reviews||[]).map(v=>v.name===board.reviewerName?{...v,...t.review,name:v.name+' (you)'}:v));
+    el('fap-desk-evidence').innerHTML=html;
+  }
+  function renderEditor(){
+    const t=current();el('fap-desk-case-title').textContent=t?'#'+t.ticketNumber+' · '+t.submitter+' v '+t.offender:'';
+    el('fap-desk-identity').textContent=board?'Reviewing as '+board.reviewerName+(canEdit()?'':' · View only'):'';
+    el('fap-desk-rows').innerHTML=t?'<div data-review-row="'+t.sheetRow+'"><div class="desk-review-fields"><label>Licence penalty<select data-review-field="penalty" aria-label="Licence penalty">'+options(board.options.penalties,t.review.penalty)+'</select></label><label>Time penalty<select data-review-field="timePenalty" aria-label="Time penalty">'+options(board.options.timePenalties,t.review.timePenalty)+'</select></label><label class="wide">Driver(s) at fault<input data-review-field="atFault" aria-label="Driver at fault" list="fap-desk-drivers" value="'+esc(t.review.atFault)+'"><datalist id="fap-desk-drivers"><option value="'+esc(t.submitter)+'"><option value="'+esc(t.offender)+'"></datalist></label></div><label class="desk-reasoning"><span class="desk-reasoning-heading"><span>Your reasoning</span><small id="fap-desk-review-save" class="desk-save-feedback"></small></span><textarea data-review-field="comments" aria-label="Your reasoning" aria-describedby="fap-desk-review-save" placeholder="Explain your decision…">'+esc(t.review.comments)+'</textarea></label><label class="desk-completion">Status<select data-review-field="state" aria-label="Review completion">'+options(['Draft','Submitted','Recused'],t.review.state||'Draft')+'</select><small>Submitted = ready for the head steward.</small></label></div>':'<p>Nothing to review.</p>';
+    controls();
+  }
+  function render(){ticketOptions();renderEditor();evidence();}
+  function remember(){try{sessionStorage.setItem('fap-desk-round:'+side,round);}catch(e){}}
+  function preferred(){try{return sessionStorage.getItem('fap-desk-round:'+side)||'';}catch(e){return '';}}
+  function acceptBoard(data){board=data;el('fap-desk-layout').dataset.mobile='evidence';el('fap-desk-mobile-tabs').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.deskMobile==='evidence')));round=data?.sheetName||'';el('fap-desk-round').value=round;if(!board?.tickets.some(t=>t.caseId===active))active=board?.tickets[0]?.caseId||'';dirty.clear();saveError='';remember();render();}
+  async function loadRound(){
+    const wanted=el('fap-desk-round').value;if(!wanted)return;loading=true;controls();status('Loading tickets…');
+    try{acceptBoard(await rpc('getStewardDesk',{side,sheetName:wanted}));status('Ready · changes save automatically.');}
+    catch(e){el('fap-desk-round').value=round;status('Could not load this round. '+e.message,true);}finally{loading=false;controls();}
+  }
+  async function loadRounds(){
+    loading=true;controls();status('Loading tickets…');
+    try{const r=await rpc('getStewardDesk',{side,includeBoard:true,preferredRound:preferred()});el('fap-desk-round').innerHTML=r.rounds.map(r=>'<option value="'+esc(r.sheetName)+'">S'+esc(r.season)+' · R'+esc(r.round)+' · '+esc(r.track)+'</option>').join('');acceptBoard(r.board||null);status(r.board?'Ready · changes save automatically.':'No registered ticket rounds yet.');}
+    catch(e){status(e.message,true);}finally{loading=false;controls();}
+  }
+  async function open(){if(loading||transition)return;await afterSave(async()=>{side=F1XLAccess.can(side)?side:F1XLAccess.can('steward')?'steward':'appeal';el('fap-desk-side').value=side;Array.from(el('fap-desk-side').options).forEach(o=>o.hidden=!F1XLAccess.can(o.value));tab=side==='appeal'?'appeal':'incident';await loadRounds();});}
+  function changed(){const t=current();if(!t)return;dirty.set(t.caseId,++serial);saveError='';ticketOptions();status(inFlight?'Saving… further edits queued.':'Unsaved changes · saving shortly.');scheduleSave();controls();}
+  function scheduleSave(){clearTimeout(saveTimer);saveTimer=setTimeout(()=>{saveTimer=null;save();},1200);}
+  async function save(){
+    clearTimeout(saveTimer);saveTimer=null;if(inFlight)return inFlight;if(loading||!dirty.size)return !dirty.size;
+    const batch=board.tickets.filter(t=>dirty.has(t.caseId)).map(t=>({sheetRow:t.sheetRow,caseId:t.caseId,recordRevision:t.recordRevision,revision:t.review.revision,review:{...t.review}}));
+    const versions=new Map(dirty);saveError='';status('Saving… you can keep reviewing.');
+    // Only saved snapshots are acknowledged. New keystrokes and other tickets
+    // remain in the queue and keep their DOM, selection and scroll position.
+    inFlight=(async()=>{try{
+      const result=await rpc('saveMyStewardReviews',{side,sheetName:round,reviewerName:board.reviewerName,reviews:batch});
+      for(const saved of result.tickets){const t=board.tickets.find(t=>t.caseId===saved.caseId);if(!t)continue;t.review.revision=saved.review.revision;t.reviews=saved.reviews;t.originalReviews=saved.originalReviews;if(dirty.get(t.caseId)===versions.get(t.caseId))dirty.delete(t.caseId);}
+      if(batch.some(t=>!result.tickets.some(s=>s.caseId===t.caseId)))throw Error('The save response was incomplete. Refresh decisions before continuing.');
+      ticketOptions();if(tab==='colleagues'||tab==='original')evidence();status(dirty.size?'Saved · newer edits queued.':'All changes saved.');return true;
+    }catch(e){saveError=e.message||'Save failed.';status('Not saved — '+saveError+' Your text is still here. Retry save.',true);return false;}
+    finally{inFlight=null;controls();if(dirty.size&&!saveError&&!transition)scheduleSave();}})();controls();return inFlight;
+  }
+  async function afterSave(next){
+    if(transition||loading)return;transition=true;clearTimeout(saveTimer);saveTimer=null;controls();
+    try{if(inFlight&&!await inFlight)return;while(dirty.size){if(!await save())return;}await next();}
+    finally{transition=false;el('fap-desk-side').value=side;el('fap-desk-round').value=round;controls();}
+  }
+  function selectTicket(id){if(!board?.tickets.some(t=>t.caseId===id))return;active=id;render();if(dirty.size&&!saveError)save();}
+  el('fap-desk-rows').addEventListener('input',e=>{const field=e.target.dataset.reviewField,t=current();if(!field||!t||!canEdit())return;t.review[field]=e.target.value;changed();});
+  el('fap-desk-evidence-tabs').addEventListener('click',e=>{const b=e.target.closest('[data-desk-tab]');if(b){tab=b.dataset.deskTab;evidence();}});
+  el('fap-desk-ticket').addEventListener('change',e=>selectTicket(e.target.value));
+  for(const [id,delta] of [['prev',-1],['next',1]])el('fap-desk-'+id).addEventListener('click',()=>{const i=board.tickets.findIndex(t=>t.caseId===active);if(board.tickets[i+delta])selectTicket(board.tickets[i+delta].caseId);});
+  el('fap-desk-side').addEventListener('change',()=>{const selected=el('fap-desk-side').value;afterSave(async()=>{const old=side;side=selected;active='';tab=side==='appeal'?'appeal':'incident';await loadRounds();if(board&&board.side!==side){side=old;render();}});});
+  el('fap-desk-round').addEventListener('change',()=>afterSave(loadRound));el('fap-desk-save').addEventListener('click',save);el('fap-desk-refresh').addEventListener('click',()=>afterSave(loadRound));
+  el('fap-desk-discard').addEventListener('click',async()=>{if(inFlight||loading||transition||!confirm('Discard your unsaved edits and reload the saved decisions?'))return;clearTimeout(saveTimer);saveTimer=null;loading=true;controls();try{const data=await rpc('getStewardDesk',{side,sheetName:round});acceptBoard(data);status('Saved decisions reloaded.');}catch(e){status('Reload failed. Your unsaved text is still here. '+e.message,true);}finally{loading=false;controls();}});
+  el('fap-desk-mobile-tabs').addEventListener('click',e=>{const b=e.target.closest('[data-desk-mobile]');if(!b)return;el('fap-desk-layout').dataset.mobile=b.dataset.deskMobile;el('fap-desk-mobile-tabs').querySelectorAll('button').forEach(n=>n.setAttribute('aria-pressed',String(n===b)));});
+  window.F1XLNavigation?.register('steward-desk',()=>!!pending());window.addEventListener('beforeunload',e=>{if(pending()){e.preventDefault();e.returnValue='';}});
+  return {open};
+})();
+</script>

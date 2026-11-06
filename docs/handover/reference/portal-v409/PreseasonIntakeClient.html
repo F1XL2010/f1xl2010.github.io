@@ -1,0 +1,284 @@
+<script>
+window.F1XLPreseasonIntake=(function() {
+  if(window.F1XLNavigation)window.F1XLNavigation.register('preseason-intake',()=>Object.keys(state.edits).length>0,()=> ({season:state.season}));
+
+  const state={season:'',data:null,busy:false,preview:null,selected:'',page:1,trackerPage:1,edits:{},detail:'',view:'tracker',divisionInitialised:false,generation:0,polling:false,lastPoll:0,remoteChanged:false,selectionChanged:false,trackerSaveTimer:null,trackerSaveError:''};
+  const el=id=>document.getElementById(id);
+  const esc=value=>String(value==null?'':value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  function status(message,error) { el('intake-status').textContent=message;el('intake-status').classList.toggle('error',!!error);if(el('intake-selection').open)reviewStatus(message,error); }
+  function reviewStatus(message,error) { el('intake-review-status').textContent=message;el('intake-review-status').hidden=!message;el('intake-review-status').classList.toggle('error',!!error); }
+  function closeReview() { if(el('intake-selection').open)el('intake-selection').close();state.selected='';state.selectionChanged=false; }
+  function actionState() {
+    const blocked=state.remoteChanged||state.selectionChanged;
+    ['intake-process','intake-reject','intake-retry-archive'].forEach(id=>el(id).disabled=state.busy||blocked);
+    el('intake-review-reload').hidden=!blocked;el('intake-review-reload').disabled=state.busy;
+    el('intake-process').textContent=state.busy?'Saving…':'Process & archive';
+  }
+  // Compare identity fields, not sheet positions or incidental response metadata.
+  function driverSignature(drivers) { return JSON.stringify(drivers.map(d=>[d.driverId,d.gamertag,d.discordId,(d.aliases||[]).map(a=>a.alias).sort()]).sort((a,b)=>a[0].localeCompare(b[0]))); }
+  function busy(value) { state.busy=value;el('intake-controls').disabled=value;el('intake-refresh').disabled=value;el('intake-back').disabled=value;el('intake-dialog-fields').disabled=value;el('intake-close-review').disabled=value;el('intake-dialog-fields').setAttribute('aria-busy',String(value));actionState(); }
+  function rpc(method,input,success) {
+    if(state.busy)return;
+    if(method!=='savePreseasonTracker'&&Object.keys(state.edits).length)return saveTracker(true,function(){rpc(method,input,success);});
+    if(input&&typeof input==='object'&&!Array.isArray(input)&&Object.prototype.hasOwnProperty.call(input,'revision'))input=Object.assign({},input,{revision:state.data&&state.data.revision});
+    state.generation++;busy(true);
+    google.script.run.withSuccessHandler(function(response) { busy(false);success(response); }).withFailureHandler(function(error) { busy(false);status(error.message||'The request failed. Refresh before retrying.',true); })[method](input);
+  }
+  function apply(response) {
+    if(window.F1XLPreseasonHub)window.F1XLPreseasonHub.checkAttention();
+    state.remoteChanged=false;state.selectionChanged=false;
+    state.lastPoll=Date.now();
+    el('intake-auto-status').textContent=el('intake-auto').checked?'Checks every 45 seconds while this screen is open':'Automatic updates paused';
+    state.edits={};state.detail='';el('intake-driver-detail').hidden=true;
+    const first=!state.data;state.data=response;
+    el("intake-back").textContent="← S"+response.season+(response.active?" Active season":" Pre-season");
+    el("intake-roster-panel").hidden=!!response.active;el("intake-edit-dates").hidden=!!response.active;
+    document.getElementById("view-preseason-intake").dataset.activeSeason=String(!!response.active);
+    if(response.active&&first)state.view="processing";
+    if(window.F1XLActiveSeason)window.F1XLActiveSeason.intakeGuide('view-preseason-intake',!!response.active,state.season,false);
+    state.selected='';state.preview=null;closeReview();el('intake-preview').hidden=true;el('intake-import').disabled=true;
+    el('intake-master').href=response.url;el('intake-source').href=response.sourceUrl;
+    el('intake-previous-master').innerHTML='<option value="">Choose a previous season…</option>'+response.previousSeasons.map(s=>'<option value="'+esc(s)+'">Season '+esc(s)+'</option>').join('');
+    const seeded=response.tracker.find(r=>r[4]);if(seeded)el('intake-previous-master').value=seeded[4];
+    el('intake-roster-panel').hidden=!!seeded||!!response.active;el('intake-roster-panel').open=!seeded;
+    const divisions=[...new Set(response.tracker.flatMap(r=>String(r[5]||'').split(',').map(v=>v.trim()).filter(Boolean)))].sort((a,b)=>Number(a)-Number(b));
+    const selected=el('intake-division').value;
+    el('intake-division').innerHTML='<option value="">All previous divisions</option>'+divisions.map(d=>'<option value="'+esc(d)+'">Division '+esc(d)+'</option>').join('');
+    el('intake-division').value=!state.divisionInitialised?(divisions[0]||''):divisions.includes(selected)?selected:'';if(divisions.length)state.divisionInitialised=true;
+    render();showView(state.view);status(response.message||(response.active?'Process incoming applications, then arrange their time trials.':'Begin by importing the previous season’s roster, then track responses and chasing. Process received applications in the separate tab.'));
+    if(response.warnings.length)status(el('intake-status').textContent+' '+response.warnings.join(' '),true);
+  }
+  function open(season) {
+    if(state.busy)return;
+    if(state.season===season&&Object.keys(state.edits).length){window.F1XLNavigate('preseason-intake');status('Your unsaved tracker changes are still here.');return;}
+    if(Object.keys(state.edits).length&&!window.confirm('Discard unsaved tracker changes and open another season?'))return;
+    if(state.selected&&!window.confirm('Leave the application selection without processing it?'))return;
+    state.generation++;if(state.season!==season)state.divisionInitialised=false;
+    state.season=season;state.data=null;state.page=1;state.trackerPage=1;state.selected='';state.preview=null;state.edits={};state.view='tracker';
+    el('intake-title').textContent='S'+season+' Applications & tracker';el('intake-back').textContent='Back to S'+season+' Pre-season';
+    el('intake-app-rows').innerHTML='';el('intake-tracker-rows').innerHTML='';closeReview();el('intake-preview').hidden=true;
+    window.F1XLNavigate('preseason-intake');status('Loading this season’s applications and tracker…');
+    rpc('getPreseasonIntake',season,apply);
+  }
+  function render() {
+    renderApplications();renderTracker();renderStats();
+  }
+  function renderApplications() {
+    if(!state.data)return;const data=state.data,query=el('intake-search').value.trim().toLowerCase();
+    const pending=data.applications.filter(a=>!a.processed).length;
+    el('intake-new-count').textContent=data.sourceAvailable===false?'?':String(pending);el('intake-new-count').hidden=pending===0&&data.sourceAvailable!==false;
+    el('intake-new-count').title=data.sourceAvailable===false?'Application source unavailable':pending+' applications awaiting processing';
+    const excluded=data.excluded||{},window=data.window;
+    el('intake-date-window').textContent=data.active?'Applications remain open during this season. Showing submissions from '+window.opens+'.':window?'Showing submissions from '+window.opens+' up to (but not including) '+window.start+'. '+(excluded.before||0)+' before this window; '+(excluded.after||0)+' on/after the opening race.':'';
+    el('intake-source-warning').textContent=(data.warnings||[]).join(' ');el('intake-source-warning').hidden=!(data.warnings||[]).length;
+    const filter=el('intake-app-filter').value;
+    const stats=[['Applications',data.applications.length],['New to F1XL',data.applications.filter(a=>/^yes\b/i.test(a.newToF1XL)).length],['Returning',data.applications.filter(a=>/^no\b/i.test(a.newToF1XL)).length],['Cannot commit every race',data.applications.filter(a=>/^no\b/i.test(a.seasonCommitment)).length]];
+    el('intake-inbox-stats').innerHTML=stats.map(p=>'<div class="stat"><span>'+esc(p[0])+'</span><strong>'+p[1]+'</strong></div>').join('');
+    const apps=data.applications.filter(a=>(filter==='all'||(filter==='processed'?a.processed:!a.processed||a.archivePending))&&(a.gamertag+' '+a.realName+' '+a.discordId+' '+a.previousGamertags+' '+a.platform).toLowerCase().includes(query));
+    const pages=Math.max(1,Math.ceil(apps.length/50));state.page=Math.min(state.page,pages);
+    el('intake-pages').textContent='Page '+state.page+' of '+pages+' · '+apps.length+' applications';
+    el('intake-prev').disabled=state.page===1;el('intake-next').disabled=state.page===pages;
+    el('intake-app-rows').innerHTML=apps.slice((state.page-1)*50,state.page*50).map(a=>'<tr><td>'+esc(a.received)+'</td><td><button class="name-button" type="button" data-intake-select="'+esc(a.key)+'">'+esc(a.gamertag)+'</button>'+(a.late?'<span class="secondary-line">After applications closed</span>':'')+'</td><td>'+esc(a.age||'—')+'</td><td>'+esc(a.discordId||'—')+'</td><td><span class="status '+(/^yes\b/i.test(a.newToF1XL)?'new':'')+'">'+(/^yes\b/i.test(a.newToF1XL)?'New':/^no\b/i.test(a.newToF1XL)?'Returning':'Not supplied')+'</span>'+(/^no\b/i.test(a.seasonCommitment)?'<span class="secondary-line">Part-time</span>':'')+'</td><td class="'+(a.processed?'intake-processed':'')+'">'+(a.processed?(a.archivePending?'Processed · archive pending':'Processed'):a.candidates.length===1?'Profile match found':a.candidates.length>1?'Choose between matches':'Needs profile search')+'</td><td>'+(a.archivePending?'<button class="button archive" type="button" data-intake-select="'+esc(a.key)+'">Retry archive</button>':!a.processed?'<button class="button danger" type="button" data-intake-reject="'+esc(a.key)+'">Reject / delete</button>':'Saved')+'</td></tr>').join('')||'<tr><td colspan="7">No applications match.</td></tr>';
+  }
+  function showView(view) {
+    state.view=view;['tracker','processing','stats'].forEach(v=>{el('intake-view-'+v).hidden=v!==view;document.querySelector('[data-intake-view="'+v+'"]').classList.toggle('active',v===view);});
+    if(view==='stats')renderStats();
+  }
+  function rows() { return state.data.tracker.map(r=>{const row=r.slice();Object.entries(state.edits[r[0]]||{}).forEach(([i,v])=>row[i]=v);return row;}); }
+  function trackerState(message) {
+    const count=Object.keys(state.edits).length,save=el('intake-save-tracker'),label=el('intake-tracker-save-state');
+    save.textContent=state.trackerSaveError?'Retry tracker save':'Save now';save.disabled=state.busy||!count;
+    label.textContent=message||(!count?'All tracker changes saved':state.busy?'Saving tracker changes…':state.trackerSaveError?'Could not save — use Retry tracker save':count+' driver'+(count===1?'':'s')+' saving shortly');
+    label.classList.toggle('error',!!state.trackerSaveError);
+  }
+  function applyTrackerSave(response) {
+    const selected=state.selected,detail=state.detail,view=state.view;
+    const compact=response.trackerOnly===true;
+    state.data=compact?Object.assign({},state.data,{revision:response.revision,tracker:response.tracker,trials:response.trials,active:response.active}):response;
+    state.edits={};state.remoteChanged=compact?(state.remoteChanged||response.recordsChanged):false;state.trackerSaveError='';
+    if(compact){renderTracker();renderStats();}else render();showView(view);
+    if(state.remoteChanged){actionState();reviewStatus('Season or driver records changed. Your choices are retained. Reload the application before continuing.',true);}
+    if(selected&&!state.data.applications.some(a=>a.key===selected))closeReview();
+    if(detail&&!rows().some(r=>r[0]===detail)){state.detail='';el('intake-driver-detail').hidden=true;}
+    trackerState('All tracker changes saved.');status(response.message||'Tracker changes saved.');
+  }
+  function saveTracker(now,after) {
+    if(state.busy)return false;clearTimeout(state.trackerSaveTimer);state.trackerSaveTimer=null;
+    if(!Object.keys(state.edits).length){trackerState();if(after)after();return true;}
+    state.generation++;state.trackerSaveError='';busy(true);trackerState('Saving tracker changes…');
+    const input={season:state.season,revision:state.data.revision,trackerReply:true,rows:Object.entries(state.edits).map(([id,fields])=>({id,fields}))};
+    google.script.run.withSuccessHandler(function(response){busy(false);applyTrackerSave(response);if(after)after();}).withFailureHandler(function(error){busy(false);state.trackerSaveError=error.message||'The tracker changes could not be saved.';trackerState();status(state.trackerSaveError,true);}).savePreseasonTracker(input);
+    return true;
+  }
+  function scheduleTrackerSave() { clearTimeout(state.trackerSaveTimer);state.trackerSaveError='';trackerState();state.trackerSaveTimer=setTimeout(function(){saveTracker(false);},900); }
+  function withTrackerSaved(next) { if(state.busy)return;clearTimeout(state.trackerSaveTimer);state.trackerSaveTimer=null;if(Object.keys(state.edits).length){status('Saving tracker changes before continuing…');saveTracker(true,next);}else next(); }
+  function mark(id,col,value) { state.edits[id]=state.edits[id]||{};state.edits[id][col]=value;scheduleTrackerSave(); }
+  function options(value,values) {return values.map(([v,label])=>'<option value="'+esc(v)+'"'+(v===value?' selected':'')+'>'+esc(label)+'</option>').join('');}
+  const responses=[['','Pending'],['Y','Yes'],['N','No'],['R','Reserve']];
+  function cell(r,i,values) {return '<select aria-label="'+esc(['Response','Chased','Console','Controller','Commitment'][i-10]+' for '+r[3])+'" data-tracker-id="'+esc(r[0])+'" data-tracker-col="'+i+'">'+options(r[i]||'',values)+'</select>';}
+  function receipt(r) {
+    if(r[7]==='Yes')return 'Processed';
+    const found=state.data.applications.filter(a=>!a.processed&&((r[1]&&a.candidates.length===1&&a.candidates[0]===r[1])||(!r[1]&&[r[2],r[3]].some(n=>n&&n.toLowerCase()===a.gamertag.toLowerCase()))));
+    return found.length?'Received · not processed':'Not processed';
+  }
+  function renderTracker() {
+    if(!state.data)return;const all=rows(),group=el('intake-group').value,division=el('intake-division').value,filter=el('intake-filter').value,query=el('intake-tracker-search').value.trim().toLowerCase();
+    el('intake-division').disabled=group!=='returning'&&group!=='all';
+    const filtered=all.filter(r=>{
+      if(group==='returning'&&!r[4]||group==='new'&&(r[4]||r[15]!=='New')||group==='older'&&(r[4]||r[15]!=='Returning after absence')||group==='unknown'&&(r[4]||r[15]&&r[15]!=='Unknown'))return false;
+      if(division&&(group==='returning'||group==='all')&&!String(r[5]).split(',').map(v=>v.trim()).includes(division))return false;
+      if(![r[1],r[2],r[3]].join(' ').toLowerCase().includes(query))return false;
+      return filter==='all'||filter==='pending'&&!r[10]||filter==='chase'&&!r[10]&&r[11]!=='Y'||filter==='unprocessed'&&r[7]!=='Yes'||filter===r[10];
+    });
+    const count=Math.max(1,Math.ceil(filtered.length/50));state.trackerPage=Math.min(state.trackerPage,count);
+    el('intake-tracker-count').textContent=all.length+' tracked · '+all.filter(r=>r[7]==='Yes').length+' processed applications · '+filtered.length+' in this view';
+    el('intake-tracker-page').innerHTML=Array.from({length:count},(_,i)=>'<option value="'+(i+1)+'">'+(i+1)+'</option>').join('');el('intake-tracker-page').value=String(state.trackerPage);
+    el('intake-tracker-page-count').textContent='of '+count+' · 50 drivers per page';
+    trackerState();
+    el('intake-tracker-rows').innerHTML=filtered.slice((state.trackerPage-1)*50,state.trackerPage*50).map(r=>{
+      const tt=state.data.trials.find(t=>t[0]===r[1]),trial=tt?(tt[3]+(tt[4]?' · '+tt[4]+(tt[6]?' '+tt[6]:'')+' UK':'')):'Awaiting processing';
+      return '<tr class="intake-response-'+esc(r[10])+'"><td><strong>'+esc(r[3]||r[2])+'</strong>'+(r[2]&&r[2]!==r[3]?'<span class="secondary-line">Previously '+esc(r[2])+'</span>':'')+'<span class="secondary-line">'+esc(r[4]?'S'+r[4]+' · '+(r[5]?'D'+r[5]:'Division not recorded')+' · '+r[6]:r[15]||'Needs classification')+'</span></td><td><input aria-label="Console for '+esc(r[3])+'" data-tracker-id="'+esc(r[0])+'" data-tracker-col="12" value="'+esc(r[12])+'" maxlength="300"></td><td><input aria-label="Controller for '+esc(r[3])+'" data-tracker-id="'+esc(r[0])+'" data-tracker-col="13" value="'+esc(r[13])+'" maxlength="300"></td><td>'+cell(r,10,responses)+'</td><td>'+cell(r,11,[['','Not recorded'],['Y','Yes'],['N','No'],['R','Reserve']])+'</td><td>'+cell(r,14,[['','Unknown'],['Yes','Yes'],['Maybe','Maybe'],['No','No · part-time']])+'</td><td class="'+(r[7]==='Yes'?'intake-processed':'')+'">'+esc(receipt(r))+'</td><td>'+esc(trial)+'</td><td><button class="button" type="button" data-tracker-detail="'+esc(r[0])+'">Profile / notes</button></td></tr>';
+    }).join('')||'<tr><td colspan="9">'+(all.length?'No drivers match these filters.':'Import the previous season’s roster to begin. Manual entry is available for exceptions.')+'</td></tr>';
+  }
+  function renderStats() {
+    if(!state.data)return;const all=rows(),old=all.filter(r=>r[4]),divisions=[...new Set(old.flatMap(r=>String(r[5]).split(',').map(x=>x.trim()).filter(Boolean)))].sort((a,b)=>Number(a)-Number(b));
+    const groups=divisions.map(d=>['Previous D'+d,old.filter(r=>String(r[5]).split(',').map(x=>x.trim()).includes(d))]);
+    groups.push(['Previous division not recorded',old.filter(r=>!r[5])],['Previous-season total',old],['New drivers',all.filter(r=>!r[4]&&r[15]==='New')],['Returning after absence',all.filter(r=>!r[4]&&r[15]==='Returning after absence')],['Needs classification',all.filter(r=>!r[4]&&(!r[15]||r[15]==='Unknown'))],['All drivers (unique)',all]);
+    el('intake-stats-note').textContent=(Object.keys(state.edits).length?'Includes your unsaved tracker changes. ':'')+'Division rows show previous-season membership. A reserve may appear in several divisions; totals count each tracker entry once. Response % includes Yes, No and Reserve.';
+    el('intake-stats-rows').innerHTML=groups.map(([label,rr])=>{const n=v=>rr.filter(r=>r[10]===v).length;const response=v=>n(v)+' ('+(rr.length?Math.round(100*n(v)/rr.length):0)+'%)';return '<tr>'+[label,rr.length,response('Y'),response('N'),response('R'),n(''),rr.filter(r=>r[11]==='Y').length,rr.filter(r=>r[7]==='Yes').length,rr.length?Math.round(100*(rr.length-n(''))/rr.length)+'%':'0%'].map(v=>'<td>'+esc(v)+'</td>').join('')+'</tr>';}).join('');
+  }
+  function detail(id) {
+    const r=rows().find(r=>r[0]===id);if(!r)return;state.detail=id;el('intake-driver-detail').hidden=false;el('intake-detail-name').textContent=r[3];
+    const driver=state.data.drivers.find(d=>d.driverId===r[1]);
+    el('intake-detail-identity').textContent=(r[1]?'Permanent profile: '+r[1]:'Link a permanent profile when processing the application.')+(driver&&driver.aliases.length?' · Known names: '+driver.aliases.map(a=>a.alias).join(', '):'');
+    el('intake-detail-group').value=r[15]||'Unknown';el('intake-detail-group').disabled=!!r[4];el('intake-detail-self').value=r[16]||'';el('intake-detail-eligible').value=r[17]||'';el('intake-detail-notes').value=r[9]||'';
+    el('intake-detail-application').disabled=!state.data.applications.some(a=>a.key===r[8]||(r[1]&&(a.driverId===r[1]||a.candidates.length===1&&a.candidates[0]===r[1])));
+    el('intake-driver-detail').scrollIntoView({block:'nearest'});
+  }
+  document.querySelectorAll('[data-intake-view]').forEach(b=>b.addEventListener('click',()=>showView(b.dataset.intakeView)));
+  ['intake-group','intake-division','intake-filter','intake-tracker-search'].forEach(id=>el(id).addEventListener('input',()=>{state.trackerPage=1;renderTracker();}));
+  el('intake-tracker-page').addEventListener('change',()=>{state.trackerPage=Number(el('intake-tracker-page').value);renderTracker();});
+  el('intake-tracker-rows').addEventListener('input',event=>{const t=event.target;if(t.dataset.trackerCol){mark(t.dataset.trackerId,t.dataset.trackerCol,t.value);if(t.dataset.trackerCol==='10')t.closest('tr').className='intake-response-'+t.value;}});
+  el('intake-tracker-rows').addEventListener('click',event=>{const b=event.target.closest('[data-tracker-detail]');if(b)detail(b.dataset.trackerDetail);});
+  [['intake-detail-group',15],['intake-detail-self',16],['intake-detail-eligible',17],['intake-detail-notes',9]].forEach(([id,col])=>el(id).addEventListener('input',()=>{if(state.detail)mark(state.detail,col,el(id).value);}));
+  el('intake-detail-close').addEventListener('click',()=>{el('intake-driver-detail').hidden=true;renderTracker();});
+  el('intake-detail-application').addEventListener('click',()=>{const r=rows().find(r=>r[0]===state.detail);const app=state.data.applications.find(a=>a.key===r[8])||state.data.applications.find(a=>r[1]&&(a.driverId===r[1]||a.candidates.length===1&&a.candidates[0]===r[1]));if(app){showView('processing');select(app.key);}});
+  el('intake-save-tracker').addEventListener('click',()=>saveTracker(true));
+  el('intake-open-tt').addEventListener('click',()=>withTrackerSaved(()=>window.F1XLPreseasonTimeTrials.open(state.season)));
+  window.addEventListener('beforeunload',event=>{if(Object.keys(state.edits).length){event.preventDefault();event.returnValue='';}});
+  function source() {
+    const master=el('intake-source-type').value==='master';
+    return {season:state.season,sourceType:master?'master':'divisions',previousSeason:master?el('intake-previous-master').value:el('intake-previous-season').value,divisionIds:el('intake-division-ids').value,revision:state.data&&state.data.revision};
+  }
+  function invalidatePreview() { state.preview=null;el('intake-preview').hidden=true;el('intake-import').disabled=true; }
+  function select(key) {
+    if(state.busy)return;const app=state.data.applications.find(a=>a.key===key);if(!app)return;
+    state.selected=key;state.selectionChanged=false;
+    el('intake-selected-name').textContent=app.gamertag+(app.processed?' · processed':'');
+    el('intake-selected-meta').textContent=(app.realName||'Real name not supplied')+' · received '+app.received;
+    const details=[['Submitted name',app.gamertag],['Season display name',app.seasonGamertag],['Age',app.age],['Nationality',app.nationality],['Discord ID',app.discordId],['Joined F1XL Discord',app.discordJoined],['Platform',app.platform],['Control method',app.controller],['New to F1XL?',app.newToF1XL],['Previous gamertags',app.previousGamertags],['Sunday 9pm commitment',app.sundayStartCommitment,true],['Full-season commitment',app.seasonCommitment,true],['Reason unable to commit',app.nonCommitmentReason,true],['Rules agreement',app.rulesAgreement,true],['Promotion/demotion agreement',app.promotionDemotionAgreement,true],['Time-trial acknowledgement',app.timeTrialAcknowledgement,true],['Streaming link',app.streamLink,true],['Permission to use streaming link publicly',app.streamConsent,true],['Additional legacy response',app.additionalLegacyResponse,true],['Other legacy response',app.unusedLegacyResponse,true]];
+    el('intake-app-details').innerHTML=details.filter(p=>p[1]).map(p=>'<div class="detail'+(p[2]||p[1].length>90?' wide':'')+'"><span>'+esc(p[0])+'</span><strong>'+esc(p[1])+'</strong></div>').join('');
+    el('intake-process-fields').hidden=app.processed;
+    el('intake-reject').hidden=app.processed;el('intake-retry-archive').hidden=!app.archivePending;
+    actionState();
+    reviewStatus(state.remoteChanged?'Season or driver records changed. Reload before processing.':app.archivePending?'This application is processed. Its records are saved; only archiving remains.':app.processed?'Processed application · saved in this Season Master.':'Review the application, then link an existing driver or create a new profile.');
+    el('intake-driver').disabled=false;
+    el('intake-driver-search').value='';el('intake-create-driver').checked=false;el('intake-rename-driver').checked=false;el('intake-accept-late').checked=false;el('intake-late-label').hidden=!app.late;
+    drivers(app.driverId||(app.candidates.length===1?app.candidates[0]:''));
+    el('intake-save-alias').checked=false;el('intake-season-name').value=app.seasonGamertag||app.gamertag;nameChoices(true);
+    el('intake-returning').innerHTML='<option value="">Match automatically, or add a new tracker entry</option>'+state.data.tracker.map(r=>'<option value="'+esc(r[0])+'">'+esc((r[2]||r[3])+' · '+(r[1]||'unlinked'))+'</option>').join('');
+    if(!el('intake-selection').open)el('intake-selection').showModal();
+  }
+  function drivers(selected) {
+    const query=el('intake-driver-search').value.trim().toLowerCase();
+    const found=state.data.drivers.filter(d=>!query||(d.gamertag+' '+d.driverId+' '+d.discordId+' '+d.aliases.map(a=>a.alias).join(' ')).toLowerCase().includes(query));
+    const shown=found.slice(0,50);const chosen=state.data.drivers.find(d=>d.driverId===selected);if(chosen&&!shown.includes(chosen))shown.unshift(chosen);
+    el('intake-driver').innerHTML='<option value="">Choose the permanent driver…</option>'+shown.map(d=>'<option value="'+esc(d.driverId)+'">'+esc(d.gamertag+' · '+d.driverId)+'</option>').join('');el('intake-driver').value=selected||'';
+    el('intake-driver-count').textContent=found.length>50?'Showing the first 50 matches. Refine the search.':found.length+' matching profiles';
+  }
+  function nameChoices(useProfile) {
+    const creating=el('intake-create-driver').checked,driver=!creating&&state.data.drivers.find(d=>d.driverId===el('intake-driver').value);
+    const known=driver?[...new Set([driver.gamertag].concat((driver.aliases||[]).map(a=>a.alias)).filter(Boolean))]:[];
+    if(useProfile&&driver)el('intake-season-name').value=driver.gamertag;
+    const value=el('intake-season-name').value;
+    el('intake-known-name').innerHTML='<option value="">Type a name below</option>'+known.map(n=>'<option value="'+esc(n)+'">'+esc(n)+(n===driver.gamertag?' (current)':'')+'</option>').join('');
+    el('intake-known-name').value=known.includes(value)?value:'';el('intake-known-name-field').hidden=!driver;
+    el('intake-rename-driver').disabled=creating||!driver;el('intake-save-alias').disabled=creating||!driver||el('intake-rename-driver').checked;
+    el('intake-name-help').textContent=creating?'The chosen name will be used for the new permanent profile and this season.':el('intake-rename-driver').checked?'The chosen name will become the permanent gamertag. The previous name will remain an alias.':el('intake-save-alias').checked?'The chosen name will also be saved as a permanent alias.':'Used in the tracker, time trials and placements. Permanent names and aliases stay as they are.';
+  }
+  el('intake-back').addEventListener('click',function() { if(state.busy)return;if(state.selected&&!window.confirm('Leave the application selection without processing it?'))return;withTrackerSaved(()=>{state.selected='';(state.data&&state.data.active?window.F1XLSeasonLaunch:window.F1XLPreseasonHub).open(state.season);}); });
+  el('intake-refresh').addEventListener('click',function() { if(state.selected&&!window.confirm('Leave the application selection, save tracker changes, then reload?'))return;withTrackerSaved(()=>{state.selected='';open(state.season);}); });
+  el('intake-app-filter').addEventListener('change',function(){state.page=1;renderApplications();});
+  el('intake-close-review').addEventListener('click',function(){if(!state.busy)closeReview();});
+  el('intake-selection').addEventListener('cancel',function(event){event.preventDefault();if(!state.busy)closeReview();});
+  el('intake-review-reload').addEventListener('click',function(){
+    if(state.busy)return;
+    const key=state.selected;withTrackerSaved(()=>rpc('getPreseasonIntake',state.season,function(response){apply(response);if(response.applications.some(a=>a.key===key))select(key);else status('That application has changed or left the inbox. Select its current entry if available.');}));
+  });
+  function reject(key) {
+    const app=state.data.applications.find(a=>a.key===key);if(!app||app.processed||state.busy)return;
+    if(!window.confirm('Reject and permanently delete '+app.gamertag+'’s application from the active response tab? It will not be archived and no driver, tracker or time-trial records will be created.'))return;
+    rpc('rejectPreseasonApplication',{season:state.season,revision:state.data.revision,key:key,confirmDelete:true},apply);
+  }
+  el('intake-reject').addEventListener('click',function(){if(!state.remoteChanged&&!state.selectionChanged)reject(state.selected);});
+  el('intake-retry-archive').addEventListener('click',function(){if(state.remoteChanged||state.selectionChanged)return;status('Archiving the saved application…');rpc('retryPreseasonApplicationArchive',{season:state.season,revision:state.data.revision,key:state.selected},apply);});
+  el('intake-search').addEventListener('input',function() { state.page=1;render(); });
+  el('intake-prev').addEventListener('click',function() { state.page--;render(); });el('intake-next').addEventListener('click',function() { state.page++;render(); });
+  el('intake-app-rows').addEventListener('click',function(event) { const button=event.target.closest('[data-intake-select]');if(button)select(button.dataset.intakeSelect);const rejected=event.target.closest('[data-intake-reject]');if(rejected)reject(rejected.dataset.intakeReject); });
+  ['intake-source-type','intake-previous-master','intake-previous-season','intake-division-ids'].forEach(id=>el(id).addEventListener('input',function() { invalidatePreview();el('intake-master-source').hidden=el('intake-source-type').value!=='master';el('intake-divisions-source').hidden=el('intake-source-type').value!=='divisions'; }));
+  el('intake-preview-button').addEventListener('click',function() {
+    status('Reading the previous-season roster…');rpc('previewPreseasonCarryForward',source(),function(response) { state.preview=response;el('intake-preview').hidden=false;el('intake-import').disabled=false;el('intake-preview').textContent=response.rows.length+' drivers from '+response.sources.join(' / ')+':\n'+response.rows.map(r=>r[2]+' · '+r[6]+(r[1]?' · profile linked':' · profile can be linked when applying')).join('\n');status('Review this roster, then add it to the tracker.'); });
+  });
+  el('intake-import').addEventListener('click',function() { if(!state.preview)return;rpc('savePreseasonCarryForward',Object.assign(source(),{previewRevision:state.preview.previewRevision}),apply); });
+  el('intake-driver-search').addEventListener('input',function() { drivers(el('intake-driver').value); });
+  el('intake-driver').addEventListener('change',function(){el('intake-rename-driver').checked=false;el('intake-save-alias').checked=false;nameChoices(true);});
+  el('intake-create-driver').addEventListener('change',function() { el('intake-driver').disabled=el('intake-create-driver').checked;el('intake-rename-driver').checked=false;el('intake-save-alias').checked=false;nameChoices(false); });
+  el('intake-known-name').addEventListener('change',function(){if(this.value)el('intake-season-name').value=this.value;});
+  el('intake-season-name').addEventListener('input',()=>nameChoices(false));
+  ['intake-rename-driver','intake-save-alias'].forEach(id=>el(id).addEventListener('change',()=>nameChoices(false)));
+  el('intake-process').addEventListener('click',function() {
+    if(!state.selected||state.remoteChanged||state.selectionChanged)return;status('Linking the driver and saving the application, tracker and time-trial entry…');
+    const driver=state.data.drivers.find(d=>d.driverId===el('intake-driver').value);
+    rpc('processPreseasonApplication',{season:state.season,revision:state.data.revision,key:state.selected,driverId:el('intake-driver').value,expectedGamertag:driver?driver.gamertag:'',seasonGamertag:el('intake-season-name').value,saveAlias:el('intake-save-alias').checked,createDriver:el('intake-create-driver').checked,renameDriver:el('intake-rename-driver').checked,trackerId:el('intake-returning').value,acceptLate:el('intake-accept-late').checked},apply);
+  });
+  function poll(force) {
+    if(!state.data||state.busy||state.polling||document.hidden||el('view-preseason-intake').hidden||!el('intake-auto').checked)return;
+    if(force!==true&&Date.now()-state.lastPoll<45000)return;
+    const generation=state.generation,season=state.season;state.polling=true;
+    const run=()=>new Promise(resolve=>{
+      if(state.generation!==generation||state.season!==season||state.busy||document.hidden||el('view-preseason-intake').hidden||!el('intake-auto').checked||window.F1XLAccess&&!window.F1XLAccess.can('applications')){resolve();return;}
+      state.lastPoll=Date.now();
+    google.script.run.withSuccessHandler(function(response){
+      resolve();if(state.generation!==generation||state.season!==season||state.busy||document.hidden||el('view-preseason-intake').hidden||!el('intake-auto').checked)return;
+      if(response.sourceAvailable===false){state.data.sourceAvailable=false;state.data.warnings=response.warnings;renderApplications();el('intake-auto-status').textContent='Application source unavailable. The last loaded list and your edits are retained.';return;}
+      const selectedWasProcessed=(state.data.applications.find(a=>a.key===state.selected)||{}).processed;
+      const appsChanged=JSON.stringify(response.applications)!==JSON.stringify(state.data.applications);
+      const recordsChanged=response.revision!==state.data.revision||driverSignature(response.drivers)!==driverSignature(state.data.drivers);
+      const active=document.activeElement,pending=Object.keys(state.edits).length||state.selected||state.preview||state.detail||(active&&active.closest('#intake-roster-panel'));
+      if(recordsChanged&&pending){
+        state.remoteChanged=true;actionState();reviewStatus('Season or driver records changed. Your choices are retained. Reload the application before continuing.',true);
+        el('intake-auto-status').textContent='Other season records changed. Your work is retained; reload before processing.';
+      }else if(recordsChanged){
+        state.data=response;state.remoteChanged=false;renderTracker();renderStats();
+      }
+      state.data.applications=response.applications;state.data.sourceAvailable=true;state.data.warnings=response.warnings;state.data.excluded=response.excluded;state.data.window=response.window;
+      if(state.selected&&!response.applications.some(a=>a.key===state.selected&&a.processed===selectedWasProcessed)){
+        state.selectionChanged=true;actionState();reviewStatus('This application changed or left the inbox. Reload before continuing.',true);el('intake-auto-status').textContent='The selected application changed or was processed. Your selection is retained; reload or select its current entry.';
+      }else if(!state.remoteChanged)el('intake-auto-status').textContent='Updated '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+' · checks every 45 seconds';
+      renderApplications();
+      if(appsChanged&&!pending&&!recordsChanged)renderTracker();
+    }).withFailureHandler(function(error){resolve();if(state.generation!==generation||state.season!==season||state.busy)return;el('intake-auto-status').textContent='Background update unavailable. Your entries are retained. '+(error.message||'Will retry.');}).getPreseasonIntake(season);
+    });
+    const request=window.F1XLBackground?window.F1XLBackground.request('intake-workspace:'+season,run):run();
+    request.catch(()=>{}).finally(()=>{state.polling=false;});
+  }
+  el('intake-auto').addEventListener('change',function(){el('intake-auto-status').textContent=this.checked?'Checking for applications…':'Automatic updates paused';if(this.checked)poll(true);});
+  el('intake-edit-dates').addEventListener('click',function(){window.F1XLSeasonPlanning.openSeason(state.season);});
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)poll();});
+  window.addEventListener('f1xl-view-change',()=>poll());
+  setInterval(poll,45000);
+  return {open:open,refreshApplications:()=>poll(true)};
+})();
+</script>
+
+

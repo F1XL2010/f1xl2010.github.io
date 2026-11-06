@@ -1,0 +1,129 @@
+{
+  "capturedAt": "2026-11-06T11:34:34.508Z",
+  "results": [
+    {
+      "name": "direct",
+      "pass": true,
+      "season": "28",
+      "divisions": "4",
+      "mode": "direct_division_v1",
+      "publicFetches": 14
+    },
+    {
+      "name": "public-history",
+      "pass": true,
+      "ok": true,
+      "keys": [
+        "ok",
+        "source",
+        "refreshedAt",
+        "cacheSeconds",
+        "careerRows",
+        "honourRows",
+        "notes"
+      ],
+      "rows": {
+        "careerRows": 841,
+        "honourRows": 1502,
+        "notes": 0
+      }
+    },
+    {
+      "name": "track-records",
+      "pass": true,
+      "ok": true,
+      "keys": [
+        "ok",
+        "records",
+        "refreshedAt"
+      ],
+      "rows": {
+        "records": 216
+      }
+    },
+    {
+      "name": "tickets",
+      "pass": true,
+      "ok": true,
+      "bytes": 169400
+    },
+    {
+      "name": "bans",
+      "pass": true,
+      "ok": true,
+      "bytes": 3515
+    },
+    {
+      "name": "licences",
+      "pass": true,
+      "ok": true,
+      "bytes": 2419
+    }
+  ],
+  "requests": [
+    {
+      "url": "https://docs.google.com/spreadsheets/d/1tmTdmjPRXF23Ixj3p_-nxsfIqv76MUIUET7Qht2qfdg/export?format=csv&gid=22801004",
+      "status": 200
+    },
+    {
+      "url": "https://docs.google.com/spreadsheets/d/1tmTdmjPRXF23Ixj3p_-nxsfIqv76MUIUET7Qht2qfdg/export?format=csv&gid=0",
+      "status": 200
+    },
+    {
+      "url": "https://docs.google.com/spreadsheets/d/1tmTdmjPRXF23Ixj3p_-nxsfIqv76MUIUET7Qht2qfdg/export?format=csv&gid=22801003",
+      "status": 200
+    },
+    {
+      "url": "https://docs.google.com/spreadsheets/d/1tmTdmjPRXF23Ixj3p_-nxsfIqv76MUIUET7Qht2qfdg/export?format=csv&gid=941487775",
+      "status": 200
+    },
+    {
+      "url": "https://docs.google.com/spreadsheets/d/1tmTdmjPRXF23Ixj3p_-nxsfIqv76MUIUET7Qht2qfdg/export?format=csv&gid=22801001",
+      "status": 200
+    },
+    {
+      "url": "https://docs.google.com/spreadsheets/d/1WyjXsSmmvX_5f_reIo71jlDKURiqKuhoV0h4b4gfTJg/export?format=csv&gid=434550697",
+      "status": 200
+    },
+    {
+      "url": "https://docs.google.com/spreadsheets/d/1WyjXsSmmvX_5f_reIo71jlDKURiqKuhoV0h4b4gfTJg/export?format=csv&gid=1457486856",
+      "status": 200
+    },
+    {
+      "url": "https://docs.google.com/spreadsheets/d/1IyyIjJrKUdmGtUy7oTWHUVss9TG9-GtjRTSXA_zyoBw/export?format=csv&gid=1457486856",
+      "status": 200
+    },
+    {
+      "url": "https://docs.google.com/spreadsheets/d/1IyyIjJrKUdmGtUy7oTWHUVss9TG9-GtjRTSXA_zyoBw/export?format=csv&gid=434550697",
+      "status": 200
+    },
+    {
+      "url": "https://docs.google.com/spreadsheets/d/1p0wdsZ3z41czUtGVLcT_afv8y9p7FzQ8Nma0d93YcD0/export?format=csv&gid=1457486856",
+      "status": 200
+    },
+    {
+      "url": "https://docs.google.com/spreadsheets/d/1p0wdsZ3z41czUtGVLcT_afv8y9p7FzQ8Nma0d93YcD0/export?format=csv&gid=434550697",
+      "status": 200
+    },
+    {
+      "url": "https://docs.google.com/spreadsheets/d/1xW2UqxG2joO1gpsUZobMM2qkTFDPLsZZQ78TvsmnlbI/export?format=csv&gid=1683645163",
+      "status": 200
+    },
+    {
+      "url": "https://docs.google.com/spreadsheets/d/1aGiR3WLHatf9eiI_uM2jFEOwkPwMZ8u5FChb7obWxLE/export?format=csv&gid=1457486856",
+      "status": 200
+    },
+    {
+      "url": "https://docs.google.com/spreadsheets/d/1aGiR3WLHatf9eiI_uM2jFEOwkPwMZ8u5FChb7obWxLE/export?format=csv&gid=434550697",
+      "status": 200
+    },
+    {
+      "url": "https://script.google.com/macros/s/AKfycbxJ9JnIwY39k4k8ouva8CPpa6EvQXeKUD1mNGc3JgaNLfVyiATX68925cKaEZDywf36IQ/exec?view=track-records&request=final-readiness-1793964861507",
+      "status": 200
+    },
+    {
+      "url": "https://script.google.com/macros/s/AKfycbxJ9JnIwY39k4k8ouva8CPpa6EvQXeKUD1mNGc3JgaNLfVyiATX68925cKaEZDywf36IQ/exec?view=public-history&request=final-readiness-1793964861506",
+      "status": 200
+    }
+  ]
+}

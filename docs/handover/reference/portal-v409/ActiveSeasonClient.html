@@ -1,0 +1,159 @@
+<script>
+window.F1XLActiveSeason=(function(){
+  if(window.F1XLNavigation)window.F1XLNavigation.register('active-operations',()=>state.dirty||(state.busy&&el('active-placement-dialog').open),()=> ({season:state.season,area:state.area}));
+
+  const state={season:'',area:'placement',view:'pending',data:null,busy:false,dirty:false,selected:'',moving:false,preview:null,currentDivision:'',currentRole:''};
+  const el=id=>document.getElementById(id),esc=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const status=t=>el('active-ops-status').textContent=t;
+  function canLeave(){return !state.busy&&(!state.dirty||window.confirm('Discard the unsaved changes?'));}
+  function busy(v){state.busy=v;el('active-ops-fields').disabled=v;el('active-placement-fields').disabled=v;el('active-ops-back').disabled=v;el('active-ops-refresh').disabled=v;el('active-placement-close').disabled=v;el('active-driver-details').disabled=v;document.querySelectorAll('[data-active-review]').forEach(b=>{b.disabled=v||(b.dataset.activeReview==='details'&&!state.data?.drivers?.find(d=>d.driverId===state.selected)?.details);});}
+  function mergeRoster(data){
+    if(!data.rosterOnly)return data;
+    const previous=state.data||{drivers:[]},byId=new Map(data.drivers.map(d=>[d.driverId,d]));
+    const drivers=previous.drivers.map(d=>Object.assign({},d,byId.get(d.driverId)||{assigned:[],details:null}));
+    data.drivers.forEach(d=>{if(!drivers.some(old=>old.driverId===d.driverId))drivers.push(Object.assign({commitment:'',status:'Not loaded',complete:false,ready:false,overall:null,one:Array(5).fill(null),two:Array(5).fill(null)},d));});
+    return Object.assign({},previous,data,{drivers:drivers,rosterMetadata:!!(data.rosterMetadata||previous.rosterMetadata)});
+  }
+  async function ensureFullPlacement(){
+    if(!state.data?.rosterOnly)return true;
+    if(state.busy)return false;busy(true);status('Loading driver details…');
+    try{const data=await new Promise((resolve,reject)=>google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).getActiveSeasonPlacement({season:state.season}));state.data=data;render();status('Ready.');return true;}
+    catch(e){status(e.message||String(e));if(el('active-placement-dialog').open)el('active-placement-error').textContent=e.message||String(e);return false;}
+    finally{busy(false);}
+  }
+  async function call(name,input){if(state.busy)return;busy(true);status(name.startsWith('get')?'Loading…':'Saving…');try{
+    const data=await new Promise((resolve,reject)=>google.script.run.withSuccessHandler(resolve).withFailureHandler(reject)[name](input));
+    // A late list response must not replace the revision or discard an open edit.
+    if(name.startsWith('get')&&el('active-placement-dialog').open){busy(false);return;}
+    state.data=mergeRoster(data);state.dirty=false;busy(false);render();status(data.message||'Ready.');if(['placeActiveSeasonDriver','confirmDriverMovement','saveActiveSeasonDriverDetails'].includes(name)&&el('active-placement-dialog').open)el('active-placement-dialog').close();if(name==='confirmDriverMovement'&&!data.directSources)await publishMovements();
+  }catch(e){busy(false);status(e.message||String(e));if(el('active-placement-dialog').open)el('active-placement-error').textContent=e.message||String(e);}}
+  function refresh(){return call(state.area==='calendar'?'getActiveSeasonCalendar':'getActiveSeasonPlacement',{season:state.season,rosterOnly:state.area==='placement'&&(state.view==='movements'||state.view==='current'&&!resultsVisible())});}
+  function open(season,area){if(state.busy||!canLeave())return;state.season=String(season);state.area=area||'placement';state.data=null;state.dirty=false;state.selected='';state.view=allocationsVisible()?'pending':'current';state.currentDivision='';state.currentRole='';
+    el('active-ops-title').textContent='S'+season+' '+(state.area==='calendar'?'Race calendar':'Driver placement');el('active-ops-back').textContent='← S'+season+' Active season';
+    el('active-ops-trials').hidden=state.area!=='placement'||!window.F1XLAccess?.can('time_trials');el('active-placement-pane').hidden=state.area!=='placement';el('active-calendar-pane').hidden=state.area!=='calendar';
+    el('active-driver-rows').innerHTML='';el('active-calendar-rows').innerHTML='';el('active-principals-pane').hidden=true;
+    window.F1XLNavigate('active-operations');refresh();
+  }
+  function render(){el('active-ops-master').href=state.data.url;if(state.area==='calendar')renderCalendar();else renderDrivers();}
+  function allocationsVisible(){return !!window.F1XLAccess?.can('placement');}
+  function resultsVisible(){return !!window.F1XLAccess?.can('tt_results');}
+  const lap=v=>v==null||v===''?'—':Number(v).toFixed(3);
+  function lapCells(values){const recorded=values.filter(v=>v!==''&&v!=null),best=recorded.length?Math.min(...recorded):null;return values.map((v,i)=>'<td'+(v!==''&&v!=null&&Number(v)===best?' class="active-fastest"':'')+'>'+lap(v)+(i===0?'*':'')+'</td>').join('');}
+  function assignmentRole(a){const team=String(a&&a.team||'');return /^reserve$/i.test(team)?'Reserve':/free agent/i.test(team)?'Free agent':'Team seat';}
+  function assignmentLabel(a){return 'D'+a.division+' · '+a.tier+' · '+a.team;}
+  function renderCurrentDrivers(query){
+    const trialsLoaded=Array.isArray(state.data.tracks),showStatus=trialsLoaded||state.data.rosterMetadata,columns=5+(showStatus?1:0)+(trialsLoaded&&resultsVisible()?1:0);
+    const current=state.data.drivers.filter(d=>d.assigned.length).map(d=>Object.assign({},d,{assignment:d.assigned.length===1?d.assigned[0]:null}));
+    const divisions=state.data.divisions.map(d=>d.division).sort((a,b)=>a-b),divisionSelect=el('active-current-division'),roleSelect=el('active-current-role');
+    divisionSelect.innerHTML='<option value="">All divisions</option>'+divisions.map(d=>'<option value="'+d+'">Division '+d+'</option>').join('');divisionSelect.value=state.currentDivision;
+    roleSelect.value=state.currentRole;
+    const count={"Team seat":0,"Free agent":0,"Reserve":0};current.forEach(d=>{if(d.assignment)count[assignmentRole(d.assignment)]++;});
+    el('active-current-summary').textContent=current.length+' current drivers · '+count['Team seat']+' team seats · '+count['Free agent']+' free agents · '+count.Reserve+' reserves';
+    el('active-current-save-state').textContent='No roster changes are staged. Use Review / move, then Save movement.';
+    const rows=current.filter(d=>{
+      const a=d.assignment,search=(d.gamertag+' '+d.driverId+' '+(a?a.team:'')+' '+(a?a.tier:'')).toLowerCase();if(!a)return search.includes(query);
+      return (!state.currentDivision||String(a.division)===state.currentDivision)&&(!state.currentRole||assignmentRole(a)===state.currentRole)&&search.includes(query);
+    }).sort((a,b)=>{
+      const aa=a.assignment,bb=b.assignment;if(!aa||!bb)return aa?1:bb?-1:a.gamertag.localeCompare(b.gamertag);
+      const roles=['Team seat','Free agent','Reserve'];return aa.division-bb.division||roles.indexOf(assignmentRole(aa))-roles.indexOf(assignmentRole(bb))||String(aa.team).localeCompare(String(bb.team))||String(aa.tier).localeCompare(String(bb.tier))||a.gamertag.localeCompare(b.gamertag);
+    });
+    const groups={};rows.forEach(d=>{const key=d.assignment?'Division '+d.assignment.division:'Needs review';(groups[key]||(groups[key]=[])).push(d);});
+    el('active-driver-head').innerHTML='<tr><th>Driver</th><th>Team</th><th>Tier</th><th>Place</th>'+(showStatus?'<th>Time trial</th>':'')+(trialsLoaded&&resultsVisible()?'<th>Overall average</th>':'')+'<th></th></tr>';
+    const groupRows=Object.keys(groups).sort((a,b)=>a==='Needs review'?1:b==='Needs review'?-1:Number(a.replace(/\D/g,''))-Number(b.replace(/\D/g,''))).map(group=>{
+      const entries=groups[group],summary=entries.length+' driver'+(entries.length===1?'':'s');
+      return '<tr class="active-current-division"><th colspan="'+columns+'">'+esc(group)+'<span>'+summary+'</span></th></tr>'+entries.map(d=>{
+        const a=d.assignment,role=a?assignmentRole(a):'Review required';
+        return '<tr'+(d.commitment==='No'?' class="active-part-time"':'')+'><td>'+esc(d.gamertag)+(d.commitment==='No'?'<span class="secondary-line">Part-time</span>':'')+'</td><td>'+esc(a?a.team:'Multiple assignments')+'</td><td>'+esc(a?a.tier:'—')+'</td><td><span class="active-roster-role '+role.toLowerCase().replace(/\s+/g,'-')+'">'+esc(role)+'</span></td>'+(showStatus?'<td>'+esc(d.status)+'</td>':'')+(trialsLoaded&&resultsVisible()?'<td>'+lap(d.overall)+'</td>':'')+'<td><button class="button" type="button" data-active-place="'+esc(d.driverId)+'">Review / move</button></td></tr>';
+      }).join('');
+    }).join('');
+    el('active-driver-rows').innerHTML=groupRows||'<tr><td colspan="'+columns+'">No current drivers match these filters.</td></tr>';
+  }
+  function renderDrivers(){
+    if(!allocationsVisible()&&state.view==='pending'||!resultsVisible()&&state.view==='trials')state.view='current';
+    const principals=state.view==='principals',current=state.view==='current';el('active-principals-pane').hidden=!principals;el('active-driver-table').hidden=principals;el('active-driver-search').hidden=principals;el('active-current-roster-tools').hidden=!current;
+    const all=state.view==='trials',query=el('active-driver-search').value.trim().toLowerCase();
+    document.querySelectorAll('[data-active-trial-view]').forEach(b=>{b.classList.toggle('active',b.dataset.activeTrialView===state.view);b.setAttribute('aria-pressed',String(b.dataset.activeTrialView===state.view));});
+    el('active-trial-note').hidden=!all;el('active-movement-publish').hidden=!state.data.movementPublicationPending;
+    if(principals){renderPrincipals();return;}
+    if(state.view==='movements'){
+      el('active-driver-head').innerHTML='<tr><th>Driver</th><th>From</th><th>To</th><th>From round</th><th>Reason</th><th>Recorded</th></tr>';
+      el('active-driver-rows').innerHTML=(state.data.movements||[]).slice().reverse().filter(r=>r[3].toLowerCase().includes(query)).map(r=>'<tr><td>'+esc(r[3])+'</td><td>'+esc('D'+r[4]+' · '+r[5]+' · '+r[7]+(r[8]?' #'+r[8]:''))+'</td><td>'+esc('D'+r[9]+' · '+r[10]+' · '+r[12]+(r[13]?' #'+r[13]:''))+'</td><td>R'+esc(r[14])+'</td><td>'+esc(r[15])+'</td><td>'+esc(r[1])+'</td></tr>').join('')||'<tr><td colspan="6">No recorded movements.</td></tr>';return;
+    }
+    if(current){renderCurrentDrivers(query);return;}
+    el('active-driver-head').innerHTML='<tr><th>Driver</th><th>Division / tier</th>'+(all?state.data.tracks.map(t=>'<th colspan="5">'+esc(t)+'</th><th>Average</th>').join('')+'<th>Overall</th>':'<th>Time trial</th><th>Overall average</th>')+'<th></th></tr>';
+    const rows=state.data.drivers.filter(d=>(all||state.view==='current'&&d.assigned.length||state.view==='pending'&&!d.assigned.length)&&(d.gamertag+' '+d.driverId).toLowerCase().includes(query));
+    el('active-driver-rows').innerHTML=rows.map(d=>'<tr'+(d.commitment==='No'?' class="active-part-time"':'')+'><td>'+esc(d.gamertag)+(d.commitment==='No'?'<span class="secondary-line">Part-time</span>':'')+'</td><td>'+esc(d.assigned.map(a=>'D'+a.division+' · '+a.tier+' · '+a.team).join('; ')||'Awaiting placement')+'</td>'+(all?lapCells(d.one)+'<td>'+lap(d.averageOne)+'</td>'+lapCells(d.two)+'<td>'+lap(d.averageTwo)+'</td><td>'+lap(d.overall)+(d.complete&&d.ready?'':' (provisional)')+'</td>':'<td>'+esc(d.status)+'</td><td>'+lap(d.overall)+'</td>')+'<td>'+(!d.assigned.length?'<button class="button" type="button" data-active-place="'+esc(d.driverId)+'"'+'>Place driver</button>':'<button class="button" type="button" data-active-place="'+esc(d.driverId)+'">Review / move</button>')+'</td></tr>').join('')||'<tr><td colspan="16">'+(all?'No matching trials.':'No matching drivers awaiting placement. Process new applications to add them.')+'</td></tr>';
+  }
+  function showDriver(id){if(state.busy)return;const d=state.data.drivers.find(d=>d.driverId===id);if(!d)return;if(!d.assigned.length&&state.data.rosterOnly){ensureFullPlacement().then(ok=>{if(ok)showDriver(id);});return;}if(!d.assigned.length&&!allocationsVisible()){status('New driver allocations require allocation access.');return;}state.selected=id;state.dirty=false;state.moving=!!d.assigned.length;state.preview=null;el('active-move-fields').hidden=!state.moving;el('active-move-round').value='';el('active-move-reason').value='';el('active-move-preview').textContent='';el('active-place-save').textContent=state.moving?'Preview move':'Confirm placement';el('active-move-current').textContent=d.assigned.map(a=>'Currently D'+a.division+' · '+a.tier+' · '+a.team+(a.number?' #'+a.number:'')).join('; ');
+    el('active-placement-name').textContent=d.gamertag;el('active-placement-error').textContent=!state.moving&&(!d.complete||!d.ready)?'Time trial incomplete or not recorded. You can still choose a division, tier and place.':'';el('active-place-division').innerHTML=state.data.divisions.map(d=>'<option value="'+d.division+'">Division '+d.division+'</option>').join('');
+    el('active-place-tier').value='1';el('active-place-role').value=d.commitment==='No'?'Reserve':'';el('active-place-role').disabled=!state.moving&&d.commitment==='No';el('active-place-notes').value='';if(state.moving){el('active-place-division').value=String(d.assigned[0].division);el('active-place-tier').value=String(d.assigned[0].tier).slice(-1);}updateSeats();fillDetails(d);setReview('placement');if(!el('active-placement-dialog').open)el('active-placement-dialog').showModal();
+  }
+  function fillDetails(d){
+    ['nationality','platform','controller'].forEach(key=>{
+      const value=d.details?.[key]||'',values=Array.from(new Set((state.data.detailOptions?.[key]||[]).concat(value).filter(Boolean)));
+      el('active-detail-'+key).innerHTML='<option value="">Not recorded</option>'+values.map(v=>'<option value="'+esc(v)+'">'+esc(v)+'</option>').join('');el('active-detail-'+key).value=value;
+    });
+    el('active-details-save').disabled=true;document.querySelector('[data-active-review="details"]').disabled=!d.details;
+  }
+  function setReview(view){
+    el('active-placement-fields').hidden=view!=='placement';el('active-driver-details').hidden=view!=='details';
+    document.querySelectorAll('[data-active-review]').forEach(b=>{b.classList.toggle('active',b.dataset.activeReview===view);b.setAttribute('aria-pressed',String(b.dataset.activeReview===view));});
+  }
+  function renderPrincipals(){
+    el('active-principals-rows').innerHTML=(state.data.principals||[]).map((t,i)=>'<tr><th>'+esc(t.team)+'</th><td><input type="text" maxlength="100" list="active-principal-names" data-active-principal="'+i+'" aria-label="'+esc(t.team)+' principal" value="'+esc(t.principal)+'" placeholder="Vacant"></td></tr>').join('')||'<tr><td colspan="2">No full teams configured in this season.</td></tr>';
+    const names=Array.from(new Set(state.data.drivers.map(d=>d.gamertag).concat((state.data.principals||[]).map(t=>t.principal)).filter(Boolean))).sort();
+    el('active-principal-names').innerHTML=names.map(name=>'<option value="'+esc(name)+'"></option>').join('');el('active-principals-save').disabled=true;el('active-principals-discard').disabled=true;
+  }
+  document.querySelectorAll('[data-active-review]').forEach(b=>b.addEventListener('click',async()=>{
+    if(state.busy||b.classList.contains('active')||!canLeave())return;
+    if(b.dataset.activeReview==='details'&&!await ensureFullPlacement())return;
+    showDriver(state.selected);setReview(b.dataset.activeReview);
+  }));
+  el('active-driver-details').addEventListener('input',()=>{state.dirty=true;el('active-details-save').disabled=false;});
+  el('active-details-save').addEventListener('click',()=>call('saveActiveSeasonDriverDetails',{season:state.season,revision:state.data.revision,driverId:state.selected,nationality:el('active-detail-nationality').value,platform:el('active-detail-platform').value,controller:el('active-detail-controller').value}));
+  el('active-principals-rows').addEventListener('input',()=>{state.dirty=true;el('active-principals-save').disabled=false;el('active-principals-discard').disabled=false;});
+  el('active-principals-discard').addEventListener('click',()=>{if(!state.busy&&canLeave()){state.dirty=false;renderPrincipals();}});
+  el('active-principals-save').addEventListener('click',()=>call('saveActiveSeasonPrincipals',{season:state.season,revision:state.data.revision,principals:state.data.principals.map((t,i)=>({team:t.team,principal:document.querySelector('[data-active-principal="'+i+'"]').value}))}));
+  function updateSeats(){el('active-move-round').value='';const division=state.data.divisions.find(d=>d.division===Number(el('active-place-division').value)),tier=Number(el('active-place-tier').value);const seats=division?division.seats.filter(s=>s.tier===tier&&(!s.role||s.role===el('active-place-role').value)):[];
+    el('active-place-team-field').hidden=!['Team seat','Free agent'].includes(el('active-place-role').value);el('active-place-team').innerHTML=seats.map(s=>'<option>'+esc(s.team)+'</option>').join('');
+    el('active-place-save').disabled=!el('active-place-role').value||['Team seat','Free agent'].includes(el('active-place-role').value)&&!seats.length;
+  }
+  function renderCalendar(){
+    el('active-calendar-rows').innerHTML=state.data.rounds.map(r=>'<tr><th>R'+r.round+'</th><td><input type="date" aria-label="R'+r.round+' date" data-active-calendar-date="'+r.round+'" value="'+esc(r.date)+'"'+(r.locked?' disabled':'')+'></td><td><input type="text" aria-label="R'+r.round+' track" data-active-calendar-track="'+r.round+'" value="'+esc(r.track)+'"'+(r.locked?' disabled':'')+'></td><td>'+esc(r.format)+'</td><td><select aria-label="R'+r.round+' status" data-active-calendar-status="'+r.round+'"'+(r.locked?' disabled':'')+'>'+['Scheduled','Cancelled'].map(s=>'<option'+(s===r.status?' selected':'')+'>'+s+'</option>').join('')+'</select>'+(r.locked?'<span class="secondary-line">Results entered · locked</span>':'')+'</td></tr>').join('');
+    el('active-calendar-end').innerHTML=state.data.rounds.map(r=>'<option value="'+r.round+'">After R'+r.round+'</option>').join('');
+    const scheduled=state.data.rounds.filter(r=>r.status!=='Cancelled');if(scheduled.length)el('active-calendar-end').value=String(scheduled[scheduled.length-1].round);el('active-calendar-save').disabled=true;
+  }
+  el('active-ops-back').addEventListener('click',()=>{if(canLeave())window.F1XLSeasonLaunch.open(state.season);});el('active-ops-refresh').addEventListener('click',()=>{if(canLeave())refresh();});
+  el('active-driver-search').addEventListener('input',()=>{if(state.data)renderDrivers();});
+  el('active-current-division').addEventListener('change',()=>{state.currentDivision=el('active-current-division').value;if(state.data)renderDrivers();});
+  el('active-current-role').addEventListener('change',()=>{state.currentRole=el('active-current-role').value;if(state.data)renderDrivers();});
+  document.querySelectorAll('[data-active-trial-view]').forEach(b=>b.addEventListener('click',async()=>{if(state.busy||!canLeave())return;if(['pending','trials','principals'].includes(b.dataset.activeTrialView)&&!await ensureFullPlacement())return;state.dirty=false;state.view=b.dataset.activeTrialView;if(state.data)renderDrivers();}));
+  el('active-driver-rows').addEventListener('click',e=>{const b=e.target.closest('[data-active-place]');if(b)showDriver(b.dataset.activePlace);});
+  el('active-placement-close').addEventListener('click',()=>{if(canLeave()){el('active-placement-dialog').close();state.dirty=false;}});
+  el('active-placement-dialog').addEventListener('cancel',e=>{if(state.busy||!canLeave())e.preventDefault();else state.dirty=false;});
+  ['active-place-division','active-place-tier','active-place-role'].forEach(id=>el(id).addEventListener('change',updateSeats));
+  el('active-placement-fields').addEventListener('input',()=>{state.dirty=true;state.preview=null;el('active-move-preview').textContent='';el('active-place-save').textContent=state.moving?'Preview move':'Confirm placement';});
+  function placementInput(){return {season:state.season,revision:state.data.revision,movementRevision:state.data.movementRevision,driverId:state.selected,division:Number(el('active-place-division').value),tier:Number(el('active-place-tier').value),role:el('active-place-role').value,team:el('active-place-role').value==='Reserve'?'':el('active-place-team').value,notes:el('active-place-notes').value,effectiveRound:el('active-move-round').value,reason:el('active-move-reason').value};}
+  el('active-place-save').addEventListener('click',async()=>{
+    if(state.busy)return;const input=placementInput();if(!state.moving)return call('placeActiveSeasonDriver',input);
+    if(state.preview)return call('confirmDriverMovement',Object.assign(input,{previewRevision:state.preview.revision,rosterReply:true}));
+    input.effectiveRound='';busy(true);el('active-placement-error').textContent='Checking seats and entered rounds…';try{const p=await new Promise((resolve,reject)=>google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).previewDriverMovement(input));state.preview=p;el('active-move-round').value=p.effectiveRound;el('active-move-preview').textContent='D'+p.from.division+' '+p.from.team+' → D'+p.to.division+' '+p.to.team+' · '+p.to.tier+(p.to.number?' #'+p.to.number:'')+' · from R'+p.effectiveRound+'. '+p.message;el('active-place-save').textContent='Save movement';el('active-placement-error').textContent='Review the move, then save it.';}catch(e){el('active-placement-error').textContent=e.message||String(e);}finally{busy(false);}
+  });
+  async function publishMovements(){if(state.busy)return;busy(true);try{const r=await new Promise((resolve,reject)=>google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).publishDriverMovements({season:state.season}));state.data.movementPublicationPending=!!r.publicationPending;status(r.message);}catch(e){state.data.movementPublicationPending=true;status('Move saved. Website publication needs retry: '+(e.message||e));}finally{busy(false);renderDrivers();}}
+  el('active-movement-publish').addEventListener('click',publishMovements);
+  el('active-ops-trials').addEventListener('click',()=>{if(!state.busy&&canLeave())window.F1XLPreseasonTimeTrials.open(state.season);});
+  el('active-calendar-rows').addEventListener('input',()=>{state.dirty=true;el('active-calendar-save').disabled=false;});
+  el('active-calendar-shorten').addEventListener('click',()=>{const after=Number(el('active-calendar-end').value);const affected=state.data.rounds.filter(r=>r.round>after);if(!affected.length)return status('No rounds follow that round.');if(affected.some(r=>r.locked))return status('A later round already has entries. Those results must be retained.');affected.forEach(r=>document.querySelector('[data-active-calendar-status="'+r.round+'"]').value='Cancelled');state.dirty=true;el('active-calendar-save').disabled=false;status('Remaining rounds marked cancelled in this preview. Review, then Save calendar.');});
+  el('active-calendar-save').addEventListener('click',()=>call('saveActiveSeasonCalendar',{season:state.season,revision:state.data.revision,rounds:state.data.rounds.map(r=>({round:r.round,date:document.querySelector('[data-active-calendar-date="'+r.round+'"]').value,track:document.querySelector('[data-active-calendar-track="'+r.round+'"]').value,status:document.querySelector('[data-active-calendar-status="'+r.round+'"]').value}))}));
+  window.addEventListener('beforeunload',e=>{if(state.dirty){e.preventDefault();e.returnValue='';}});
+  function intakeGuide(sectionId,active,season,trial){
+    const section=el(sectionId);section.querySelector('.eyebrow').textContent=active?'Active season':trial?'Season preparation':'Preseason · Stage 2';
+    const pill=section.querySelector('.pill');if(pill)pill.textContent=active?'ACTIVE SEASON':'PRE-SEASON';
+    let guide=section.querySelector('.active-intake-help');if(!guide){guide=document.createElement('details');guide.className='active-intake-help';guide.innerHTML='<summary>Step-by-step help</summary><ol></ol><button class="button" type="button"></button>';section.querySelector('.topbar').insertAdjacentElement('afterend',guide);}
+    guide.hidden=!active;if(!active)return;
+    const steps=trial?['Bookings and completion work as before, in the same season trial list.','Completed drivers leave Bookings. Completed trials shows names and completion dates only.','Use Driver placement to compare full lap times and assign a new driver individually.']:['Review incoming applications and link each to a permanent driver profile.','Process & archive saves the tracker and creates its time-trial entry. Applications stay open during the season.','Arrange and complete the trial, then use Driver placement in the active hub.'];
+    guide.querySelector('ol').innerHTML=steps.map(s=>'<li>'+esc(s)+'</li>').join('');const button=guide.querySelector('button');button.textContent=trial?'Open driver placement':'Open time trials';button.hidden=trial&&!allocationsVisible();button.onclick=()=>trial?open(season,'placement'):window.F1XLPreseasonTimeTrials.open(season);
+  }
+  return {open:open,intakeGuide:intakeGuide};
+})();
+</script>

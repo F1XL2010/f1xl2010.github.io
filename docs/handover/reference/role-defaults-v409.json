@@ -1,0 +1,183 @@
+{
+  "date": "2026-11-06",
+  "source": "AccessPolicy in verified v409",
+  "levels": {
+    "0": "No default access",
+    "1": "Read",
+    "2": "Write / operate; additional endpoint and own-record checks still apply"
+  },
+  "areas": {
+    "navigation": "Signed-in navigation",
+    "season_hub": "Season hubs",
+    "season_setup": "Season dates & preparation",
+    "applications": "Applications & tracker",
+    "time_trials": "Time-trial recording",
+    "time_trial_bookings": "Time-trial bookings",
+    "tt_results": "Completed TT results & rankings",
+    "social_races": "Pre-season social races",
+    "placement": "Driver allocations",
+    "movements": "Active-season driver movements & details",
+    "tracks": "Track draw & announcements",
+    "principals": "Staff applications & principals",
+    "draft": "Draft & presentations",
+    "division_allocations": "Draft roster corrections",
+    "results": "Results entry & routine website updates",
+    "calendar": "Race calendar",
+    "licences": "Licences & bans",
+    "tickets": "Head steward: ticket processing & outcomes",
+    "appeals_management": "Final appeal decisions",
+    "steward": "Steward: own reviews",
+    "appeal": "Appeals: own reviews",
+    "asr": "All Star Race",
+    "postseason": "Season closure",
+    "archive": "Season archive & statistics previews",
+    "drivers": "Driver profiles & identities",
+    "career": "Permanent Career Stats & accolades",
+    "reference": "Reference Data",
+    "publishing": "Website configuration & season publication",
+    "maintenance": "Connections, templates, repairs & direct-sheet links",
+    "free_agents": "Free Agent Hub (read only)",
+    "team_hub": "Team Principal Hub",
+    "team_preview": "View any team as an administrator",
+    "people": "People & permissions"
+  },
+  "roles": {
+    "god": {
+      "label": "God (full access)",
+      "permissions": {
+        "navigation": 2,
+        "season_hub": 2,
+        "season_setup": 2,
+        "applications": 2,
+        "time_trials": 2,
+        "time_trial_bookings": 2,
+        "tt_results": 2,
+        "social_races": 2,
+        "placement": 2,
+        "movements": 2,
+        "tracks": 2,
+        "principals": 2,
+        "draft": 2,
+        "division_allocations": 2,
+        "results": 2,
+        "calendar": 2,
+        "licences": 2,
+        "tickets": 2,
+        "appeals_management": 2,
+        "steward": 2,
+        "appeal": 2,
+        "asr": 2,
+        "postseason": 2,
+        "archive": 2,
+        "drivers": 2,
+        "career": 2,
+        "reference": 2,
+        "publishing": 2,
+        "maintenance": 2,
+        "team_hub": 2,
+        "free_agents": 2,
+        "team_preview": 2,
+        "people": 2
+      }
+    },
+    "admin": {
+      "label": "Administrator",
+      "permissions": {
+        "navigation": 1,
+        "season_setup": 2,
+        "applications": 2,
+        "time_trials": 2,
+        "time_trial_bookings": 2,
+        "social_races": 2,
+        "movements": 2,
+        "tracks": 2,
+        "principals": 2,
+        "draft": 2,
+        "division_allocations": 2,
+        "results": 2,
+        "calendar": 2,
+        "licences": 2,
+        "tickets": 2,
+        "appeals_management": 2,
+        "asr": 2,
+        "team_hub": 2,
+        "postseason": 1,
+        "career": 1,
+        "free_agents": 1,
+        "team_preview": 1
+      }
+    },
+    "allocations_lead": {
+      "label": "Head of Allocations",
+      "permissions": {
+        "navigation": 1,
+        "time_trials": 2,
+        "time_trial_bookings": 2,
+        "tt_results": 2,
+        "placement": 2,
+        "movements": 2,
+        "division_allocations": 2
+      }
+    },
+    "time_trial_team": {
+      "label": "Time Trial Team",
+      "permissions": {
+        "navigation": 1,
+        "applications": 2,
+        "time_trials": 2
+      }
+    },
+    "recruitment": {
+      "label": "Applications coordinator",
+      "permissions": {
+        "navigation": 1,
+        "applications": 2,
+        "time_trial_bookings": 2
+      }
+    },
+    "head_steward": {
+      "label": "Head Steward",
+      "permissions": {
+        "navigation": 1,
+        "tickets": 2,
+        "appeals_management": 2,
+        "licences": 2
+      }
+    },
+    "steward": {
+      "label": "Steward",
+      "permissions": {
+        "navigation": 1,
+        "steward": 2
+      }
+    },
+    "appeal": {
+      "label": "Appeals reviewer",
+      "permissions": {
+        "navigation": 1,
+        "appeal": 2
+      }
+    },
+    "principal": {
+      "label": "Team Principal",
+      "permissions": {
+        "navigation": 1,
+        "team_hub": 2
+      }
+    },
+    "free_agent_coordinator": {
+      "label": "Free Agent Coordinator",
+      "permissions": {
+        "navigation": 1,
+        "free_agents": 1
+      }
+    },
+    "presenter": {
+      "label": "Host / draft operator",
+      "permissions": {
+        "navigation": 1,
+        "draft": 2
+      }
+    }
+  }
+}

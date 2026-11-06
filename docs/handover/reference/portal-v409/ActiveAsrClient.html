@@ -1,0 +1,95 @@
+<style>
+  #view-active-asr #aasr-body>.panel{padding:16px}#view-active-asr .aasr-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:14px}
+  #view-active-asr .aasr-fields{display:flex;gap:16px;flex-wrap:wrap;align-items:end;margin:16px 0}
+  #view-active-asr label:has([data-aasr-field="Slideshow URL"]){flex:1;min-width:240px}#view-active-asr label{display:flex;flex-direction:column;gap:7px}
+  #view-active-asr input,#view-active-asr select,#view-active-asr textarea{max-width:100%;padding:9px;background:var(--panel,#101e19);color:inherit;border:1px solid #385449;border-radius:6px}
+  #view-active-asr table{width:100%;border-collapse:collapse}#view-active-asr th,#view-active-asr td{padding:10px;text-align:left;border-bottom:1px solid #30483e}
+  #view-active-asr th{font-size:12px;color:#a6bfbe}
+  #aasr-message{min-height:24px;margin:12px 0}#aasr-message[data-error=true]{color:#ffad9c}
+  #aasr-preview{background:#0a151b;color:#f4f7fb;border:1px solid #3d6559;border-radius:14px;width:min(1200px,94vw);max-height:94vh;padding:26px;box-sizing:border-box}
+  #aasr-preview::backdrop{background:#000c}#aasr-preview .aasr-reveal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+  #aasr-preview article{border:1px solid #426555;border-top:4px solid #5de4a0;background:#12241f;padding:18px;border-radius:8px}
+  #aasr-preview h2{margin:8px 0 20px;font-size:32px}#aasr-preview .aasr-track{font-size:clamp(36px,7vw,88px);text-align:center;padding:50px 12px}
+  #aasr-preview small{color:#9cbbae}#aasr-preview button{color:inherit}#aasr-preview:fullscreen{width:100%;height:100%;max-height:none;border-radius:0;overflow:auto}
+</style>
+<script>
+window.F1XLActiveAsr=(function(){
+  if(window.F1XLNavigation)window.F1XLNavigation.register('active-asr',()=>state.dirty,()=> ({season:state.season}));
+
+  const state={season:'',data:null,tab:'setup',division:'1',session:'qualifying',busy:false,dirty:false,reveal:'track'};
+  const el=id=>document.getElementById(id),root=el('view-active-asr');
+  const esc=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const tabs=[['setup','Event & places'],['tracker','Division top ten'],['invitations','Invitations'],['teams','Teams'],['results','Results & race night'],['announcements','Announcements']];
+  const option=(v,current,label)=>'<option value="'+esc(v)+'"'+(String(v)===String(current)?' selected':'')+'>'+esc(label==null?v:label)+'</option>';
+  const button=(action,text)=>'<button class="button" type="button" data-aasr-action="'+action+'">'+text+'</button>';
+  const table=(heads,body)=>'<div class="table-scroll"><table><thead><tr>'+heads.map(h=>'<th>'+h+'</th>').join('')+'</tr></thead><tbody>'+body+'</tbody></table></div>';
+  const field=(label,key,value,type='text')=>'<label>'+label+'<input data-aasr-field="'+esc(key)+'" type="'+type+'" value="'+esc(value)+'"></label>';
+  function message(text,error){el('aasr-message').textContent=text;el('aasr-message').dataset.error=!!error;}
+  function busy(value){state.busy=value;root.querySelectorAll('button,input,select,textarea').forEach(e=>e.disabled=value);}
+  function dirty(){state.dirty=true;el('aasr-dirty').textContent='Unsaved changes';}
+  function leave(){return !state.busy&&(!state.dirty||window.confirm('Discard unsaved ASR changes?'));}
+  function rpc(name,input){return new Promise((resolve,reject)=>google.script.run.withSuccessHandler(resolve).withFailureHandler(reject)[name](input));}
+  async function request(name,input){if(state.busy)return;busy(true);message(name==='getActiveAsr'?'Loading ASR…':name==='createActiveAsr'?'Creating the season ASR workbook…':'Saving…');
+    try{state.data=await rpc(name,Object.assign({season:state.season},input));state.season=state.data.season;state.dirty=false;render();message(state.data.message||'');}
+    catch(e){message(e.message||String(e),true);}finally{busy(false);}
+  }
+  function load(force){if(state.busy)return;if(!state.data||force){if(!leave())return;return request('getActiveAsr',{});}}
+  function open(season){if(!leave())return;state.season=String(season);state.data=null;state.dirty=false;window.F1XLNavigate('active-asr');}
+  function divisionNav(){return '<div class="toolbar">'+Array.from({length:state.data.divisions},(_,i)=>'<button class="button '+(state.division===String(i+1)?'active':'')+'" type="button" data-aasr-division="'+(i+1)+'">Division '+(i+1)+'</button>').join('')+'</div>';}
+  function render(){const d=state.data;el('aasr-title').textContent=d?'S'+d.season+' All Star Race':'All Star Race';el('aasr-book').hidden=!d||!d.url;if(d&&d.url)el('aasr-book').href=d.url;el('aasr-dirty').textContent='All changes saved';
+    el('aasr-tabs').hidden=!d||!d.ready;el('aasr-tabs').innerHTML=tabs.map(([key,title])=>'<button class="button '+(state.tab===key?'active':'')+'" type="button" data-aasr-tab="'+key+'">'+title+'</button>').join('');
+    if(!d){el('aasr-body').innerHTML='';return;}if(!d.ready){el('aasr-body').innerHTML='<div class="panel"><h2>Prepare this season’s ASR</h2><p>Create a season copy of the ASR template with a standings tracker, invitations, teams and results.</p>'+button('create',d.exists?'Complete workbook setup':'Create ASR workbook')+'</div>';return;}
+    const grid=Number(d.setup['Grid size']);let html='';
+    if(state.tab==='setup')html='<div class="aasr-fields">'+field('Track','Track',d.setup.Track)+field('Race date','Race date',d.setup['Race date'],'date')+'<label>Grid size<select data-aasr-field="Grid size">'+[20,22].map(n=>option(n,grid)).join('')+'</select></label></div><p>Normal qualifying · 100% race · race points from '+grid+' down to 1.</p>'+table(['Division','Places'],d.allocations.map((r,i)=>'<tr><td>Division '+esc(r[0])+'</td><td><input aria-label="Division '+esc(r[0])+' places" data-aasr-allocation="'+i+'" type="number" min="0" max="22" value="'+esc(r[1])+'"></td></tr>').join(''))+'<p id="aasr-total">'+allocationText()+'</p>'+button('save','Save event & places')+' '+button('next-invitations','Go to invitations');
+    if(state.tab==='tracker')html=divisionNav()+'<p>Standings snapshot: '+esc(d.setup['Standings refreshed']||'Not refreshed')+'</p>'+button('tracker','Refresh standings')+table(['Position','Driver','Points'],d.topTen.filter(r=>r[0]===state.division).map(r=>'<tr><td>'+esc(r[1])+'</td><td>'+esc(r[3])+'</td><td>'+esc(r[4])+'</td></tr>').join(''));
+    if(state.tab==='invitations'){
+      const n=d.next.find(n=>n.division===state.division)||{places:0,confirmed:0,invited:0};
+      html=divisionNav()+'<p>'+n.confirmed+' confirmed · '+n.invited+' awaiting response · '+n.places+' places</p><p>'+button('save','Save invitations')+'</p>'+table(['Position','Driver','Response','Notes'],d.invitations.map((r,i)=>r[0]!==state.division?'':'<tr><td>'+esc(r[1])+'</td><td>'+esc(r[3])+'</td><td><select aria-label="Response for '+esc(r[3])+'" data-aasr-response="'+i+'">'+['Not invited','Invited','Confirmed','Declined'].map(v=>option(v,r[5])).join('')+'</select></td><td><input aria-label="Notes for '+esc(r[3])+'" data-aasr-note="'+i+'" value="'+esc(r[6])+'"></td></tr>').join(''))+'<p>Recording an invitation does not send a message. A decline leaves the place available for the next driver in that division.</p>'+button('next-teams','Go to teams');
+    }
+    if(state.tab==='teams')html='<p>'+d.invitations.filter(r=>r[5]==='Confirmed').length+' / '+grid+' drivers confirmed.</p>'+button('generate',d.pairs.length?'Regenerate pairings':'Generate pairings')+(d.pairs.length?' '+button('randomise-cars','Randomise car allocation')+'<p>'+(d.pairsCurrent?'Pairings match the confirmed field.':'The confirmed field or rankings changed. Review and regenerate before entering results.')+'</p>'+table(['Team','First driver','Paired driver'],d.pairs.map((r,i)=>'<tr><td><select aria-label="Team for pair '+(i+1)+'" data-aasr-team="'+i+'">'+d.teams.map(t=>option(t,r[1])).join('')+'</select></td><td>'+esc(r[3])+' <small>D'+esc(r[4])+' · #'+esc(r[5])+'</small></td><td>'+esc(r[7])+' <small>D'+esc(r[8])+' · #'+esc(r[9])+'</small></td></tr>').join(''))+button('save','Save team assignments')+' '+button('next-announcements','Go to announcements'):'<p>Confirm the field first. The highest qualifier from the top division pairs with the lowest qualifier from the bottom division, continuing inwards.</p>');
+    if(state.tab==='results'){
+      if(!d.pairsCurrent)html='<p>Confirm the field and generate its teams before entering results.</p>'+button('next-teams','Open teams');
+      else{const race=state.session==='race',rows=d[state.session],drivers=d.pairs.flatMap(r=>[r[3],r[7]]);
+        html='<div class="toolbar">'+['qualifying','race'].map(s=>'<button class="button '+(state.session===s?'active':'')+'" data-aasr-session="'+s+'" type="button">'+(s==='race'?'Race & team results':'Qualifying')+'</button>').join('')+' '+button('race-night','Race-night presentation')+' '+button('save','Save results')+'</div>'+table(['Position','Driver','Team',race?'Stops':'Tyre',race?'Time / gap / DNF / DNS / DSQ':'Time',...(race?['Points']:[])],rows.slice(0,grid).map((r,i)=>'<tr><td>'+(i+1)+'</td><td><select aria-label="Driver in position '+(i+1)+'" data-aasr-result="'+i+'" data-col="1">'+option('',r[1],'Choose driver')+drivers.map(n=>option(n,r[1])).join('')+'</select></td><td data-aasr-result-team="'+i+'">'+esc(teamFor(r[1]))+'</td><td>'+(race?'<input type="number" min="0" step="1" aria-label="Stops in position '+(i+1)+'" data-aasr-result="'+i+'" data-col="3" value="'+esc(r[3])+'">':'<select aria-label="Tyre in position '+(i+1)+'" data-aasr-result="'+i+'" data-col="3">'+Array.from(new Set(['','Super Soft','Soft','Medium','Hard','Inters','Wet',r[3]])).map(t=>option(t,r[3],t||'Choose tyre')).join('')+'</select>')+'</td><td><input aria-label="Time or status in position '+(i+1)+'" data-aasr-result="'+i+'" data-col="4" value="'+esc(r[4])+'"></td>'+(race?'<td>'+esc(r[5])+'</td>':'')+'</tr>').join(''))+'<p>Enter finishing order. DNF, DNS and DSQ score zero. Points refresh after saving. Presentation reads saved results automatically; use another portal window or device for admin input.</p>'+(race?leaders()+'<h2>Team standings</h2><p>Provisional until all race results are entered. Ties stay tied for admin review.</p>'+table(['Position','Team','Points'],d.teamResults.map(r=>'<tr><td>'+esc(r[2])+'</td><td>'+esc(r[0])+'</td><td>'+esc(r[1])+'</td></tr>').join('')):'');}
+    }
+    if(state.tab==='announcements')html='<div class="aasr-fields">'+field('Announcement date','Reveal date',d.announcements['Reveal date'],'date')+field('Slideshow link','Slideshow URL',d.announcements['Slideshow URL'],'url')+'</div><label>Presentation notes<textarea rows="3" data-aasr-field="Notes">'+esc(d.announcements.Notes)+'</textarea></label><p>Prepare the track and team reveal here. Saving does not publish it. PowerPoint generation will use the supplied ASR announcement example.</p><div class="toolbar">'+button('save','Save announcement details')+' '+button('preview','Preview track & teams')+(safeLink(d.announcements['Slideshow URL'])?' <a class="button" href="'+esc(d.announcements['Slideshow URL'])+'" target="_blank" rel="noopener">Open slideshow ↗</a>':'')+'</div>';
+    el('aasr-body').innerHTML='<div class="panel">'+html+'</div>';if(state.tab==='results')filterDrivers();
+  }
+  function leaders(){const d=state.data,rows=d.race.filter(r=>r[1]),complete=rows.length===Number(d.setup['Grid size'])&&rows.every(r=>r[4]),classified=rows.filter(r=>r[4]&&!/^(DNF|DNS|DSQ)$/i.test(r[4])),best=Number(d.teamResults[0]&&d.teamResults[0][1]||0);if(!classified.length||!Number.isFinite(best)||best<=0)return '';const names=d.teamResults.filter(r=>Number(r[1])===best).map(r=>r[0]).join(' / ');return '<div class="aasr-grid" style="margin-top:20px"><article class="panel" style="padding:18px"><small>'+(complete?'Winning team'+(names.includes(' / ')?'s — tied':''):'Leading team')+'</small><h2>'+esc(names)+'</h2><strong>'+best+' points</strong></article><article class="panel" style="padding:18px"><small>'+(complete?'Winning driver':'Leading driver')+'</small><h2>'+esc(classified[0][1])+'</h2></article></div>';}
+  function teamFor(driver){const pair=state.data.pairs.find(r=>r[3]===driver||r[7]===driver);return pair?pair[1]:'';}
+  function safeLink(url){return /^https:\/\/(docs\.google\.com\/presentation\/|[a-z0-9.-]+\.sharepoint\.com\/|1drv\.ms\/)/i.test(url||'');}
+  function allocationText(){const d=state.data,total=d.allocations.reduce((n,r)=>n+Number(r[1]||0),0);return total+' / '+d.setup['Grid size']+' places allocated';}
+  function filterDrivers(){root.querySelectorAll('[data-aasr-result][data-col="1"]').forEach(s=>{const used=state.data[state.session].map(r=>r[1]);Array.from(s.options).forEach(o=>o.hidden=!!o.value&&o.value!==s.value&&used.includes(o.value));});}
+  async function changeTab(tab){if(state.busy)return;if(state.dirty){if(!leave())return;await request('getActiveAsr',{});if(state.dirty)return;}state.tab=tab;render();}
+  function save(){const d=state.data,area=state.tab,input={area:area==='tracker'?'tracker':area,revision:d.revision};if(area==='setup'){input.setup=d.setup;input.allocations=d.allocations;}if(area==='invitations')input.rows=d.invitations;if(area==='teams')input.teams=d.pairs.map(r=>r[1]);if(area==='results'){input.qualifying=d.qualifying.map(r=>[r[1],r[3],r[4]]);input.race=d.race.map(r=>[r[1],r[3],r[4]]);}if(area==='announcements')input.announcements=d.announcements;return request('saveActiveAsr',input);}
+  function preview(){const d=state.data;el('aasr-preview-title').textContent='S'+d.season+' All Star Race';const content=el('aasr-preview-body');
+    content.innerHTML=state.reveal==='track'?'<div class="aasr-track">'+esc(d.setup.Track||'Track to be selected')+'</div><p style="text-align:center">'+esc(d.setup['Race date']||'Date to be confirmed')+' · 100% race</p>':!d.pairsCurrent?'<p>Confirm and generate the teams before previewing the line-up.</p>':'<div class="aasr-reveal-grid">'+d.pairs.map(r=>'<article><small>TEAM '+esc(r[0])+'</small><h2>'+esc(r[1])+'</h2><p>'+esc(r[3])+' <small>Division '+esc(r[4])+'</small></p><p>'+esc(r[7])+' <small>Division '+esc(r[8])+'</small></p></article>').join('')+'</div>';
+    el('aasr-preview').querySelectorAll('[data-aasr-reveal]').forEach(b=>b.classList.toggle('active',b.dataset.aasrReveal===state.reveal));
+  }
+  root.addEventListener('input',e=>{const t=e.target,d=state.data;if(!d||state.busy)return;let changed=true;
+    if(t.hasAttribute('data-aasr-field'))(state.tab==='announcements'?d.announcements:d.setup)[t.dataset.aasrField]=t.value;
+    else if(t.hasAttribute('data-aasr-allocation'))d.allocations[Number(t.dataset.aasrAllocation)][1]=t.value;
+    else if(t.hasAttribute('data-aasr-response'))d.invitations[Number(t.dataset.aasrResponse)][5]=t.value;
+    else if(t.hasAttribute('data-aasr-note'))d.invitations[Number(t.dataset.aasrNote)][6]=t.value;
+    else if(t.hasAttribute('data-aasr-team'))d.pairs[Number(t.dataset.aasrTeam)][1]=t.value;
+    else if(t.hasAttribute('data-aasr-result')){d[state.session][Number(t.dataset.aasrResult)][Number(t.dataset.col)]=t.value;filterDrivers();if(Number(t.dataset.col)===1){const team=root.querySelector('[data-aasr-result-team="'+t.dataset.aasrResult+'"]');if(team)team.textContent=teamFor(t.value);}}
+    else changed=false;if(changed){dirty();if(el('aasr-total'))el('aasr-total').textContent=allocationText();}
+  });
+  root.addEventListener('click',async e=>{const b=e.target.closest('button');if(!b||state.busy)return;
+    if(b.dataset.aasrTab){changeTab(b.dataset.aasrTab);return;}if(b.dataset.aasrDivision){state.division=b.dataset.aasrDivision;render();if(state.dirty)el('aasr-dirty').textContent='Unsaved changes';return;}
+    if(b.dataset.aasrSession){state.session=b.dataset.aasrSession;render();if(state.dirty)el('aasr-dirty').textContent='Unsaved changes';return;}
+    const action=b.dataset.aasrAction;if(action==='create')request('createActiveAsr',{});else if(action==='save')save();else if(action==='refresh')load(true);
+    else if(action==='back'&&leave()){state.dirty=false;state.data=null;window.F1XLSeasonLaunch.open(state.season);}
+    else if(action&&action.startsWith('next-'))changeTab(action.slice(5));
+    else if(action==='tracker')request('saveActiveAsr',{area:'tracker',revision:state.data.revision});
+    else if(action==='randomise-cars'){if(state.dirty){message('Save team assignments before randomising car allocation.',true);return;}request('saveActiveAsr',{area:'randomise-cars',revision:state.data.revision});}
+    else if(action==='generate'){if(state.dirty){message('Save team assignments or refresh before regenerating.',true);return;}if(!state.data.pairs.length||confirm('Replace the saved pairings using the current confirmed field?'))request('saveActiveAsr',{area:'generate',revision:state.data.revision});}
+    else if(action==='race-night'){if(state.dirty){message('Save your results first, then open the presentation.',true);return;}window.F1XLAsrRaceNight.open(state.season,state.session);}
+    else if(action==='preview'){if(state.dirty){message('Save your announcement details first.',true);return;}preview();el('aasr-preview').showModal();}
+  });
+  el('aasr-preview').addEventListener('click',async e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.aasrReveal){state.reveal=b.dataset.aasrReveal;preview();}if(b.id==='aasr-preview-close'){if(document.fullscreenElement)await document.exitFullscreen();el('aasr-preview').close();}if(b.id==='aasr-preview-full'){try{if(document.fullscreenElement)await document.exitFullscreen();else await el('aasr-preview').requestFullscreen();}catch(e){el('aasr-preview-hint').textContent='Full screen is unavailable here. You can use browser full screen instead.';}}});
+  document.addEventListener('click',e=>{const nav=e.target.closest('[data-view],[data-nav-to]');if(!root.hidden&&nav&&(nav.dataset.view||nav.dataset.navTo)!=='active-asr'){if(!leave()){e.preventDefault();e.stopImmediatePropagation();}else if(state.dirty){state.dirty=false;state.data=null;}}},true);
+  window.addEventListener('beforeunload',e=>{if(state.dirty||state.busy){e.preventDefault();e.returnValue='';}});
+  return {open:open,load:load};
+})();
+</script>

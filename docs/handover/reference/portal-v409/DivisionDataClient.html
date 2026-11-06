@@ -1,0 +1,282 @@
+<script>
+(function() {
+  'use strict';
+  const dd = { overview:null, setup:null, round:null, calculated:null, loaded:false, view:'setup', setupView:'entrants', sessionId:'', setupDirty:false, roundDirty:false };
+  const byId = function(id) { return document.getElementById(id); };
+  const esc = function(value) { return String(value == null ? '' : value).replace(/[&<>"']/g, function(c) { return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; }); };
+
+  function status(message, error) {
+    const el = byId('division-data-status');
+    el.hidden = false;
+    el.className = 'notice workflow-note' + (error ? ' error' : '');
+    el.innerHTML = '<strong>' + esc(message) + '</strong>';
+  }
+
+  function fail(error, fallback) { status(error && error.message ? error.message : fallback, true); }
+
+  function load(force) {
+    if (dd.loaded && !force) {
+      switchView(dd.view);
+      return;
+    }
+    if ((dd.setupDirty || dd.roundDirty) && force && !window.confirm('Discard the unsaved Division Data changes and reload the workbook?')) return;
+    status(force ? 'Refreshing the Division 1 workbook…' : 'Loading the Division 1 workbook…', false);
+    const refresh = byId('refresh-division-data');
+    if (refresh) { refresh.disabled = true; refresh.textContent = 'Refreshing…'; }
+    google.script.run.withSuccessHandler(function(response) {
+      dd.overview = response.overview;
+      dd.setup = response.setup;
+      dd.loaded = true;
+      dd.setupDirty = false;
+      dd.roundDirty = false;
+      byId('division-data-source').textContent = dd.overview.sourceName + ' · ' + dd.overview.divisionLabel + ' · last refreshed ' + new Date(dd.overview.refreshedAt).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+      byId('division-data-subnav').hidden = false;
+      ensureDivisionDatalists();
+      populateRoundSelector();
+      populateCalculatedSelector();
+      renderSetup();
+      switchView(dd.view);
+      updateSaveStates();
+      status('Division workbook loaded. Calendar and licence information are linked read-only here; saves write only the existing Data or selected round inputs.', false);
+      if (refresh) { refresh.disabled = false; refresh.textContent = 'Refresh workbook'; }
+    }).withFailureHandler(function(error) {
+      fail(error, 'The Division 1 workbook could not be loaded.');
+      if (refresh) { refresh.disabled = false; refresh.textContent = 'Refresh workbook'; }
+    }).getDivisionDataInitial(force === true);
+  }
+
+  function switchView(view) {
+    dd.view = view;
+    document.querySelectorAll('[data-division-view]').forEach(function(button) { button.classList.toggle('active', button.dataset.divisionView === view); });
+    ['setup','round','calculated'].forEach(function(name) { byId('division-data-' + name).hidden = name !== view; });
+  }
+
+  function switchSetupView(view) {
+    dd.setupView = view;
+    document.querySelectorAll('[data-division-setup-view]').forEach(function(button) { button.classList.toggle('active', button.dataset.divisionSetupView === view); });
+    ['entrants','lineups','reserves','principals'].forEach(function(name) { byId('division-setup-' + name).hidden = name !== view; });
+  }
+
+  function ensureDivisionDatalists() {
+    const host = byId('view-division-data');
+    const lists = {
+      'division-driver-options': unique(dd.setup.drivers.map(function(row) { return row[0]; }).concat(dd.setup.reserves.map(function(row) { return row[0]; }))),
+      'division-nationality-options': dd.setup.options.nationalities,
+      'division-team-options': dd.setup.options.teams
+    };
+    Object.keys(lists).forEach(function(id) {
+      let list = byId(id);
+      if (!list) { list = document.createElement('datalist'); list.id = id; host.appendChild(list); }
+      list.innerHTML = lists[id].map(function(value) { return '<option value="' + esc(value) + '"></option>'; }).join('');
+    });
+  }
+
+  function unique(values) { return Array.from(new Set((values || []).map(function(value) { return String(value || '').trim(); }).filter(Boolean))).sort(); }
+  function selectOptions(values, selected, blankLabel) { return (blankLabel == null ? values : [''].concat(values)).map(function(value) { return '<option value="' + esc(value) + '"' + (String(value) === String(selected || '') ? ' selected' : '') + '>' + esc(value || blankLabel || '—') + '</option>'; }).join(''); }
+  function input(value, group, row, column, className, list) { return '<input class="' + (className || '') + '" type="text" value="' + esc(value) + '" data-division-setup-group="' + group + '" data-row="' + row + '" data-column="' + column + '"' + (list ? ' list="' + list + '"' : '') + '>'; }
+  function select(value, values, group, row, column) { return '<select data-division-setup-group="' + group + '" data-row="' + row + '" data-column="' + column + '">' + selectOptions(values, value, '—') + '</select>'; }
+
+  function renderSetup() {
+    if (!dd.setup) return;
+    const calc = dd.setup.calculated;
+    byId('division-entrant-rows').innerHTML = dd.setup.drivers.map(function(row, index) {
+      return '<tr><td>' + (index + 1) + '</td><td>' + input(row[0], 'drivers', index, 0, 'driver-cell', 'division-driver-options') + '</td><td>' + input(row[1], 'drivers', index, 1, '', 'division-nationality-options') + '</td><td>' + esc(calc.driverAbbreviations[index] || '') + '</td><td>' + select(row[2], dd.setup.options.teams, 'drivers', index, 2) + '</td><td>' + select(row[3], dd.setup.options.tiers, 'drivers', index, 3) + '</td><td>' + select(row[4], dd.setup.options.platforms, 'drivers', index, 4) + '</td><td>' + select(row[5], dd.setup.options.controllers, 'drivers', index, 5) + '</td></tr>';
+    }).join('');
+    byId('division-lineup-rows').innerHTML = dd.setup.lineups.map(function(row, index) {
+      return '<tr><td>' + (index + 1) + '</td><td>' + input(row[0], 'lineups', index, 0, 'short-cell') + '</td><td>' + input(row[1], 'lineups', index, 1, 'driver-cell', 'division-driver-options') + '</td><td>' + esc(calc.lineupPlatform[index] || '') + '</td><td>' + esc(calc.lineupController[index] || '') + '</td><td>' + select(row[2], dd.setup.options.teams, 'lineups', index, 2) + '</td><td>' + select(row[3], dd.setup.options.tiers, 'lineups', index, 3) + '</td></tr>';
+    }).join('');
+    byId('division-reserve-rows').innerHTML = dd.setup.reserves.map(function(row, index) {
+      return '<tr><td>' + (index + 1) + '</td><td>' + input(row[0], 'reserves', index, 0, 'driver-cell', 'division-driver-options') + '</td><td>' + esc(calc.reservePlatform[index] || '') + '</td><td>' + esc(calc.reserveController[index] || '') + '</td><td>' + esc(calc.reserveTier[index] || '') + '</td><td>' + input(dd.setup.retired[index][0], 'retired', index, 0, 'driver-cell', 'division-driver-options') + '</td></tr>';
+    }).join('');
+    byId('division-principal-rows').innerHTML = dd.setup.principals.map(function(row, index) {
+      return '<tr><td>' + (index + 1) + '</td><td>' + input(row[0], 'principals', index, 0, 'driver-cell', 'division-driver-options') + '</td><td>' + input(row[1], 'principals', index, 1, '', 'division-team-options') + '</td></tr>';
+    }).join('');
+    switchSetupView(dd.setupView);
+  }
+
+  function updateSetupValue(target) {
+    const group = target.dataset.divisionSetupGroup;
+    const row = Number(target.dataset.row);
+    const column = Number(target.dataset.column);
+    if (!dd.setup || !dd.setup[group] || !dd.setup[group][row]) return;
+    dd.setup[group][row][column] = target.value;
+    dd.setupDirty = true;
+    updateSaveStates();
+  }
+
+  function saveSetup(button) {
+    if (!dd.setup || !dd.setupDirty) return;
+    button.disabled = true; button.textContent = 'Saving…';
+    status('Saving the existing Data tab…', false);
+    google.script.run.withSuccessHandler(function(response) {
+      dd.setup = response;
+      dd.setupDirty = false;
+      ensureDivisionDatalists();
+      renderSetup();
+      updateSaveStates();
+      button.disabled = false; button.textContent = 'Save division setup';
+      status(response.message || 'Division setup saved.', false);
+    }).withFailureHandler(function(error) {
+      fail(error, 'The division setup could not be saved.');
+      button.disabled = false; button.textContent = 'Save division setup';
+    }).saveDivisionSetup({ revision:dd.setup.revision, drivers:dd.setup.drivers, lineups:dd.setup.lineups, reserves:dd.setup.reserves, retired:dd.setup.retired, principals:dd.setup.principals });
+  }
+
+  function populateRoundSelector() {
+    const select = byId('division-round-select');
+    const old = select.value;
+    select.innerHTML = '<option value="">Choose a round…</option>' + dd.overview.rounds.map(function(round) {
+      return '<option value="' + esc(round.sheetName) + '">R' + round.round + ' · ' + esc(round.circuit || 'Track not linked') + ' · ' + round.format + (round.entrants ? ' · ' + round.entrants + ' results' : '') + '</option>';
+    }).join('');
+    if (dd.overview.rounds.some(function(round) { return round.sheetName === old; })) select.value = old;
+  }
+
+  function loadRound(force) {
+    const sheetName = byId('division-round-select').value;
+    if (!sheetName) { status('Choose a round first.', true); return; }
+    if (dd.roundDirty && !window.confirm('Discard the unsaved changes to the currently open round?')) return;
+    status('Loading ' + sheetName + '…', false);
+    google.script.run.withSuccessHandler(function(response) {
+      dd.round = response;
+      dd.roundDirty = false;
+      dd.sessionId = response.sessions[0] ? response.sessions[0].id : '';
+      renderRound();
+      updateSaveStates();
+      status(response.sheetName + ' loaded. Edits remain on this screen until Save complete round is pressed.', false);
+    }).withFailureHandler(function(error) { fail(error, 'The selected round could not be loaded.'); }).getDivisionRound(sheetName, force === true);
+  }
+
+  function renderRound() {
+    if (!dd.round) return;
+    byId('division-round-content').hidden = false;
+    byId('division-round-title').textContent = 'R' + dd.round.round + ' · ' + (dd.round.circuit || 'Track not linked');
+    byId('division-round-format').textContent = dd.round.format;
+    renderRoundMetadata();
+    byId('division-session-subnav').innerHTML = dd.round.sessions.map(function(session) { return '<button class="button' + (session.id === dd.sessionId ? ' active' : '') + '" type="button" data-division-session="' + session.id + '">' + esc(session.label) + '</button>'; }).join('');
+    renderRoundSession();
+  }
+
+  function metadataField(label, key, values) {
+    const value = dd.round.metadata[key] || '';
+    return '<div class="field"><label for="division-meta-' + key + '">' + esc(label) + '</label>' + (values ? '<select id="division-meta-' + key + '" data-division-meta="' + key + '">' + selectOptions(values, value, '—') + '</select>' : '<input id="division-meta-' + key + '" type="text" value="' + esc(value) + '" data-division-meta="' + key + '">') + '</div>';
+  }
+
+  function renderRoundMetadata() {
+    let html = metadataField('Qualifying weather','qualiWeather',dd.round.options.weather) + metadataField('Race weather','raceWeather',dd.round.options.weather) + metadataField('Safety cars','safetyCars') + metadataField('Red flags','redFlags') + metadataField('Cancelled','cancelled');
+    if (dd.round.isSprint) html += (dd.round.isLegacySprint ? '' : metadataField('Sprint qualifying weather','sprintQualiWeather',dd.round.options.weather)) + metadataField('Sprint race weather','sprintRaceWeather',dd.round.options.weather) + metadataField('Sprint safety cars','sprintSafetyCars') + metadataField('Sprint red flags','sprintRedFlags');
+    byId('division-round-metadata').innerHTML = html;
+  }
+
+  function currentSession() { return dd.round && dd.round.sessions.find(function(session) { return session.id === dd.sessionId; }); }
+  function roundInput(value, row, field, className, list) { return '<input class="' + (className || '') + '" type="text" value="' + esc(value) + '" data-division-round-row="' + row + '" data-division-round-field="' + field + '"' + (list ? ' list="' + list + '"' : '') + '>'; }
+
+  function renderRoundSession() {
+    const session = currentSession();
+    if (!session) return;
+    if (session.kind === 'qualifying') {
+      byId('division-session-head').innerHTML = '<tr><th>Pos</th><th>Nat</th><th>#</th><th>Driver</th><th>Team</th><th>Time</th><th>Tyre</th><th>Licence</th></tr>';
+      byId('division-session-rows').innerHTML = session.rows.map(function(row,index) {
+        return '<tr><td>' + esc(row.position || index + 1) + '</td><td>' + roundInput(row.nationality,index,'nationality','short-cell') + '</td><td>' + roundInput(row.number,index,'number','short-cell') + '</td><td>' + roundInput(row.driver,index,'driver','driver-cell','division-driver-options') + '</td><td>' + roundInput(row.team,index,'team','', 'division-team-options') + '</td><td>' + roundInput(row.time,index,'time','') + '</td><td><select data-division-round-row="' + index + '" data-division-round-field="tyre">' + selectOptions(dd.round.options.tyres,row.tyre,'—') + '</select></td><td>' + esc([row.licencePoints,row.licencePenalty].filter(Boolean).join(' · ') || '—') + '</td></tr>';
+      }).join('');
+    } else {
+      byId('division-session-head').innerHTML = '<tr><th>Pos</th><th>Nat</th><th>#</th><th>Driver</th><th>Team</th><th>Stops</th><th>Gap / status</th><th>Points</th><th>FL</th><th>Licence</th></tr>';
+      byId('division-session-rows').innerHTML = session.rows.map(function(row,index) {
+        return '<tr><td>' + esc(row.position || index + 1) + '</td><td>' + roundInput(row.nationality,index,'nationality','short-cell') + '</td><td>' + esc(row.number || '—') + '</td><td>' + roundInput(row.driver,index,'driver','driver-cell','division-driver-options') + '</td><td>' + esc(row.team || '—') + '</td><td>' + roundInput(row.stops,index,'stops','short-cell') + '</td><td>' + roundInput(row.gap,index,'gap','') + '</td><td>' + esc(row.points || '0') + '</td><td><label class="inline-check"><input type="checkbox" data-division-round-row="' + index + '" data-division-round-field="fastestLap"' + (String(row.fastestLap).toUpperCase() === 'Y' ? ' checked' : '') + '> Y</label></td><td>' + esc([row.licencePoints,row.licencePenalty].filter(Boolean).join(' · ') || '—') + '</td></tr>';
+      }).join('');
+    }
+  }
+
+  function updateRoundValue(target) {
+    const session = currentSession();
+    if (!session) return;
+    const row = Number(target.dataset.divisionRoundRow);
+    const field = target.dataset.divisionRoundField;
+    if (!session.rows[row] || !field) return;
+    session.rows[row][field] = target.type === 'checkbox' ? (target.checked ? 'Y' : '') : target.value;
+    dd.roundDirty = true;
+    updateSaveStates();
+  }
+
+  function updateMetadata(target) {
+    if (!dd.round || !target.dataset.divisionMeta) return;
+    dd.round.metadata[target.dataset.divisionMeta] = target.value;
+    dd.roundDirty = true;
+    updateSaveStates();
+  }
+
+  function roundSavePayload() {
+    return dd.round.sessions.map(function(session) {
+      return { id:session.id, rows:session.rows.map(function(row) {
+        return session.kind === 'qualifying'
+          ? [row.nationality,row.number,row.driver,row.team,row.time,row.tyre]
+          : [row.nationality,row.driver,row.stops,row.gap,row.fastestLap];
+      }) };
+    });
+  }
+
+  function saveRound(button) {
+    if (!dd.round || !dd.roundDirty) return;
+    button.disabled = true; button.textContent = 'Saving…';
+    status('Saving ' + dd.round.sheetName + ' and allowing the existing formulas to recalculate…', false);
+    google.script.run.withSuccessHandler(function(response) {
+      dd.round = response;
+      dd.roundDirty = false;
+      renderRound();
+      updateSaveStates();
+      button.disabled = false; button.textContent = 'Save complete round';
+      status(response.message || 'Round saved.', false);
+    }).withFailureHandler(function(error) {
+      fail(error, 'The round could not be saved.');
+      button.disabled = false; button.textContent = 'Save complete round';
+    }).saveDivisionRound({ sheetName:dd.round.sheetName, revision:dd.round.revision, metadata:dd.round.metadata, sessions:roundSavePayload() });
+  }
+
+  function populateCalculatedSelector() {
+    const select = byId('division-calculated-select');
+    const old = select.value;
+    select.innerHTML = '<option value="">Choose a tab…</option>' + dd.overview.calculatedViews.filter(function(view) { return view.available; }).map(function(view) { return '<option value="' + esc(view.name) + '">' + esc(view.name) + (view.hidden ? ' · hidden in Sheet' : '') + '</option>'; }).join('');
+    if (dd.overview.calculatedViews.some(function(view) { return view.name === old && view.available; })) select.value = old;
+  }
+
+  function loadCalculated(force) {
+    const name = byId('division-calculated-select').value;
+    if (!name) { status('Choose a workbook tab first.', true); return; }
+    status('Loading the read-only ' + name + ' view…', false);
+    google.script.run.withSuccessHandler(function(response) {
+      dd.calculated = response;
+      renderCalculated();
+      status(name + ' loaded read-only.', false);
+    }).withFailureHandler(function(error) { fail(error, 'The workbook view could not be loaded.'); }).getDivisionCalculatedView(name, force === true);
+  }
+
+  function renderCalculated() {
+    if (!dd.calculated) return;
+    byId('division-calculated-meta').textContent = dd.calculated.hidden ? 'Hidden tab · read only' : 'Visible tab · read only';
+    const header = '<thead><tr><th></th>' + dd.calculated.columns.map(function(column) { return '<th>' + esc(column) + '</th>'; }).join('') + '</tr></thead>';
+    const body = '<tbody>' + dd.calculated.rows.map(function(row,index) { return '<tr><td>' + (index + 1) + '</td>' + dd.calculated.columns.map(function(_,column) { const value=row[column]||''; return '<td title="' + esc(value) + '">' + esc(value) + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody>';
+    byId('division-calculated-grid').innerHTML = '<table>' + header + body + '</table>';
+  }
+
+  function updateSaveStates() {
+    const setup = byId('division-setup-save-state');
+    setup.textContent = dd.setupDirty ? 'Unsaved changes' : 'No unsaved changes';
+    setup.classList.toggle('dirty', dd.setupDirty);
+    const round = byId('division-round-save-state');
+    round.textContent = dd.roundDirty ? 'Unsaved changes' : 'No unsaved changes';
+    round.classList.toggle('dirty', dd.roundDirty);
+    byId('division-round-select').disabled = dd.roundDirty;
+  }
+
+  byId('division-data-subnav').addEventListener('click', function(event) { const button=event.target.closest('[data-division-view]'); if(button)switchView(button.dataset.divisionView); });
+  byId('division-setup-subnav').addEventListener('click', function(event) { const button=event.target.closest('[data-division-setup-view]'); if(button)switchSetupView(button.dataset.divisionSetupView); });
+  byId('refresh-division-data').addEventListener('click', function() { load(true); });
+  byId('view-division-data').addEventListener('input', function(event) { if(event.target.matches('[data-division-setup-group]'))updateSetupValue(event.target); if(event.target.matches('[data-division-meta]'))updateMetadata(event.target); if(event.target.matches('[data-division-round-field]'))updateRoundValue(event.target); });
+  byId('view-division-data').addEventListener('change', function(event) { if(event.target.matches('[data-division-setup-group]'))updateSetupValue(event.target); if(event.target.matches('[data-division-meta]'))updateMetadata(event.target); if(event.target.matches('[data-division-round-field]'))updateRoundValue(event.target); });
+  byId('save-division-setup').addEventListener('click', function(event) { saveSetup(event.currentTarget); });
+  byId('load-division-round').addEventListener('click', function() { loadRound(false); });
+  byId('save-division-round').addEventListener('click', function(event) { saveRound(event.currentTarget); });
+  byId('division-session-subnav').addEventListener('click', function(event) { const button=event.target.closest('[data-division-session]'); if(button){dd.sessionId=button.dataset.divisionSession;renderRound();} });
+  byId('load-division-calculated').addEventListener('click', function() { loadCalculated(false); });
+  window.F1XLDivisionData = { load:load };
+})();
+</script>

@@ -1,0 +1,14 @@
+{
+  "checkedAt": "2026-11-06T12:46:14.888Z",
+  "pass": true,
+  "preservedDocuments": 26,
+  "portalSourceFiles": 121,
+  "currentLocalLinksChecked": 140,
+  "packFiles": 198,
+  "errors": [],
+  "warnings": [
+    "Archived original Markdown links are not rewritten or treated as portable dependencies; see archive/README.md.",
+    "Credential-pattern scanning is not proof that arbitrary future additions contain no sensitive information; review before distribution."
+  ],
+  "scope": "Local documentation/reference integrity only; no new live-system test"
+}
