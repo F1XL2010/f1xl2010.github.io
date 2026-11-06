@@ -1,6 +1,6 @@
 // F1XL Service Worker
 // VERSION is injected automatically by GitHub Actions on each deploy
-const VERSION = 'launch-proposal-20261105-r4';
+const VERSION = 'fb20b9ae6469';
 const CACHE_NAME = `f1xl-shell-${VERSION}`;
 
 // Files to cache — the app shell only, never data
